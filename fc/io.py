@@ -3,7 +3,7 @@
 # io.py - Module containing wrapper classes for flow cytometry data files.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 1/29/2015
+# Date: 2/1/2015
 #
 # Requires:
 #   * numpy
@@ -13,6 +13,18 @@ import numpy as np
 class TaborLabFCSFile:
     '''Class describing FCS files which come off of the flow cytometer used
     in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
+    
+    Class Attributes:
+        * infile - string or file-like object
+        * text - dictionary of KEY-VALUE pairs extracted from FCS TEXT section
+        * data - numpy array of data extracted from FCS DATA section
+        * channel_info - list of dictionaries describing each channels
+            * label
+            * number
+            * pmt_voltage (i.e. gain)
+            * 100x_lin_gain
+            * amplifier ('lin' or 'log')
+            * threshold
 
     Instrument: BD FACScan flow cytometer
 
@@ -25,25 +37,26 @@ class TaborLabFCSFile:
             data. This allows for straightforward use of numpy.memmap which
             results in a significant speedup)
         * only 1 data set per file
-
-
+    
     For more details, see the FCS2.0 standard:
-        
+    
     [Dean, PN; Bagwell, CB; Lindmo, T; Murphy, RF; Salzman, GC (1990).
     "Data file standard for flow cytometry. Data File Standards Committee
     of the Society for Analytical Cytology.". Cytometry 11: 323-332.
     PMID 2340769]
+    
+    also, see mailing list post:
+    
+    [https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html]
 
+    for BD$WORD key-value interpretations for FCS files coming off of BD
+    instruments.
+    
     Based in part on the fcm python library [https://github.com/jfrelinger/fcm].
-
-    Class Attributes:
-        * infile - string or file-like object
-        * text - dictionary of KEY-VALUE pairs extracted from FCS TEXT part
-        * data - numpy array of data extracted from FCS DATA part
-        * channel_info - list of dictionaries describing each channels
     '''
     
     def __init__(self, infile):
+        'infile - string or file-like object'
         
         self.infile = infile
 
@@ -53,7 +66,7 @@ class TaborLabFCSFile:
             f = infile
 
         ###
-        # Import relevant fields from HEADER part
+        # Import relevant fields from HEADER section
         ###
         self._version = f.read(10)
 
@@ -69,7 +82,7 @@ class TaborLabFCSFile:
         self._data_end = int(f.read(8))
 
         ###
-        # Import key-value pairs from TEXT part
+        # Import key-value pairs from TEXT section
         ###
         f.seek(self._text_begin)
         self._separator = f.read(1)
@@ -196,7 +209,7 @@ class TaborLabFCSFile:
         self.channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
         
         ###
-        # Import DATA part
+        # Import DATA section
         ###
         shape = (int(self.text['$TOT']), int(self.text['$PAR']))
 
