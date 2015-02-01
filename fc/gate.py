@@ -13,7 +13,7 @@
 # the gated data set.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 1/28/2015
+# Date: 2/1/2015
 #
 # Requires:
 #   * numpy
@@ -38,16 +38,30 @@ def extrema(data, extrema=[(2**10)-1, 0]):
     extrema - list of values to discard (default=[1023,0])
 
     returns - Boolean numpy array of length N'''
+    
     mask = np.zeros(shape=data.shape,dtype=bool)
     for e in extrema:
         mask |= data==e
     return ~mask.any(axis=1)
 
-def density(data):
-    raise NotImplementedError()
+def circular_median(data, gate_fraction=0.65):
+    '''Gate out all events but those with (FSC,SSC) values closest to the 2D
+    (FSC,SSC) median.
+
+    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    gate_fraction - fraction of data points to keep (default=0.65)
+
+    returns       - Boolean numpy array of length N'''
+
+    # Determine number of points to keep
+    n = np.ceil(gate_fraction*float(data.shape[0]))
+
+    # Calculate distance to median point
+    m = np.median(data[:,0:2],0)
+    d = np.linalg.norm()
 
 def whitening(data):
     raise NotImplementedError()
 
-def circular_median(data):
+def density(data, sigma, gate_fraction):
     raise NotImplementedError()
