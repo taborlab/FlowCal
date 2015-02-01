@@ -54,11 +54,17 @@ def circular_median(data, gate_fraction=0.65):
     returns       - Boolean numpy array of length N'''
 
     # Determine number of points to keep
-    n = np.ceil(gate_fraction*float(data.shape[0]))
+    n = int(np.ceil(gate_fraction*float(data.shape[0])))
 
     # Calculate distance to median point
     m = np.median(data[:,0:2],0)
-    d = np.linalg.norm()
+    d = np.sqrt(np.sum(np.square(m-data[:,0:2]),1))
+
+    # Select closest points
+    idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
+    mask = np.zeros(shape=data.shape[0],dtype=bool)
+    mask[idx[:n]] = True
+    return mask
 
 def whitening(data):
     raise NotImplementedError()

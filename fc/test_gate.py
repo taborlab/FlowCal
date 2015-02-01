@@ -3,7 +3,7 @@
 # test_gate.py - Unit tests for gate module
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 1/28/2015
+# Date: 2/1/2015
 #
 # Requires:
 #   * gate
@@ -153,6 +153,12 @@ class TestSimpleGates(unittest.TestCase):
             gate.extrema(self.d2,[1,5,10]),
             np.array([0,1,1,1,0,1,1,1,1,0],dtype=bool)
             )
+
+class TestCircularMedianGate(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_circular_median(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
