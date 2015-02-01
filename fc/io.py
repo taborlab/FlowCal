@@ -40,8 +40,7 @@ class TaborLabFCSFile:
         * infile - string or file-like object
         * text - dictionary of KEY-VALUE pairs extracted from FCS TEXT part
         * data - numpy array of data extracted from FCS DATA part
-        * channel_labels - list of strings describing channels
-        * gains - dictionary mapping channel label to gain
+        * channel_info - list of dictionaries describing each channels
     '''
     
     def __init__(self, infile):
@@ -108,12 +107,6 @@ class TaborLabFCSFile:
 
         self.text = dict(zip(l[0::2], l[1::2]))
 
-        num_channels = int(self.text['$PAR'])
-        self.channel_labels = [self.text['$P%dN'%c]
-                               for c in xrange(1,num_channels+1)]
-
-        #TODO add gains
-
         # Confirm FCS file assumptions
         if self.text['$DATATYPE'] != 'I':
             raise TypeError('FCS file $DATATYPE is not I')
@@ -124,6 +117,7 @@ class TaborLabFCSFile:
         if self.text['$BYTEORD'] != '4,3,2,1':
             raise TypeError('FCS file $BYTEORD is not 4,3,2,1')
 
+        num_channels = int(self.text['$PAR'])
         bits_per_channel = [int(self.text['$P%dB'%c])
                             for c in xrange(1,num_channels+1)]
         if not all(b==16 for b in bits_per_channel):
@@ -132,6 +126,74 @@ class TaborLabFCSFile:
         
         if self.text['$NEXTDATA'] != '0':
             raise TypeError('FCS file contains more than one data set')
+
+        # From the following mailing list post:
+        #
+        # https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
+        #
+        # the BD$WORD keys are interpreted for BD instruments. Populate a list
+        # of dictionaries based on this interpretation to make it easier to
+        # extract parameters like the channel gain.
+        if num_channels != 6:
+            raise ImportError('expecting 6 channels (FSC, SSC, FL1, FL2, FL3,'
+                              + ' Time), detected %d'%num_channels)
+
+        def amp(a):
+            'Mapping of amplifier VALUE to human-readable string'
+            if a is None:
+                return None
+            if a == '1':
+                return 'lin'
+            if a == '0':
+                return 'log'
+            raise ImportError('unrecognized amplifier setting')
+
+        ch1 = {
+            'label':self.text.get('$P1N'),
+            'number':1,
+            'pmt_voltage':self.text.get('BD$WORD13'),
+            '100x_lin_gain':self.text.get('BD$WORD18'),
+            'amplifier':amp(self.text.get('BD$WORD23')),
+            'threshold':self.text.get('BD$WORD29')
+            }
+        ch2 = {
+            'label':self.text.get('$P2N'),
+            'number':2,
+            'pmt_voltage':self.text.get('BD$WORD14'),
+            '100x_lin_gain':self.text.get('BD$WORD19'),
+            'amplifier':amp(self.text.get('BD$WORD24')),
+            'threshold':self.text.get('BD$WORD30')
+            }
+        ch3 = {
+            'label':self.text.get('$P3N'),
+            'number':3,
+            'pmt_voltage':self.text.get('BD$WORD15'),
+            '100x_lin_gain':self.text.get('BD$WORD20'),
+            'amplifier':amp(self.text.get('BD$WORD25')),
+            'threshold':self.text.get('BD$WORD31')
+            }
+        ch4 = {
+            'label':self.text.get('$P4N'),
+            'number':4,
+            'pmt_voltage':self.text.get('BD$WORD16'),
+            '100x_lin_gain':self.text.get('BD$WORD21'),
+            'amplifier':amp(self.text.get('BD$WORD26')),
+            'threshold':self.text.get('BD$WORD32')
+            }
+        ch5 = {
+            'label':self.text.get('$P5N'),
+            'number':5,
+            'pmt_voltage':self.text.get('BD$WORD17'),
+            '100x_lin_gain':self.text.get('BD$WORD22'),
+            'amplifier':amp(self.text.get('BD$WORD27')),
+            'threshold':self.text.get('BD$WORD33')
+            }
+        ch6 = {
+            'label':self.text.get('$P6N'),
+            'number':6,
+            }
+
+        self.channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
         
         ###
         # Import DATA part
