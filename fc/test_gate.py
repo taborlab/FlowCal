@@ -3,7 +3,7 @@
 # test_gate.py - Unit tests for gate module
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/1/2015
+# Date: 2/2/2015
 #
 # Requires:
 #   * gate
@@ -155,10 +155,48 @@ class TestSimpleGates(unittest.TestCase):
             )
 
 class TestCircularMedianGate(unittest.TestCase):
-    def setUp(self):
-        pass
-    def test_circular_median(self):
-        pass
 
+    def setUp(self):
+        self.d = np.array([
+            [4,4],
+            [4,5],
+            [4,6],
+            [5,4],
+            [5,5],
+            [5,6],
+            [6,4],
+            [6,5],
+            [6,6],
+            [5,5],
+            ])
+
+    def test_circular_median_1(self):
+        np.testing.assert_array_equal(
+            gate.circular_median(self.d,
+                gate_fraction=10.0/10),
+            np.array([1,1,1,1,1,1,1,1,1,1],dtype=bool)
+            )
+
+    def test_circular_median_2(self):
+        np.testing.assert_array_equal(
+            gate.circular_median(self.d,
+                gate_fraction=2.0/10),
+            np.array([0,0,0,0,1,0,0,0,0,1],dtype=bool)
+            )
+
+    def test_circular_median_3(self):
+        np.testing.assert_array_equal(
+            gate.circular_median(self.d,
+                gate_fraction=6.0/10),
+            np.array([0,1,0,1,1,1,0,1,0,1],dtype=bool)
+            )
+
+    def test_circular_median_4(self):
+        np.testing.assert_array_equal(
+            gate.circular_median(self.d,
+                gate_fraction=0.0/10),
+            np.array([0,0,0,0,0,0,0,0,0,0],dtype=bool)
+            )
+        
 if __name__ == '__main__':
     unittest.main()
