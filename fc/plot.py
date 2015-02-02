@@ -33,18 +33,21 @@ def fsc_ssc(data,
     # plot results
     if ax is None:
         fig = plt.figure()
-        ax = fig.add_subplot(1,1,1)
+        cur_ax = fig.add_subplot(1,1,1)
+    else:
+        cur_ax = ax
 
-    img = ax.imshow(H,origin='lower')
+    img = cur_ax.imshow(H,origin='lower')
 
     if colorbar:
-        plt.colorbar(img, ax=ax)
+        plt.colorbar(img, ax=cur_ax)
 
-    ax.axis(axes_limits)
-    ax.set_xlabel('FSC')
-    ax.set_ylabel('SSC')
+    cur_ax.axis(axes_limits)
+    cur_ax.set_xlabel('FSC')
+    cur_ax.set_ylabel('SSC')
 
     if not (title is None):
-        ax.set_title(str(title))
+        cur_ax.set_title(str(title))
 
-    plt.show()
+    if ax is None:
+        plt.show()
