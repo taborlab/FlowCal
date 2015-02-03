@@ -142,8 +142,25 @@ def whitening(data, gate_fraction=0.65):
     idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
     mask = np.zeros(shape=data.shape[0],dtype=bool)
     mask[idx[:n]] = True
+    
+    # Last point defines boundary of circle in eigenspace which can be
+    # transformed back into original data space and serve as gate contour
+    theta = np.arange(0,2*np.pi,2*np.pi/100)
+    r = d[idx[n-1]]
+    x = [r*np.cos(t) for t in theta]
+    y = [r*np.sin(t) for t in theta]
 
-    return mask
+    # Close the circle
+    x.append(x[0])
+    y.append(y[0])
+    
+    c = np.array([x,y]).T
+    
+    # Transform circle back into original space and add the median.
+    # Note: inv(v) = v.T since columns are orthonormal
+    cntr = m + c.dot(np.diag(np.sqrt(w))).dot(v.T)
+
+    return mask, cntr
 
 def density(data, sigma, gate_fraction):
     raise NotImplementedError()
