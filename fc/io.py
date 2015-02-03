@@ -3,7 +3,7 @@
 # io.py - Module containing wrapper classes for flow cytometry data files.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/1/2015
+# Date: 2/2/2015
 #
 # Requires:
 #   * numpy
@@ -17,14 +17,15 @@ class TaborLabFCSFile:
     Class Attributes:
         * infile - string or file-like object
         * text - dictionary of KEY-VALUE pairs extracted from FCS TEXT section
-        * data - numpy array of data extracted from FCS DATA section
-        * channel_info - list of dictionaries describing each channels
-            * label
-            * number
-            * pmt_voltage (i.e. gain)
-            * 100x_lin_gain
-            * amplifier ('lin' or 'log')
-            * threshold
+        * data - NxD numpy array describing N cytometry events observing D
+                     data dimensions extracted from FCS DATA section
+        * channel_info - list of dictionaries describing each channels. Keys:
+            * 'label'
+            * 'number'
+            * 'pmt_voltage' (i.e. gain)
+            * '100x_lin_gain'
+            * 'amplifier' (values = 'lin' or 'log')
+            * 'threshold'
 
     Instrument: BD FACScan flow cytometer
 
