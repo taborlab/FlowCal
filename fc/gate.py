@@ -16,7 +16,7 @@
 # plotting).
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/2/2015
+# Date: 2/3/2015
 #
 # Requires:
 #   * numpy
@@ -24,7 +24,7 @@
 import numpy as np
 
 def high_low(data, high=(2**10)-1, low=0):
-    '''Gate out high and low values.
+    '''Gate out high and low values across all specified dimensions.
 
     data    - NxD numpy array (row=event)
     high    - high value to discard (default=1023)
@@ -35,7 +35,7 @@ def high_low(data, high=(2**10)-1, low=0):
     return ~np.any((data==high)|(data==low),axis=1)
 
 def extrema(data, extrema=[(2**10)-1, 0]):
-    '''Gate out list of extreme values.
+    '''Gate out list of extreme values across all specified dimensions.
 
     data    - NxD numpy array (row=event)
     extrema - list of values to discard (default=[1023,0])
@@ -46,6 +46,26 @@ def extrema(data, extrema=[(2**10)-1, 0]):
     for e in extrema:
         mask |= data==e
     return ~mask.any(axis=1)
+    
+def start_stop(data, num_start=250, num_stop=100):
+    '''Gate out first and last events collected.
+
+    data      - NxD numpy array (row=event)
+    num_start - number of points to discard from the beginning of data
+                (assumes data is in chronological order)
+    num_stop  - number of points to discard from the end of data (assumes data
+                is in chronological order)
+
+    returns - Boolean numpy array of length N'''
+    
+    if data.shape[0] < (num_start + num_stop):
+        raise ValueError('# events < (num_start + num_stop)')
+    
+    mask = np.ones(shape=data.shape[0],dtype=bool)
+    mask[:num_start] = False
+    mask[-num_stop:] = False
+    
+    return mask
 
 def circular_median(data, gate_fraction=0.65):
     '''Gate out all events but those with (FSC,SSC) values closest to the 2D
@@ -85,7 +105,7 @@ def circular_median(data, gate_fraction=0.65):
     return mask, np.array([x,y]).T
 
 def whitening(data, gate_fraction=0.65):
-    '''Use whitening transformation to transform data into a space where
+    '''Use whitening transformation to transform (FSC,SSC) into a space where
     median-based covariance is the identity matrix and gate out all events
     but those closest to the transformed 2D (FSC,SSC) median.
 
