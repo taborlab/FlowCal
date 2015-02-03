@@ -16,6 +16,7 @@ def fsc_ssc(data,
             axes_limits=[0,1023,0,1023],
             title=None,
             colorbar=True,
+            gate=None,
             ax=None):
     '''Plot FSC v SSC.
 
@@ -23,6 +24,7 @@ def fsc_ssc(data,
     axes_limits - axis boundaries (default=[0,1023,0,1023])
     title       - string to label plot (default=None)
     colorbar    - show colorbar (default=True)
+    gate        - Mx2 numpy array, specifies red line on plot (default=None)
     ax          - matplotlib axis object (default=None)'''
     
     # make 2D histogram of FSC v SSC
@@ -41,6 +43,9 @@ def fsc_ssc(data,
 
     if colorbar:
         plt.colorbar(img, ax=cur_ax)
+
+    if not (gate is None):
+        cur_ax.plot(gate[:,0], gate[:,1], 'r')
 
     cur_ax.axis(axes_limits)
     cur_ax.set_xlabel('FSC')
