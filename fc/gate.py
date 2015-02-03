@@ -84,8 +84,46 @@ def circular_median(data, gate_fraction=0.65):
 
     return mask, np.array([x,y]).T
 
-def whitening(data):
-    raise NotImplementedError()
+def whitening(data, gate_fraction=0.65):
+    '''Use whitening transformation to transform data into a space where
+    median-based covariance is the identity matrix and gate out all events
+    but those closest to the transformed 2D (FSC,SSC) median.
+
+    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    gate_fraction - fraction of data points to keep (default=0.65)
+
+    returns       - Boolean numpy array of length N, 2D numpy array of x-y
+                    coordinates of gate contour'''
+
+    if data.shape[0] < 2:
+        raise ValueError('data must have more than 1 event')
+
+    # Determine number of points to keep
+    n = int(np.ceil(gate_fraction*float(data.shape[0])))
+
+    # Calculate median-based covariance matrix (measure mean squared distance
+    # to median instead of mean)
+    m = np.median(data[:,0:2],0)
+    X = m-data[:,0:2]
+    S = X.T.dot(X) / float(data.shape[0])
+
+    # Calculate eigenvectors
+    w,v = np.linalg.eig(S)
+
+    # Transform median-centered data into new eigenspace. This is equivalent
+    # to "whitening" the data; scales data to data with median-based
+    # covariance of the indentity matrix.
+    transformed_data = X.dot(v).dot(np.diag(1.0/np.sqrt(w)))
+
+    # Calculate distance to median (which is the origin in the new eigenspace)
+    d = np.sqrt(np.sum(np.square(transformed_data),1))
+
+    # Select closest points
+    idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
+    mask = np.zeros(shape=data.shape[0],dtype=bool)
+    mask[idx[:n]] = True
+
+    return mask
 
 def density(data, sigma, gate_fraction):
     raise NotImplementedError()
