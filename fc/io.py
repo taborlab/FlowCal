@@ -16,9 +16,10 @@ class TaborLabFCSFile:
     
     Class Attributes:
         * infile - string or file-like object
-        * text - dictionary of KEY-VALUE pairs extracted from FCS TEXT section
-        * data - NxD numpy array describing N cytometry events observing D
-                     data dimensions extracted from FCS DATA section
+        * text   - dictionary of KEY-VALUE pairs extracted from FCS TEXT
+                   section
+        * data   - NxD numpy array describing N cytometry events observing D
+                   data dimensions extracted from FCS DATA section
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
