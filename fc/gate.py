@@ -56,7 +56,7 @@ def start_stop(data, num_start=250, num_stop=100):
     num_stop  - number of points to discard from the end of data (assumes data
                 is in chronological order)
 
-    returns - Boolean numpy array of length N'''
+    returns   - Boolean numpy array of length N'''
     
     if data.shape[0] < (num_start + num_stop):
         raise ValueError('# events < (num_start + num_stop)')

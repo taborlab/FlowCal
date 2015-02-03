@@ -173,30 +173,44 @@ class TestCircularMedianGate(unittest.TestCase):
     def test_circular_median_1(self):
         np.testing.assert_array_equal(
             gate.circular_median(self.d,
-                gate_fraction=10.0/10),
+                gate_fraction=10.0/10)[0],
             np.array([1,1,1,1,1,1,1,1,1,1],dtype=bool)
             )
 
     def test_circular_median_2(self):
         np.testing.assert_array_equal(
             gate.circular_median(self.d,
-                gate_fraction=2.0/10),
+                gate_fraction=2.0/10)[0],
             np.array([0,0,0,0,1,0,0,0,0,1],dtype=bool)
             )
 
     def test_circular_median_3(self):
         np.testing.assert_array_equal(
             gate.circular_median(self.d,
-                gate_fraction=6.0/10),
+                gate_fraction=6.0/10)[0],
             np.array([0,1,0,1,1,1,0,1,0,1],dtype=bool)
             )
 
     def test_circular_median_4(self):
         np.testing.assert_array_equal(
             gate.circular_median(self.d,
-                gate_fraction=0.0/10),
+                gate_fraction=0.0/10)[0],
             np.array([0,0,0,0,0,0,0,0,0,0],dtype=bool)
             )
+
+class TestStartStopGate(unittest.TestCase):
+    def test_start_stop_1(self):
+        d = np.zeros(shape=349,dtype=bool)
+        self.assertRaises(ValueError, gate.start_stop, d)
+        
+    def test_start_stop_2(self):
+        d = np.zeros(shape=350,dtype=bool)
+        np.testing.assert_array_equal(gate.start_stop(d), d)
+        
+    def test_start_stop_3(self):
+        d = np.zeros(shape=351,dtype=bool)
+        d[250] = True
+        np.testing.assert_array_equal(gate.start_stop(d), d)
         
 if __name__ == '__main__':
     unittest.main()
