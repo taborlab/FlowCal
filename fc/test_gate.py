@@ -3,7 +3,7 @@
 # test_gate.py - Unit tests for gate module
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/2/2015
+# Date: 2/3/2015
 #
 # Requires:
 #   * gate
