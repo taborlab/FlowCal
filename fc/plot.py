@@ -39,19 +39,19 @@ def fsc_ssc_counts(data,
     gate        - Mx2 numpy array, specifies red line on plot (default=None)
     ax          - matplotlib axis object (default=None)'''
     
-    # make 2D histogram of FSC v SSC
+    # Make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
     H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
-    H = H.T     # numpy transposes axes to be consistent with histogramnd
+    C = H.T     # numpy transposes axes to be consistent with histogramnd
 
-    # plot results
+    # Plot results
     if ax is None:
         fig = plt.figure()
         cur_ax = fig.add_subplot(1,1,1)
     else:
         cur_ax = ax
 
-    img = cur_ax.imshow(H,origin='lower',interpolation='none')
+    img = cur_ax.imshow(C,origin='lower',interpolation='none')
 
     if colorbar:
         plt.colorbar(img, ax=cur_ax)
@@ -87,31 +87,31 @@ def fsc_ssc_density(data,
     gate        - Mx2 numpy array, specifies red line on plot (default=None)
     ax          - matplotlib axis object (default=None)'''
 
-    # make 2D histogram of FSC v SSC
+    # Make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
     H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
-    H = H.T     # numpy transposes axes to be consistent with histogramnd
+    C = H.T     # numpy transposes axes to be consistent with histogramnd
 
-    # blur 2D histogram of FSC v SSC
-    fH = scipy.ndimage.filters.gaussian_filter(
-        H,
+    # Blur 2D histogram of FSC v SSC
+    D = scipy.ndimage.filters.gaussian_filter(
+        C,
         sigma=sigma,
         order=0,
         mode='constant',
         cval=0.0,
         truncate=6.0)
 
-    # normalize filtered histogram to make it a valid probability mass function
-    nfH = fH / np.sum(fH)
+    # Normalize filtered histogram to make it a valid probability mass function
+    nD = D / np.sum(D)
 
-    # plot results
+    # Plot results
     if ax is None:
         fig = plt.figure()
         cur_ax = fig.add_subplot(1,1,1)
     else:
         cur_ax = ax
 
-    img = cur_ax.imshow(nfH,origin='lower',interpolation='none')
+    img = cur_ax.imshow(nD,origin='lower',interpolation='none')
 
     if colorbar:
         plt.colorbar(img, ax=cur_ax)

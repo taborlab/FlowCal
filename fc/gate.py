@@ -16,12 +16,14 @@
 # plotting).
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/3/2015
+# Date: 2/4/2015
 #
 # Requires:
 #   * numpy
+#   * scipy
 
 import numpy as np
+import scipy.ndimage.filters
 
 def high_low(data, high=(2**10)-1, low=0):
     '''Gate out high and low values across all specified dimensions.
@@ -163,4 +165,53 @@ def whitening(data, gate_fraction=0.65):
     return mask, cntr
 
 def density(data, sigma, gate_fraction):
-    raise NotImplementedError()
+    '''Use whitening transformation to transform (FSC,SSC) into a space where
+    median-based covariance is the identity matrix and gate out all events
+    but those closest to the transformed 2D (FSC,SSC) median.
+
+    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    gate_fraction - fraction of data points to keep (default=0.65)
+
+    returns       - Boolean numpy array of length N, 2D numpy array of x-y
+                    coordinates of gate contour'''
+
+    if data.shape[0] < 2:
+        raise ValueError('data must have more than 1 event')
+
+    # Determine number of points to keep
+    n = int(np.ceil(gate_fraction*float(data.shape[0])))
+
+    # Make 2D histogram of FSC v SSC
+    e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
+    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
+    C = H.T     # numpy transposes axes to be consistent with histogramnd
+
+    # Blur 2D histogram of FSC v SSC
+    D = scipy.ndimage.filters.gaussian_filter(
+        C,
+        sigma=sigma,
+        order=0,
+        mode='constant',
+        cval=0.0,
+        truncate=6.0)
+
+    # Normalize filtered histogram to make it a valid probability mass function
+    nD = D / np.sum(D)
+
+    # Sort each (FSC,SSC) combination by density
+    v_nD = nD.ravel()
+    v_C = C.ravel()
+    sidx = sorted(xrange(len(v_nD)), key=lambda k: v_nD[k], reverse=True)
+    sv_C = v_C[sidx]
+
+    # Find minimum number of (FSC,SSC) coordinates needed to reach specified
+    # number of data points
+    csv_C = np.cumsum(sv_C)
+    Nidx = np.nonzero(csv_C >= n)[0][0]    # take first nonzero
+
+    # Convert (FSC,SSC) indices into 2D coordinates into the counts matrix
+    fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], C.shape)
+
+    mask = [tuple(e) in zip(fsc,ssc) for e in data[:,0:2]]
+
+    return mask
