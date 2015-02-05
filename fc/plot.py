@@ -8,9 +8,11 @@
 # Requires:
 #   * numpy
 #   * matplotlib
+#   * scipy
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.ndimage.filters
 
 # Mapping of string to RGB tuple for some pre-selected colors
 colors = {
@@ -35,9 +37,7 @@ def fsc_ssc_counts(data,
     title       - string to label plot (default=None)
     colorbar    - show colorbar (default=True)
     gate        - Mx2 numpy array, specifies red line on plot (default=None)
-    ax          - matplotlib axis object (default=None)
-
-    returns     - 2D histogram, numpy array of counts'''
+    ax          - matplotlib axis object (default=None)'''
     
     # make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
@@ -51,7 +51,7 @@ def fsc_ssc_counts(data,
     else:
         cur_ax = ax
 
-    img = cur_ax.imshow(H,origin='lower')
+    img = cur_ax.imshow(H,origin='lower',interpolation='none')
 
     if colorbar:
         plt.colorbar(img, ax=cur_ax)
@@ -69,26 +69,65 @@ def fsc_ssc_counts(data,
     if ax is None:
         plt.show()
 
-    return H
-
 def fsc_ssc_density(data,
+            sigma=10,
             axes_limits=[0,1023,0,1023],
             title=None,
             colorbar=True,
             gate=None,
             ax=None):
-    '''Plot FSC v SSC density.
+    '''Plot 2D FSC v SSC histogram which has been blurred with a 2D Gaussian
+    kernel and normalized to a valid probability mass function.
 
     data        - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    sigma       - standard deviation of Gaussian kernel (default=10)
     axes_limits - axis boundaries (default=[0,1023,0,1023])
     title       - string to label plot (default=None)
     colorbar    - show colorbar (default=True)
     gate        - Mx2 numpy array, specifies red line on plot (default=None)
-    ax          - matplotlib axis object (default=None)
+    ax          - matplotlib axis object (default=None)'''
 
-    returns     - 2D histogram, numpy array of counts'''
+    # make 2D histogram of FSC v SSC
+    e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
+    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
+    H = H.T     # numpy transposes axes to be consistent with histogramnd
 
-    pass    
+    # blur 2D histogram of FSC v SSC
+    fH = scipy.ndimage.filters.gaussian_filter(
+        H,
+        sigma=sigma,
+        order=0,
+        mode='constant',
+        cval=0.0,
+        truncate=6.0)
+
+    # normalize filtered histogram to make it a valid probability mass function
+    nfH = fH / np.sum(fH)
+
+    # plot results
+    if ax is None:
+        fig = plt.figure()
+        cur_ax = fig.add_subplot(1,1,1)
+    else:
+        cur_ax = ax
+
+    img = cur_ax.imshow(nfH,origin='lower',interpolation='none')
+
+    if colorbar:
+        plt.colorbar(img, ax=cur_ax)
+
+    if not (gate is None):
+        cur_ax.plot(gate[:,0], gate[:,1], 'r')
+
+    cur_ax.axis(axes_limits)
+    cur_ax.set_xlabel('FSC')
+    cur_ax.set_ylabel('SSC')
+
+    if not (title is None):
+        cur_ax.set_title(str(title))
+
+    if ax is None:
+        plt.show()
 
 def hist(data,
          xlim=[0,1023],
@@ -111,14 +150,11 @@ def hist(data,
                  [dark blue])
     title      - string to label plot (default=None)
     xlabel     - string to label x-axis (default=None)
-    ax         - matplotlib axis object (default=None)
-
-    returns - 1D histogram, numpy array of counts'''
+    ax         - matplotlib axis object (default=None)'''
 
     if len(data.shape) > 1:
         raise ValueError('more than 1 dimension specified')
     
-    # plot results
     if ax is None:
         fig = plt.figure()
         cur_ax = fig.add_subplot(1,1,1)
@@ -159,5 +195,3 @@ def hist(data,
 
     if ax is None:
         plt.show()
-
-    return n
