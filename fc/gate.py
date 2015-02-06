@@ -72,17 +72,18 @@ def start_stop(data, num_start=250, num_stop=100):
     return mask
 
 def circular_median(data, gate_fraction=0.65):
-    '''Gate out all events but those with (FSC,SSC) values closest to the 2D
-    (FSC,SSC) median.
+    '''Gate out all events but those with (x,y) values closest to the 2D (x,y)
+    median.
 
-    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    data          - NxD numpy array (only first 2 dimensions [columns] are
+                    used)
     gate_fraction - fraction of data points to keep (default=0.65)
 
-    returns       - Boolean numpy array of length N, 2D numpy array of x-y
+    returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
                     coordinates of gate contour'''
 
     if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
+        raise ValueError('must specify at least 2 dimensions')
 
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
@@ -111,19 +112,20 @@ def circular_median(data, gate_fraction=0.65):
 
     return mask, np.array([x,y]).T
 
-def whitening(data, gate_fraction=0.65):
-    '''Use whitening transformation to transform (FSC,SSC) into a space where
-    median-based covariance is the identity matrix and gate out all events
-    but those closest to the transformed 2D (FSC,SSC) median.
+def whitening2d(data, gate_fraction=0.65):
+    '''Use whitening transformation to transform (x,y) values into a space
+    where median-based covariance is the identity matrix and gate out all
+    events but those closest to the transformed 2D (x,y) median.
 
-    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    data          - NxD numpy array (only first 2 dimensions [columns] are
+                    used)
     gate_fraction - fraction of data points to keep (default=0.65)
 
-    returns       - Boolean numpy array of length N, 2D numpy array of x-y
+    returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
                     coordinates of gate contour'''
 
     if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
+        raise ValueError('must specify at least 2 dimensions')
 
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
@@ -172,21 +174,23 @@ def whitening(data, gate_fraction=0.65):
 
     return mask, cntr
 
-def density(data, sigma=10.0, gate_fraction=0.65):
-    '''Blur 2D FSC v SSC histogram using a 2D Gaussian filter, normalize the
-    resulting blurred histogram to make it a valid probability mass function,
-    and gate out all but the "densest" points (points with the largest
-    probability).
+def density2d(data, bins=np.arange(1025)-0.5, sigma=10.0, gate_fraction=0.65):
+    '''Blur 2D histogram using a 2D Gaussian filter, normalize the resulting
+    blurred histogram to make it a valid probability mass function, and gate
+    out all but the "densest" points (points with the largest probability).
 
-    data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    data          - NxD numpy array (only first 2 dimensions [columns] are
+                    used)
+    bins          - bins argument to np.histogram2d
+                    (default=np.arange(1025)-0.5)
     sigma         - standard deviation for Gaussian kernel (default=10.0)
     gate_fraction - fraction of data points to keep (default=0.65)
 
     returns       - Boolean numpy array of length N, list of 2D numpy arrays
-                    of x-y coordinates of gate contour(s)'''
+                    of (x,y) coordinates of gate contour(s)'''
 
     if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
+        raise ValueError('must specify at least 2 dimensions')
 
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
@@ -194,13 +198,12 @@ def density(data, sigma=10.0, gate_fraction=0.65):
     # Determine number of points to keep
     n = int(np.ceil(gate_fraction*float(data.shape[0])))
 
-    # Make 2D histogram of FSC v SSC
-    e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
-    C,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
+    # Make 2D histogram
+    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=bins)
 
-    # Blur 2D histogram of FSC v SSC
-    bC = scipy.ndimage.filters.gaussian_filter(
-        C,
+    # Blur 2D histogram
+    bH = scipy.ndimage.filters.gaussian_filter(
+        H,
         sigma=sigma,
         order=0,
         mode='constant',
@@ -208,22 +211,22 @@ def density(data, sigma=10.0, gate_fraction=0.65):
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    D = bC / np.sum(bC)
+    D = bH / np.sum(bH)
 
-    # Sort each (FSC,SSC) point by density
+    # Sort each (x,y) point by density
     vD = D.ravel()
-    vC = C.ravel()
+    vH = H.ravel()
     sidx = sorted(xrange(len(vD)), key=lambda idx: vD[idx], reverse=True)
-    svC = vC[sidx]  # linearized counts array sorted by density
+    svH = vH[sidx]  # linearized counts array sorted by density
 
-    # Find minimum number of accepted (FSC,SSC) points needed to reach specified
+    # Find minimum number of accepted (x,y) points needed to reach specified
     # number of data points
-    csvC = np.cumsum(svC)
-    Nidx = np.nonzero(csvC>=n)[0][0]    # we want to include this index
+    csvH = np.cumsum(svH)
+    Nidx = np.nonzero(csvH>=n)[0][0]    # we want to include this index
 
-    # Convert accepted (FSC,SSC) linear indices into 2D indices into the counts
+    # Convert accepted (x,y) linear indices into 2D indices into the histogram
     # matrix
-    fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], C.shape)
+    fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], H.shape)
     accepted_points = set(zip(fsc,ssc))
     mask = np.array([tuple(event) in accepted_points for event in data[:,0:2]])
 
@@ -231,7 +234,7 @@ def density(data, sigma=10.0, gate_fraction=0.65):
     # at the probability associated with the last accepted point.
     x,y = np.mgrid[0:1024,0:1024]
     mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
-    t = mpl_cntr.trace(vD[sidx[Nidx]])
+    tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
     # trace returns a list of arrays which contain vertices and path codes
     # used in matplotlib Path objects (see http://stackoverflow.com/a/18309914
@@ -239,13 +242,13 @@ def density(data, sigma=10.0, gate_fraction=0.65):
     # just going to make sure the path codes aren't unfamiliar and then extract
     # all of the vertices and pack them into a list of 2D contours.
     cntr = []
-    num_cntrs = len(t)/2
+    num_cntrs = len(tr)/2
     for idx in xrange(num_cntrs):
-        vertices = t[idx]
-        codes = t[num_cntrs+idx]
+        vertices = tr[idx]
+        codes = tr[num_cntrs+idx]
 
         # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
-        if not np.all((codes==1) | (codes==2)):
+        if not np.all((codes==1)|(codes==2)):
             raise Exception('contour error: unrecognized path code')
 
         cntr.append(vertices)
