@@ -16,7 +16,7 @@
 # plotting).
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/4/2015
+# Date: 2/5/2015
 #
 # Requires:
 #   * numpy
@@ -79,6 +79,9 @@ def circular_median(data, gate_fraction=0.65):
     returns       - Boolean numpy array of length N, 2D numpy array of x-y
                     coordinates of gate contour'''
 
+    if len(data.shape) < 2:
+        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
+
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
 
@@ -116,6 +119,9 @@ def whitening(data, gate_fraction=0.65):
 
     returns       - Boolean numpy array of length N, 2D numpy array of x-y
                     coordinates of gate contour'''
+
+    if len(data.shape) < 2:
+        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
 
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
@@ -164,16 +170,21 @@ def whitening(data, gate_fraction=0.65):
 
     return mask, cntr
 
-def density(data, sigma, gate_fraction):
-    '''Use whitening transformation to transform (FSC,SSC) into a space where
-    median-based covariance is the identity matrix and gate out all events
-    but those closest to the transformed 2D (FSC,SSC) median.
+def density(data, sigma=10.0, gate_fraction=0.65):
+    '''Blur 2D FSC v SSC histogram using a 2D Gaussian filter, normalize the
+    resulting blurred histogram to make it a valid probability mass function,
+    and gate out all but the "densest" points (points with the largest
+    probability).
 
     data          - NxD numpy array (row=event), 1st column=FSC, 2nd column=SSC
+    sigma         - standard deviation for Gaussian kernel (default=10.0)
     gate_fraction - fraction of data points to keep (default=0.65)
 
     returns       - Boolean numpy array of length N, 2D numpy array of x-y
                     coordinates of gate contour'''
+
+    if len(data.shape) < 2:
+        raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
 
     if data.shape[0] < 2:
         raise ValueError('data must have more than 1 event')
@@ -183,11 +194,10 @@ def density(data, sigma, gate_fraction):
 
     # Make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
-    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
-    C = H.T     # numpy transposes axes to be consistent with histogramnd
+    C,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
 
     # Blur 2D histogram of FSC v SSC
-    D = scipy.ndimage.filters.gaussian_filter(
+    bC = scipy.ndimage.filters.gaussian_filter(
         C,
         sigma=sigma,
         order=0,
@@ -196,22 +206,24 @@ def density(data, sigma, gate_fraction):
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    nD = D / np.sum(D)
+    D = bC / np.sum(bC)
 
-    # Sort each (FSC,SSC) combination by density
-    v_nD = nD.ravel()
-    v_C = C.ravel()
-    sidx = sorted(xrange(len(v_nD)), key=lambda k: v_nD[k], reverse=True)
-    sv_C = v_C[sidx]
+    # Sort each (FSC,SSC) point by density
+    vD = D.ravel()
+    vC = C.ravel()
+    sidx = sorted(xrange(len(vD)), key=lambda idx: vD[idx], reverse=True)
+    svC = vC[sidx]  # linearized counts array sorted by density
 
-    # Find minimum number of (FSC,SSC) coordinates needed to reach specified
+    # Find minimum number of accepted (FSC,SSC) points needed to reach specified
     # number of data points
-    csv_C = np.cumsum(sv_C)
-    Nidx = np.nonzero(csv_C >= n)[0][0]    # take first nonzero
+    csvC = np.cumsum(svC)
+    Nidx = np.nonzero(csvC>=n)[0][0]    # we want to include this index
 
-    # Convert (FSC,SSC) indices into 2D coordinates into the counts matrix
+    # Convert accepted (FSC,SSC) linear indices into 2D indices into the counts
+    # matrix
     fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], C.shape)
+    accepted_points = set(zip(fsc,ssc))
 
-    mask = [tuple(e) in zip(fsc,ssc) for e in data[:,0:2]]
+    mask = np.array([tuple(event) in accepted_points for event in data[:,0:2]])
 
     return mask

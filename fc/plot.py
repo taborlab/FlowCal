@@ -3,7 +3,7 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/4/2015
+# Date: 2/5/2015
 #
 # Requires:
 #   * numpy
@@ -41,8 +41,7 @@ def fsc_ssc_counts(data,
     
     # Make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
-    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
-    C = H.T     # numpy transposes axes to be consistent with histogramnd
+    C,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
 
     # Plot results
     if ax is None:
@@ -51,10 +50,16 @@ def fsc_ssc_counts(data,
     else:
         cur_ax = ax
 
-    img = cur_ax.imshow(C,origin='lower',interpolation='none')
+    # numpy histograms are organized such that the 1st dimension (FSC) = rows
+    # (1st index) and the 2nd dimension (SSC) = columns (2nd index). Visualized
+    # as is, this results in x-axis = SSC and y-axis = FSC with the origin at
+    # the top left corner, which is not what we're used to. Transpose the
+    # counts array to fix the axes and set origin to 'lower' to have (0,0) at
+    # the bottom left corner instead of the top left corner.
+    img = cur_ax.imshow(C.T,origin='lower',interpolation='none')
 
     if colorbar:
-        plt.colorbar(img, ax=cur_ax)
+        plt.colorbar(img, ax=cur_ax, label='Counts')
 
     if not (gate is None):
         cur_ax.plot(gate[:,0], gate[:,1], 'r')
@@ -70,7 +75,7 @@ def fsc_ssc_counts(data,
         plt.show()
 
 def fsc_ssc_density(data,
-            sigma=10,
+            sigma=10.0,
             axes_limits=[0,1023,0,1023],
             title=None,
             colorbar=True,
@@ -89,11 +94,10 @@ def fsc_ssc_density(data,
 
     # Make 2D histogram of FSC v SSC
     e = np.arange(1025)-0.5      # bin edges (centered over 0 - 1023)
-    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
-    C = H.T     # numpy transposes axes to be consistent with histogramnd
+    C,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=e)
 
     # Blur 2D histogram of FSC v SSC
-    D = scipy.ndimage.filters.gaussian_filter(
+    bC = scipy.ndimage.filters.gaussian_filter(
         C,
         sigma=sigma,
         order=0,
@@ -102,7 +106,7 @@ def fsc_ssc_density(data,
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    nD = D / np.sum(D)
+    D = bC / np.sum(bC)
 
     # Plot results
     if ax is None:
@@ -111,10 +115,16 @@ def fsc_ssc_density(data,
     else:
         cur_ax = ax
 
-    img = cur_ax.imshow(nD,origin='lower',interpolation='none')
+    # numpy histograms are organized such that the 1st dimension (FSC) = rows
+    # (1st index) and the 2nd dimension (SSC) = columns (2nd index). Visualized
+    # as is, this results in x-axis = SSC and y-axis = FSC with the origin at
+    # the top left corner, which is not what we're used to. Transpose the
+    # density array to fix the axes and set origin to 'lower' to have (0,0) at
+    # the bottom left corner instead of the top left corner.
+    img = cur_ax.imshow(D.T,origin='lower',interpolation='none')
 
     if colorbar:
-        plt.colorbar(img, ax=cur_ax)
+        plt.colorbar(img, ax=cur_ax, label='Probability')
 
     if not (gate is None):
         cur_ax.plot(gate[:,0], gate[:,1], 'r')
