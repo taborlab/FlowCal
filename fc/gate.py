@@ -21,9 +21,11 @@
 # Requires:
 #   * numpy
 #   * scipy
+#   * matplotlib
 
 import numpy as np
 import scipy.ndimage.filters
+import matplotlib._cntr         # matplotlib contour, implemented in C
 
 def high_low(data, high=(2**10)-1, low=0):
     '''Gate out high and low values across all specified dimensions.
@@ -180,8 +182,8 @@ def density(data, sigma=10.0, gate_fraction=0.65):
     sigma         - standard deviation for Gaussian kernel (default=10.0)
     gate_fraction - fraction of data points to keep (default=0.65)
 
-    returns       - Boolean numpy array of length N, 2D numpy array of x-y
-                    coordinates of gate contour'''
+    returns       - Boolean numpy array of length N, list of 2D numpy arrays
+                    of x-y coordinates of gate contour(s)'''
 
     if len(data.shape) < 2:
         raise ValueError('must specify at least 2 dimensions (FSC and SSC)')
@@ -223,7 +225,29 @@ def density(data, sigma=10.0, gate_fraction=0.65):
     # matrix
     fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], C.shape)
     accepted_points = set(zip(fsc,ssc))
-
     mask = np.array([tuple(event) in accepted_points for event in data[:,0:2]])
 
-    return mask
+    # Use matplotlib contour plotter (implemented in C) to generate contour(s)
+    # at the probability associated with the last accepted point.
+    x,y = np.mgrid[0:1024,0:1024]
+    mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
+    t = mpl_cntr.trace(vD[sidx[Nidx]])
+
+    # trace returns a list of arrays which contain vertices and path codes
+    # used in matplotlib Path objects (see http://stackoverflow.com/a/18309914
+    # and the documentation for matplotlib.path.Path for more details). I'm
+    # just going to make sure the path codes aren't unfamiliar and then extract
+    # all of the vertices and pack them into a list of 2D contours.
+    cntr = []
+    num_cntrs = len(t)/2
+    for idx in xrange(num_cntrs):
+        vertices = t[idx]
+        codes = t[num_cntrs+idx]
+
+        # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
+        if not np.all((codes==1) | (codes==2)):
+            raise Exception('contour error: unrecognized path code')
+
+        cntr.append(vertices)
+
+    return mask, cntr

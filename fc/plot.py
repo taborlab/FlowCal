@@ -36,7 +36,8 @@ def fsc_ssc_counts(data,
     axes_limits - axis boundaries (default=[0,1023,0,1023])
     title       - string to label plot (default=None)
     colorbar    - show colorbar (default=True)
-    gate        - Mx2 numpy array, specifies red line on plot (default=None)
+    gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
+                  line(s) on plot (default=None)
     ax          - matplotlib axis object (default=None)'''
     
     # Make 2D histogram of FSC v SSC
@@ -62,7 +63,11 @@ def fsc_ssc_counts(data,
         plt.colorbar(img, ax=cur_ax, label='Counts')
 
     if not (gate is None):
-        cur_ax.plot(gate[:,0], gate[:,1], 'r')
+        if isinstance(gate, list):
+            for cntr in gate:
+                cur_ax.plot(cntr[:,0], cntr[:,1], 'r')
+        else:
+            cur_ax.plot(gate[:,0], gate[:,1], 'r')
 
     cur_ax.axis(axes_limits)
     cur_ax.set_xlabel('FSC')
@@ -89,7 +94,8 @@ def fsc_ssc_density(data,
     axes_limits - axis boundaries (default=[0,1023,0,1023])
     title       - string to label plot (default=None)
     colorbar    - show colorbar (default=True)
-    gate        - Mx2 numpy array, specifies red line on plot (default=None)
+    gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
+                  line(s) on plot (default=None)
     ax          - matplotlib axis object (default=None)'''
 
     # Make 2D histogram of FSC v SSC
@@ -127,7 +133,11 @@ def fsc_ssc_density(data,
         plt.colorbar(img, ax=cur_ax, label='Probability')
 
     if not (gate is None):
-        cur_ax.plot(gate[:,0], gate[:,1], 'r')
+        if isinstance(gate, list):
+            for cntr in gate:
+                cur_ax.plot(cntr[:,0], cntr[:,1], 'r')
+        else:
+            cur_ax.plot(gate[:,0], gate[:,1], 'r')
 
     cur_ax.axis(axes_limits)
     cur_ax.set_xlabel('FSC')
