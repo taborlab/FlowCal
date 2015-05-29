@@ -3,7 +3,7 @@
 # io.py - Module containing wrapper classes for flow cytometry data files.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/2/2015
+# Date: 5/29/2015
 #
 # Requires:
 #   * numpy
@@ -149,9 +149,6 @@ class TaborLabFCSFile:
         # the BD$WORD keys are interpreted for BD instruments. Populate a list
         # of dictionaries based on this interpretation to make it easier to
         # extract parameters like the channel gain.
-        if num_channels != 6:
-            raise ImportError('expecting 6 channels (FSC, SSC, FL1, FL2, FL3,'
-                              + ' Time), detected %d'%num_channels)
 
         def amp(a):
             'Mapping of amplifier VALUE to human-readable string'
