@@ -108,9 +108,11 @@ class TaborLabFCSFile:
 
         # Detect if delimiter was used in keyword or value. This is technically
         # legal, but I'm too lazy to try and fix it because I don't think it's
-        # relevant to us. This issue should manifest itself as an empty element
-        # in the list since, according to the standard, any instance of the
-        # delimiter in a keyword or a value must be "quoted" by repeating it.
+        # relevant to us. According to the FCS2.0 standard, "If the separator
+        # appears in a keyword or in a keyword value, it must be 'quoted' by
+        # being repeated" and "null (zero length) keywords or keyword values
+        # are not permitted", so this issue should manifest itself as an empty
+        # element in the list.
         if any(x=='' for x in l):
             raise ImportError('error parsing TEXT section: delimiter used in'
                               + ' keyword or value.')
