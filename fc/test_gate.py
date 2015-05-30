@@ -3,11 +3,14 @@
 # test_gate.py - Unit tests for gate module
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/3/2015
+# Date: 5/30/2015
 #
 # Requires:
 #   * gate
 #   * numpy
+#
+# Note: fc.io clashes with native python io module and will cause this set of
+# unit tests to fail inside of fc/ folder.
 
 import gate
 import numpy as np
