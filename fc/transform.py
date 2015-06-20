@@ -10,7 +10,7 @@
 # observing D data dimensions, and PARAMETERS are transformation specific
 # parameters.
 #
-# Author: John T. Sexton (john.t.sexton@rice.edu)
+# Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
 # Date: 6/30/2015
 #
@@ -152,23 +152,48 @@ def _find_hist_peaks(data, labels, labels_all = None,
 
     return peaks, hists_smooth
 
-def _fit_mef_standards_curve(known_peaks, fit_peaks, method='log line+auto'):
-    '''description'''
-    
-    if method == 'log line':
+def _fit_mef_standards_curve(fit_peaks, known_peaks, method='log line+auto'):
+    '''Fit a model mapping fit calibration bead peaks (in channels) to known
+    calibration bead peaks (in MEF). Empirically, we have determined that the
+    following model serves best for our purposes:
+
+        log(Y + M(3)) = (M(1)*X) + M(2)
+
+    where Y=known_peaks, X=fit_peaks, and M represents the 3 model parameters.
+
+    This model was derived from a straightforward exponential model (fitting
+    a line on a log-y plot; M(1) and M(2)) which was augmented with an
+    autofluorescence offset term (M(3)) to account for the fact that, in
+    practice, the lowest calibration bead peak (which is supposed to be a
+    blank) has a nonzero fluorescence value.
+
+    This model is fit in a log-y space using nonlinear least squares
+    regression (as opposed to fitting an exponential model in y space).
+    We believe fitting in the log-y space weights the residuals more
+    intuitively (roughly evenly in the log-y space), whereas fitting an
+    exponential model vastly overvalues the brighter peaks.
+
+    fit_peaks   - list? numpy array?
+    known_peaks - list? numpy array?
+
+    returns     - function? array of model parameters?'''
+
+    # error checking? fit_peaks and known_peaks need to be same length
+
+    if model == 'log line':
         pass
-    elif method == 'exp':
+    elif model == 'exp':
         pass
-    elif method == 'exp+auto':
+    elif model == 'exp+auto':
         pass
-    elif method == 'log line+auto':
+    elif model == 'log line+auto':
         pass
     else: 
-        raise ValueError('Unrecognized method')
+        raise ValueError('Unrecognized model')
     
     def standards_curve(data):
         '''Transform data from Channels to Molecules of Equivalent
-        Fluorophore.'''
+        Fluorophore (MEF).'''
         
         return data
     
