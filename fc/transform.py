@@ -22,6 +22,7 @@
 import numpy as np
 import scipy.ndimage.filters
 from sklearn.cluster import DBSCAN 
+from scipy.optimize import minimize
 
 def exponentiate(data):
     '''Exponentiate data using the following transformation:
@@ -152,7 +153,7 @@ def _find_hist_peaks(data, labels, labels_all = None,
 
     return peaks, hists_smooth
 
-def _fit_mef_standards_curve(fit_peaks, known_peaks, method='log line+auto'):
+def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
     '''Fit a model mapping fit calibration bead peaks (in channels) to known
     calibration bead peaks (in MEF). Empirically, we have determined that the
     following model serves best for our purposes:
@@ -178,8 +179,12 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, method='log line+auto'):
 
     returns     - function? array of model parameters?'''
 
-    # error checking? fit_peaks and known_peaks need to be same length
-
+    # Check that the data is input data is appropriate
+    assert len(fit_peaks) == len(known_peaks), "Error: fit_peaks and  \
+        known_peaks have different lengths"
+    
+    # Just log line+auto and log prop+auto for now.
+    # Log prop+auto eliminates the y-intercept parameter.
     if model == 'log line':
         pass
     elif model == 'exp':
@@ -187,17 +192,77 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, method='log line+auto'):
     elif model == 'exp+auto':
         pass
     elif model == 'log line+auto':
-        pass
+        # This model requires at least three data points
+        assert len(fit_peaks) > 2, "Error: log line+auto standards curve model\
+        requires at least three bead peak values."        
+        
+        # This model has three parameters stored in params:
+        # 0: The slope of fit_peaks vs. log(known_peaks - bead_auto)
+        # 1: The y-intercept if fit_peaks vs. log(known_peaks - bead_auto)
+        # 2: The bead autoflurescence (bead_auto).
+        params = np.zeros(3)
+        
+        # Initial guesses to assist the fit:
+        # 0: slope found by putting a line through the highest two peaks
+        # 1: y-intercept found by putting a line through highest two peaks
+        # 2: bead_auto found by a MEFL value of 100
+        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[2])) / \
+                        (fit_peaks[-1] - fit_peaks[-2])
+        params[1] = np.log(known_peaks[-1]) - params[0] * fit_peaks[-1]
+        params[2] = 100
+
+        # Define error function
+        def err_fun(p, x, y):
+            return np.log(y + p[2]) - ( p[0] * x + p[1] )
+            
+        # Define transformation function
+        def fun(p,x):
+            return np.exp(p[0] * x + p[1]) - p[2]
+            
+    elif model == 'log prop+auto':
+        # This model requires at least two data points
+        assert len(fit_peaks) > 1, "Error: log line+auto standards curve model\
+        requires at least three bead peak values."        
+        
+        # This model has three parameters stored in params:
+        # 0: The slope of fit_peaks vs. log(known_peaks - bead_auto)
+        # 1: The bead autoflurescence (bead_auto).
+        params = np.zeros(2)
+        
+        # Initial guesses to assist the fit:
+        # 0: slope found by putting a line through the highest two peaks
+        # 1: bead_auto found by a MEFL value of 100
+        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[2])) / \
+                        (fit_peaks[-1] - fit_peaks[-2])
+        params[1] = 100
+        
+        # Define error function
+        def err_fun(p, x, y):
+            return np.log(y + p[1]) - ( p[0] * x )
+        
+        # Definte transformation function
+        def fun(p,x):
+            return np.exp(p[0] * x) - p[1]
     else: 
-        raise ValueError('Unrecognized model')
+        raise ValueError('Unrecognized model: {}'.format(model))
+    
+    # Perform fit using scipy.optimize.minimize to minimize error function
+    res = minimize(err_fun, params, args=(fit_peaks,known_peaks))
+    
+    # Store best-fit values in 'params'
+    params = res.x
     
     def standards_curve(data):
         '''Transform data from Channels to Molecules of Equivalent
         Fluorophore (MEF).'''
         
-        return data
+        return fun(params, data)
     
-    return standards_curve
+    # Return dictionary containing function, model name, and params.
+    return {'f': standards_curve,
+            'model': model,
+            'params': params
+            }
 
 def to_mef(data, beads, known_mef, peaks=None, sc=None):
     '''description'''
