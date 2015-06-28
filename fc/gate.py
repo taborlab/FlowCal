@@ -16,7 +16,7 @@
 # plotting).
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/5/2015
+# Date: 6/28/2015
 #
 # Requires:
 #   * numpy
@@ -31,8 +31,8 @@ def high_low(data, high=(2**10)-1, low=0):
     '''Gate out high and low values across all specified dimensions.
 
     data    - NxD numpy array (row=event)
-    high    - high value to discard (default=1023)
-    low     - low value to discard (default=0)
+    high    - high value to discard
+    low     - low value to discard
 
     returns - Boolean numpy array of length N'''
     
@@ -42,7 +42,7 @@ def extrema(data, extrema=[(2**10)-1, 0]):
     '''Gate out list of extreme values across all specified dimensions.
 
     data    - NxD numpy array (row=event)
-    extrema - list of values to discard (default=[1023,0])
+    extrema - list of values to discard
 
     returns - Boolean numpy array of length N'''
     
@@ -77,7 +77,7 @@ def circular_median(data, gate_fraction=0.65):
 
     data          - NxD numpy array (only first 2 dimensions [columns] are
                     used)
-    gate_fraction - fraction of data points to keep (default=0.65)
+    gate_fraction - fraction of data points to keep
 
     returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
                     coordinates of gate contour'''
@@ -119,7 +119,7 @@ def whitening2d(data, gate_fraction=0.65):
 
     data          - NxD numpy array (only first 2 dimensions [columns] are
                     used)
-    gate_fraction - fraction of data points to keep (default=0.65)
+    gate_fraction - fraction of data points to keep
 
     returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
                     coordinates of gate contour'''
@@ -183,8 +183,8 @@ def density2d(data, bins=np.arange(1025)-0.5, sigma=10.0, gate_fraction=0.65):
                     used)
     bins          - bins argument to np.histogram2d
                     (default=np.arange(1025)-0.5)
-    sigma         - standard deviation for Gaussian kernel (default=10.0)
-    gate_fraction - fraction of data points to keep (default=0.65)
+    sigma         - standard deviation for Gaussian kernel
+    gate_fraction - fraction of data points to keep
 
     returns       - Boolean numpy array of length N, list of 2D numpy arrays
                     of (x,y) coordinates of gate contour(s)'''

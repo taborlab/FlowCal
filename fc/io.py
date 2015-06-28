@@ -3,14 +3,14 @@
 # io.py - Module containing wrapper classes for flow cytometry data files.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 5/29/2015
+# Date: 6/28/2015
 #
 # Requires:
 #   * numpy
 
 import numpy as np
 
-class TaborLabFCSFile:
+class TaborLabFCSFile(object):
     '''Class describing FCS files which come off of the flow cytometer used
     in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
     

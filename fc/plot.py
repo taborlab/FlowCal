@@ -3,7 +3,7 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/5/2015
+# Date: 6/28/2015
 #
 # Requires:
 #   * numpy
@@ -37,14 +37,14 @@ def hist2d(data,
 
     data        - NxD numpy array (only first 2 dimensions [columns] are used)
     bins        - bins argument to np.histogram2d (default=np.arange(1025)-0.5)
-    axes_limits - axis boundaries (default=[0,1023,0,1023])
-    xlabel      - string to label x-axis (default='FSC')
-    ylabel      - string to label y-axis (default='SSC')
-    title       - string to label plot (default=None)
-    colorbar    - show colorbar (default=True)
+    axes_limits - axis boundaries
+    xlabel      - string to label x-axis
+    ylabel      - string to label y-axis
+    title       - string to label plot
+    colorbar    - show colorbar
     gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
-                  line(s) on plot (default=None)
-    ax          - matplotlib axis object (default=None)'''
+                  line(s) on plot
+    ax          - matplotlib axis object'''
     
     if len(data.shape) < 2:
         raise ValueError('must specify at least 2 dimensions')
@@ -107,15 +107,15 @@ def density2d(data,
 
     data        - NxD numpy array (only first 2 dimensions [columns] are used)
     bins        - bins argument to np.histogram2d (default=np.arange(1025)-0.5)
-    sigma       - standard deviation of Gaussian kernel (default=10.0)
-    axes_limits - axis boundaries (default=[0,1023,0,1023])
-    xlabel      - string to label x-axis (default='FSC')
-    ylabel      - string to label y-axis (default='SSC')
-    title       - string to label plot (default=None)
-    colorbar    - show colorbar (default=True)
+    sigma       - standard deviation of Gaussian kernel
+    axes_limits - axis boundaries
+    xlabel      - string to label x-axis
+    ylabel      - string to label y-axis
+    title       - string to label plot
+    colorbar    - show colorbar
     gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
-                  line(s) on plot (default=None)
-    ax          - matplotlib axis object (default=None)'''
+                  line(s) on plot
+    ax          - matplotlib axis object'''
 
     if len(data.shape) < 2:
         raise ValueError('must specify at least 2 dimensions')
@@ -177,6 +177,7 @@ def density2d(data,
 
 def hist1d(data,
            bins=np.arange(1025)-0.5,
+           normed=False,
            xlim=[0,1023],
            ylim=None,
            edge_color='db',
@@ -188,17 +189,18 @@ def hist1d(data,
 
     data       - Nx1 or NxD numpy array (only first dimension [column] is used)
     bins       - bins argument to plt.hist (default=np.arange(1025)-0.5)
-    xlim       - x-axis limits (default=[0,1023])
-    ylim       - y-axis limits (default=None)
+    normed     - normalize histogram to make probability density
+    xlim       - x-axis limits
+    ylim       - y-axis limits
     edge_color - color of histogram edge. Can either be a string indicating a
                  pre-selected color or a matplotlib color spec (default='lb'
                  [light blue])
     face_color - color of histogram face. Can either be a string indicating a
                  pre-selected color or a matplotlib color spec (default='db'
                  [dark blue])
-    title      - string to label plot (default=None)
-    xlabel     - string to label x-axis (default=None)
-    ax         - matplotlib axis object (default=None)'''
+    title      - string to label plot
+    xlabel     - string to label x-axis
+    ax         - matplotlib axis object'''
     
     
     if len(data.shape) == 1:    # 1D array
@@ -227,6 +229,7 @@ def hist1d(data,
     n,bins,patches = cur_ax.hist(
         d,
         bins=bins,
+        normed=normed,
         histtype='stepfilled',
         color=fc,
         edgecolor=ec)
@@ -237,7 +240,10 @@ def hist1d(data,
     if not (ylim is None):
         cur_ax.set_ylim(ylim)
 
-    cur_ax.set_ylabel('Counts')
+    if normed:
+        cur_ax.set_ylabel('Probability')
+    else:
+        cur_ax.set_ylabel('Counts')
 
     if not (title is None):
         cur_ax.set_title(str(title))
