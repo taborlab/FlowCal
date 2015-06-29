@@ -11,7 +11,7 @@
 # parameters.
 #
 # Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 2/11/2015
+# Date: 6/29/2015
 #
 # Requires:
 #   * numpy
@@ -33,8 +33,21 @@ def exponentiate(data):
 
 def _find_hist_peaks(data, num_peaks):
     '''description'''
+
+    # do some kind of classificaiton. kmeans? gmm? dbscan?
     
-    pass
+    # serialize on classification
+    labels = None
+
+    # calculate sample mean and standard deviation
+    mu = None
+    sigma = None
+
+    # do Gaussian blur
+
+    # extract peaks
+
+    return np.array([])
 
 def _fit_mef_standards_curve(known_peaks, fit_peaks, method='log line+auto'):
     '''description'''
