@@ -17,9 +17,11 @@
 # Requires:
 #   * numpy
 #   * scipy
+#   * scikit-learn
 
 import numpy as np
 import scipy.ndimage.filters
+from sklearn.cluster import DBSCAN 
 
 def exponentiate(data):
     '''Exponentiate data using the following transformation:
@@ -33,6 +35,60 @@ def exponentiate(data):
     returns - NxD numpy array'''
     
     return np.power(10, (data.astype(float)/256.0))
+
+def _clustering_dbscan(data, eps = 20.0, min_samples = 40):
+    '''
+    Find clusters in the data array using the DBSCAN method from the 
+    scikit-learn library.
+
+    data        - NxD numpy array.
+    eps         - Parameter for DBSCAN. Check scikit-learn documentation for
+                  more info.
+    min_samples - Parameter for DBSCAN. Check scikit-learn documentation for
+                  more info.
+
+    returns     - Nx1 numpy array, labeling each sample to a cluster.
+    '''
+
+    # Initialize DBSCAN object
+    db = DBSCAN(eps = eps, min_samples = min_samples)
+    # Fit data
+    db.fit(data)
+    # Extract labels
+    # A value of -1 indicates no assignment to any cluster
+    labels = db.labels_
+
+    # Extract individual labels and number of labels
+    labels_all = list(set(labels))
+    n_labels = len(labels_all)
+    n_samples = len(labels)
+
+    # Calculate number of samples in each cluster
+    n_samples_cluster = [np.sum(labels==li) for li in labels_all]
+
+    # Check that no cluster is too small.
+    # Clusters are assumed to be roughly the same size. Any cluster smaller 
+    # than 10 times less than the expected amount will be removed
+    min_n_samples = float(n_samples)/n_labels/10.0
+    labels_all_checked = []
+    for i, li in enumerate(labels_all):
+        if n_samples_cluster[i] < min_n_samples:
+            labels[labels==li] = -1
+        else:
+            labels_all_checked.append(li)
+    labels_all = labels_all_checked
+
+    # Change the cluster numbers to a contiguous positive sequence
+    labels_checked = -1*np.ones(len(labels))
+    cn = 0
+    for li in labels_all:
+        labels_checked[labels==li] = cn
+        cn = cn + 1
+    labels = labels_checked
+
+    assert(np.any(labels==-1) == False)
+
+    return labels
 
 def _find_hist_peaks(data, labels, labels_all = None, 
         min_val = 0, max_val = 1023):
