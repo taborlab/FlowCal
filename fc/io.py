@@ -11,8 +11,8 @@
 
 import numpy as np
 
-class TaborLabFCSFile(np.ndarray):
-    '''Class describing FCS files which come off of the flow cytometer used
+class TaborLabFCSData(np.ndarray):
+    '''Class describing FCS data which come off of the flow cytometer used
     in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
 
     The class itself is an NxD numpy array describing N cytometry events 
