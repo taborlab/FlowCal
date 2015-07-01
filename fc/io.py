@@ -11,16 +11,17 @@
 
 import numpy as np
 
-class TaborLabFCSFile(object):
+class TaborLabFCSFile(np.ndarray):
     '''Class describing FCS files which come off of the flow cytometer used
     in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
+
+    The class itself is an NxD numpy array describing N cytometry events 
+    observing D data dimensions extracted from FCS DATA section in the FCS file.
     
     Class Attributes:
         * infile - string or file-like object
         * text   - dictionary of KEY-VALUE pairs extracted from FCS TEXT
                    section
-        * data   - NxD numpy array describing N cytometry events observing D
-                   data dimensions extracted from FCS DATA section
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
@@ -57,19 +58,23 @@ class TaborLabFCSFile(object):
     
     Based in part on the fcm python library [https://github.com/jfrelinger/fcm].
     '''
-    
-    def __init__(self, infile):
-        'infile - string or file-like object'
-        self.load_from_file(infile)
 
-    def load_from_file(self, infile):
-        ''' Load data from FCS file
-
-            infile - String or file-like object. If string, it contains the 
-                        name of the file to load data from. If file-like 
-                        object, it refers to the file itself.
+    @staticmethod
+    def load_from_file(infile):
         '''
-        self.infile = infile
+        Load data, text, and channel_info from FCS file.
+
+        infile - String or file-like object. If string, it contains the 
+                    name of the file to load data from. If file-like 
+                    object, it refers to the file itself.
+
+        returns:
+
+        data            - numpy array with data from the FCS file
+        text            - dictionary of KEY-VALUE pairs extracted from FCS TEXT
+                            section.
+        channel_info    - list of dictionaries describing each channels.
+        '''
 
         if isinstance(infile, basestring):
             f = open(infile, 'rb')
@@ -79,33 +84,33 @@ class TaborLabFCSFile(object):
         ###
         # Import relevant fields from HEADER section
         ###
-        self._version = f.read(10)
+        _version = f.read(10)
 
-        if self._version != 'FCS2.0    ':
+        if _version != 'FCS2.0    ':
             raise TypeError('incorrection FCS file version')
         else:
-            self._version = self._version.strip()
+            _version = _version.strip()
 
-        self._text_begin = int(f.read(8))
-        self._text_end = int(f.read(8))
+        _text_begin = int(f.read(8))
+        _text_end = int(f.read(8))
         
-        self._data_begin = int(f.read(8))
-        self._data_end = int(f.read(8))
+        _data_begin = int(f.read(8))
+        _data_end = int(f.read(8))
 
         ###
         # Import key-value pairs from TEXT section
         ###
-        f.seek(self._text_begin)
-        self._separator = f.read(1)
+        f.seek(_text_begin)
+        _separator = f.read(1)
         
         # Offsets point to the byte BEFORE the indicated boundary. This way,
         # you can seek to the offset and then read 1 byte to read the indicated
         # boundary. This means the length of the TEXT section is
         # ((end+1) - begin).
-        f.seek(self._text_begin)
-        self._text = f.read((self._text_end+1) - self._text_begin)
+        f.seek(_text_begin)
+        _text = f.read((_text_end+1) - _text_begin)
 
-        l = self._text.split(self._separator)
+        l = _text.split(_separator)
 
         # The first and last list items should be empty because the TEXT
         # section starts and ends with the delimiter
@@ -131,26 +136,26 @@ class TaborLabFCSFile(object):
             raise ImportError('error parsing TEXT section: odd # of'
                               + ' key-value entries')
 
-        self.text = dict(zip(l[0::2], l[1::2]))
+        text = dict(zip(l[0::2], l[1::2]))
 
         # Confirm FCS file assumptions
-        if self.text['$DATATYPE'] != 'I':
+        if text['$DATATYPE'] != 'I':
             raise TypeError('FCS file $DATATYPE is not I')
 
-        if self.text['$MODE'] != 'L':
+        if text['$MODE'] != 'L':
             raise TypeError('FCS file $MODE is not L')
 
-        if self.text['$BYTEORD'] != '4,3,2,1':
+        if text['$BYTEORD'] != '4,3,2,1':
             raise TypeError('FCS file $BYTEORD is not 4,3,2,1')
 
-        num_channels = int(self.text['$PAR'])
-        bits_per_channel = [int(self.text['$P%dB'%c])
+        num_channels = int(text['$PAR'])
+        bits_per_channel = [int(text['$P%dB'%c])
                             for c in xrange(1,num_channels+1)]
         if not all(b==16 for b in bits_per_channel):
             raise TypeError('channel bit width error: $PnB != 16 for all'
                             + ' parameters (channels)')
         
-        if self.text['$NEXTDATA'] != '0':
+        if text['$NEXTDATA'] != '0':
             raise TypeError('FCS file contains more than one data set')
 
         # From the following mailing list post:
@@ -172,60 +177,60 @@ class TaborLabFCSFile(object):
             raise ImportError('unrecognized amplifier setting')
 
         ch1 = {
-            'label':self.text.get('$P1N'),
+            'label':text.get('$P1N'),
             'number':1,
-            'pmt_voltage':self.text.get('BD$WORD13'),
-            '100x_lin_gain':self.text.get('BD$WORD18'),
-            'amplifier':amp(self.text.get('BD$WORD23')),
-            'threshold':self.text.get('BD$WORD29')
+            'pmt_voltage':text.get('BD$WORD13'),
+            '100x_lin_gain':text.get('BD$WORD18'),
+            'amplifier':amp(text.get('BD$WORD23')),
+            'threshold':text.get('BD$WORD29')
             }
         ch2 = {
-            'label':self.text.get('$P2N'),
+            'label':text.get('$P2N'),
             'number':2,
-            'pmt_voltage':self.text.get('BD$WORD14'),
-            '100x_lin_gain':self.text.get('BD$WORD19'),
-            'amplifier':amp(self.text.get('BD$WORD24')),
-            'threshold':self.text.get('BD$WORD30')
+            'pmt_voltage':text.get('BD$WORD14'),
+            '100x_lin_gain':text.get('BD$WORD19'),
+            'amplifier':amp(text.get('BD$WORD24')),
+            'threshold':text.get('BD$WORD30')
             }
         ch3 = {
-            'label':self.text.get('$P3N'),
+            'label':text.get('$P3N'),
             'number':3,
-            'pmt_voltage':self.text.get('BD$WORD15'),
-            '100x_lin_gain':self.text.get('BD$WORD20'),
-            'amplifier':amp(self.text.get('BD$WORD25')),
-            'threshold':self.text.get('BD$WORD31')
+            'pmt_voltage':text.get('BD$WORD15'),
+            '100x_lin_gain':text.get('BD$WORD20'),
+            'amplifier':amp(text.get('BD$WORD25')),
+            'threshold':text.get('BD$WORD31')
             }
         ch4 = {
-            'label':self.text.get('$P4N'),
+            'label':text.get('$P4N'),
             'number':4,
-            'pmt_voltage':self.text.get('BD$WORD16'),
-            '100x_lin_gain':self.text.get('BD$WORD21'),
-            'amplifier':amp(self.text.get('BD$WORD26')),
-            'threshold':self.text.get('BD$WORD32')
+            'pmt_voltage':text.get('BD$WORD16'),
+            '100x_lin_gain':text.get('BD$WORD21'),
+            'amplifier':amp(text.get('BD$WORD26')),
+            'threshold':text.get('BD$WORD32')
             }
         ch5 = {
-            'label':self.text.get('$P5N'),
+            'label':text.get('$P5N'),
             'number':5,
-            'pmt_voltage':self.text.get('BD$WORD17'),
-            '100x_lin_gain':self.text.get('BD$WORD22'),
-            'amplifier':amp(self.text.get('BD$WORD27')),
-            'threshold':self.text.get('BD$WORD33')
+            'pmt_voltage':text.get('BD$WORD17'),
+            '100x_lin_gain':text.get('BD$WORD22'),
+            'amplifier':amp(text.get('BD$WORD27')),
+            'threshold':text.get('BD$WORD33')
             }
         ch6 = {
-            'label':self.text.get('$P6N'),
+            'label':text.get('$P6N'),
             'number':6,
             }
 
-        self.channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
+        channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
         
         ###
         # Import DATA section
         ###
-        shape = (int(self.text['$TOT']), int(self.text['$PAR']))
+        shape = (int(text['$TOT']), int(text['$PAR']))
 
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA section.
-        if (shape[0]*shape[1]*2) != ((self._data_end+1)-self._data_begin):
+        if (shape[0]*shape[1]*2) != ((_data_end+1)-_data_begin):
             raise ImportError('DATA size does not match expected array size')
 
         # Use a numpy memmap object to interpret the binary data straight from
@@ -234,17 +239,53 @@ class TaborLabFCSFile(object):
             f,
             dtype=np.dtype('>u2'),      # big endian, unsigned 2-byte integer
             mode='r',                   # read-only
-            offset=self._data_begin,
+            offset=_data_begin,
             shape=shape,
             order='C'                   # memory layout is row-major
             )
 
         # Cast memmap object to regular numpy array stored in memory (as
         # opposed to being backed by disk)
-        self.data = np.array(data)
+        data = np.array(data)
 
+        # Close file if necessary
         if isinstance(infile, basestring):
             f.close()
 
-    def __repr__(self):
+        return (data, text, channel_info)
+
+    def __new__(cls, infile):
+        '''
+        Class constructor. 
+
+        Special care needs to be taken when inheriting from a numpy array. 
+        Details can be found here: 
+        http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
+        '''
+
+        # First, load all data from fcs file
+        data, text, channel_info = cls.load_from_file(infile)
+
+        # Call constructor of numpy array
+        obj = data.view(cls)
+
+        # Add attributes
+        obj.infile = infile
+        obj.text = text
+        obj.channel_info = channel_info
+
+        # Finally, we must return the newly created object:
+        return obj
+
+    def __array_finalize__(self, obj):
+        '''Method called after all methods of construction of the class.'''
+        # If called from explicit constructor, do nothing.
+        if obj is None: return
+
+        # Otherwise, copy attributes from "parent"
+        self.infile = getattr(obj, 'infile', None)
+        self.text = getattr(obj, 'text', None)
+        self.channel_info = getattr(obj, 'channel_info', None)
+
+    def __str__(self):
         return str(self.infile)
