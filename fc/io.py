@@ -2,8 +2,9 @@
 #
 # io.py - Module containing wrapper classes for flow cytometry data files.
 #
-# Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 6/28/2015
+# Authors: John T. Sexton (john.t.sexton@rice.edu)
+#          Sebastian M. Castillo-Hair (smc9@rice.edu)
+# Date: 6/30/2015
 #
 # Requires:
 #   * numpy
@@ -59,7 +60,15 @@ class TaborLabFCSFile(object):
     
     def __init__(self, infile):
         'infile - string or file-like object'
-        
+        self.load_from_file(infile)
+
+    def load_from_file(self, infile):
+        ''' Load data from FCS file
+
+            infile - String or file-like object. If string, it contains the 
+                        name of the file to load data from. If file-like 
+                        object, it refers to the file itself.
+        '''
         self.infile = infile
 
         if isinstance(infile, basestring):
