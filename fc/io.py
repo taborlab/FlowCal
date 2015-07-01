@@ -289,3 +289,67 @@ class TaborLabFCSFile(np.ndarray):
 
     def __str__(self):
         return str(self.infile)
+
+    @property
+    def channels(self):
+        return [i['label'] for i in self.channel_info]
+
+    def name_to_index(self, channels):
+        '''Return the channel indexes for the named channels
+
+        channels - String or list of strings indicating the name(s) of the 
+                    channel(s) of interest.
+
+        returns:
+                - a number with the index(ces) of the channels of interest.
+        '''
+
+        if isinstance(channels, basestring):
+            # channels is a string containing a channel name
+            if channels in self.channels:
+                return self.channels.index(channels)
+            else:
+                raise ValueError("{} is not a valid channel name."
+                    .format(channels))
+
+        elif isinstance(channels, list):
+            # channels is a list of strings
+            lst = []
+            for ci in channels:
+                if ci in self.channels:
+                    lst.append(self.channels.index(ci))
+                else:
+                    raise ValueError("{} is not a valid channel name."
+                        .format(ci))
+            return lst
+
+        else:
+            raise ValueError("Input argument should be a string or list \
+                of strings.")
+
+    def __getitem__(self, key):
+        '''Overriden __getitem__ function to allow indexing by channel name.'''
+        # Separate key components
+        key_sample = key[0]
+        key_channel = key[1]
+
+        # Check if key_channel is a string, list/tuple, or other
+        if isinstance(key_channel, basestring):
+            key_i = self.name_to_index(key_channel)
+            key_all = (key_sample, key_i)
+
+        elif isinstance(key_channel, tuple) or isinstance(key_channel, list):
+            # Convert to mutable.
+            key_channel = list(key_channel)  
+            # Change any strings into channel indices
+            for i, j in enumerate(key_channel):
+                if isinstance(j, basestring):
+                    key_channel[i] = self.name_to_index(j)
+            key_all = (key_sample, key_channel)
+
+        else:
+            key_all = (key_sample, key_channel)
+
+        return np.ndarray.__getitem__(self, key_all)
+
+
