@@ -328,18 +328,23 @@ class TaborLabFCSFile(np.ndarray):
                 of strings.")
 
     def __getitem__(self, key):
-        '''Overriden __getitem__ function to allow indexing by channel name.'''
+        '''Overriden __getitem__ function.
+
+        This function achieves two things: It allows for channel indexing by
+        channel name, and it takes care of properly slicing the channel_info 
+        array.
+        '''
         # Separate key components
         key_sample = key[0]
         key_channel = key[1]
 
         # Check if key_channel is a string, list/tuple, or other
         if isinstance(key_channel, basestring):
-            key_i = self.name_to_index(key_channel)
-            key_all = (key_sample, key_i)
+            key_channel = self.name_to_index(key_channel)
+            key_all = (key_sample, key_channel)
 
         elif isinstance(key_channel, tuple) or isinstance(key_channel, list):
-            # Convert to mutable.
+            # Make mutable
             key_channel = list(key_channel)  
             # Change any strings into channel indices
             for i, j in enumerate(key_channel):
@@ -350,6 +355,17 @@ class TaborLabFCSFile(np.ndarray):
         else:
             key_all = (key_sample, key_channel)
 
-        return np.ndarray.__getitem__(self, key_all)
+        # Get sliced array
+        new_arr = np.ndarray.__getitem__(self, key_all)
+        # Return if not an array
+        if not hasattr(new_arr, '__iter__'):
+            return new_arr
 
+        # Finally, slice the channel_info attribute
+        if hasattr(key_channel, '__iter__'):
+            new_arr.channel_info = [new_arr.channel_info[kc] \
+                for kc in key_channel]
+        else:
+            new_arr.channel_info = [new_arr.channel_info[key_channel]]
 
+        return new_arr
