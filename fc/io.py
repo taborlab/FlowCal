@@ -353,7 +353,7 @@ class TaborLabFCSData(np.ndarray):
                 key_channel = self.name_to_index(key_channel)
                 key_all = (key_sample, key_channel)
 
-            elif isinstance(key_channel, tuple) or isinstance(key_channel, list):
+            elif hasattr(key_channel, '__iter__'):
                 # Make mutable
                 key_channel = list(key_channel)  
                 # Change any strings into channel indices
@@ -375,6 +375,8 @@ class TaborLabFCSData(np.ndarray):
             if hasattr(key_channel, '__iter__'):
                 new_arr.channel_info = [new_arr.channel_info[kc] \
                     for kc in key_channel]
+            elif isinstance(key_channel, slice):
+                new_arr.channel_info = new_arr.channel_info[key_channel]
             else:
                 new_arr.channel_info = [new_arr.channel_info[key_channel]]
         else:

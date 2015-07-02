@@ -127,6 +127,16 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         self.assertEqual(ds.channels, ['SSC-H', 'FL3-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
+    def test_mask_slicing(self):
+        '''
+        Testing mask slicing of a TaborLabFCSData object.
+        '''
+        m = self.d[:,1]>500
+        ds = self.d[m,:]
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(len(ds.channel_info), 6)
+
 class TestTaborLabFCSDataOperations(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.TaborLabFCSData(filename)
