@@ -184,7 +184,8 @@ def hist1d(data,
            face_color='lb',
            title=None,
            xlabel=None,
-           ax=None):
+           ax=None,
+           **kwargs):
     '''Plot 1D histogram.
 
     data       - Nx1 or NxD numpy array (only first dimension [column] is used)
@@ -232,7 +233,8 @@ def hist1d(data,
         normed=normed,
         histtype='stepfilled',
         color=fc,
-        edgecolor=ec)
+        edgecolor=ec,
+        **kwargs)
 
     if not (xlim is None):
         cur_ax.set_xlim(xlim)
