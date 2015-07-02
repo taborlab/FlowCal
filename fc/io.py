@@ -287,6 +287,12 @@ class TaborLabFCSData(np.ndarray):
         self.text = getattr(obj, 'text', None)
         self.channel_info = getattr(obj, 'channel_info', None)
 
+    def __array_wrap__(self, out_arr, context = None):
+        if out_arr.ndim == 0:
+            return None
+        else:
+            return np.ndarray.__array_wrap__(self, out_arr, context)
+
     def __str__(self):
         return str(self.infile)
 
