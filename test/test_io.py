@@ -140,6 +140,15 @@ class TestTaborLabFCSDataOperations(unittest.TestCase):
         ds = self.d + 3
         self.assertIsInstance(ds, fc.io.TaborLabFCSData)
         self.assertEqual(ds[254,3] - self.d[254,3], 3)
+        
+    def test_sqrt(self):
+        '''
+        Testing that the square root of a TaborLabFCSData object returns a 
+        TaborLabFCSData object.
+        '''
+        ds = np.sqrt(self.d)
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds[254,3], np.sqrt(self.d[254,3]))
 
     def test_sum(self):
         '''

@@ -288,6 +288,7 @@ class TaborLabFCSData(np.ndarray):
         self.channel_info = getattr(obj, 'channel_info', None)
 
     def __array_wrap__(self, out_arr, context = None):
+        '''Method called after numpy ufuncs.'''
         if out_arr.ndim == 0:
             return None
         else:
