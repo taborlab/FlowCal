@@ -132,7 +132,7 @@ class TestTaborLabFCSDataOperations(unittest.TestCase):
         self.d = fc.io.TaborLabFCSData(filename)
         self.n_samples = self.d.shape[0]
 
-    def test_sum(self):
+    def test_sum_integer(self):
         '''
         Testing that the sum of a TaborLabFCSData object returns a 
         TaborLabFCSData object.
@@ -140,6 +140,36 @@ class TestTaborLabFCSDataOperations(unittest.TestCase):
         ds = self.d + 3
         self.assertIsInstance(ds, fc.io.TaborLabFCSData)
         self.assertEqual(ds[254,3] - self.d[254,3], 3)
+
+    def test_sum(self):
+        '''
+        Testing that the sum of a TaborLabFCSData object returns an scalar.
+        '''
+        s = np.sum(self.d)
+        self.assertIsInstance(s, np.uint64)
+
+    def test_mean(self):
+        '''
+        Testing that the mean of a TaborLabFCSData object returns an scalar.
+        '''
+        m = np.mean(self.d)
+        self.assertIsInstance(m, float)
+
+    def test_std(self):
+        '''
+        Testing that the std of a TaborLabFCSData object returns an scalar.
+        '''
+        s = np.std(self.d)
+        self.assertIsInstance(s, float)
+
+    def test_mean_axis(self):
+        '''
+        Testing that the mean along the axis 0 of a TaborLabFCSData object 
+        returns a TaborLabFCSData object.
+        '''
+        m = np.mean(self.d, axis = 0)
+        self.assertIsInstance(m, fc.io.TaborLabFCSData)
+        self.assertEqual(m.shape, (6,))
         
 if __name__ == '__main__':
     unittest.main()
