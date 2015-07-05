@@ -45,48 +45,34 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
         data_ch = data
     else:
         data_ch = data[:,channels]
+        if data_ch.ndim == 1:
+            data_ch = data_ch.reshape((-1,1))
 
     # Gate
-    if data_ch.ndim >= 2:
-        mask = np.all((data_ch < high) & (data_ch > low), axis=1)
-    else:
-        mask = (data_ch < high) & (data_ch > low)
+    mask = np.all((data_ch < high) & (data_ch > low), axis=1)
     gated_data = data[mask]
 
     return gated_data
-
-# def extrema(data, extrema=[(2**10)-1, 0]):
-#     '''Gate out list of extreme values across all specified dimensions.
-
-#     data    - NxD numpy array (row=event)
-#     extrema - list of values to discard
-
-#     returns - Boolean numpy array of length N'''
     
-#     mask = np.zeros(shape=data.shape,dtype=bool)
-#     for e in extrema:
-#         mask |= data==e
-#     return ~mask.any(axis=1)
-    
-# def start_stop(data, num_start=250, num_stop=100):
-#     '''Gate out first and last events collected.
+def start_end(data, num_start=250, num_end=100):
+    '''Gate out num_start first and num_end last events collected.
 
-#     data      - NxD numpy array (row=event)
-#     num_start - number of points to discard from the beginning of data
-#                 (assumes data is in chronological order)
-#     num_stop  - number of points to discard from the end of data (assumes data
-#                 is in chronological order)
+    data      - NxD FCSData object or numpy array
+    num_start - number of points to discard from the beginning of data
+    num_end   - number of points to discard from the end of data
 
-#     returns   - Boolean numpy array of length N'''
+    returns  - Gated MxD FCSData object or numpy array'''
     
-#     if data.shape[0] < (num_start + num_stop):
-#         raise ValueError('# events < (num_start + num_stop)')
+    if data.shape[0] < (num_start + num_end):
+        raise ValueError('Number of events to discard greater than total' + 
+            ' number.')
     
-#     mask = np.ones(shape=data.shape[0],dtype=bool)
-#     mask[:num_start] = False
-#     mask[-num_stop:] = False
+    mask = np.ones(shape=data.shape[0],dtype=bool)
+    mask[:num_start] = False
+    mask[-num_end:] = False
+    gated_data = data[mask]
     
-#     return mask
+    return gated_data
 
 # def circular_median(data, gate_fraction=0.65):
 #     '''Gate out all events but those with (x,y) values closest to the 2D (x,y)
