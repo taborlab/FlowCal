@@ -74,47 +74,6 @@ def start_end(data, num_start=250, num_end=100):
     
     return gated_data
 
-# def circular_median(data, gate_fraction=0.65):
-#     '''Gate out all events but those with (x,y) values closest to the 2D (x,y)
-#     median.
-
-#     data          - NxD numpy array (only first 2 dimensions [columns] are
-#                     used)
-#     gate_fraction - fraction of data points to keep
-
-#     returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
-#                     coordinates of gate contour'''
-
-#     if len(data.shape) < 2:
-#         raise ValueError('must specify at least 2 dimensions')
-
-#     if data.shape[0] < 2:
-#         raise ValueError('data must have more than 1 event')
-
-#     # Determine number of points to keep
-#     n = int(np.ceil(gate_fraction*float(data.shape[0])))
-
-#     # Calculate distance to median point
-#     m = np.median(data[:,0:2],0)
-#     d = np.sqrt(np.sum(np.square(m-data[:,0:2]),1))
-
-#     # Select closest points
-#     idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
-#     mask = np.zeros(shape=data.shape[0],dtype=bool)
-#     mask[idx[:n]] = True
-
-#     # Last point defines boundary of circle which can serve as gate contour
-#     theta = np.arange(0,2*np.pi,2*np.pi/100)
-#     r = d[idx[n-1]]
-#     x = [m[0] + (r*np.cos(t)) for t in theta]
-#     y = [m[1] + (r*np.sin(t)) for t in theta]
-
-#     # Close the circle
-#     x.append(x[0])
-#     y.append(y[0])
-
-#     return mask, np.array([x,y]).T
-
 # def whitening2d(data, gate_fraction=0.65):
 #     '''Use whitening transformation to transform (x,y) values into a space
 #     where median-based covariance is the identity matrix and gate out all
