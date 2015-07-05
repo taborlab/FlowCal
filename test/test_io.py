@@ -2,7 +2,7 @@
 #
 # test_io.py - Unit tests for io module
 #
-# Author: Sebastian M. Castillo-Hair
+# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
 # Date: 7/1/2015
 #
 # Requires:
