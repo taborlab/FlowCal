@@ -19,6 +19,7 @@
 #   * scipy
 #   * scikit-learn
 
+from collections import namedtuple
 import numpy as np
 import scipy.ndimage.filters
 from sklearn.cluster import DBSCAN 
@@ -281,6 +282,18 @@ def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
     max_fl           - maximum possible fluorescence value in data.
     verbose          - whether to print information about step completion,
                         warnings and errors.
+
+    Returns: 
+
+    Named tuple with fields:
+    sc            - A function encoding the standard curve transformation.
+    labels        - Labels resulting from the clustering procedure.
+    peaks         - Identified peaks for every cluster.
+    hists_smooth  - Smoothed histograms for every cluster and channel.
+    peaks_ret     - Peaks per channel retained for fitting the beads model.
+    mef_ret       - MEF values per channel retained for fitting the beads model.
+    sc_beads      - Fitted model for beads (includes bead autoflurescence)
+    sc_params     - Fitted parameters from the bead model.
     '''
 
     # 1. Slice beads_data and cluster
@@ -441,26 +454,32 @@ def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
         sc_beads_all.append(sc_beads)
         sc_params_all.append(sc_params)
 
+    # Assemble output as namedtuple
+    Output = namedtuple('Output', ['sc', 'labels', 'peaks', 'hists_smooth', 
+        'peaks_ret', 'mef_ret', 'sc_beads', 'sc_params'],
+        verbose = False)
+
     # Unpack arrays if mef_channels was not iterable
     if hasattr(mef_channels, '__iter__'):
-        peaks_ret = peaks_all
-        hists_smooth_ret = hists_smooth_all
-        peaks_fit_ret = peaks_fit_all
-        peaks_mef_channel_ret = peaks_mef_channel_all
-        sc_ret = sc_all
-        sc_beads_ret = sc_beads_all
-        sc_params_ret = sc_params_all
+        o = Output(sc_all,
+            labels, 
+            peaks_all, 
+            hists_smooth_all, 
+            peaks_fit_all,
+            peaks_mef_channel_all,
+            sc_beads_all,
+            sc_params_all)
     else:
-        peaks_ret = peaks_all[0]
-        hists_smooth_ret = hists_smooth_all[0]
-        peaks_fit_ret = peaks_fit_all[0]
-        peaks_mef_channel_ret = peaks_mef_channel_all[0]
-        sc_ret = sc_all[0]
-        sc_beads_ret = sc_beads_all[0]
-        sc_params_ret = sc_params_all[0]
+        o = Output(sc_all[0],
+            labels, 
+            peaks_all[0], 
+            hists_smooth_all[0], 
+            peaks_fit_all[0], 
+            peaks_mef_channel_all[0],
+            sc_beads_all[0],
+            sc_params_all[0])
 
-    return sc_ret, labels, peaks_ret, hists_smooth_ret, peaks_fit_ret, \
-        peaks_mef_channel_ret, sc_beads_ret, sc_params_ret
+    return o
 
 def blank(data, white_cells):
     raise NotImplementedError
