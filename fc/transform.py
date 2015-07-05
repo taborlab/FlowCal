@@ -154,7 +154,7 @@ def _find_hist_peaks(data, labels, labels_all = None,
     return peaks, hists_smooth
 
 def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
-    '''Fit a model mapping fit calibration bead peaks (in channels) to known
+    '''Fit a model mapping calibration bead peaks (in channel space) to known
     calibration bead peaks (in MEF). Empirically, we have determined that the
     following model serves best for our purposes:
 
@@ -184,11 +184,11 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
         known_peaks have different lengths"
     
     if model == 'log line':
-        raise NotImplementedError("Model '{}' not implemented.".format(model))
+        raise ValueError("Model '{}' not implemented.".format(model))
     elif model == 'exp':
-        raise NotImplementedError("Model '{}' not implemented.".format(model))
+        raise ValueError("Model '{}' not implemented.".format(model))
     elif model == 'exp+auto':
-        raise NotImplementedError("Model '{}' not implemented.".format(model))
+        raise ValueError("Model '{}' not implemented.".format(model))
     elif model == 'log line+auto':
         # This model requires at least three data points
         assert len(fit_peaks) > 2, "Error: log line+auto standards curve model\
@@ -209,52 +209,37 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
         params[1] = np.log(known_peaks[-1]) - params[0] * fit_peaks[-1]
         params[2] = 100
 
-        # Define error function
+        # Error function
         def err_fun(p, x, y):
             return np.sum((np.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
             
-        # Define transformation function
-        def fun(p,x):
+        # Bead model function
+        def fit_fun(p,x):
             return np.exp(p[0] * x + p[1]) - p[2]
+
+        # Channel-to-MEF standard curve transformation function
+        def sc_fun(p,x):
+            return np.exp(p[0] * x + p[1])
             
     elif model == 'log prop+auto':
-        # This model requires at least two data points
-        assert len(fit_peaks) > 1, "Error: log line+auto standards curve model\
-        requires at least three bead peak values."        
-        
-        # This model has three parameters stored in params:
-        # 0: The slope of fit_peaks vs. log(known_peaks - bead_auto)
-        # 1: The bead autoflurescence (bead_auto).
-        params = np.zeros(2)
-        
-        # Initial guesses to assist the fit:
-        # 0: slope found by putting a line through the highest two peaks
-        # 1: bead_auto found by a MEFL value of 100
-        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[-2])) / \
-                        (fit_peaks[-1] - fit_peaks[-2])
-        params[1] = 100
-        
-        # Define error function
-        def err_fun(p, x, y):
-            return np.sum((np.log(y + p[1]) - ( p[0] * x ))**2)
-        
-        # Definte transformation function
-        def fun(p,x):
-            return np.exp(p[0] * x) - p[1]
+        raise ValueError("Model '{}' not implemented.".format(model))
     else: 
         raise ValueError('Unrecognized model: {}'.format(model))
     
-    # Perform fit using scipy.optimize.minimize to minimize error function
+    # Fit parameters
     err_par = lambda p: err_fun(p, fit_peaks, known_peaks)
     res = minimize(err_par, params)
-    
-    # Store best-fit values
+
+    # Separate parameters
     params = res.x
 
-    # Define standards curve function
-    sc = lambda x: fun(params, x)
+    # Beads model function
+    sc_beads = lambda x: fit_fun(params, x)
+
+    # Standards curve function
+    sc = lambda x: sc_fun(params, x)
     
-    return sc
+    return (sc, sc_beads, params)
 
 def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
     cluster_method = 'dbscan', cluster_params = {}, cluster_channels = 0, 
@@ -321,7 +306,11 @@ def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
     # Initialize output lists
     peaks_all = []
     hists_smooth_all = []
+    peaks_fit_all = []
+    peaks_mef_channel_all = []
     sc_all = []
+    sc_beads_all = []
+    sc_params_all = []
 
     # Iterate through each mef channel
     for mef_channel, peaks_mef_channel in zip(mef_channel_all, peaks_mef_all):
@@ -440,21 +429,38 @@ def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
             print "MEF values for channel {}.".format(mef_channel)
             print peaks_mef_channel
 
-        # Get standards curve
-        sc = _fit_mef_standards_curve(peaks_fit, peaks_mef_channel, 
-            model = mef_model)
+        # Store results
+        peaks_fit_all.append(peaks_fit)
+        peaks_mef_channel_all.append(peaks_mef_channel)
+
+        # 4. Get standard curve
+        sc, sc_beads, sc_params = _fit_mef_standards_curve(peaks_fit, 
+            peaks_mef_channel, model = mef_model)
+
         sc_all.append(sc)
+        sc_beads_all.append(sc_beads)
+        sc_params_all.append(sc_params)
 
     # Unpack arrays if mef_channels was not iterable
     if hasattr(mef_channels, '__iter__'):
-        sc_ret = sc_all
         peaks_ret = peaks_all
         hists_smooth_ret = hists_smooth_all
+        peaks_fit_ret = peaks_fit_all
+        peaks_mef_channel_ret = peaks_mef_channel_all
+        sc_ret = sc_all
+        sc_beads_ret = sc_beads_all
+        sc_params_ret = sc_params_all
     else:
-        sc_ret = sc_all[0]
         peaks_ret = peaks_all[0]
         hists_smooth_ret = hists_smooth_all[0]
-    return sc_ret, labels, peaks_ret, hists_smooth_ret, peaks_fit, peaks_mef_channel
+        peaks_fit_ret = peaks_fit_all[0]
+        peaks_mef_channel_ret = peaks_mef_channel_all[0]
+        sc_ret = sc_all[0]
+        sc_beads_ret = sc_beads_all[0]
+        sc_params_ret = sc_params_all[0]
+
+    return sc_ret, labels, peaks_ret, hists_smooth_ret, peaks_fit_ret, \
+        peaks_mef_channel_ret, sc_beads_ret, sc_params_ret
 
 def blank(data, white_cells):
     raise NotImplementedError
