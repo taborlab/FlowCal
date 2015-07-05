@@ -288,6 +288,7 @@ class TaborLabFCSData(np.ndarray):
         self.channel_info = getattr(obj, 'channel_info', None)
 
     def __array_wrap__(self, out_arr, context = None):
+        '''Method called after numpy ufuncs.'''
         if out_arr.ndim == 0:
             return None
         else:
@@ -340,9 +341,12 @@ class TaborLabFCSData(np.ndarray):
         channel name, and it takes care of properly slicing the channel_info 
         array.
         '''
-        # If key is a tuple, decompose and interpret key[1] as the channel.
-        # Otherwise, pass directly to ndarray.__getitem__().
-        if isinstance(key, tuple):
+        # If key is a tuple with no None, decompose and interpret key[1] as 
+        # the channel. If it contains Nones, pass directly to 
+        # ndarray.__getitem__() and convert to np.ndarray. Otherwise, pass
+        # directly to ndarray.__getitem__().
+        if isinstance(key, tuple) and len(key) == 2 \
+            and key[0] is not None and key[1] is not None:
             # Separate key components
             key_sample = key[0]
             key_channel = key[1]
@@ -352,7 +356,7 @@ class TaborLabFCSData(np.ndarray):
                 key_channel = self.name_to_index(key_channel)
                 key_all = (key_sample, key_channel)
 
-            elif isinstance(key_channel, tuple) or isinstance(key_channel, list):
+            elif hasattr(key_channel, '__iter__'):
                 # Make mutable
                 key_channel = list(key_channel)  
                 # Change any strings into channel indices
@@ -374,10 +378,19 @@ class TaborLabFCSData(np.ndarray):
             if hasattr(key_channel, '__iter__'):
                 new_arr.channel_info = [new_arr.channel_info[kc] \
                     for kc in key_channel]
+            elif isinstance(key_channel, slice):
+                new_arr.channel_info = new_arr.channel_info[key_channel]
             else:
                 new_arr.channel_info = [new_arr.channel_info[key_channel]]
+
+        elif isinstance(key, tuple) and len(key) == 2 \
+            and (key[0] is None or key[1] is None):
+            # Get sliced array and convert to np.ndarray
+            new_arr = np.ndarray.__getitem__(self, key)
+            new_arr = new_arr.view(np.ndarray)
+
         else:
-            # Get sliced array
+            # Get sliced array using native getitem function.
             new_arr = np.ndarray.__getitem__(self, key)
 
         return new_arr

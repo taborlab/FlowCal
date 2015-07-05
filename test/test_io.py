@@ -55,16 +55,6 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         self.assertEqual(ds.channels, channel_names)
         self.assertEqual(len(ds.channel_info), 6)
 
-    def test_1d_slicing_with_list(self):
-        '''
-        Testing the 1D slicing with a list of a TaborLabFCSData object.
-        '''
-        ds = self.d[range(10)]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
-        self.assertEqual(ds.shape, (10,6))
-        self.assertEqual(ds.channels, channel_names)
-        self.assertEqual(len(ds.channel_info), 6)
-
     def test_slicing_channel_with_int(self):
         '''
         Testing the channel slicing with an int of a TaborLabFCSData object.
@@ -127,6 +117,33 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         self.assertEqual(ds.channels, ['SSC-H', 'FL3-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
+    def test_mask_slicing(self):
+        '''
+        Testing mask slicing of a TaborLabFCSData object.
+        '''
+        m = self.d[:,1]>500
+        ds = self.d[m,:]
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(len(ds.channel_info), 6)
+
+    def test_none_slicing_1(self):
+        '''
+        Testing slicing with None on the first dimension of a TaborLabFCSData 
+        object.
+        '''
+        ds = self.d[None,[0,2]]
+        self.assertIsInstance(ds, np.ndarray)
+
+    def test_none_slicing_2(self):
+        '''
+        Testing slicing with None on the second dimension of a TaborLabFCSData 
+        object.
+        '''
+        ds = self.d[:,None]
+        self.assertIsInstance(ds, np.ndarray)
+
+
 class TestTaborLabFCSDataOperations(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.TaborLabFCSData(filename)
@@ -140,6 +157,15 @@ class TestTaborLabFCSDataOperations(unittest.TestCase):
         ds = self.d + 3
         self.assertIsInstance(ds, fc.io.TaborLabFCSData)
         self.assertEqual(ds[254,3] - self.d[254,3], 3)
+        
+    def test_sqrt(self):
+        '''
+        Testing that the square root of a TaborLabFCSData object returns a 
+        TaborLabFCSData object.
+        '''
+        ds = np.sqrt(self.d)
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds[254,3], np.sqrt(self.d[254,3]))
 
     def test_sum(self):
         '''
