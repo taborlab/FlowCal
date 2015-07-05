@@ -158,13 +158,13 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
     calibration bead peaks (in MEF). Empirically, we have determined that the
     following model serves best for our purposes:
 
-        log(Y + M(3)) = (M(1)*X) + M(2)
+        log(Y + P(3)) = (P(1)*X) + P(2)
 
-    where Y=known_peaks, X=fit_peaks, and M represents the 3 model parameters.
+    where Y=known_peaks, X=fit_peaks, and P represents the 3 model parameters.
 
     This model was derived from a straightforward exponential model (fitting
-    a line on a log-y plot; M(1) and M(2)) which was augmented with an
-    autofluorescence offset term (M(3)) to account for the fact that, in
+    a line on a log-y plot; P(1) and P(2)) which was augmented with an
+    autofluorescence offset term (P(3)) to account for the fact that, in
     practice, the lowest calibration bead peak (which is supposed to be a
     blank) has a nonzero fluorescence value.
 
@@ -180,21 +180,19 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
     returns     - function? array of model parameters?'''
 
     # Check that the data is input data is appropriate
-    assert len(fit_peaks) == len(known_peaks), "Error: fit_peaks and  \
+    assert len(fit_peaks) == len(known_peaks), "fit_peaks and  \
         known_peaks have different lengths"
     
-    # Just log line+auto and log prop+auto for now.
-    # Log prop+auto eliminates the y-intercept parameter.
     if model == 'log line':
-        pass
+        raise NotImplementedError("Model '{}' not implemented.".format(model))
     elif model == 'exp':
-        pass
+        raise NotImplementedError("Model '{}' not implemented.".format(model))
     elif model == 'exp+auto':
-        pass
+        raise NotImplementedError("Model '{}' not implemented.".format(model))
     elif model == 'log line+auto':
         # This model requires at least three data points
         assert len(fit_peaks) > 2, "Error: log line+auto standards curve model\
-        requires at least three bead peak values."        
+        requires at least three bead peak values."
         
         # This model has three parameters stored in params:
         # 0: The slope of fit_peaks vs. log(known_peaks - bead_auto)
@@ -206,14 +204,14 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
         # 0: slope found by putting a line through the highest two peaks
         # 1: y-intercept found by putting a line through highest two peaks
         # 2: bead_auto found by a MEFL value of 100
-        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[2])) / \
+        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[-2])) / \
                         (fit_peaks[-1] - fit_peaks[-2])
         params[1] = np.log(known_peaks[-1]) - params[0] * fit_peaks[-1]
         params[2] = 100
 
         # Define error function
         def err_fun(p, x, y):
-            return np.log(y + p[2]) - ( p[0] * x + p[1] )
+            return np.sum((np.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
             
         # Define transformation function
         def fun(p,x):
@@ -232,13 +230,13 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
         # Initial guesses to assist the fit:
         # 0: slope found by putting a line through the highest two peaks
         # 1: bead_auto found by a MEFL value of 100
-        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[2])) / \
+        params[0] = (np.log(known_peaks[-1]) - np.log(known_peaks[-2])) / \
                         (fit_peaks[-1] - fit_peaks[-2])
         params[1] = 100
         
         # Define error function
         def err_fun(p, x, y):
-            return np.log(y + p[1]) - ( p[0] * x )
+            return np.sum((np.log(y + p[1]) - ( p[0] * x ))**2)
         
         # Definte transformation function
         def fun(p,x):
@@ -247,36 +245,219 @@ def _fit_mef_standards_curve(fit_peaks, known_peaks, model='log line+auto'):
         raise ValueError('Unrecognized model: {}'.format(model))
     
     # Perform fit using scipy.optimize.minimize to minimize error function
-    res = minimize(err_fun, params, args=(fit_peaks,known_peaks))
+    err_par = lambda p: err_fun(p, fit_peaks, known_peaks)
+    res = minimize(err_par, params)
     
-    # Store best-fit values in 'params'
+    # Store best-fit values
     params = res.x
-    
-    def standards_curve(data):
-        '''Transform data from Channels to Molecules of Equivalent
-        Fluorophore (MEF).'''
-        
-        return fun(params, data)
-    
-    # Return dictionary containing function, model name, and params.
-    return {'f': standards_curve,
-            'model': model,
-            'params': params
-            }
 
-def to_mef(data, beads, known_mef, peaks=None, sc=None):
-    '''description'''
+    # Define standards curve function
+    sc = lambda x: fun(params, x)
     
-    if sc is None:
-        if peaks is None:
-            peaks = _find_hist_peaks(beads)
-            
-        sc = _fit_mef_standards_curve(known_mef, peaks)
-            
-    return sc(data)
+    return sc
+
+def get_mef_standards_curve(beads_data, peaks_mef, mef_channels = 0,
+    cluster_method = 'dbscan', cluster_params = {}, cluster_channels = 0, 
+    mef_model = 'log line+auto', min_fl = 0, max_fl = 1023, verbose = False):
+    '''Generate a function that transforms channel data into MEF data.
+
+    This is performed using flow cytometry beads data, contained in the 
+    beads_data argument. The steps involved in the MEF standards curve 
+    generation are:
+        1. The individual groups of beads are first clustered using a method
+            of choice. 
+        2. The value of the peak is identified for each cluster, for each
+            channel in mef_channels.
+        3. Clusters that are too close to one of the edges are discarded. The 
+            corresponding known MEF values in peaks_mef are also discarded. If
+            the expected mef value of some peak is unknown (represented as a 
+            None value in peaks_mef), the corresponding peak is also discarded.
+        4. The peaks identified from the beads are contrasted with the expected
+            MEF values, and a standards curve function is generated using the
+            appropriate MEF model. 
+
+    The function generated is a transformation function, as specified in the 
+    header of this module.
+
+    Arguments:
+    
+    beads_data       - an NxD numpy array or FCSData object.
+    peaks_mef        - a numpy array with the P known MEF values of the beads.
+                        If mef_channels is an iterable of lenght C, peaks mef
+                        should be a CxP array, where P is the number of MEF
+                        peaks.
+    mef_channels     - channel name, or iterable with channel names, on which
+                        to generate MEF transformation functions.
+    mef_model        - Bead fluorescence model
+    cluster_method   - method used for peak clustering.
+    cluster_params   - parameters to pass to the clustering method.
+    cluster_channels - channels used for clustering.
+    min_fl           - minimum possible fluorescence value in data.
+    max_fl           - maximum possible fluorescence value in data.
+    verbose          - whether to print information about step completion,
+                        warnings and errors.
+    '''
+
+    # 1. Slice beads_data and cluster
+    data_cluster = beads_data[:,cluster_channels]
+    if cluster_method == 'dbscan':
+        labels = _clustering_dbscan(data_cluster, **cluster_params)
+    else:
+        raise ValueError("Clustering method {} not recognized."
+            .format(cluster_method))
+    labels_all = np.array(list(set(labels)))
+    n_clusters = len(labels_all)
+    if verbose:
+        print "Number of clusters found: {}".format(n_clusters)
+
+    # mef_channels and peaks_mef should be iterables.
+    if hasattr(mef_channels, '__iter__'):
+        mef_channel_all = list(mef_channels)
+        peaks_mef_all = np.array(peaks_mef).copy()
+    else:
+        mef_channel_all = [mef_channels]
+        peaks_mef_all = np.array([peaks_mef])
+
+    # Initialize output lists
+    peaks_all = []
+    hists_smooth_all = []
+    sc_all = []
+
+    # Iterate through each mef channel
+    for mef_channel, peaks_mef_channel in zip(mef_channel_all, peaks_mef_all):
+        if verbose: 
+            print "For channel {}...".format(mef_channel)
+        # Separate data for the relevant channel
+        data_channel = beads_data[:,mef_channel]
+
+        # Step 2. Find peaks in each one of the clusters. 
+
+        # # Remove events in the boundaries first.
+        # mask_channel = (data_channel > min_fl) & (data_channel < max_fl)
+        # data_masked_channel = data_channel[mask_channel]
+        # labels_channel = labels[mask_channel]
+        # labels_all_channel = np.array(list(set(labels_channel)))
+        # # Some peaks can be lost if they are completely contained at either 
+        # # boundary. In this case, "peaks" and "labels_all" will have 
+        # # inconsistent dimensions.
+        # # TODO: handle this case.
+        # if len(labels_all_channel) != len(labels_all):
+        #     raise RuntimeError("Completely saturated peaks.")
+        # # Find peaks
+        # peaks, hists_smooth = _find_hist_peaks(data_masked_channel, 
+        #                         labels_channel, labels_all = labels_all_channel, 
+        #                         min_val = min_fl, max_val = max_fl)
+
+        # Find peaks on all the channel data
+        peaks, hists_smooth = _find_hist_peaks(data_channel, 
+                                labels, labels_all = labels_all, 
+                                min_val = min_fl, max_val = max_fl)
+        
+        # Save peaks and smoothed histograms
+        peaks_all.append(peaks)
+        hists_smooth_all.append(hists_smooth)
+
+        # 3. Discard clusters that are too close to the edges
+        # "Close" will be defined as peak being at a lower distance to the left 
+        # edge than 2.5x the standard deviation, and lower than 2.5x the std to 
+        # the right. 
+        # Only one of two things could happen: either the peaks are being cut 
+        # off to the left or to the right. That means that we can discard 
+        # the lowest peaks or the highest peaks, but not both.
+        
+        # We first need to sort the peaks and clusters
+        ind_sorted = np.argsort(peaks)
+        peaks_sorted = peaks[ind_sorted]
+        labels_sorted = labels_all[ind_sorted]
+        # Get the standard deviation of each peak
+        peaks_std = [np.std(data_channel[labels==li]) \
+            for li in labels_sorted]
+        if verbose:
+            print "Peaks identified:"
+            s_peaks = ''
+            for p,s in zip(peaks_sorted, peaks_std):
+                s_peaks = s_peaks + "{} +/- {:.2f}, ".format(p,s)
+            print s_peaks
+        # Decide which peaks to discard
+        if (peaks_sorted[0] - 2.5*peaks_std[0]) <= min_fl \
+            and (peaks_sorted[-1] + 2.5*peaks_std[-1]) >= max_fl:
+            raise ValueError('Peaks are being cut off at both sides for \
+                channel {}.'.format(mef_channel))
+        elif (peaks_sorted[0] - 2.5*peaks_std[0]) <= min_fl:
+            discard = 'left'
+            discard_n = 1
+            while (peaks_sorted[discard_n] - 2.5*peaks_std[discard_n]) \
+                <= min_fl:
+                discard_n = discard_n + 1
+            peaks_fit = peaks_sorted[discard_n:]
+            if verbose:
+                print "{} peak(s) discarded to the left.".format(discard_n)
+        elif (peaks_sorted[-1] + 2.5*peaks_std[-1]) >= max_fl:
+            discard = 'right'
+            discard_n = 1
+            while (peaks_sorted[-1-discard_n] + 2.5*peaks_std[-1-discard_n]) \
+                >= max_fl:
+                discard_n = discard_n + 1
+            peaks_fit = peaks_sorted[:-discard_n]
+            if verbose:
+                print "{} peak(s) discarded to the right.".format(discard_n)
+        else:
+            discard = False
+            discard_n = 0
+            peaks_fit = peaks_sorted
+            if verbose:
+                print "No peaks discarded."
+
+        # Discard equivalent peaks form the MEF array
+        peaks_mef_channel = peaks_mef_channel[:]
+        if verbose:
+            "{} MEF peaks provided.".format(len(peaks_mef_channel))
+        mef_discard = len(peaks_mef_channel) - len(peaks_fit)
+        if discard == 'left':
+            peaks_mef_channel = peaks_mef_channel[mef_discard:]
+            if verbose:
+                print "{} MEF value(s) discarded to the left.".format(
+                    mef_discard)
+        elif discard == 'right':
+            peaks_mef_channel = peaks_mef_channel[:-mef_discard]
+            if verbose:
+                print "{} MEF value(s) discarded to the right.".format(
+                    mef_discard)
+        elif mef_discard > 0:
+            ValueError('Number of MEF values and peaks does not match in' + 
+                ' channel {}.'.format(mef_channel))
+        # Check if first mef peak is None, and discard
+        if peaks_mef_channel[0] is None:
+            peaks_mef_channel = peaks_mef_channel[1:]
+            peaks_fit = peaks_fit[1:]
+            if verbose:
+                print("First peak's MEF value is unknown, and therefore was" +
+                    " discarded.")
+        # Cast to to float. If the array had contained a None value, it will be
+        # of type 'object'.
+        peaks_mef_channel = peaks_mef_channel.astype(np.float64)
+        if verbose:
+            print "MEF values for channel {}.".format(mef_channel)
+            print peaks_mef_channel
+
+        # Get standards curve
+        sc = _fit_mef_standards_curve(peaks_fit, peaks_mef_channel, 
+            model = mef_model)
+        sc_all.append(sc)
+
+    # Unpack arrays if mef_channels was not iterable
+    if hasattr(mef_channels, '__iter__'):
+        sc_ret = sc_all
+        peaks_ret = peaks_all
+        hists_smooth_ret = hists_smooth_all
+    else:
+        sc_ret = sc_all[0]
+        peaks_ret = peaks_all[0]
+        hists_smooth_ret = hists_smooth_all[0]
+    return sc_ret, labels, peaks_ret, hists_smooth_ret, peaks_fit, peaks_mef_channel
 
 def blank(data, white_cells):
-    pass
+    raise NotImplementedError
 
 def compensate(data):
-    pass
+    raise NotImplementedError
