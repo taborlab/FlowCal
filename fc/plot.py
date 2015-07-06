@@ -2,8 +2,7 @@
 #
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
+# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
 # Date: 7/6/2015
 #
 # Requires:
@@ -58,8 +57,8 @@ def hist1d(data_list,
            legend = False,
            legend_loc = None,
            xlabel = None,
-           savefig = None,
            histtype = 'stepfilled',
+           savefig = None,
            **kwargs):
 
     '''Plot 1D histogram of a list of data objects
@@ -74,12 +73,14 @@ def hist1d(data_list,
     legend_loc - location of the legend to include.
     xlabel     - Label to use on the x axis
     histtype   - histogram type
+    savefig    - if not None, it specifies the name of the file to save the 
+                figure to.
     **kwargs   - passed directly to matploblib's hist. 'edgecolor', 
                 'facecolor', 'linestyle', and 'label' can be specified as a 
                 lists, with an element for each data object.
     '''    
 
-    # Convert to list if it's not already
+    # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
         if 'edgecolor' in kwargs:
@@ -92,8 +93,10 @@ def hist1d(data_list,
             kwargs['label'] = [kwargs['label']]
 
     # Default colors
-    if 'facecolor' not in kwargs:
+    if histtype == 'stepfilled' and 'facecolor' not in kwargs:
         kwargs['facecolor'] = load_colormap('spectral', len(data_list))
+    elif histtype == 'step' and 'edgecolor' not in kwargs:
+        kwargs['edgecolor'] = load_colormap('spectral', len(data_list))
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -138,156 +141,126 @@ def hist1d(data_list,
 
     # Save if necessary
     if savefig is not None:
+        pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
 
+def density2d(data, 
+            channels = [0,1], 
+            log = False, 
+            div = 1, 
+            bins = None, 
+            smooth = True,
+            sigma = 10.0,
+            mode = 'mesh',
+            colorbar = False,
+            normed = False,
+            savefig = None,
+            **kwargs):
+    '''Plot 2D density plot
 
-# def hist2d(data,
-#            bins=np.arange(1025)-0.5,
-#            axes_limits=[0,1023,0,1023],
-#            xlabel='FSC',
-#            ylabel='SSC',
-#            title=None,
-#            colorbar=True,
-#            gate=None,
-#            ax=None):
-#     '''Plot 2D histogram.
+    data        - a NxD FCSData object.
+    channels    - channels to use in the density plot.
+    log         - whether the x axis should be in log units.
+    div         - number to divide the default number of bins. Ignored if bins 
+                   argument is not None.
+    bins        - bins to use for numpy.histogram2d.
+    smooth      - Whether to apply gaussian smoothing to the histogram
+    sigma       - Sigma parameter used for the gaussian smoothing.
+    mode        - Plotting mode. Can be 'mesh' or 'scatter'.
+    colorbar    - Plot colorbar
+    normed      - Plot normed histogram (pmf)
+    savefig     - if not None, it specifies the name of the file to save the 
+                   figure to.
+    kwargs      - passed directly to matplotlib's scatter or pcolormesh.
+    '''
 
-#     data        - NxD numpy array (only first 2 dimensions [columns] are used)
-#     bins        - bins argument to np.histogram2d (default=np.arange(1025)-0.5)
-#     axes_limits - axis boundaries
-#     xlabel      - string to label x-axis
-#     ylabel      - string to label y-axis
-#     title       - string to label plot
-#     colorbar    - show colorbar
-#     gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
-#                   line(s) on plot
-#     ax          - matplotlib axis object'''
-    
-#     if len(data.shape) < 2:
-#         raise ValueError('must specify at least 2 dimensions')
-    
-#     # Make 2D histogram
-#     H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=bins)
+    # Extract channels to plot
+    assert len(channels) == 2, 'Two channels need to be specified.'
+    data_plot = data[:, channels]
 
-#     # Plot results
-#     if ax is None:
-#         fig = plt.figure()
-#         cur_ax = fig.add_subplot(1,1,1)
-#     else:
-#         cur_ax = ax
+    # Calculate bins if necessary
+    if bins is None:
+        rx = data_plot.channel_info[0]['range']
+        ry = data_plot.channel_info[1]['range']
+        if log == True:
+            bins = numpy.array([numpy.logspace(numpy.log10(rx[0]), 
+                                            numpy.log10(rx[1]), 
+                                            (rx[2] + 1)/div),
+                                numpy.logspace(numpy.log10(ry[0]), 
+                                            numpy.log10(ry[1]), 
+                                            (ry[2] + 1)/div),
+                                ])
+        else:
+            bins = numpy.array([
+                numpy.linspace(rx[0], rx[1] + 1, (rx[2] + 1)/div),
+                numpy.linspace(ry[0], ry[1] + 1, (ry[2] + 1)/div),
+                ])
 
-#     # numpy histograms are organized such that the 1st dimension (eg. FSC) =
-#     # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
-#     # Visualized as is, this results in x-axis = SSC and y-axis = FSC with the
-#     # origin at the top left corner, which is not what we're used to. Transpose
-#     # the histogram array to fix the axes and set origin to 'lower' to have
-#     # (0,0) at the bottom left corner instead of the top left corner.
-#     img = cur_ax.imshow(H.T,origin='lower',interpolation='none')
+    # Calculate histogram
+    H, xedges, yedges = numpy.histogram2d(data_plot[:,0],
+                                        data_plot[:,1],
+                                        bins = bins)
+    # H needs to be rotated and flipped
+    H = numpy.rot90(H)
+    H = numpy.flipud(H)
 
-#     if colorbar:
-#         plt.colorbar(img, ax=cur_ax, label='Counts')
+    # Normalize
+    if normed:
+        H = H/numpy.sum(H)
 
-#     if not (gate is None):
-#         if isinstance(gate, list):
-#             for cntr in gate:
-#                 cur_ax.plot(cntr[:,0], cntr[:,1], 'r')
-#         else:
-#             cur_ax.plot(gate[:,0], gate[:,1], 'r')
+    # Smooth    
+    if smooth:
+        bH = scipy.ndimage.filters.gaussian_filter(
+            H,
+            sigma=sigma,
+            order=0,
+            mode='constant',
+            cval=0.0)
+    else:
+        bH = H
 
-#     if not (axes_limits is None):
-#         cur_ax.axis(axes_limits)
-    
-#     if not (xlabel is None):
-#         cur_ax.set_xlabel(xlabel)
-    
-#     if not (ylabel is None):
-#         cur_ax.set_ylabel(ylabel)
+    # Plotting mode
+    if mode == 'scatter':
+        Hind = numpy.ravel(H)
+        xv, yv = numpy.meshgrid(xedges[:-1], yedges[:-1])
+        x = numpy.ravel(xv)[Hind != 0]
+        y = numpy.ravel(yv)[Hind != 0]
+        z = numpy.ravel(bH)[Hind != 0]
+        pyplot.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
+    elif mode == 'mesh':
+        pyplot.pcolormesh(xedges, yedges, bH, **kwargs)
+    else:
+        raise ValueError("Mode {} not recognized.".format(mode))
 
-#     if not (title is None):
-#         cur_ax.set_title(str(title))
+    # Plot
+    if colorbar:
+        cbar = pyplot.colorbar()
+        if normed:
+            cbar.ax.set_ylabel('Probability')
+        else:
+            cbar.ax.set_ylabel('Counts')
+    # Reset axis and log if necessary
+    if log:
+        pyplot.gca().set_xscale('log')
+        pyplot.gca().set_yscale('log')
+        a = list(pyplot.axis())
+        a[1] = 10**(numpy.ceil(numpy.log10(xedges[-1])))
+        a[3] = 10**(numpy.ceil(numpy.log10(yedges[-1])))
+        pyplot.axis(a)
+    else:
+        a = list(pyplot.axis())
+        a[0] = numpy.ceil(xedges[0])
+        a[1] = numpy.ceil(xedges[-1])
+        a[2] = numpy.ceil(yedges[0])
+        a[3] = numpy.ceil(yedges[-1])
+        pyplot.axis(a)
+    # pyplot.grid(True)
+    pyplot.xlabel(data_plot.channel_info[0]['label'])
+    pyplot.ylabel(data_plot.channel_info[1]['label'])
 
-#     if ax is None:
-#         plt.show()
-
-# def density2d(data,
-#               bins=np.arange(1025)-0.5,
-#               sigma=10.0,
-#               axes_limits=[0,1023,0,1023],
-#               xlabel='FSC',
-#               ylabel='SSC',
-#               title=None,
-#               colorbar=True,
-#               gate=None,
-#               ax=None):
-#     '''Plot 2D histogram which has been blurred with a 2D Gaussian kernel and
-#     normalized to a valid probability mass function.
-
-#     data        - NxD numpy array (only first 2 dimensions [columns] are used)
-#     bins        - bins argument to np.histogram2d (default=np.arange(1025)-0.5)
-#     sigma       - standard deviation of Gaussian kernel
-#     axes_limits - axis boundaries
-#     xlabel      - string to label x-axis
-#     ylabel      - string to label y-axis
-#     title       - string to label plot
-#     colorbar    - show colorbar
-#     gate        - Mx2 numpy array or list of Mx2 numpy arrays specifying red
-#                   line(s) on plot
-#     ax          - matplotlib axis object'''
-
-#     if len(data.shape) < 2:
-#         raise ValueError('must specify at least 2 dimensions')
-        
-#     # Make 2D histogram
-#     H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=bins)
-
-#     # Blur 2D histogram
-#     bH = scipy.ndimage.filters.gaussian_filter(
-#         H,
-#         sigma=sigma,
-#         order=0,
-#         mode='constant',
-#         cval=0.0,
-#         truncate=6.0)
-
-#     # Normalize filtered histogram to make it a valid probability mass function
-#     D = bH / np.sum(bH)
-
-#     # Plot results
-#     if ax is None:
-#         fig = plt.figure()
-#         cur_ax = fig.add_subplot(1,1,1)
-#     else:
-#         cur_ax = ax
-
-#     # numpy histograms are organized such that the 1st dimension (eg. FSC) =
-#     # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
-#     # Visualized as is, this results in x-axis = SSC and y-axis = FSC with the
-#     # origin at the top left corner, which is not what we're used to. Transpose
-#     # the density array to fix the axes and set origin to 'lower' to have (0,0)
-#     # at the bottom left corner instead of the top left corner.
-#     img = cur_ax.imshow(D.T,origin='lower',interpolation='none')
-
-#     if colorbar:
-#         plt.colorbar(img, ax=cur_ax, label='Probability')
-
-#     if not (gate is None):
-#         if isinstance(gate, list):
-#             for cntr in gate:
-#                 cur_ax.plot(cntr[:,0], cntr[:,1], 'r')
-#         else:
-#             cur_ax.plot(gate[:,0], gate[:,1], 'r')
-
-#     if not (axes_limits is None):
-#         cur_ax.axis(axes_limits)
-    
-#     if not (xlabel is None):
-#         cur_ax.set_xlabel(xlabel)
-    
-#     if not (ylabel is None):
-#         cur_ax.set_ylabel(ylabel)
-
-#     if not (title is None):
-#         cur_ax.set_title(str(title))
-
-#     if ax is None:
-#         plt.show()
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
