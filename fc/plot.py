@@ -12,9 +12,11 @@
 
 import os
 import csv
+
 import numpy
-from matplotlib import pyplot
 import scipy.ndimage.filters
+from matplotlib import pyplot
+from mpl_toolkits.mplot3d import Axes3D
 
 def load_colormap(name, number):
     ''' Get colormap.
@@ -45,7 +47,21 @@ def load_colormap(name, number):
             end = numpy.sum(range(number + 1)) - 3
             cm = cm_raw[start:end]
         return cm
-
+    elif name == 'diverging':
+        # load raw csv data
+        cm_raw = []
+        with open(__location__ + '/diverging.csv', 'rb') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                cm_raw.append((float(row[0])/255,
+                                float(row[1])/255, 
+                                float(row[2])/255))
+        # Get appropriate colormap for number of elements
+        if number <= 6:
+            cm = cm_raw[:number]
+        else:
+            cm = [cm_raw[i%6] for i in range(number)]
+        return cm
     else:
         raise ValueError("Colormap {} not recognized.".format(name))
 
@@ -352,6 +368,60 @@ def scatter3d(data_list,
     ax_3d.yaxis.set_ticklabels([])
     ax_3d.zaxis.set_ticklabels([])
 
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
+
+def mef_std_crv(peaks_ch, 
+                peaks_mef,
+                sc_beads,
+                sc_abs,
+                xlim = (0., 1023.),
+                ylim = (1, 1e8),
+                xlabel = None,
+                ylabel = None,
+                savefig = None,
+                **kwargs):
+    '''Plot the standard curves of a beads model.
+
+    peaks_ch   - experimental values of peaks in channel space.
+    peaks_mef  - theoretical MEF values of peaks
+    sc_beads   - standard curve of the beads model.
+    sc_abs     - standard curve in absolute MEF units.
+    xlim       - limits on x axis
+    ylim       - limits on y axis
+    xlabel     - label for x axis
+    ylabel     - label for y axis
+    savefig    - if not None, it specifies the name of the file to save the 
+                figure to.
+    **kwargs   - passed directly to matploblib's plot.
+    '''    
+
+    # Get colors
+    colors = load_colormap('diverging', 3)
+    # Generate x data
+    xdata = numpy.linspace(xlim[0],xlim[1],200)
+
+    # Plot
+    pyplot.plot(peaks_ch, peaks_mef, 'o', 
+        label = 'Beads', color = colors[0])
+    pyplot.plot(xdata, sc_beads(xdata), 
+        label = 'Beads model', color = colors[1])
+    pyplot.plot(xdata, sc_abs(xdata), 
+        label = 'Standard curve', color = colors[2])
+    pyplot.yscale('log')
+    pyplot.xlim(xlim)
+    pyplot.ylim(ylim)
+    pyplot.grid(True)
+    if xlabel:
+        pyplot.xlabel(xlabel)
+    if xlabel:
+        pyplot.ylabel(ylabel)
+    pyplot.legend(loc = 'lower right')
+    
+    # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
