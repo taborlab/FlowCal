@@ -4,15 +4,19 @@
 #
 # All transformations should be of the following form:
 #
-#     data_out = transform(data_in, parameters)
+#     data_t = transform(data, channels, params):
 #
-# where DATA_IN and DATA_OUT are NxD numpy arrays describing N cytometry events
-# observing D data dimensions, and PARAMETERS are transformation specific
-# parameters.
+# where 'data' and 'data_t' are NxD FCSData object or numpy arrays, representing
+# N events with D channels, 'channels' indicate the channels in which to apply
+# the transformation, and params are transformation-specific parameters.
+# Each transformation function can apply its own restrictions or default on 
+# 'channels'.
+# If data is an FCSData object, transform should rescale 
+# data.channel_info['range'] if necessary.
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 6/30/2015
+# Date: 7/7/2015
 #
 # Requires:
 #   * numpy
@@ -25,18 +29,47 @@ import scipy.ndimage.filters
 from sklearn.cluster import DBSCAN 
 from scipy.optimize import minimize
 
-def exponentiate(data):
+def exponentiate(data, channels = None):
     '''Exponentiate data using the following transformation:
         y = 10^(x/256)
-    This transformation spaces out the data across 4 logs from 1 to 10,000.
-    This is also the transformation typically applied by flow cytometer
-    software.
+    This transformation spaces out 10-bit data across 4 logs from 1 to 10,000.
+    This rescales the fluorecence units to those observed in most flow 
+    cytometry aquisition software, if log scale has been used.
 
-    data    - NxD numpy array (row=event)
+    data     - NxD FCSData object or numpy array
+    channels - channels in which to perform the transformation. If channels is
+                None, perform transformation in all channels.
 
-    returns - NxD numpy array'''
-    
-    return np.power(10, (data.astype(float)/256.0))
+    returns  - NxD FCSData object or numpy array. '''
+
+    # Define actual transformation
+    apply_transform = lambda x: 10**(x/256.0)
+
+    # Copy data array
+    data_t = data.copy().astype(np.float64)
+    # Default: all channels
+    if channels is None:
+        channels = range(data.shape[1])
+    if not hasattr(channels, '__iter__'):
+        channels = [channels]
+    # Apply transformation
+    data_t[:,channels] = apply_transform(data_t[:,channels])
+    # Apply transformation to range
+    if hasattr(data_t, 'channel_info'):
+        if hasattr(channels, '__iter__'):
+            for channel in channels:
+                if isinstance(channel, basestring):
+                    ch = data_t.name_to_index(channel)
+                else:
+                    ch = channel
+                if 'range' in data_t.channel_info[ch]:
+                    r = data_t.channel_info[ch]['range']
+                    r[0] = apply_transform(r[0])
+                    r[1] = apply_transform(r[1])
+                    data_t.channel_info[ch]['range'] = r
+
+    return data_t
+
 
 def _clustering_dbscan(data, eps = 20.0, min_samples = 40):
     '''

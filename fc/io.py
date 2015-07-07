@@ -9,6 +9,7 @@
 # Requires:
 #   * numpy
 
+from copy import deepcopy
 import numpy as np
 
 class TaborLabFCSData(np.ndarray):
@@ -25,7 +26,7 @@ class TaborLabFCSData(np.ndarray):
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
-            * 'range' [min, max, steps]
+            * 'range': [min, max, steps]
             * 'pmt_voltage' (i.e. gain)
             * '100x_lin_gain'
             * 'amplifier' (values = 'lin' or 'log')
@@ -88,7 +89,7 @@ class TaborLabFCSData(np.ndarray):
         _version = f.read(10)
 
         if _version != 'FCS2.0    ':
-            raise TypeError('incorrection FCS file version')
+            raise TypeError('Incorrect FCS file version.')
         else:
             _version = _version.strip()
 
@@ -290,8 +291,10 @@ class TaborLabFCSData(np.ndarray):
 
         # Otherwise, copy attributes from "parent"
         self.infile = getattr(obj, 'infile', None)
-        self.text = getattr(obj, 'text', None)
-        self.channel_info = getattr(obj, 'channel_info', None)
+        if hasattr(obj, 'text'):
+            self.text = deepcopy(obj.text)
+        if hasattr(obj, 'channel_info'):
+            self.channel_info = deepcopy(obj.channel_info)
 
     def __array_wrap__(self, out_arr, context = None):
         '''Method called after numpy ufuncs.'''
