@@ -4,19 +4,19 @@
 #
 # All gate functions should be of one of the following forms:
 #
-#     mask = gate(data, parameters)
-#     mask, contour = gate(data, parameters)
+#     gated = gate(data, channels, parameters)
+#     gated, contour = gate(data, channels, parameters)
 #
-# where DATA is a NxD numpy array describing N cytometry events observing D
-# data dimensions, PARAMETERS are gate specific parameters, MASK is a
-# Boolean numpy array of length N indicating which events were gated out
-# (False) and which events were kept (True) such that DATA[MASK,:] represents
-# the gated data set, and CONTOUR is an optional 2D numpy array of x-y
-# coordinates tracing out a line which represents the gate (useful for
-# plotting).
+# where data is a NxD numpy array describing N cytometry events observing D
+# data dimensions (channels), channels specify the channels in which to perform
+# gating, parameters are gate-specific parameters, and gated is the gated 
+# result. If channels is not specified, gating should be performed on all 
+# channels. Contour is an optional 2D numpy array of x-y coordinates tracing 
+# out a line which represents the gate (useful for plotting).
 #
-# Author: John T. Sexton (john.t.sexton@rice.edu)
-# Date: 6/28/2015
+# Authors: John T. Sexton (john.t.sexton@rice.edu)
+#          Sebastian M. Castillo-Hair (smc9@rice.edu)
+# Date: 7/5/2015
 #
 # Requires:
 #   * numpy
@@ -26,180 +26,90 @@
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
-
-def high_low(data, high=(2**10)-1, low=0):
-    '''Gate out high and low values across all specified dimensions.
-
-    data    - NxD numpy array (row=event)
-    high    - high value to discard
-    low     - low value to discard
-
-    returns - Boolean numpy array of length N'''
     
-    return ~np.any((data==high)|(data==low),axis=1)
+def start_end(data, num_start=250, num_end=100):
+    '''Gate out num_start first and num_end last events collected.
 
-def extrema(data, extrema=[(2**10)-1, 0]):
-    '''Gate out list of extreme values across all specified dimensions.
-
-    data    - NxD numpy array (row=event)
-    extrema - list of values to discard
-
-    returns - Boolean numpy array of length N'''
-    
-    mask = np.zeros(shape=data.shape,dtype=bool)
-    for e in extrema:
-        mask |= data==e
-    return ~mask.any(axis=1)
-    
-def start_stop(data, num_start=250, num_stop=100):
-    '''Gate out first and last events collected.
-
-    data      - NxD numpy array (row=event)
+    data      - NxD FCSData object or numpy array
     num_start - number of points to discard from the beginning of data
-                (assumes data is in chronological order)
-    num_stop  - number of points to discard from the end of data (assumes data
-                is in chronological order)
+    num_end   - number of points to discard from the end of data
 
-    returns   - Boolean numpy array of length N'''
+    returns  - Gated MxD FCSData object or numpy array'''
     
-    if data.shape[0] < (num_start + num_stop):
-        raise ValueError('# events < (num_start + num_stop)')
+    if data.shape[0] < (num_start + num_end):
+        raise ValueError('Number of events to discard greater than total' + 
+            ' number.')
     
     mask = np.ones(shape=data.shape[0],dtype=bool)
     mask[:num_start] = False
-    mask[-num_stop:] = False
+    mask[-num_end:] = False
+    gated_data = data[mask]
     
-    return mask
+    return gated_data
 
-def circular_median(data, gate_fraction=0.65):
-    '''Gate out all events but those with (x,y) values closest to the 2D (x,y)
-    median.
+def high_low(data, channels=None, high=(2**10)-1, low=0):
+    '''Gate out high and low values across all specified dimensions.
 
-    data          - NxD numpy array (only first 2 dimensions [columns] are
-                    used)
-    gate_fraction - fraction of data points to keep
+    For every i, if any value of data[i,channels] is less or equal than low, 
+    or greater or equal than high, it will not be included in the final result.
 
-    returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
-                    coordinates of gate contour'''
+    data     - NxD FCSData object or numpy array
+    channels - channels on which to perform gating
+    high     - high value to discard
+    low      - low value to discard
 
-    if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions')
+    returns  - Gated MxD FCSData object or numpy array'''
+    
+    # Extract channels in which to gate
+    if channels is None:
+        data_ch = data
+    else:
+        data_ch = data[:,channels]
+        if data_ch.ndim == 1:
+            data_ch = data_ch.reshape((-1,1))
 
-    if data.shape[0] < 2:
-        raise ValueError('data must have more than 1 event')
+    # Gate
+    mask = np.all((data_ch < high) & (data_ch > low), axis=1)
+    gated_data = data[mask]
+
+    return gated_data
+
+def density2d(data, channels = [0,1], bins = np.arange(1025)-0.5, 
+    sigma = 10.0, gate_fraction = 0.65):
+    '''Gate that preserves the points in the region with highest density.
+
+    First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
+    normalize the resulting blurred histogram to make it a valid probability 
+    mass function. Finally, gate out all but the points in the densest region
+    (points with the largest probability).
+
+    data            - NxD FCSData object or numpy array
+    channels        - channels on which to perform gating
+    bins            - bins argument to np.histogram2d
+                      (default=np.arange(1025)-0.5)
+    sigma           - standard deviation for Gaussian kernel
+    gate_fraction   - fraction of data points to keep
+
+    returns         - Gated MxD FCSData object or numpy array, 
+                    - list of 2D numpy arrays of (x,y) coordinates of gate 
+                        contour(s)
+    '''
+
+    # Extract channels in which to gate
+    assert len(channels) == 2, '2 channels should be specified.'
+    data_ch = data[:,channels]
+    if data_ch.ndim == 1:
+        data_ch = data_ch.reshape((-1,1))
+
+    # Check dimensions
+    assert data_ch.ndim > 1, 'Data should have at least 2 dimensions'
+    assert data_ch.shape[0] > 1, 'Data must have more than 1 event'
 
     # Determine number of points to keep
-    n = int(np.ceil(gate_fraction*float(data.shape[0])))
-
-    # Calculate distance to median point
-    m = np.median(data[:,0:2],0)
-    d = np.sqrt(np.sum(np.square(m-data[:,0:2]),1))
-
-    # Select closest points
-    idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
-    mask = np.zeros(shape=data.shape[0],dtype=bool)
-    mask[idx[:n]] = True
-
-    # Last point defines boundary of circle which can serve as gate contour
-    theta = np.arange(0,2*np.pi,2*np.pi/100)
-    r = d[idx[n-1]]
-    x = [m[0] + (r*np.cos(t)) for t in theta]
-    y = [m[1] + (r*np.sin(t)) for t in theta]
-
-    # Close the circle
-    x.append(x[0])
-    y.append(y[0])
-
-    return mask, np.array([x,y]).T
-
-def whitening2d(data, gate_fraction=0.65):
-    '''Use whitening transformation to transform (x,y) values into a space
-    where median-based covariance is the identity matrix and gate out all
-    events but those closest to the transformed 2D (x,y) median.
-
-    data          - NxD numpy array (only first 2 dimensions [columns] are
-                    used)
-    gate_fraction - fraction of data points to keep
-
-    returns       - Boolean numpy array of length N, 2D numpy array of (x,y)
-                    coordinates of gate contour'''
-
-    if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions')
-
-    if data.shape[0] < 2:
-        raise ValueError('data must have more than 1 event')
-
-    # Determine number of points to keep
-    n = int(np.ceil(gate_fraction*float(data.shape[0])))
-
-    # Calculate median-based covariance matrix (measure mean squared distance
-    # to median instead of mean)
-    m = np.median(data[:,0:2],0)
-    X = m-data[:,0:2]
-    S = X.T.dot(X) / float(data.shape[0])
-
-    # Calculate eigenvectors
-    w,v = np.linalg.eig(S)
-
-    # Transform median-centered data into new eigenspace. This is equivalent
-    # to "whitening" the data; scales data to data with median-based
-    # covariance of the indentity matrix.
-    transformed_data = X.dot(v).dot(np.diag(1.0/np.sqrt(w)))
-
-    # Calculate distance to median (which is the origin in the new eigenspace)
-    d = np.sqrt(np.sum(np.square(transformed_data),1))
-
-    # Select closest points
-    idx = sorted(xrange(d.shape[0]), key=lambda k: d[k])
-    mask = np.zeros(shape=data.shape[0],dtype=bool)
-    mask[idx[:n]] = True
-    
-    # Last point defines boundary of circle in eigenspace which can be
-    # transformed back into original data space and serve as gate contour
-    theta = np.arange(0,2*np.pi,2*np.pi/100)
-    r = d[idx[n-1]]
-    x = [r*np.cos(t) for t in theta]
-    y = [r*np.sin(t) for t in theta]
-
-    # Close the circle
-    x.append(x[0])
-    y.append(y[0])
-    
-    c = np.array([x,y]).T
-    
-    # Transform circle back into original space and add the median.
-    # Note: inv(v) = v.T since columns are orthonormal
-    cntr = m + c.dot(np.diag(np.sqrt(w))).dot(v.T)
-
-    return mask, cntr
-
-def density2d(data, bins=np.arange(1025)-0.5, sigma=10.0, gate_fraction=0.65):
-    '''Blur 2D histogram using a 2D Gaussian filter, normalize the resulting
-    blurred histogram to make it a valid probability mass function, and gate
-    out all but the "densest" points (points with the largest probability).
-
-    data          - NxD numpy array (only first 2 dimensions [columns] are
-                    used)
-    bins          - bins argument to np.histogram2d
-                    (default=np.arange(1025)-0.5)
-    sigma         - standard deviation for Gaussian kernel
-    gate_fraction - fraction of data points to keep
-
-    returns       - Boolean numpy array of length N, list of 2D numpy arrays
-                    of (x,y) coordinates of gate contour(s)'''
-
-    if len(data.shape) < 2:
-        raise ValueError('must specify at least 2 dimensions')
-
-    if data.shape[0] < 2:
-        raise ValueError('data must have more than 1 event')
-
-    # Determine number of points to keep
-    n = int(np.ceil(gate_fraction*float(data.shape[0])))
+    n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
 
     # Make 2D histogram
-    H,xe,ye = np.histogram2d(data[:,0], data[:,1], bins=bins)
+    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
     # Blur 2D histogram
     bH = scipy.ndimage.filters.gaussian_filter(
@@ -222,17 +132,21 @@ def density2d(data, bins=np.arange(1025)-0.5, sigma=10.0, gate_fraction=0.65):
     # Find minimum number of accepted (x,y) points needed to reach specified
     # number of data points
     csvH = np.cumsum(svH)
-    Nidx = np.nonzero(csvH>=n)[0][0]    # we want to include this index
+    Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
     # Convert accepted (x,y) linear indices into 2D indices into the histogram
     # matrix
-    fsc,ssc = np.unravel_index(sidx[:(Nidx+1)], H.shape)
-    accepted_points = set(zip(fsc,ssc))
-    mask = np.array([tuple(event) in accepted_points for event in data[:,0:2]])
+    i0,i1 = np.unravel_index(sidx[:(Nidx+1)], H.shape)
+    accepted = set(zip(i0,i1))
+    # Generate mask and gate
+    mask = np.array([tuple(event) in accepted for event in data_ch[:,0:2]])
+    gated_data = data[mask]
 
     # Use matplotlib contour plotter (implemented in C) to generate contour(s)
     # at the probability associated with the last accepted point.
-    x,y = np.mgrid[0:1024,0:1024]
+    s_ind = np.ceil(bins[0])
+    e_ind = np.ceil(bins[-1])
+    x,y = np.mgrid[s_ind:e_ind, s_ind:e_ind]
     mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
     tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
@@ -249,8 +163,8 @@ def density2d(data, bins=np.arange(1025)-0.5, sigma=10.0, gate_fraction=0.65):
 
         # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
         if not np.all((codes==1)|(codes==2)):
-            raise Exception('contour error: unrecognized path code')
+            raise Exception('Contour error: unrecognized path code')
 
         cntr.append(vertices)
 
-    return mask, cntr
+    return gated_data, cntr

@@ -2,7 +2,7 @@
 #
 # test_io.py - Unit tests for io module
 #
-# Author: Sebastian M. Castillo-Hair
+# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
 # Date: 7/1/2015
 #
 # Requires:
@@ -29,6 +29,22 @@ class TestTaborLabFCSDataLoading(unittest.TestCase):
         self.assertEqual(d.shape, (20949, 6))
         self.assertEqual(len(d.channel_info), 6)
         self.assertEqual(d.channels, channel_names)
+
+class TestTaborLabFCSAttributes(unittest.TestCase):
+    def setUp(self):
+        self.d = fc.io.TaborLabFCSData(filename)
+        self.n_samples = self.d.shape[0]
+
+    def test_range(self):
+        '''
+        Testing proper loading of range information
+        '''
+        self.assertEqual(self.d.channel_info[0]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[1]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[2]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
+
 
 class TestTaborLabFCSDataSlicing(unittest.TestCase):
     def setUp(self):
