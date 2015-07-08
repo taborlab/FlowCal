@@ -13,6 +13,7 @@
 # 'channels'.
 # If data is an FCSData object, transform should rescale 
 # data.channel_info['range'] if necessary.
+# 
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
@@ -29,6 +30,53 @@ import scipy.ndimage.filters
 from sklearn.cluster import DBSCAN 
 from scipy.optimize import minimize
 
+
+def transform(data, channels, transform_fxn, def_channels = None):
+    '''Generic transformation function, to be used by other functions.
+
+    This function performs basic checks on channels and data. Then it applies
+    transform_fxn to the specified channels. Finally, it rescales range in 
+    data.channel_info if necessary.
+
+    data            - NxD FCSData object or numpy array
+    channels        - channels in which to perform the transformation. If 
+                        channels is None, use def_channels.
+    def_channels    - default set of channels in which to perform the 
+                        transformations. If None, use all channels.
+    transform_fxn   - Function that performs the actual transformation.
+
+    returns         - NxD FCSData object or numpy array.
+    '''
+    # Copy data array
+    data_t = data.copy().astype(np.float64)
+    # Default
+    if channels is None:
+        if def_channels is None:
+            channels = range(data.shape[1])
+        else:
+            channels = def_channels
+    # Convert channels to iterable
+    if not hasattr(channels, '__iter__'):
+        channels = [channels]
+    # Apply transformation
+    data_t[:,channels] = transform_fxn(data_t[:,channels])
+    # Apply transformation to range
+    if hasattr(data_t, 'channel_info'):
+        if hasattr(channels, '__iter__'):
+            for channel in channels:
+                if isinstance(channel, basestring):
+                    ch = data_t.name_to_index(channel)
+                else:
+                    ch = channel
+                if 'range' in data_t.channel_info[ch]:
+                    r = data_t.channel_info[ch]['range']
+                    r[0] = transform_fxn(r[0])
+                    r[1] = transform_fxn(r[1])
+                    data_t.channel_info[ch]['range'] = r
+
+    return data_t
+
+
 def exponentiate(data, channels = None):
     '''Exponentiate data using the following transformation:
         y = 10^(x/256)
@@ -42,33 +90,8 @@ def exponentiate(data, channels = None):
 
     returns  - NxD FCSData object or numpy array. '''
 
-    # Define actual transformation
-    apply_transform = lambda x: 10**(x/256.0)
-
-    # Copy data array
-    data_t = data.copy().astype(np.float64)
-    # Default: all channels
-    if channels is None:
-        channels = range(data.shape[1])
-    if not hasattr(channels, '__iter__'):
-        channels = [channels]
-    # Apply transformation
-    data_t[:,channels] = apply_transform(data_t[:,channels])
-    # Apply transformation to range
-    if hasattr(data_t, 'channel_info'):
-        if hasattr(channels, '__iter__'):
-            for channel in channels:
-                if isinstance(channel, basestring):
-                    ch = data_t.name_to_index(channel)
-                else:
-                    ch = channel
-                if 'range' in data_t.channel_info[ch]:
-                    r = data_t.channel_info[ch]['range']
-                    r[0] = apply_transform(r[0])
-                    r[1] = apply_transform(r[1])
-                    data_t.channel_info[ch]['range'] = r
-
-    return data_t
+    def transform_fxn(x): return 10**(x/256.0)
+    return transform(data, channels, transform_fxn)
 
 
 def _clustering_dbscan(data, eps = 20.0, min_samples = 40):
