@@ -119,5 +119,15 @@ class TestExponentiateFCS(unittest.TestCase):
               [1.,10**(1023/256.),1024]]
         self.assertEqual(cit, co)
 
+    def test_transform_channels_str(self):
+        dt = fc.transform.exponentiate(self.d, channels = ['SSC-H', 
+                                                        'FL1-H', 'FL3-H'])
+        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        numpy.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
+        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        numpy.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
+        numpy.testing.assert_array_equal(dt[:,5], self.d[:,5])
+
 if __name__ == '__main__':
     unittest.main()

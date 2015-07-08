@@ -403,3 +403,41 @@ class TaborLabFCSData(np.ndarray):
             new_arr = np.ndarray.__getitem__(self, key)
 
         return new_arr
+
+    def __setitem__(self, key, item):
+        '''Overriden __setitem__ function.
+
+        This function allows for channel indexing by channel name.
+        '''
+        # If key is a tuple with no Nones, decompose and interpret key[1] as 
+        # the channel. If it contains Nones, pass directly to 
+        # ndarray.__setitem__().
+        if isinstance(key, tuple) and len(key) == 2 \
+            and key[0] is not None and key[1] is not None:
+            # Separate key components
+            key_sample = key[0]
+            key_channel = key[1]
+
+            # Check if key_channel is a string, list/tuple, or other
+            if isinstance(key_channel, basestring):
+                key_channel = self.name_to_index(key_channel)
+                key_all = (key_sample, key_channel)
+
+            elif hasattr(key_channel, '__iter__'):
+                # Make mutable
+                key_channel = list(key_channel)  
+                # Change any strings into channel indices
+                for i, j in enumerate(key_channel):
+                    if isinstance(j, basestring):
+                        key_channel[i] = self.name_to_index(j)
+                key_all = (key_sample, key_channel)
+
+            else:
+                key_all = (key_sample, key_channel)
+
+            # Write into array
+            np.ndarray.__setitem__(self, key_all, item)
+
+        else:
+            # Get sliced array using native getitem function.
+            np.ndarray.__setitem__(self, key, item)
