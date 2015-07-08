@@ -45,6 +45,12 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
         self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
 
+    def test_str(self):
+        '''
+        Testing string representation.
+        '''
+        self.assertEqual(str(self.d), 'Data.001')
+
 
 class TestTaborLabFCSDataSlicing(unittest.TestCase):
     def setUp(self):

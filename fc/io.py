@@ -9,7 +9,9 @@
 # Requires:
 #   * numpy
 
+import os
 from copy import deepcopy
+
 import numpy as np
 
 class TaborLabFCSData(np.ndarray):
@@ -304,7 +306,8 @@ class TaborLabFCSData(np.ndarray):
             return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __str__(self):
-        return str(self.infile)
+        '''Return name of fcs file.'''
+        return os.path.basename(str(self.infile)) 
 
     @property
     def channels(self):
