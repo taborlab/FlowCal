@@ -122,11 +122,13 @@ def hist1d(data_list,
         if bins is None:
             r = y.channel_info[0]['range']
             if log == True:
+                dr = (numpy.log10(r[1]) - numpy.log10(r[0]))/float(r[2] - 1)
                 bins = numpy.logspace(numpy.log10(r[0]), 
-                                        numpy.log10(r[1]), 
-                                        (r[2] + 1)/div)
+                                        numpy.log10(r[1]) + dr, 
+                                        (r[2]/div + 1))
             else:
-                bins = numpy.linspace(r[0], r[1] + 1, (r[2] + 1)/div)
+                dr = (r[1] - r[0])/float(r[2] - 1)
+                bins = numpy.linspace(r[0], r[1] + dr, (r[2]/div + 1))
         # Check for properties specified as lists.
         kwargsi = kwargs.copy()
         if 'edgecolor' in kwargsi:
@@ -200,17 +202,21 @@ def density2d(data,
         rx = data_plot.channel_info[0]['range']
         ry = data_plot.channel_info[1]['range']
         if log == True:
+            drx = (numpy.log10(rx[1]) - numpy.log10(rx[0]))/float(rx[2] - 1)
+            dry = (numpy.log10(ry[1]) - numpy.log10(ry[0]))/float(ry[2] - 1)
             bins = numpy.array([numpy.logspace(numpy.log10(rx[0]), 
-                                            numpy.log10(rx[1]), 
-                                            (rx[2] + 1)/div),
+                                            numpy.log10(rx[1]) + drx, 
+                                            (rx[2]/div + 1)),
                                 numpy.logspace(numpy.log10(ry[0]), 
-                                            numpy.log10(ry[1]), 
-                                            (ry[2] + 1)/div),
+                                            numpy.log10(ry[1]) + dry, 
+                                            (ry[2]/div + 1)),
                                 ])
         else:
+            drx = (rx[1] - rx[0])/float(rx[2] - 1)
+            dry = (ry[1] - ry[0])/float(ry[2] - 1)
             bins = numpy.array([
-                numpy.linspace(rx[0], rx[1] + 1, (rx[2] + 1)/div),
-                numpy.linspace(ry[0], ry[1] + 1, (ry[2] + 1)/div),
+                numpy.linspace(rx[0], rx[1] + drx, (rx[2]/div + 1)),
+                numpy.linspace(ry[0], ry[1] + dry, (ry[2]/div + 1)),
                 ])
 
     # Calculate histogram
@@ -261,7 +267,9 @@ def density2d(data,
         pyplot.gca().set_xscale('log')
         pyplot.gca().set_yscale('log')
         a = list(pyplot.axis())
+        a[0] = 10**(numpy.ceil(numpy.log10(xedges[0])))
         a[1] = 10**(numpy.ceil(numpy.log10(xedges[-1])))
+        a[2] = 10**(numpy.ceil(numpy.log10(yedges[0])))
         a[3] = 10**(numpy.ceil(numpy.log10(yedges[-1])))
         pyplot.axis(a)
     else:
@@ -283,7 +291,6 @@ def density2d(data,
 
 def scatter3d(data_list, 
                 channels = [0,1,2], 
-                log = False, 
                 savefig = None,
                 **kwargs):
 
@@ -291,7 +298,6 @@ def scatter3d(data_list,
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channels   - channels to use on the data objects.
-    log        - whether the axes should be in log units.
     savefig    - if not None, it specifies the name of the file to save the 
                 figure to.
     **kwargs   - passed directly to matploblib's functions. 'color' can be 
