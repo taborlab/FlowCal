@@ -277,6 +277,8 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
     if plot:
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
+    # Extract beads file name
+    beads_file_name = str(beads_data)
 
     # 1. Slice beads_data and cluster
     data_cluster = beads_data[:,cluster_channels]
@@ -303,7 +305,8 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
             pyplot.figure(figsize = (8,6))
             fc.plot.scatter3d(data_plot, 
                     channels = cluster_channels, 
-                    savefig = '{}/cluster.png'.format(plot_dir))
+                    savefig = '{}/{}_cluster.png'.format(plot_dir,
+                                                    beads_file_name))
 
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
@@ -344,7 +347,8 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
                 ylim = pyplot.ylim()
                 pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
             pyplot.tight_layout()
-            pyplot.savefig('{}/peaks_{}.png'.format(plot_dir, mef_channel),
+            pyplot.savefig('{}/{}_peaks_{}.png'.format(plot_dir,
+                                    beads_file_name, mef_channel),
                 dpi = 300)
             pyplot.close()
 
@@ -446,8 +450,9 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
                     sc,
                     xlabel = xlabel,
                     ylabel = 'MEF',
-                    savefig = '{}/std_crv_{}.png'.format(plot_dir, 
-                            mef_channel))
+                    savefig = '{}/{}_std_crv_{}.png'.format(plot_dir,
+                                                            beads_file_name, 
+                                                            mef_channel))
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
