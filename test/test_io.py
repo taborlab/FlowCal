@@ -45,6 +45,12 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
         self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
 
+    def test_str(self):
+        '''
+        Testing string representation.
+        '''
+        self.assertEqual(str(self.d), 'Data.001')
+
 
 class TestTaborLabFCSDataSlicing(unittest.TestCase):
     def setUp(self):
@@ -158,6 +164,34 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         '''
         ds = self.d[:,None]
         self.assertIsInstance(ds, np.ndarray)
+
+    def test_2d_slicing_assignment(self):
+        '''
+        Test assignment to TaborLabFCSData using slicing
+        '''
+        ds = self.d.copy()
+        ds[:,[1,2]] = 5
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds.channels, channel_names)
+        np.testing.assert_array_equal(ds[:,0], self.d[:,0])
+        np.testing.assert_array_equal(ds[:,1], 5)
+        np.testing.assert_array_equal(ds[:,2], 5)
+        np.testing.assert_array_equal(ds[:,3], self.d[:,3])
+        np.testing.assert_array_equal(ds[:,4], self.d[:,4])
+
+    def test_2d_slicing_assignment_string(self):
+        '''
+        Test assignment to TaborLabFCSData using slicing with channel names
+        '''
+        ds = self.d.copy()
+        ds[:,['SSC-H', 'FL1-H']] = 5
+        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertEqual(ds.channels, channel_names)
+        np.testing.assert_array_equal(ds[:,0], self.d[:,0])
+        np.testing.assert_array_equal(ds[:,1], 5)
+        np.testing.assert_array_equal(ds[:,2], 5)
+        np.testing.assert_array_equal(ds[:,3], self.d[:,3])
+        np.testing.assert_array_equal(ds[:,4], self.d[:,4])
 
 
 class TestTaborLabFCSDataOperations(unittest.TestCase):

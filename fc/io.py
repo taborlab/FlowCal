@@ -9,6 +9,9 @@
 # Requires:
 #   * numpy
 
+import os
+from copy import deepcopy
+
 import numpy as np
 
 class TaborLabFCSData(np.ndarray):
@@ -25,7 +28,7 @@ class TaborLabFCSData(np.ndarray):
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
-            * 'range' [min, max, steps]
+            * 'range': [min, max, steps]
             * 'pmt_voltage' (i.e. gain)
             * '100x_lin_gain'
             * 'amplifier' (values = 'lin' or 'log')
@@ -88,7 +91,7 @@ class TaborLabFCSData(np.ndarray):
         _version = f.read(10)
 
         if _version != 'FCS2.0    ':
-            raise TypeError('incorrection FCS file version')
+            raise TypeError('Incorrect FCS file version.')
         else:
             _version = _version.strip()
 
@@ -290,8 +293,10 @@ class TaborLabFCSData(np.ndarray):
 
         # Otherwise, copy attributes from "parent"
         self.infile = getattr(obj, 'infile', None)
-        self.text = getattr(obj, 'text', None)
-        self.channel_info = getattr(obj, 'channel_info', None)
+        if hasattr(obj, 'text'):
+            self.text = deepcopy(obj.text)
+        if hasattr(obj, 'channel_info'):
+            self.channel_info = deepcopy(obj.channel_info)
 
     def __array_wrap__(self, out_arr, context = None):
         '''Method called after numpy ufuncs.'''
@@ -301,7 +306,8 @@ class TaborLabFCSData(np.ndarray):
             return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __str__(self):
-        return str(self.infile)
+        '''Return name of fcs file.'''
+        return os.path.basename(str(self.infile)) 
 
     @property
     def channels(self):
@@ -400,3 +406,41 @@ class TaborLabFCSData(np.ndarray):
             new_arr = np.ndarray.__getitem__(self, key)
 
         return new_arr
+
+    def __setitem__(self, key, item):
+        '''Overriden __setitem__ function.
+
+        This function allows for channel indexing by channel name.
+        '''
+        # If key is a tuple with no Nones, decompose and interpret key[1] as 
+        # the channel. If it contains Nones, pass directly to 
+        # ndarray.__setitem__().
+        if isinstance(key, tuple) and len(key) == 2 \
+            and key[0] is not None and key[1] is not None:
+            # Separate key components
+            key_sample = key[0]
+            key_channel = key[1]
+
+            # Check if key_channel is a string, list/tuple, or other
+            if isinstance(key_channel, basestring):
+                key_channel = self.name_to_index(key_channel)
+                key_all = (key_sample, key_channel)
+
+            elif hasattr(key_channel, '__iter__'):
+                # Make mutable
+                key_channel = list(key_channel)  
+                # Change any strings into channel indices
+                for i, j in enumerate(key_channel):
+                    if isinstance(j, basestring):
+                        key_channel[i] = self.name_to_index(j)
+                key_all = (key_sample, key_channel)
+
+            else:
+                key_all = (key_sample, key_channel)
+
+            # Write into array
+            np.ndarray.__setitem__(self, key_all, item)
+
+        else:
+            # Get sliced array using native getitem function.
+            np.ndarray.__setitem__(self, key, item)
