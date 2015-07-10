@@ -74,7 +74,7 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
 
     return gated_data
 
-def density2d(data, channels = [0,1], bins = np.arange(1025)-0.5, 
+def density2d(data, channels = [0,1], bins = None, 
     sigma = 10.0, gate_fraction = 0.65):
     '''Gate that preserves the points in the region with highest density.
 
@@ -86,7 +86,6 @@ def density2d(data, channels = [0,1], bins = np.arange(1025)-0.5,
     data            - NxD FCSData object or numpy array
     channels        - channels on which to perform gating
     bins            - bins argument to np.histogram2d
-                      (default=np.arange(1025)-0.5)
     sigma           - standard deviation for Gaussian kernel
     gate_fraction   - fraction of data points to keep
 
@@ -104,6 +103,12 @@ def density2d(data, channels = [0,1], bins = np.arange(1025)-0.5,
     # Check dimensions
     assert data_ch.ndim > 1, 'Data should have at least 2 dimensions'
     assert data_ch.shape[0] > 1, 'Data must have more than 1 event'
+
+    # Generate bins if necessary
+    if bins is None:
+        r = data_ch.channel_info[0]['range']
+        dr = (r[1] - r[0])/float(r[2] - 1)
+        bins = np.linspace(r[0], r[1] + dr, (r[2] + 1))
 
     # Determine number of points to keep
     n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))

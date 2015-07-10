@@ -65,6 +65,16 @@ def load_colormap(name, number):
     else:
         raise ValueError("Colormap {} not recognized.".format(name))
 
+
+##############################################################################
+# SIMPLE PLOTS
+##############################################################################
+#
+# The following functions produce simple plots independently of any other 
+# function.
+#
+##############################################################################
+
 def hist1d(data_list,
            channel = 0,
            log = False,
@@ -73,6 +83,9 @@ def hist1d(data_list,
            legend = False,
            legend_loc = None,
            xlabel = None,
+           ylabel = None,
+           ylim = None,
+           title = None,
            histtype = 'stepfilled',
            savefig = None,
            **kwargs):
@@ -88,6 +101,9 @@ def hist1d(data_list,
     legend     - whether to include a legend.
     legend_loc - location of the legend to include.
     xlabel     - Label to use on the x axis
+    ylabel     - Label to use on the y axis
+    ylim       - Limits for the y axis
+    title      - Title for the plot
     histtype   - histogram type
     savefig    - if not None, it specifies the name of the file to save the 
                 figure to.
@@ -149,11 +165,18 @@ def hist1d(data_list,
         pyplot.xlabel(data[:,channel].channel_info[0]['label'])
     else:
         pyplot.xlabel(xlabel)
-    pyplot.xlim((bins[0], bins[-1]))
-    if 'normed' in kwargs:
-        pyplot.ylabel('Probability')
+    if ylabel is None:
+        if 'normed' in kwargs:
+            pyplot.ylabel('Probability')
+        else:
+            pyplot.ylabel('Counts')
     else:
-        pyplot.ylabel('Counts')
+        pyplot.ylabel(ylabel)
+    pyplot.xlim((bins[0], bins[-1]))
+    if ylim:
+        pyplot.ylim(ylim)
+    if title:
+        pyplot.title(title)
     if legend:
         pyplot.legend(loc = legend_loc)
 
@@ -173,6 +196,9 @@ def density2d(data,
             mode = 'mesh',
             colorbar = False,
             normed = False,
+            xlabel = None,
+            ylabel = None,
+            title = None,
             savefig = None,
             **kwargs):
     '''Plot 2D density plot
@@ -188,6 +214,9 @@ def density2d(data,
     mode        - Plotting mode. Can be 'mesh' or 'scatter'.
     colorbar    - Plot colorbar
     normed      - Plot normed histogram (pmf)
+    xlabel      - Label to use on the x axis
+    ylabel      - Label to use on the y axis
+    title       - Title for the plot.
     savefig     - if not None, it specifies the name of the file to save the 
                    figure to.
     kwargs      - passed directly to matplotlib's scatter or pcolormesh.
@@ -280,8 +309,16 @@ def density2d(data,
         a[3] = numpy.ceil(yedges[-1])
         pyplot.axis(a)
     # pyplot.grid(True)
-    pyplot.xlabel(data_plot.channel_info[0]['label'])
-    pyplot.ylabel(data_plot.channel_info[1]['label'])
+    if xlabel:
+        pyplot.xlabel(xlabel)
+    else:
+        pyplot.xlabel(data_plot.channel_info[0]['label'])
+    if ylabel:
+        pyplot.ylabel(ylabel)
+    else:
+        pyplot.ylabel(data_plot.channel_info[1]['label'])
+    if title:
+        pyplot.title(title)
 
     # Save if necessary
     if savefig is not None:
@@ -426,6 +463,128 @@ def mef_std_crv(peaks_ch,
     if xlabel:
         pyplot.ylabel(ylabel)
     pyplot.legend(loc = 'lower right')
+    
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
+
+
+##############################################################################
+# COMPLEX PLOTS
+##############################################################################
+#
+# The functions below produce plots by composing the results of the functions 
+# defined above.
+#
+##############################################################################
+
+def density_and_hist(data,
+                    gated_data = None,
+                    gate_contour = None,
+                    density_channels = None,
+                    density_params = {},
+                    hist_channels = None,
+                    hist_params = {},
+                    figsize = None,
+                    savefig = None,
+                    ):
+    '''Makes a combined density/histograms plot of a FCSData file.
+
+    This function calls hist1d and density2d to plot a density diagram and a 
+    number of histograms in the same plot using one single function call. 
+    Setting density_channels to None will not produce a density diagram, 
+    and setting hist_channels to None will not produce any histograms. Setting
+    both to None will raise an error.
+
+    If gated_data is True, this function will plot the histograms corresponding
+    to gated_data on top of data's histograms, with some level of transparency
+    on data. 
+
+    Arguments:
+    data                - FCSData object
+    gated_data          - FCSData object
+    gate_contour        - List of Nx2 curves, representing a gate, to be 
+                            plotted in the density diagram.
+    density_channels    - 2-element iterable with the channels to use for the 
+                            density plot. Default: None (no density plot)
+    density_params      - Dictionary with the kwargs to pass to the density2d 
+                            function.
+    hist_channels       - channels to use in each one of the histograms.
+                            Default: None (no histograms)
+    hist_params         - Dictionary with the kwargs to pass to the hist1d 
+                            function.
+    figsize             - Figure size. If None, calculate a default based on 
+                            the number of subplots.
+    savefig             - if not None, it specifies the name of the file to 
+                            save the figure to.
+    '''
+
+    # Check number of plots
+    if density_channels is None and hist_channels is None:
+        raise ValueError("density_channels and hist_channels cannot be both \
+            None.")
+    # Change hist_channels to iterable if necessary
+    if not hasattr(hist_channels, "__iter__"):
+        hist_channels = [hist_channels]
+    if isinstance(hist_params, dict):
+        hist_params = [hist_params]*len(hist_channels)
+
+    plot_density = not(density_channels is None)
+    n_plots = plot_density + len(hist_channels)
+
+    # Calculate plot size if necessary
+    if figsize is None:
+        height = 3.25*n_plots
+        figsize = (6, height)
+
+    # Create plot
+    pyplot.figure(figsize = figsize)
+
+    # Density plot
+    if plot_density:
+        pyplot.subplot(n_plots, 1, 1)
+        # Plot density diagram
+        density2d(data, channels = density_channels, **density_params)
+        # Plot gate contour
+        if gate_contour is not None:
+            for g in gate_contour:
+                pyplot.plot(g[:,0], g[:,1], color = 'r', linewidth = 1.5)
+        # Add title
+        if 'title' not in density_params:
+            if gated_data is not None:
+                ret = gated_data.shape[0]*100./data.shape[0]
+                title = "{} ({:.1f}% retained)".format(str(data), ret)
+            else:
+                title = str(data)
+            pyplot.title(title)
+
+
+    # Colors
+    if n_plots - 1 < 3:
+        n_colors = 3
+    else:
+        n_colors = n_plots - 1
+    colors = load_colormap('spectral', n_colors)
+    colors = colors[::-1]
+    # Histogram
+    for i, hist_channel in enumerate(hist_channels):
+        # Define subplot
+        pyplot.subplot(n_plots, 1, plot_density + i + 1)
+        # Default colors
+        hist_params_i = hist_params[i].copy()
+        if 'facecolor' not in hist_params_i:
+            hist_params_i['facecolor'] = colors[i]
+        # Plots
+        if gated_data is not None:
+            hist1d(data, channel = hist_channel, 
+                alpha = 0.5, **hist_params_i)
+            hist1d(gated_data, channel = hist_channel, 
+                alpha = 1.0, **hist_params_i)
+            pyplot.legend(['Ungated', 'Gated'])
+        else:
+            hist1d(data, channel = hist_channel, **hist_params_i)
     
     # Save if necessary
     if savefig is not None:

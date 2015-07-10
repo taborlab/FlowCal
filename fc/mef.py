@@ -66,6 +66,8 @@ def clustering_dbscan(data, eps = 20.0, min_samples = 40):
             labels[labels==li] = -1
         else:
             labels_all_checked.append(li)
+    if -1 in labels_all and -1 not in labels_all_checked:
+        labels_all_checked.append(-1)
     labels_all = labels_all_checked
 
     # Change the cluster numbers to a contiguous positive sequence
