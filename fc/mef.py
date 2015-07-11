@@ -16,8 +16,9 @@
 
 import os
 import functools
+import contextlib
 
-import numpy as np
+import numpy
 from scipy.optimize import minimize
 import scipy.ndimage.filters
 from matplotlib import pyplot
@@ -54,7 +55,7 @@ def clustering_dbscan(data, eps = 20.0, min_samples = 40):
     n_samples = len(labels)
 
     # Calculate number of samples in each cluster
-    n_samples_cluster = [np.sum(labels==li) for li in labels_all]
+    n_samples_cluster = [numpy.sum(labels==li) for li in labels_all]
 
     # Check that no cluster is too small.
     # Clusters are assumed to be roughly the same size. Any cluster smaller 
@@ -71,14 +72,14 @@ def clustering_dbscan(data, eps = 20.0, min_samples = 40):
     labels_all = labels_all_checked
 
     # Change the cluster numbers to a contiguous positive sequence
-    labels_checked = -1*np.ones(len(labels))
+    labels_checked = -1*numpy.ones(len(labels))
     cn = 0
     for li in labels_all:
         labels_checked[labels==li] = cn
         cn = cn + 1
     labels = labels_checked
 
-    assert(np.any(labels==-1) == False)
+    assert(numpy.any(labels==-1) == False)
 
     return labels
 
@@ -115,34 +116,97 @@ def find_hist_peaks(data, labels, labels_all = None,
         labels_all = list(set(labels))
 
     # Calculate bin edges and centers
-    bin_edges = np.arange(min_val, max_val + 2) - 0.5
-    bin_edges[0] = -np.inf
-    bin_edges[-1] = np.inf
-    bin_centers = np.arange(min_val, max_val + 1)
+    bin_edges = numpy.arange(min_val, max_val + 2) - 0.5
+    bin_edges[0] = -numpy.inf
+    bin_edges[-1] = numpy.inf
+    bin_centers = numpy.arange(min_val, max_val + 1)
 
     # Identify peaks for each cluster
-    peaks = np.zeros(len(labels_all))
-    hists_smooth = np.zeros([len(labels_all), len(bin_centers)])
+    peaks = numpy.zeros(len(labels_all))
+    hists_smooth = numpy.zeros([len(labels_all), len(bin_centers)])
     for i, li in enumerate(labels_all):
         # Extract data that belongs to this cluster
         data_li = data[labels == li]
         # Calculate sample mean and standard deviation
-        # mu_li = np.mean(data_li)
-        sigma_li = np.std(data_li)
+        # mu_li = numpy.mean(data_li)
+        sigma_li = numpy.std(data_li)
         # Calculate histogram
-        hist, __ = np.histogram(data_li, bin_edges)
+        hist, __ = numpy.histogram(data_li, bin_edges)
         # Do Gaussian blur on histogram
         # We have found empirically that using one half of the distribution's 
         # standard deviation results in a nice fit.
         hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma_li/2.)
         # Extract peak
-        i_max = np.argmax(hist_smooth)
+        i_max = numpy.argmax(hist_smooth)
         peak = bin_centers[i_max]
         # Pack values
         peaks[i] = peak
         hists_smooth[i,:] = hist_smooth
 
     return peaks, hists_smooth
+
+def select_peaks(peaks_ch, 
+                peaks_mef, 
+                peaks_ch_std,
+                peaks_ch_std_mult = 2.5,
+                peaks_ch_min = 0, 
+                peaks_ch_max = 1023):
+    '''Select peaks for fitting based on proximity to the minimum and maximum 
+    values.
+
+    This function discards some peaks on channel space from peaks_ch if they're
+    too close to either peaks_ch_min or peaks_ch_max. Next, it discards the
+    corresponding peaks in peaks_mef. Finally, it discards peaks from peaks_mef
+    that have an undetermined value (NaN), and it also discards the 
+    corresponding peaks in peaks_ch.
+
+    Arguments:
+    peaks_ch          - Sorted peak values in channel space 
+    peaks_mef         - Peak values in MEF units
+    peaks_ch_min      - Minimum tolerable value in channel space
+    peaks_ch_max      - Maximum tolerable value in channel space
+    '''
+
+    # Discard channel-space peaks
+    if (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult) <= peaks_ch_min \
+        and (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult) >= peaks_ch_max:
+        raise ValueError('Peaks are being cut off at both sides.')
+    elif (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult) <= peaks_ch_min:
+        discard_ch = 'left'
+        discard_ch_n = 1
+        while (peaks_ch[discard_ch_n] - peaks_ch_std[discard_ch_n]*peaks_ch_std_mult) <= peaks_ch_min:
+            discard_ch_n = discard_ch_n + 1
+        sel_peaks_ch = peaks_ch[discard_ch_n:]
+    elif (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult) >= peaks_ch_max:
+        discard_ch = 'right'
+        discard_ch_n = 1
+        while (peaks_ch[-1-discard_ch_n] + peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult) >= peaks_ch_max:
+            discard_ch_n = discard_ch_n + 1
+        sel_peaks_ch = peaks_ch[:-discard_ch_n]
+    else:
+        discard_ch = False
+        discard_ch_n = 0
+        sel_peaks_ch = peaks_ch.copy()
+
+    # Discard MEF peaks
+    discard_mef_n = len(peaks_mef) - len(sel_peaks_ch)
+    if discard_ch == 'left':
+        sel_peaks_mef = peaks_mef[discard_mef_n:]
+    elif discard_ch == 'right':
+        sel_peaks_mef = peaks_mef[:-discard_mef_n]
+    elif discard_ch == False and discard_mef_n == 0:
+        sel_peaks_mef = peaks_mef.copy()
+    else:
+        ValueError('Number of MEF values and channel peaks does not match.')
+    
+    # Discard unknown (NaN) peaks
+    unknown_mef = numpy.isnan(sel_peaks_mef)
+    n_unknown_mef = numpy.sum(unknown_mef)
+    if n_unknown_mef > 0:
+        sel_peaks_ch = sel_peaks_ch[numpy.invert(unknown_mef)]
+        sel_peaks_mef = sel_peaks_mef[numpy.invert(unknown_mef)]
+
+    return sel_peaks_ch, sel_peaks_mef
 
 def fit_standard_curve(peaks_ch, peaks_mef):
     '''Fit a model mapping calibration bead fluroescence in channel space units 
@@ -193,27 +257,27 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         bead peak values."
         
     # Initialize parameters
-    params = np.zeros(3)
+    params = numpy.zeros(3)
     # Initial guesses:
     # 0: slope found by putting a line through the highest two peaks.
     # 1: y-intercept found by putting a line through highest two peaks.
     # 2: bead autofluorescence initialized to 100.
-    params[0] = (np.log(peaks_mef[-1]) - np.log(peaks_mef[-2])) / \
+    params[0] = (numpy.log(peaks_mef[-1]) - numpy.log(peaks_mef[-2])) / \
                     (peaks_ch[-1] - peaks_ch[-2])
-    params[1] = np.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
+    params[1] = numpy.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
     params[2] = 100.
 
     # Error function
     def err_fun(p, x, y):
-        return np.sum((np.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
+        return numpy.sum((numpy.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
         
     # Bead model function
     def fit_fun(p,x):
-        return np.exp(p[0] * x + p[1]) - p[2]
+        return numpy.exp(p[0] * x + p[1]) - p[2]
 
     # Channel-to-MEF standard curve transformation function
     def sc_fun(p,x):
-        return np.exp(p[0] * x + p[1])
+        return numpy.exp(p[0] * x + p[1])
     
     # Fit parameters
     err_par = lambda p: err_fun(p, peaks_ch, peaks_mef)
@@ -230,6 +294,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     
     return (sc, sc_beads, sc_params)
 
+@contextlib.contextmanager
 def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
     cluster_method = 'dbscan', cluster_params = {}, cluster_channels = 0, 
     verbose = False, plot = False, plot_dir = None):
@@ -275,6 +340,8 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
     transform_fxn - A transformation function encoding the standard curves.
 
     '''
+    if verbose:
+        numpy.set_printoptions(precision=2)
     # Create directory if plot is True
     if plot:
         if not os.path.exists(plot_dir):
@@ -289,7 +356,7 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
     else:
         raise ValueError("Clustering method {} not recognized."
             .format(cluster_method))
-    labels_all = np.array(list(set(labels)))
+    labels_all = numpy.array(list(set(labels)))
     n_clusters = len(labels_all)
     # Print information
     if verbose:
@@ -299,9 +366,9 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
         if len(cluster_channels) == 3:
             data_list = [beads_data[labels == i] for i in labels_all]
             # Sort
-            data_dist = [np.sum((np.mean(di[:,cluster_channels], 
+            data_dist = [numpy.sum((numpy.mean(di[:,cluster_channels], 
                     axis = 0))**2) for di in data_list]
-            data_ind = np.argsort(data_dist)
+            data_ind = numpy.argsort(data_dist)
             data_plot = [data_list[i] for i in data_ind]
             # Plot
             pyplot.figure(figsize = (8,6))
@@ -309,14 +376,15 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
                     channels = cluster_channels, 
                     savefig = '{}/{}_cluster.png'.format(plot_dir,
                                                     beads_file_name))
+            pyplot.close()
 
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
         mef_channel_all = list(mef_channels)
-        peaks_mef_all = np.array(peaks_mef).copy()
+        peaks_mef_all = numpy.array(peaks_mef).copy()
     else:
         mef_channel_all = [mef_channels]
-        peaks_mef_all = np.array([peaks_mef])
+        peaks_mef_all = numpy.array([peaks_mef])
 
     # Initialize output list
     sc_all = []
@@ -344,7 +412,7 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
             for c, i in zip(colors, data_ind):
                 p = peaks[i]
                 h = hists_smooth[i]
-                pyplot.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
+                pyplot.plot(numpy.linspace(min_fl, max_fl, len(h)), h*4, 
                     color = c)
                 ylim = pyplot.ylim()
                 pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
@@ -361,83 +429,34 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
         # off to the left or to the right. That means that we can discard 
         # the lowest peaks or the highest peaks, but not both.
         
-        # We first need to sort the peaks and clusters
-        ind_sorted = np.argsort(peaks)
+        # Sort peaks and clusters
+        ind_sorted = numpy.argsort(peaks)
         peaks_sorted = peaks[ind_sorted]
         labels_sorted = labels_all[ind_sorted]
         # Get the standard deviation of each peak
-        peaks_std = [np.std(data_channel[labels==li]) \
-            for li in labels_sorted]
+        peaks_std = numpy.array([numpy.std(data_channel[labels==li]) \
+            for li in labels_sorted])
+        
         if verbose:
-            print "Peaks identified:"
+            print "Channel peaks identified:"
             print peaks_sorted
-            print "Standard deviation:"
-            print ["{:.2f}".format(p) for p in peaks_std]
-        # Decide which peaks to discard
-        if (peaks_sorted[0] - 2.5*peaks_std[0]) <= min_fl \
-            and (peaks_sorted[-1] + 2.5*peaks_std[-1]) >= max_fl:
-            raise ValueError('Peaks are being cut off at both sides for \
-                channel {}.'.format(mef_channel))
-        elif (peaks_sorted[0] - 2.5*peaks_std[0]) <= min_fl:
-            discard = 'left'
-            discard_n = 1
-            while (peaks_sorted[discard_n] - 2.5*peaks_std[discard_n]) \
-                <= min_fl:
-                discard_n = discard_n + 1
-            peaks_fit = peaks_sorted[discard_n:]
-            if verbose:
-                print "{} peak(s) discarded to the left.".format(discard_n)
-        elif (peaks_sorted[-1] + 2.5*peaks_std[-1]) >= max_fl:
-            discard = 'right'
-            discard_n = 1
-            while (peaks_sorted[-1-discard_n] + 2.5*peaks_std[-1-discard_n]) \
-                >= max_fl:
-                discard_n = discard_n + 1
-            peaks_fit = peaks_sorted[:-discard_n]
-            if verbose:
-                print "{} peak(s) discarded to the right.".format(discard_n)
-        else:
-            discard = False
-            discard_n = 0
-            peaks_fit = peaks_sorted
-            if verbose:
-                print "No peaks discarded."
-
-        # Discard peaks from the MEF array
-        peaks_mef_channel = peaks_mef_channel[:]
-        if verbose:
-            "{} MEF peaks provided.".format(len(peaks_mef_channel))
-        mef_discard = len(peaks_mef_channel) - len(peaks_fit)
-        if discard == 'left':
-            peaks_mef_channel = peaks_mef_channel[mef_discard:]
-            if verbose:
-                print "{} MEF value(s) discarded to the left.".format(
-                    mef_discard)
-        elif discard == 'right':
-            peaks_mef_channel = peaks_mef_channel[:-mef_discard]
-            if verbose:
-                print "{} MEF value(s) discarded to the right.".format(
-                    mef_discard)
-        elif mef_discard > 0:
-            ValueError('Number of MEF values and peaks does not match in' + 
-                ' channel {}.'.format(mef_channel))
-        # Check if first mef peak is None, and discard
-        if peaks_mef_channel[0] is None:
-            peaks_mef_channel = peaks_mef_channel[1:]
-            peaks_fit = peaks_fit[1:]
-            if verbose:
-                print("First peak's MEF value is unknown, and therefore was" +
-                    " discarded.")
-        # Cast to to float. If the array had contained a None value, it will be
-        # of type 'object'.
-        peaks_mef_channel = peaks_mef_channel.astype(np.float64)
-        if verbose:
-            print "MEF values for channel {}.".format(mef_channel)
+            print "Standard deviations:"
+            print peaks_std
+            print "MEF peaks provided:"
             print peaks_mef_channel
+        sel_peaks_ch, sel_peaks_mef = select_peaks(peaks_sorted, 
+                peaks_mef_channel, peaks_ch_std = peaks_std,
+                peaks_ch_min = min_fl, peaks_ch_max = max_fl)
+        if verbose:
+            print "{} peaks retained.".format(len(sel_peaks_ch))
+            print "Selected channel peaks:"
+            print sel_peaks_ch
+            print "Selected MEF peaks:"
+            print sel_peaks_mef
 
         # 4. Get standard curve
-        sc, sc_beads, sc_params = fit_standard_curve(peaks_fit, 
-            peaks_mef_channel)
+        sc, sc_beads, sc_params = fit_standard_curve(sel_peaks_ch, 
+            sel_peaks_mef)
 
         sc_all.append(sc)
 
@@ -446,8 +465,8 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
             channel_gain = data_channel.channel_info[0]['pmt_voltage']
             xlabel = '{} (gain = {})'.format(channel_name, channel_gain)
             pyplot.figure(figsize = (6,4))
-            fc.plot.mef_std_crv(peaks_fit, 
-                    peaks_mef_channel,
+            fc.plot.mef_std_crv(sel_peaks_ch, 
+                    sel_peaks_mef,
                     sc_beads,
                     sc,
                     xlabel = xlabel,
@@ -455,6 +474,7 @@ def get_transform_fxn(beads_data, peaks_mef, mef_channels = 0,
                     savefig = '{}/{}_std_crv_{}.png'.format(plot_dir,
                                                             beads_file_name, 
                                                             mef_channel))
+            pyplot.close()
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
