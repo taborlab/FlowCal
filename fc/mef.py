@@ -83,16 +83,12 @@ def clustering_dbscan(data, eps = 20.0, min_samples = 40):
 
     return labels
 
-def find_hist_peaks(data, labels, labels_all = None, 
-        min_val = 0, max_val = 1023):
+def find_hist_peaks(data, min_val = 0, max_val = 1023):
     '''
     Find histogram peaks from a dataset.
 
-    This function assumes that clustering of the data has been previously 
-    performed, and the labels for the different clusters are given in the 
-    arguments. The algorithm then proceeds as follows:
-        1. For each one of the C clusters, calculate the histogram for the 
-            dataset.
+    The algorithm then proceeds as follows:
+        1. Calculate the histogram.
         2. Use a 1D Gaussian filter to smooth out the histogram. The sigma 
             value for the Gaussian filter is chosen based on the standard 
             deviation of the fit Gaussian from the GMM for that paritcular 
@@ -101,19 +97,13 @@ def find_hist_peaks(data, labels, labels_all = None,
 
     data        - Nx1 numpy array with the 1D data from where peaks should be 
                   identified. Data values are assumed to be integer.
-    labels      - Nx1 numpy array with the cluster labels of each data sample.
-    labels_all  - Cx1 numpy array with all the individual cluster labels.
     min_val     - minimum possible value in data.
     max_val     - maximum possible value in data.
 
-    returns     - Cx1 numpy array with the values of the identified peaks.
-                - Cx(max_val - min_val + 1) numpy array with a smoothed 
+    returns     - The value of the identified peak.
+                - (max_val - min_val + 1) numpy array with a smoothed 
                   histogram for each cluster.
     '''
-
-    # Check if individual labels have been provided, otherwise calculate
-    if labels_all is None:
-        labels_all = list(set(labels))
 
     # Calculate bin edges and centers
     bin_edges = numpy.arange(min_val, max_val + 2) - 0.5
@@ -121,29 +111,21 @@ def find_hist_peaks(data, labels, labels_all = None,
     bin_edges[-1] = numpy.inf
     bin_centers = numpy.arange(min_val, max_val + 1)
 
-    # Identify peaks for each cluster
-    peaks = numpy.zeros(len(labels_all))
-    hists_smooth = numpy.zeros([len(labels_all), len(bin_centers)])
-    for i, li in enumerate(labels_all):
-        # Extract data that belongs to this cluster
-        data_li = data[labels == li]
-        # Calculate sample mean and standard deviation
-        # mu_li = numpy.mean(data_li)
-        sigma_li = numpy.std(data_li)
-        # Calculate histogram
-        hist, __ = numpy.histogram(data_li, bin_edges)
-        # Do Gaussian blur on histogram
-        # We have found empirically that using one half of the distribution's 
-        # standard deviation results in a nice fit.
-        hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma_li/2.)
-        # Extract peak
-        i_max = numpy.argmax(hist_smooth)
-        peak = bin_centers[i_max]
-        # Pack values
-        peaks[i] = peak
-        hists_smooth[i,:] = hist_smooth
+    # Identify peak
+    # Calculate sample mean and standard deviation
+    # mu = numpy.mean(data)
+    sigma = numpy.std(data)
+    # Calculate histogram
+    hist, __ = numpy.histogram(data, bin_edges)
+    # Do Gaussian blur on histogram
+    # We have found empirically that using one half of the distribution's 
+    # standard deviation results in a nice fit.
+    hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma/2.)
+    # Extract peak
+    i_max = numpy.argmax(hist_smooth)
+    peak = bin_centers[i_max]
 
-    return peaks, hists_smooth
+    return peak, hist_smooth
 
 def select_peaks(peaks_ch, 
                 peaks_mef, 
@@ -420,13 +402,16 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Find peaks on all the channel data
         min_fl = data_channel.channel_info[0]['range'][0]
         max_fl = data_channel.channel_info[0]['range'][1]
-        peaks_ch, hists_smooth = find_hist_peaks(data_channel, 
-                                labels, labels_all = labels_all, 
-                                min_val = min_fl, max_val = max_fl)
+
+        peaks_hists = [find_hist_peaks(di[:,mef_channel], 
+                            min_val = min_fl, max_val = max_fl)
+                            for di in data_clustered]
+        peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
+        hists_smooth = [ph[1] for ph in peaks_hists]
         # Sort peaks and clusters
         ind_sorted = numpy.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
-        labels_sorted = labels_all[ind_sorted]
+        data_sorted = [data_clustered[i] for i in ind_sorted]
 
         # Print information
         if verbose:
@@ -449,6 +434,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                     color = c)
                 ylim = pyplot.ylim()
                 pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
+                pyplot.ylim(ylim)
             # Save and close
             pyplot.tight_layout()
             pyplot.savefig('{}/{}_peaks_{}.png'.format(plot_dir,
@@ -459,8 +445,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # ===========================
         
         # Get the standard deviation of each peak
-        peaks_std = numpy.array([numpy.std(data_channel[labels==li]) \
-            for li in labels_sorted])
+        peaks_std = numpy.array([numpy.std(di[:,mef_channel]) \
+            for di in data_sorted])
         
         # Print information
         if verbose:

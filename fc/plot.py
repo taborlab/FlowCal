@@ -462,7 +462,7 @@ def mef_std_crv(peaks_ch,
         pyplot.xlabel(xlabel)
     if xlabel:
         pyplot.ylabel(ylabel)
-    pyplot.legend(loc = 'lower right')
+    pyplot.legend(loc = 'best')
     
     # Save if necessary
     if savefig is not None:
