@@ -16,7 +16,7 @@
 
 import os
 import functools
-import contextlib
+import collections
 
 import numpy
 from scipy.optimize import minimize
@@ -278,10 +278,9 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     
     return (sc, sc_beads, sc_params)
 
-@contextlib.contextmanager
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'dbscan', cluster_params = {}, cluster_channels = 0, 
-    verbose = False, plot = False, plot_dir = None):
+    verbose = False, plot = False, plot_dir = None, full = False):
     '''Generate a function that transforms channel data into MEF data.
 
     This is performed using flow cytometry beads data, contained in the 
@@ -322,13 +321,27 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     plot             - If True, produce diagnostic plots.
     plot_dir         - Directory where to save diagnostics plots. Ignored if 
                         plot is False.
+    full             - Whether to include intermediate results in the output.
+                        If full is True, the function returns a named tuple
+                        with fields as described below. If full is False, the
+                        function only returns the calculated transformation
+                        function.
 
     Returns: 
 
-    transform_fxn - A transformation function encoding the standard curves.
+    transform_fxn   - A transformation function encoding the standard curves.
+    clustering_res  - If full == True, this is a dictionary that contains the 
+                        results of the clustering step.
+    peak_find_res   - If full == True, this is a dictionary that contains the 
+                        results of the peak finding step.
+    peak_sel_res    - If full == True, this is a dictionary that contains the 
+                        results of the peak selection step.
+    fitting_res     - If full == True, this is a dictionary that contains the 
+                        results of the model fitting step.
 
     '''
     if verbose:
+        prev_precision = numpy.get_printoptions()['precision']
         numpy.set_printoptions(precision=2)
     # Create directory if plot is True
     if plot:
@@ -384,8 +397,15 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         mef_channel_all = [mef_channels]
         peaks_mef_all = numpy.array([peaks_mef])
 
-    # Initialize list of standard curves
+    # Initialize lists to acumulate results
     sc_all = []
+    if full:
+        peaks_ch_all = []
+        peaks_hists_all = []
+        sel_peaks_ch_all = []
+        sel_peaks_mef_all = []
+        sc_beads_all = []
+        sc_params_all =[]
 
     # Iterate through each mef channel
     for mef_channel, peaks_mef_channel in zip(mef_channel_all, peaks_mef_all):
@@ -413,6 +433,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         peaks_sorted = peaks_ch[ind_sorted]
         data_sorted = [data_clustered[i] for i in ind_sorted]
 
+        # Accumulate results
+        if full:
+            peaks_ch_all.append(peaks_ch)
+            peaks_hists_all.append(hists_smooth)
         # Print information
         if verbose:
             print "- STEP 2. PEAK IDENTIFICATION."
@@ -461,6 +485,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 peaks_mef_channel, peaks_ch_std = peaks_std,
                 peaks_ch_min = min_fl, peaks_ch_max = max_fl)
 
+        # Accumulate results
+        if full:
+            sel_peaks_ch_all.append(sel_peaks_ch)
+            sel_peaks_mef_all.append(sel_peaks_mef)
         # Print information
         if verbose:
             print "{} peaks retained.".format(len(sel_peaks_ch))
@@ -479,6 +507,9 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             print sc_params
 
         sc_all.append(sc)
+        if full:
+            sc_beads_all.append(sc_beads)
+            sc_params_all.append(sc_params)
 
         # Plot
         if plot:
@@ -504,4 +535,40 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                                     sc_list = sc_all,
                                     sc_channels = mef_channel_all)
 
-    return transform_fxn
+    if verbose:
+        numpy.set_printoptions(precision = prev_precision)
+
+    if full:
+        # Clustering results
+        clustering_res = {}
+        clustering_res['labels'] = labels
+        # Peak finding results
+        peak_find_res = {}
+        peak_find_res['peaks_ch'] = peaks_ch_all
+        peak_find_res['peaks_hists'] = peaks_hists_all
+        # Peak selection results
+        peak_sel_res = {}
+        peak_sel_res['sel_peaks_ch'] = sel_peaks_ch_all
+        peak_sel_res['sel_peaks_mef'] = sel_peaks_mef_all
+        # Fitting results
+        fitting_res = {}
+        fitting_res['sc'] = sc_all
+        fitting_res['sc_beads'] = sc_beads_all
+        fitting_res['sc_params'] = sc_params_all
+
+        # Make namedtuple
+        fields = ['transform_fxn',
+                  'clustering_res',
+                  'peak_find_res',
+                  'peak_sel_res',
+                  'fitting_res']
+        MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
+        out = MEFOutput(transform_fxn = transform_fxn,
+                        clustering_res = clustering_res,
+                        peak_find_res = peak_find_res,
+                        peak_sel_res = peak_sel_res,
+                        fitting_res = fitting_res,
+                        )
+        return out
+    else:
+        return transform_fxn
