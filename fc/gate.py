@@ -23,7 +23,7 @@
 #   * scipy
 #   * matplotlib
 
-import numpy as np
+import numpy
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
     
@@ -40,7 +40,7 @@ def start_end(data, num_start=250, num_end=100):
         raise ValueError('Number of events to discard greater than total' + 
             ' number.')
     
-    mask = np.ones(shape=data.shape[0],dtype=bool)
+    mask = numpy.ones(shape=data.shape[0],dtype=bool)
     mask[:num_start] = False
     mask[-num_end:] = False
     gated_data = data[mask]
@@ -69,12 +69,12 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
             data_ch = data_ch.reshape((-1,1))
 
     # Gate
-    mask = np.all((data_ch < high) & (data_ch > low), axis=1)
+    mask = numpy.all((data_ch < high) & (data_ch > low), axis=1)
     gated_data = data[mask]
 
     return gated_data
 
-def density2d(data, channels = [0,1], bins = None, 
+def density2d(data, channels = [0,1], bins = None, bins_log = False,
     sigma = 10.0, gate_fraction = 0.65):
     '''Gate that preserves the points in the region with highest density.
 
@@ -85,7 +85,8 @@ def density2d(data, channels = [0,1], bins = None,
 
     data            - NxD FCSData object or numpy array
     channels        - channels on which to perform gating
-    bins            - bins argument to np.histogram2d
+    bins            - bins argument to numpy.histogram2d. Autogenerate if None.
+    bins_log        - If bins is None, autogenerate bins in log space.
     sigma           - standard deviation for Gaussian kernel
     gate_fraction   - fraction of data points to keep
 
@@ -106,15 +107,41 @@ def density2d(data, channels = [0,1], bins = None,
 
     # Generate bins if necessary
     if bins is None:
-        r = data_ch.channel_info[0]['range']
-        dr = (r[1] - r[0])/float(r[2] - 1)
-        bins = np.linspace(r[0], r[1] + dr, (r[2] + 1))
+        rx = data_ch.channel_info[0]['range']
+        ry = data_ch.channel_info[1]['range']
+        if bins_log:
+            drx = (numpy.log10(rx[1]) - numpy.log10(rx[0]))/float(rx[2] - 1)
+            dry = (numpy.log10(ry[1]) - numpy.log10(ry[0]))/float(ry[2] - 1)
+            bins = numpy.array([numpy.logspace(numpy.log10(rx[0]), 
+                                               numpy.log10(rx[1]) + drx, 
+                                               (rx[2] + 1)),
+                                numpy.logspace(numpy.log10(ry[0]), 
+                                               numpy.log10(ry[1]) + dry, 
+                                               (ry[2] + 1)),
+                                ])
+        else:
+            drx = (rx[1] - rx[0])/float(rx[2] - 1)
+            dry = (ry[1] - ry[0])/float(ry[2] - 1)
+            bins = numpy.array([
+                numpy.linspace(rx[0], rx[1] + drx, (rx[2] + 1)),
+                numpy.linspace(ry[0], ry[1] + dry, (ry[2] + 1)),
+                ])
 
     # Determine number of points to keep
-    n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
+    n = int(numpy.ceil(gate_fraction*float(data_ch.shape[0])))
 
-    # Make 2D histogram
-    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+    # Make 2D histogram and get bins
+    H,xe,ye = numpy.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+
+    # Get lists of indices per bin
+    ix = numpy.digitize(data_ch[:,0], bins=xe) - 1
+    iy = numpy.digitize(data_ch[:,1], bins=ye) - 1
+
+    filler = numpy.frompyfunc(lambda x: list(), 1, 1)
+    Hi = numpy.empty_like(H, dtype=numpy.object)
+    filler(Hi, Hi)
+    for i, (xi, yi) in enumerate(zip(ix, iy)):
+        Hi[xi, yi].append(i)
 
     # Blur 2D histogram
     bH = scipy.ndimage.filters.gaussian_filter(
@@ -126,32 +153,29 @@ def density2d(data, channels = [0,1], bins = None,
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    D = bH / np.sum(bH)
+    D = bH / numpy.sum(bH)
 
     # Sort each (x,y) point by density
     vD = D.ravel()
     vH = H.ravel()
-    sidx = sorted(xrange(len(vD)), key=lambda idx: vD[idx], reverse=True)
+    sidx = numpy.argsort(vD)[::-1]
     svH = vH[sidx]  # linearized counts array sorted by density
 
     # Find minimum number of accepted (x,y) points needed to reach specified
     # number of data points
-    csvH = np.cumsum(svH)
-    Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
+    csvH = numpy.cumsum(svH)
+    Nidx = numpy.nonzero(csvH >= n)[0][0]    # we want to include this index
 
-    # Convert accepted (x,y) linear indices into 2D indices into the histogram
-    # matrix
-    i0,i1 = np.unravel_index(sidx[:(Nidx+1)], H.shape)
-    accepted = set(zip(i0,i1))
-    # Generate mask and gate
-    mask = np.array([tuple(event) in accepted for event in data_ch[:,0:2]])
+    # Get indices of events to keep
+    vHi = Hi.ravel()
+    mask = vHi[sidx[:(Nidx+1)]]
+    mask = numpy.array([item for sublist in mask for item in sublist])
+    mask = numpy.sort(mask)
     gated_data = data[mask]
 
     # Use matplotlib contour plotter (implemented in C) to generate contour(s)
     # at the probability associated with the last accepted point.
-    s_ind = np.ceil(bins[0])
-    e_ind = np.ceil(bins[-1])
-    x,y = np.mgrid[s_ind:e_ind, s_ind:e_ind]
+    x,y = numpy.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
     mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
     tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
@@ -167,7 +191,7 @@ def density2d(data, channels = [0,1], bins = None,
         codes = tr[num_cntrs+idx]
 
         # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
-        if not np.all((codes==1)|(codes==2)):
+        if not numpy.all((codes==1)|(codes==2)):
             raise Exception('Contour error: unrecognized path code')
 
         cntr.append(vertices)
