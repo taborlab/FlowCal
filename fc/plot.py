@@ -84,6 +84,7 @@ def hist1d(data_list,
            legend_loc = None,
            xlabel = None,
            ylabel = None,
+           xlim = None,
            ylim = None,
            title = None,
            histtype = 'stepfilled',
@@ -102,6 +103,7 @@ def hist1d(data_list,
     legend_loc - location of the legend to include.
     xlabel     - Label to use on the x axis
     ylabel     - Label to use on the y axis
+    xlim       - Limits for the x axis
     ylim       - Limits for the y axis
     title      - Title for the plot
     histtype   - histogram type
@@ -139,12 +141,14 @@ def hist1d(data_list,
             r = y.channel_info[0]['range']
             if log == True:
                 dr = (numpy.log10(r[1]) - numpy.log10(r[0]))/float(r[2] - 1)
-                bins = numpy.logspace(numpy.log10(r[0]), 
-                                        numpy.log10(r[1]) + dr, 
+                bins = numpy.logspace(numpy.log10(r[0]) - dr/2., 
+                                        numpy.log10(r[1]) + dr/2., 
                                         (r[2]/div + 1))
             else:
                 dr = (r[1] - r[0])/float(r[2] - 1)
-                bins = numpy.linspace(r[0], r[1] + dr, (r[2]/div + 1))
+                bins = numpy.linspace(r[0] - dr/2., 
+                                        r[1] + dr/2., 
+                                        (r[2]/div + 1))
         # Check for properties specified as lists.
         kwargsi = kwargs.copy()
         if 'edgecolor' in kwargsi:
@@ -172,7 +176,10 @@ def hist1d(data_list,
             pyplot.ylabel('Counts')
     else:
         pyplot.ylabel(ylabel)
-    pyplot.xlim((bins[0], bins[-1]))
+    if xlim is None:
+        pyplot.xlim((bins[0], bins[-1]))
+    else:
+        pyplot.xlim(xlim)
     if ylim:
         pyplot.ylim(ylim)
     if title:
