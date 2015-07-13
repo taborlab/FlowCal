@@ -23,6 +23,7 @@ from scipy.optimize import minimize
 import scipy.ndimage.filters
 from matplotlib import pyplot
 from sklearn.cluster import DBSCAN 
+from sklearn.mixture import GMM 
 
 import fc.plot
 import fc.transform
@@ -88,6 +89,125 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     labels = labels_checked
 
     assert(numpy.any(labels==-1) == False)
+
+    return labels
+
+def clustering_distance(data, n_clusters = 8):
+    '''
+    Find clusters in the data array based on distance to the origin.
+
+    data        - NxD numpy array.
+    n_clusters  - Number of expected clusters
+
+    returns     - Nx1 numpy array, labeling each sample to a cluster.
+    '''
+    # Number of elements per cluster
+    fractions = numpy.ones(n_clusters)*1./n_clusters
+
+    n_per_cluster = fractions*data.shape[0]
+    cluster_cum = numpy.append([0], numpy.cumsum(n_per_cluster))
+
+    # Get distance and sort based on it
+    dist = numpy.sum(data**2., axis = 1)
+    sorted_i = numpy.argsort(dist)
+
+    # Initialize labels
+    labels = numpy.ones(data.shape[0])*-1
+
+    # Assign labels
+    for i in range(n_clusters):
+        il = int(cluster_cum[i])
+        ih = int(cluster_cum[i+1])
+        sorted_i_i = sorted_i[il:ih]
+        labels[sorted_i_i] = i
+
+    return labels
+
+
+def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub', 
+    tol = 1e-7, min_covar = 1e-2):
+    '''
+    Find clusters in the data array using the GMM method from the 
+    scikit-learn library.
+
+    data            - NxD numpy array.
+    n_clusters      - Number of expected clusters
+    initialization  - Initialization method
+    tol             - Tolerance for convergence of GMM method. Check 
+                        scikit-learn documentation for more info.
+    min_covar       - Minimum covariance for the GMM method. Check 
+                        scikit-learn documentation for more info.
+    returns     - Nx1 numpy array, labeling each sample to a cluster.
+    '''
+
+
+    # Initialization method
+    if initialization == 'distance':
+        # Perform distance-based clustering
+        labels = fc.mef.clustering_distance(data, n_clusters)
+        labels_all = list(set(labels))
+        data_clustered = [data[labels == i] for i in labels_all]
+        
+        # Initialize parameters for GMM
+        weights = numpy.tile(1.0 / n_clusters,
+                                        n_clusters)
+        means = numpy.array([numpy.mean(di, axis = 0) 
+            for di in data_clustered])
+        covars = [numpy.cov(di.T) for di in data_clustered]
+
+        # Initialize GMM object
+        gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
+            covariance_type = 'full', params = 'mc', init_params = '')
+        gmm.weight_ = weights
+        gmm.means_ = means
+        gmm.covars_ = covars
+
+    elif initialization == 'distance_sub':
+        # Initialize parameters for GMM
+        weights = numpy.tile(1.0 / n_clusters,
+                                        n_clusters)
+        means = []
+        covars = []
+
+        # Get distance and sort based on it
+        dist = numpy.sum(data**2., axis = 1)
+        sorted_i = numpy.argsort(dist)
+
+        # Expected number of elements per cluster
+        n_per_cluster = data.shape[0]/float(n_clusters)
+
+        # Get the means and covariances per cluster
+        # We will just use a fraction of 1-2*discard_frac of the data.
+        # Data at the edges that actually corresponds to another cluster can
+        # really mess up the final result.
+        discard_frac = 0.25
+        for i in range(n_clusters):
+            il = int((i+discard_frac)*n_per_cluster)
+            ih = int((i+1-discard_frac)*n_per_cluster)
+            sorted_i_i = sorted_i[il:ih]
+            data_i = data[sorted_i_i]
+            means.append(numpy.mean(data_i, axis = 0))
+            covars.append(numpy.cov(data_i.T))
+        means = numpy.array(means)
+
+        # Initialize GMM object
+        gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
+            covariance_type = 'full', params = 'mc', init_params = '')
+        gmm.weight_ = weights
+        gmm.means_ = means
+        gmm.covars_ = covars
+
+    else:
+        raise ValueError('Initialization method {} not implemented.'\
+            .format(initialization))
+
+    # Fit 
+    gmm.fit(data)
+    # Get labels using the responsibilities
+    # This avoids the complete elimination of a cluster if two or more clusters
+    # have very similar means.
+    resp = gmm.predict_proba(data)
+    labels = [numpy.random.choice(range(n_clusters), p = ri) for ri in resp]
 
     return labels
 
@@ -287,7 +407,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     return (sc, sc_beads, sc_params)
 
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
-    cluster_method = 'dbscan', cluster_params = {}, cluster_channels = 0, 
+    cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
     verbose = False, plot = False, plot_dir = None, full = False):
     '''Generate a function that transforms channel data into MEF data.
 
@@ -363,6 +483,12 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     # ===========
     if cluster_method == 'dbscan':
         labels = clustering_dbscan(data_beads[:,cluster_channels], 
+            **cluster_params)
+    elif cluster_method == 'distance':
+        labels = clustering_distance(data_beads[:,cluster_channels], 
+            **cluster_params)
+    elif cluster_method == 'gmm':
+        labels = clustering_gmm(data_beads[:,cluster_channels], 
             **cluster_params)
     else:
         raise ValueError("Clustering method {} not recognized."
