@@ -258,7 +258,8 @@ def find_hist_peaks(data, min_val = 0, max_val = 1023):
 def select_peaks(peaks_ch, 
                 peaks_mef, 
                 peaks_ch_std,
-                peaks_ch_std_mult = 2.5,
+                peaks_ch_std_mult_l = 2.5,
+                peaks_ch_std_mult_r = 2.5,
                 peaks_ch_min = 0, 
                 peaks_ch_max = 1023):
     '''Select peaks for fitting based on proximity to the minimum and maximum 
@@ -271,28 +272,35 @@ def select_peaks(peaks_ch,
     corresponding peaks in peaks_ch.
 
     Arguments:
-    peaks_ch          - Sorted peak values in channel space 
-    peaks_mef         - Peak values in MEF units
-    peaks_ch_min      - Minimum tolerable value in channel space
-    peaks_ch_max      - Maximum tolerable value in channel space
+    peaks_ch            - Sorted peak values in channel space 
+    peaks_mef           - Peak values in MEF units
+    peaks_ch_std_mult_l - Tolerance for peaks at the left, in std. devs.
+    peaks_ch_std_mult_r - Tolerance for peaks at the right, in std. devs.
+    peaks_ch_min        - Minimum tolerable value in channel space
+    peaks_ch_max        - Maximum tolerable value in channel space
     '''
 
+    # Minimum peak standard deviation will be 1.0
+    min_std = 1.0
+    peaks_ch_std = peaks_ch_std.copy()
+    peaks_ch_std[peaks_ch_std < min_std] = min_std
+
     # Discard channel-space peaks
-    if (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult) <= peaks_ch_min \
-        and (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult) >= peaks_ch_max:
+    if (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min and\
+        (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max:
         raise ValueError('Peaks are being cut off at both sides.')
-    elif (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult) <= peaks_ch_min:
+    elif (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min:
         discard_ch = 'left'
         discard_ch_n = 1
-        while (peaks_ch[discard_ch_n] 
-            - peaks_ch_std[discard_ch_n]*peaks_ch_std_mult) <= peaks_ch_min:
+        while (peaks_ch[discard_ch_n] - 
+            peaks_ch_std[discard_ch_n]*peaks_ch_std_mult_l) <= peaks_ch_min:
             discard_ch_n = discard_ch_n + 1
         sel_peaks_ch = peaks_ch[discard_ch_n:]
-    elif (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult) >= peaks_ch_max:
+    elif (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max:
         discard_ch = 'right'
         discard_ch_n = 1
-        while (peaks_ch[-1-discard_ch_n] 
-            + peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult) >= peaks_ch_max:
+        while (peaks_ch[-1-discard_ch_n] +
+            peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult_r) >= peaks_ch_max:
             discard_ch_n = discard_ch_n + 1
         sel_peaks_ch = peaks_ch[:-discard_ch_n]
     else:
