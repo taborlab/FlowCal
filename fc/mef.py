@@ -27,19 +27,23 @@ from sklearn.cluster import DBSCAN
 import fc.plot
 import fc.transform
 
-def clustering_dbscan(data, eps = 20.0, min_samples = 40):
+def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     '''
     Find clusters in the data array using the DBSCAN method from the 
     scikit-learn library.
 
-    data        - NxD numpy array.
-    eps         - Parameter for DBSCAN. Check scikit-learn documentation for
-                  more info.
-    min_samples - Parameter for DBSCAN. Check scikit-learn documentation for
-                  more info.
+    data           - NxD numpy array.
+    eps            - Parameter for DBSCAN. Check scikit-learn documentation for
+                     more info.
+    min_samples    - Parameter for DBSCAN. Check scikit-learn documentation for
+                     more info.
+    n_clusters_exp - Number of expected clusters
 
     returns     - Nx1 numpy array, labeling each sample to a cluster.
     '''
+    # Default value of min_samples
+    if min_samples is None:
+        min_samples = data.shape[0]/200.
 
     # Initialize DBSCAN object
     db = DBSCAN(eps = eps, min_samples = min_samples)
@@ -58,18 +62,22 @@ def clustering_dbscan(data, eps = 20.0, min_samples = 40):
     n_samples_cluster = [numpy.sum(labels==li) for li in labels_all]
 
     # Check that no cluster is too small.
-    # Clusters are assumed to be roughly the same size. Any cluster smaller 
-    # than 10 times less than the expected amount will be removed
-    min_n_samples = float(n_samples)/n_labels/10.0
-    labels_all_checked = []
-    for i, li in enumerate(labels_all):
-        if n_samples_cluster[i] < min_n_samples:
-            labels[labels==li] = -1
+    # Clusters are assumed to be uniformly distributed. Any cluster 10 std 
+    # smaller than the expected size (under a binomial distribution) will be 
+    # assimilated with the next smallest
+    # Larger than expected clusters will be assumed to correspond to clusters
+    # containing data for 2 or more bead types.
+    p = 1./n_clusters_exp
+    n_samples_exp = data.shape[0]*p
+    n_samples_std = numpy.sqrt(data.shape[0]*p*(1-p))
+    while(True):
+        cluster_size = numpy.array([numpy.sum(labels==li) for li in labels_all])
+        cluster_i = numpy.argsort(cluster_size)
+        if cluster_size[cluster_i[0]] < n_samples_exp - n_samples_std*10:
+            labels[labels==labels_all[cluster_i[0]]] = labels_all[cluster_i[1]]
+            labels_all.remove(labels_all[cluster_i[0]])
         else:
-            labels_all_checked.append(li)
-    if -1 in labels_all and -1 not in labels_all_checked:
-        labels_all_checked.append(-1)
-    labels_all = labels_all_checked
+            break
 
     # Change the cluster numbers to a contiguous positive sequence
     labels_checked = -1*numpy.ones(len(labels))
@@ -385,7 +393,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             pyplot.figure(figsize = (8,6))
             fc.plot.scatter3d(data_plot, 
                     channels = cluster_channels, 
-                    savefig = '{}/{}_cluster.png'.format(plot_dir,
+                    savefig = '{}/cluster_{}.png'.format(plot_dir,
                                                     data_file_name))
             pyplot.close()
 
@@ -461,8 +469,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 pyplot.ylim(ylim)
             # Save and close
             pyplot.tight_layout()
-            pyplot.savefig('{}/{}_peaks_{}.png'.format(plot_dir,
-                                    data_file_name, mef_channel), dpi = 300)
+            pyplot.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
+                                    mef_channel, data_file_name), dpi = 300)
             pyplot.close()
 
         # 3. Select peaks for fitting
@@ -525,9 +533,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                     sc,
                     xlabel = xlabel,
                     ylabel = 'MEF',
-                    savefig = '{}/{}_std_crv_{}.png'.format(plot_dir,
+                    savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
+                                                            mef_channel,
                                                             data_file_name, 
-                                                            mef_channel))
+                                                            ))
             pyplot.close()
 
     # Make output transformation function
