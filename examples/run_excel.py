@@ -22,7 +22,7 @@ gated_plot_dir = 'plot_gated'
 
 # Excel file name
 input_form = 'input_form.xlsx'
-output_form = 'output.xlsx'
+output_form = 'output.xls'
 
 if __name__ == "__main__":
     # Check that directories exists, create if it doesn't.
