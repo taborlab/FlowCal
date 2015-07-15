@@ -8,6 +8,9 @@ import numpy
 import scipy
 from matplotlib import pyplot
 
+from Tkinter import Tk
+from tkFileDialog import askopenfilename
+
 import fc.io
 import fc.excel_io
 import fc.gate
@@ -16,20 +19,27 @@ import fc.transform
 import fc.mef
 import fc.stats
 
-# Directories
-beads_plot_dir = 'plot_beads'
-gated_plot_dir = 'plot_gated'
+def main():
+    # Launch dialog to select input file
+    Tk().withdraw() # don't show main window
+    input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')]) 
+    if not input_form:
+        print "Canelled."
+        return
 
-# Excel file name
-input_form = 'input_form.xlsx'
-output_form = 'output.xls'
+    # Get base directory
+    basedir, __ = os.path.split(input_form)
 
-if __name__ == "__main__":
-    # Check that directories exists, create if it doesn't.
+    # Generate plotting directories
+    beads_plot_dir = "{}/{}".format(basedir, 'plot_beads')
+    gated_plot_dir = "{}/{}".format(basedir, 'plot_gated')
     if not os.path.exists(beads_plot_dir):
         os.makedirs(beads_plot_dir)
     if not os.path.exists(gated_plot_dir):
         os.makedirs(gated_plot_dir)
+
+    # Generate path of output file
+    output_form = "{}/{}".format(basedir, 'output.xls')
 
     # Get beads files data from input form
     beads_info = fc.excel_io.import_rows(input_form, "beads")
@@ -38,7 +48,7 @@ if __name__ == "__main__":
     print "\nProcessing beads..."
     for bi in beads_info:
         # Open file
-        di = fc.io.TaborLabFCSData(bi['File Path'])
+        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, bi['File Path']))
         print "{} ({} events).".format(str(di), di.shape[0])
 
         # Trim
@@ -88,7 +98,7 @@ if __name__ == "__main__":
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData(ci['File Path'])
+        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']))
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
@@ -165,3 +175,7 @@ if __name__ == "__main__":
     fc.excel_io.export_workbook(output_form, {'cells': ws})
 
     print "\nDone."
+    raw_input("Press Enter to exit...")
+
+if __name__ == "__main__":
+    main()
