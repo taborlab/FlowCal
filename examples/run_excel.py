@@ -156,6 +156,7 @@ def main():
         ci['Gated Counts'] = di.shape[0]
         for channel in ['FL1-H']:
             ci[channel + ' Mean'] = fc.stats.mean(di, channel)
+            ci[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
             ci[channel + ' Median'] = fc.stats.median(di, channel)
             ci[channel + ' Mode'] = fc.stats.mode(di, channel)
             ci[channel + ' Std'] = fc.stats.std(di, channel)

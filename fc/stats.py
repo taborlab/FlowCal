@@ -9,8 +9,10 @@
 #
 # Requires:
 #   * numpy
+#   * scipy
 
 import numpy
+import scipy.stats
 
 def mean(data, channel):
     ''' Calculate the mean.
@@ -23,6 +25,18 @@ def mean(data, channel):
         raise ValueError("Channel should be a scalar.")
 
     return numpy.mean(data[:,channel])
+
+def gmean(data, channel):
+    ''' Calculate the geometric mean.
+
+    Attributes:
+    data    - NxD FCSData object or numpy array
+    channel - Channel in which to calculate the statistic
+    '''
+    if hasattr(channel, '__iter__'):
+        raise ValueError("Channel should be a scalar.")
+
+    return scipy.stats.gmean(data[:,channel])
 
 def median(data, channel):
     ''' Calculate the median.
