@@ -29,7 +29,8 @@ def main():
         return
 
     # Get base directory
-    basedir, __ = os.path.split(input_form)
+    basedir, input_file = os.path.split(input_form)
+    input_filename, __ = os.path.splitext(input_file)
 
     # Generate plotting directories
     beads_plot_dir = "{}/{}".format(basedir, 'plot_beads')
@@ -40,7 +41,7 @@ def main():
         os.makedirs(gated_plot_dir)
 
     # Generate path of output file
-    output_form = "{}/{}".format(basedir, 'output.xlsx')
+    output_form = "{}/{}".format(basedir, input_filename + '_output.xlsx')
 
     # Get beads files data from input form
     beads_info = fc.excel_io.import_rows(input_form, "beads")
