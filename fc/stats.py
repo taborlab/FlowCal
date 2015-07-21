@@ -109,4 +109,4 @@ def RCV(data, channel):
         raise ValueError("Channel should be a scalar.")
 
     q75, q25 = numpy.percentile(data[:,channel], [75 ,25])
-    return numpy.median(data[:,channel])/(q75 - q25)
+    return (q75 - q25)/numpy.median(data[:,channel])
