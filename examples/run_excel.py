@@ -39,7 +39,7 @@ def main():
         os.makedirs(gated_plot_dir)
 
     # Generate path of output file
-    output_form = "{}/{}".format(basedir, 'output.xls')
+    output_form = "{}/{}".format(basedir, 'output.xlsx')
 
     # Get beads files data from input form
     beads_info = fc.excel_io.import_rows(input_form, "beads")
