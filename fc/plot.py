@@ -10,6 +10,7 @@
 #   * matplotlib
 #   * scipy
 
+import gc
 import os
 import csv
 
@@ -192,6 +193,7 @@ def hist1d(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
         pyplot.close()
+        gc.collect()
 
 def density2d(data, 
             channels = [0,1], 
@@ -332,6 +334,7 @@ def density2d(data,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
         pyplot.close()
+        gc.collect()
 
 def scatter3d(data_list, 
                 channels = [0,1,2], 
@@ -423,6 +426,7 @@ def scatter3d(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
         pyplot.close()
+        gc.collect()
 
 def mef_std_crv(peaks_ch, 
                 peaks_mef,
@@ -476,6 +480,7 @@ def mef_std_crv(peaks_ch,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
         pyplot.close()
+        gc.collect()
 
 
 ##############################################################################
@@ -598,3 +603,4 @@ def density_and_hist(data,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = 300)
         pyplot.close()
+        gc.collect()

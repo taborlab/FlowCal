@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import gc
 import os
 import os.path
 import sys
@@ -57,6 +58,7 @@ if __name__ == "__main__":
         hist_params = {'ylim': (0, 1000), 'div': 4},
         savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
     pyplot.close()
+    gc.collect()
 
     # Obtain standard curve transformation
     print "\nCalculating standard curve..."
@@ -116,5 +118,6 @@ if __name__ == "__main__":
                     'xlabel': 'Molecules of Equivalent Fluorescein (MEFL)'},
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
             pyplot.close()
+            gc.collect()
 
     

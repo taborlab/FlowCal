@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import gc
 import os
 import os.path
 import sys
@@ -148,6 +149,7 @@ def main():
                 'xlabel': 'Molecules of Equivalent Fluorescein (MEFL)'},
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
         pyplot.close()
+        gc.collect()
 
     # Export to output excel file
     print "\nWriting output file..."
