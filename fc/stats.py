@@ -111,7 +111,7 @@ def RCV(data, channel):
     q75, q25 = numpy.percentile(data[:,channel], [75 ,25])
     return (q75 - q25)/numpy.median(data[:,channel])
 
-def rate(data, channel):
+def rate(data, channel='Time'):
     ''' Calculate the flow rate of events.
 
     data    - NxD FCSData object or numpy array
