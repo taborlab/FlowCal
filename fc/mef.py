@@ -211,9 +211,9 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
 
     return labels
 
-def find_hist_peaks(data, min_val = 0, max_val = 1023):
+def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     '''
-    Find histogram peaks from a dataset.
+    Find histogram peaks using the smoothed mode method.
 
     The algorithm then proceeds as follows:
         1. Calculate the histogram.
@@ -254,6 +254,20 @@ def find_hist_peaks(data, min_val = 0, max_val = 1023):
     peak = bin_centers[i_max]
 
     return peak, hist_smooth
+
+def find_peaks_median(data):
+    '''
+    Find histogram peaks as the median.
+
+    data        - Nx1 numpy array with the 1D data from where peaks should be 
+                  identified. 
+
+    returns     - The median of data.
+    '''
+
+    peak = numpy.median(data)
+
+    return peak
 
 def select_peaks(peaks_ch, 
                 peaks_mef, 
@@ -401,7 +415,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     
     # Fit parameters
     err_par = lambda p: err_fun(p, peaks_ch, peaks_mef)
-    res = minimize(err_par, params)
+    res = minimize(err_par, params, options = {'gtol': 1e-6})
 
     # Separate parameters
     sc_params = res.x
@@ -416,6 +430,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
+    find_peaks_method = 'smoothed_mode',
     verbose = False, plot = False, plot_dir = None, full = False):
     '''Generate a function that transforms channel data into MEF data.
 
@@ -442,26 +457,27 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     Arguments:
     
-    data_beads       - an NxD numpy array or FCSData object.
-    peaks_mef        - a numpy array with the P known MEF values of the beads.
-                        If mef_channels is an iterable of lenght C, peaks mef
-                        should be a CxP array, where P is the number of MEF
-                        peaks.
-    mef_channels     - channel name, or iterable with channel names, on which
-                        to generate MEF transformation functions.
-    cluster_method   - method used for peak clustering.
-    cluster_params   - parameters to pass to the clustering method.
-    cluster_channels - channels used for clustering.
-    verbose          - whether to print information about step completion,
-                        warnings and errors.
-    plot             - If True, produce diagnostic plots.
-    plot_dir         - Directory where to save diagnostics plots. Ignored if 
-                        plot is False.
-    full             - Whether to include intermediate results in the output.
-                        If full is True, the function returns a named tuple
-                        with fields as described below. If full is False, the
-                        function only returns the calculated transformation
-                        function.
+    data_beads        - an NxD numpy array or FCSData object.
+    peaks_mef         - a numpy array with the P known MEF values of the beads.
+                         If mef_channels is an iterable of lenght C, peaks mef
+                         should be a CxP array, where P is the number of MEF
+                         peaks.
+    mef_channels      - channel name, or iterable with channel names, on which
+                         to generate MEF transformation functions.
+    cluster_method    - method used for peak clustering.
+    cluster_params    - parameters to pass to the clustering method.
+    cluster_channels  - channels used for clustering.
+    find_peaks_method - Method used to find the peak value.
+    verbose           - whether to print information about step completion,
+                         warnings and errors.
+    plot              - If True, produce diagnostic plots.
+    plot_dir          - Directory where to save diagnostics plots. Ignored if 
+                         plot is False.
+    full              - Whether to include intermediate results in the output.
+                         If full is True, the function returns a named tuple
+                         with fields as described below. If full is False, the
+                         function only returns the calculated transformation
+                         function.
 
     Returns: 
 
@@ -543,7 +559,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     sc_all = []
     if full:
         peaks_ch_all = []
-        peaks_hists_all = []
+        if find_peaks_method == 'smoothed_mode':
+            peaks_hists_all = []
         sel_peaks_ch_all = []
         sel_peaks_mef_all = []
         sc_beads_all = []
@@ -564,12 +581,15 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Find peaks on all the channel data
         min_fl = data_channel.channel_info[0]['range'][0]
         max_fl = data_channel.channel_info[0]['range'][1]
-
-        peaks_hists = [find_hist_peaks(di[:,mef_channel], 
-                            min_val = min_fl, max_val = max_fl)
-                            for di in data_clustered]
-        peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
-        hists_smooth = [ph[1] for ph in peaks_hists]
+        if find_peaks_method == 'smoothed_mode':
+            peaks_hists = [find_peaks_smoothed_mode(di[:,mef_channel], 
+                                min_val = min_fl, max_val = max_fl)
+                                for di in data_clustered]
+            peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
+            hists_smooth = [ph[1] for ph in peaks_hists]
+        elif find_peaks_method == 'median':
+            peaks_ch = numpy.array([find_peaks_median(di[:,mef_channel]) 
+                                for di in data_clustered])
         # Sort peaks and clusters
         ind_sorted = numpy.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
@@ -578,7 +598,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Accumulate results
         if full:
             peaks_ch_all.append(peaks_ch)
-            peaks_hists_all.append(hists_smooth)
+            if find_peaks_method == 'smoothed_mode':
+                peaks_hists_all.append(hists_smooth)
         # Print information
         if verbose:
             print "- STEP 2. PEAK IDENTIFICATION."
@@ -594,10 +615,13 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 alpha = 0.75)
             # Plot smoothed histograms and peaks
             for c, i in zip(colors, cluster_sorted_ind):
+                # Smoothed histogram, if applicable
+                if find_peaks_method == 'smoothed_mode':
+                    h = hists_smooth[i]
+                    pyplot.plot(numpy.linspace(min_fl, max_fl, len(h)), h*4, 
+                        color = c)
+                # Peak values
                 p = peaks_ch[i]
-                h = hists_smooth[i]
-                pyplot.plot(numpy.linspace(min_fl, max_fl, len(h)), h*4, 
-                    color = c)
                 ylim = pyplot.ylim()
                 pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
                 pyplot.ylim(ylim)
@@ -688,7 +712,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Peak finding results
         peak_find_res = {}
         peak_find_res['peaks_ch'] = peaks_ch_all
-        peak_find_res['peaks_hists'] = peaks_hists_all
+        if find_peaks_method == 'smoothed_mode':
+            peak_find_res['peaks_hists'] = peaks_hists_all
         # Peak selection results
         peak_sel_res = {}
         peak_sel_res['sel_peaks_ch'] = sel_peaks_ch_all
