@@ -157,6 +157,7 @@ def main():
     for ci, di, diug in zip(cells_info, data_gated, data):
         ci['Ungated Counts'] = diug.shape[0]
         ci['Gated Counts'] = di.shape[0]
+        ci['Gated Counts/millsecond'] = fc.stats.rate(di,'Time')
         for channel in ['FL1-H']:
             ci[channel + ' Mean'] = fc.stats.mean(di, channel)
             ci[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
