@@ -3,6 +3,8 @@ import gc
 import os
 import os.path
 import sys
+from platform import system as platformSys
+from subprocess import call
 sys.path.append('..')
 
 import numpy
@@ -23,7 +25,13 @@ import fc.stats
 def main():
     # Launch dialog to select input file
     Tk().withdraw() # don't show main window
-    input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')]) 
+    # OSX ONLY: Call bash script to prevent file select window from sticking after use
+    if platformSys() == 'Darwin':
+        call("defaults write org.python.python ApplePersistenceIgnoreState YES", shell=True)
+        input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
+        call("defaults write org.python.python ApplePersistenceIgnoreState NO", shell=True)    
+    else:
+        input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
     if not input_form:
         print "Canelled."
         return
