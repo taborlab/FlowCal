@@ -6,9 +6,9 @@ Installation
 ----------
 Python 2.7 is required. The following Python packages should also be installed:
 
-* `matplotlib` (1.4.3)
 * `numpy` (1.9.2)
 * `scipy` (0.15.1)
+* `matplotlib` (1.4.3)
 * `scikit-learn` (0.16.1)
 * `xlrd` (0.9.3)
 * `openpyxl` (2.0.2)

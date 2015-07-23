@@ -2,8 +2,6 @@
 import gc
 import os
 import os.path
-import sys
-sys.path.append('..')
 
 import numpy
 import scipy
