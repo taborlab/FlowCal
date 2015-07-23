@@ -153,8 +153,11 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
                                         n_clusters)
         means = numpy.array([numpy.mean(di, axis = 0) 
             for di in data_clustered])
-        covars = [numpy.cov(di.T).reshape(-1,1) for di in data_clustered]
-#        print covars
+        
+        if data.shape[1] == 1:
+            covars = [numpy.cov(di.T).reshape(1,1) for di in data_clustered]
+        else:
+            covars = [numpy.cov(di.T) for di in data_clustered]
 
         # Initialize GMM object
         gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
@@ -188,7 +191,10 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
             sorted_i_i = sorted_i[il:ih]
             data_i = data[sorted_i_i]
             means.append(numpy.mean(data_i, axis = 0))
-            covars.append(numpy.cov(data_i.T))
+            if data.shape[1] == 1:
+                covars.append(numpy.cov(data_i.T).reshape(1,1))
+            else:
+                covars.append(numpy.cov(data_i.T))
         means = numpy.array(means)
 
         # Initialize GMM object
@@ -544,7 +550,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             # This could call scatter3d with just 2d data + an empty channel
             # properly labeling the channels will be complicated
             # Otherwise, a scatter2d could be implemented in fc.plot
-            
+            pass
             
         if len(cluster_channels) == 3:
             # Plot
