@@ -88,6 +88,7 @@ def export_workbook(workbook_name, worksheet_data):
     '''
     # Create Workbook
     workbook = openpyxl.Workbook()
+    workbook.remove_sheet(workbook.get_active_sheet())
     
     starting_index = 1 if float(openpyxl.__version__.split('.')[0])>=2 else 0
     for name, data in worksheet_data.iteritems():
