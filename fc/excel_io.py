@@ -12,6 +12,7 @@ import collections
 
 import xlrd
 import xlwt
+import openpyxl
 
 def import_rows(workbook_name, worksheet_name):
     ''' Opens an excel doument and imports data from a specific sheet.
@@ -86,15 +87,17 @@ def export_workbook(workbook_name, worksheet_data):
     worksheet_data  - Dictionary of list of lists, representing data to save.
     '''
     # Create Workbook
-    workbook = xlwt.Workbook()
+    workbook = openpyxl.Workbook()
     
+    starting_index = 1 if float(openpyxl.__version__.split('.')[0])>=2 else 0
     for name, data in worksheet_data.iteritems():
         # Add sheet
-        sheet = workbook.add_sheet(name)
+        workbook.create_sheet().title = name
+        sheet = workbook.get_sheet_by_name(name)
 
         for r, row in enumerate(data):
             for c, value in enumerate(row):
-                sheet.write(r, c, value) 
+                sheet.cell(row = r + starting_index, column = c + starting_index).value = value
 
     # Try to save document   
     try:

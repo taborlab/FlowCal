@@ -2,6 +2,7 @@
 import gc
 import os
 import os.path
+import collections
 import sys
 from platform import system as platformSys
 from subprocess import call
@@ -49,7 +50,7 @@ def main():
         os.makedirs(gated_plot_dir)
 
     # Generate path of output file
-    output_form = "{}/{}".format(basedir, input_filename + '_output.xls')
+    output_form = "{}/{}".format(basedir, input_filename + '_output.xlsx')
 
     # Get beads files data from input form
     beads_info = fc.excel_io.import_rows(input_form, "beads")
@@ -88,7 +89,6 @@ def main():
             mef.append(mefl)
             mef_channels.append('FL1-H')
         mef = numpy.array(mef)
-
         # Obtain standard curve transformation
         print "\nCalculating standard curve..."
         to_mef = fc.mef.get_transform_fxn(gated_di, mef, 
@@ -176,7 +176,7 @@ def main():
             ci[channel + ' CV'] = fc.stats.CV(di, channel)
             ci[channel + ' IQR'] = fc.stats.iqr(di, channel)
             ci[channel + ' RCV'] = fc.stats.RCV(di, channel)
-    # Convert data
+    # Convert stats
     headers = cells_info[0].keys()
     content = []
     for ci in cells_info:
@@ -184,9 +184,57 @@ def main():
         for h in headers:
             row.append(ci[h])
         content.append(row)
+    stats_ws = [headers] + content
+
+    # Calculate histogram values
+    beads_x = collections.OrderedDict()
+    data_y = collections.OrderedDict()
+    channels = ['FL1-H']
+    for ci, di in zip(cells_info, data_gated):
+        beads_id = ci['Beads File Path']
+        #Calculate x values for a beads entry
+        if beads_id not in beads_x:
+            beads_x[beads_id] = []
+            for channel in channels:
+                r = di[:,channel].channel_info[0]['range']
+                dr = (numpy.log10(r[1]) - numpy.log10(r[0]))/float(r[2] - 1)
+                #Edges of channels
+                bins = numpy.logspace(numpy.log10(r[0]) - dr/2., 
+                                        numpy.log10(r[1]) + dr/2., 
+                                        (r[2] + 1))
+                #Middle of channel
+                x_values = numpy.logspace(numpy.log10(r[0]), 
+                                    numpy.log10(r[1]), 
+                                    (r[2]))
+                x_param = (channel,bins,x_values)
+                beads_x[beads_id].append(x_param)
+        else:
+            x_param = beads_x[beads_id]
+        # calculate y values for data
+        data_id = ci['File Path']
+        data_y[data_id] = []
+        for channel, bins, x_values in beads_x[beads_id]:
+            counts, values = numpy.histogram(di[:,channel],bins = bins)
+            data_y[data_id].append((beads_id, channel, counts))
+    # Format beads sheet
+    beads_ws = []
+    for beads_id, x_param in beads_x.items():
+        for channel, bins, x_values in x_param:
+            row = [beads_id,channel]
+            for value in x_values:
+                row.append(value)
+            beads_ws.append(row)
+    # Format Cells sheet
+    hist_ws = []
+    for data_id, y_values in data_y.items():
+        for beads_id, channel, counts in y_values:
+            row = [data_id, beads_id, channel]
+            for value in counts:
+                row.append(value)
+            hist_ws.append(row)
+
     # Save output excel file
-    ws = [headers] + content
-    fc.excel_io.export_workbook(output_form, {'cells': ws})
+    fc.excel_io.export_workbook(output_form, {'Stats': stats_ws,'Hist x':beads_ws, 'Hist y':hist_ws})
 
     print "\nDone."
     raw_input("Press Enter to exit...")
