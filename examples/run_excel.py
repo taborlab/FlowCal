@@ -23,7 +23,7 @@ import fc.mef
 import fc.stats
 
 def main():
-    # Launch dialog to select input file
+    # Launch dialogue to select input file
     Tk().withdraw() # don't show main window
     # OSX ONLY: Call bash script to prevent file select window from sticking after use
     if platformSys() == 'Darwin':
@@ -33,7 +33,7 @@ def main():
     else:
         input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
     if not input_form:
-        print "Canelled."
+        print "Cancelled."
         return
 
     # Get base directory
