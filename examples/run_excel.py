@@ -66,7 +66,7 @@ def main():
         di = fc.gate.high_low(di, ['FSC-H', 'SSC-H'])
         # Density gate
         print "Running density gate (fraction = {:.2f})..."\
-            .format(bi['Gate Fraction'])
+            .format(float(bi['Gate Fraction']))
         gated_di, gate_contour = fc.gate.density2d(data = di,
                                 gate_fraction = float(bi['Gate Fraction']))
         # Plot
@@ -138,9 +138,9 @@ def main():
     data_gated_contour = []
     for ci, di in zip(cells_info, data_mef):
         print "{} (gate fraction = {:.2f})...".format(str(di), 
-                ci['Gate Fraction'])
+                float(ci['Gate Fraction']))
         di_gated, gate_contour = fc.gate.density2d(data = di, bins_log = True,
-                                        gate_fraction = ci['Gate Fraction'])
+                                        gate_fraction = float(ci['Gate Fraction']))
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
