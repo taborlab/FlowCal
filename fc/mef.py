@@ -547,10 +547,13 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
         if len(cluster_channels) == 2:
-            # This could call scatter3d with just 2d data + an empty channel
-            # properly labeling the channels will be complicated
-            # Otherwise, a scatter2d could be implemented in fc.plot
-            pass
+            # Plot
+            pyplot.figure(figsize = (6,4))
+            fc.plot.scatter2d(data_plot, 
+                    channels = cluster_channels, 
+                    savefig = '{}/cluster_{}.png'.format(plot_dir,
+                                                    data_file_name))
+            pyplot.close()
             
         if len(cluster_channels) == 3:
             # Plot

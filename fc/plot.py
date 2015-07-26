@@ -336,6 +336,63 @@ def density2d(data,
         pyplot.close()
         gc.collect()
 
+def scatter2d(data_list, 
+                channels = [0,1], 
+                savefig = None,
+                **kwargs):
+
+    '''Plot a 2D scatter plot of a list of data objects
+
+    data_list  - a NxD FCSData object or numpy array, or a list of them.
+    channels   - channels to use on the data objects.
+    savefig    - if not None, it specifies the name of the file to save the 
+                figure to.
+    **kwargs   - passed directly to matploblib's plot functions. 'color' can be 
+                specified as a list, with an element for each data object.
+    '''    
+
+    # Check appropriate number of channels
+    assert len(channels) == 2, 'Two channels need to be specified.'
+
+    # Convert to list if necessary
+    if not isinstance(data_list, list):
+        data_list = [data_list]
+    if 'color' in kwargs:
+        kwargs['color'] = [kwargs['color']]
+
+    # Default colors
+    if 'color' not in kwargs:
+        kwargs['color'] = load_colormap('spectral', len(data_list))
+
+    # Iterate through data_list
+    for i, data in enumerate(data_list):
+        data_plot = data[:, channels]
+        kwargsi = kwargs.copy()
+        if 'color' in kwargsi:
+            kwargsi['color'] = kwargs['color'][i]
+        # ch0 vs ch2
+        pyplot.scatter(data_plot[:,0], data_plot[:,1],
+            s = 5, alpha = 0.25, **kwargsi)
+
+    # Extract info about channels
+    if hasattr(data_plot, 'channel_info'):
+        name_ch = [data_plot[:,i].channel_info[0]['label'] for i in [0,1]]
+        gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage'] for i in [0,1]]
+        range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1]]
+
+        pyplot.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
+        pyplot.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
+        pyplot.xlim(range_ch[0][0], range_ch[0][1])
+        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
+        gc.collect()
+
+
 def scatter3d(data_list, 
                 channels = [0,1,2], 
                 savefig = None,
@@ -390,36 +447,38 @@ def scatter3d(data_list,
             marker='o', alpha = 0.1, **kwargsi)
 
     # Extract info about channels
-    name_ch = [data_plot[:,i].channel_info[0]['label'] for i in [0,1,2]]
-    gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage'] for i in [0,1,2]]
-    range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1,2]]
+    if hasattr(data_plot, 'channel_info'):
+        name_ch = [data_plot[:,i].channel_info[0]['label'] for i in [0,1,2]]
+        gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage']\
+                                                             for i in [0,1,2]]
+        range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1,2]]
 
-    # ch0 vs ch2
-    pyplot.subplot(221)
-    pyplot.ylabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-    pyplot.xlim(range_ch[0][0], range_ch[0][1])
-    pyplot.ylim(range_ch[2][0], range_ch[2][1])
-    # ch0 vs ch1
-    pyplot.subplot(223)
-    pyplot.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
-    pyplot.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
-    pyplot.xlim(range_ch[0][0], range_ch[0][1])
-    pyplot.ylim(range_ch[1][0], range_ch[1][1])
-    # ch2 vs ch1
-    pyplot.subplot(224)
-    pyplot.xlabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-    pyplot.xlim(range_ch[2][0], range_ch[2][1])
-    pyplot.ylim(range_ch[1][0], range_ch[1][1])
-    # 3d
-    ax_3d.set_xlim(range_ch[0][0], range_ch[0][1])
-    ax_3d.set_ylim(range_ch[1][0], range_ch[1][1])
-    ax_3d.set_zlim(range_ch[2][0], range_ch[2][1])
-    ax_3d.set_xlabel(name_ch[0])
-    ax_3d.set_ylabel(name_ch[1])
-    ax_3d.set_zlabel(name_ch[2])
-    ax_3d.xaxis.set_ticklabels([])
-    ax_3d.yaxis.set_ticklabels([])
-    ax_3d.zaxis.set_ticklabels([])
+        # ch0 vs ch2
+        pyplot.subplot(221)
+        pyplot.ylabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
+        pyplot.xlim(range_ch[0][0], range_ch[0][1])
+        pyplot.ylim(range_ch[2][0], range_ch[2][1])
+        # ch0 vs ch1
+        pyplot.subplot(223)
+        pyplot.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
+        pyplot.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
+        pyplot.xlim(range_ch[0][0], range_ch[0][1])
+        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+        # ch2 vs ch1
+        pyplot.subplot(224)
+        pyplot.xlabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
+        pyplot.xlim(range_ch[2][0], range_ch[2][1])
+        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+        # 3d
+        ax_3d.set_xlim(range_ch[0][0], range_ch[0][1])
+        ax_3d.set_ylim(range_ch[1][0], range_ch[1][1])
+        ax_3d.set_zlim(range_ch[2][0], range_ch[2][1])
+        ax_3d.set_xlabel(name_ch[0])
+        ax_3d.set_ylabel(name_ch[1])
+        ax_3d.set_zlabel(name_ch[2])
+        ax_3d.xaxis.set_ticklabels([])
+        ax_3d.yaxis.set_ticklabels([])
+        ax_3d.zaxis.set_ticklabels([])
 
     # Save if necessary
     if savefig is not None:
