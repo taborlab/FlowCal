@@ -437,7 +437,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
-    find_peaks_method = 'smoothed_mode',
+    find_peaks_method = 'median',
     verbose = False, plot = False, plot_dir = None, full = False):
     '''Generate a function that transforms channel data into MEF data.
 
