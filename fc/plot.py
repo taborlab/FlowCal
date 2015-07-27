@@ -631,7 +631,6 @@ def density_and_hist(data,
                 title = str(data)
             pyplot.title(title)
 
-
     # Colors
     if n_plots - 1 < 3:
         n_colors = 3
