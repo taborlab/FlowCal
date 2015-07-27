@@ -52,7 +52,7 @@ if __name__ == "__main__":
     pyplot.figure(figsize = (6,4))
     fc.plot.density_and_hist(beads_data, gated_beads_data, 
         density_channels = ['FSC-H', 'SSC-H'], 
-        hist_channels = ['FL1-H'],
+        hist_channels = ['FL1-H', 'FL2-H', 'FL3-H'],
         gate_contour = gate_contour, 
         density_params = {'mode': 'scatter'}, 
         hist_params = {'ylim': (0, 1000), 'div': 4},

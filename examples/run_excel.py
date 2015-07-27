@@ -64,6 +64,13 @@ def main():
         di = fc.io.TaborLabFCSData("{}/{}".format(basedir, bi['File Path']))
         print "{} ({} events).".format(str(di), di.shape[0])
 
+        # Extract channels used for clustering
+        if 'Clustering Channels' in bi:
+            cluster_channels = bi['Clustering Channels'].split(',')
+            cluster_channels = [cc.strip() for cc in cluster_channels]
+        else:
+            cluster_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+
         # Trim
         di = fc.gate.start_end(di, num_start=250, num_end=100)
         di = fc.gate.high_low(di, ['FSC-H', 'SSC-H'])
@@ -76,10 +83,10 @@ def main():
         pyplot.figure(figsize = (6,4))
         fc.plot.density_and_hist(di, gated_di, 
             density_channels = ['FSC-H', 'SSC-H'], 
-            hist_channels = ['FL1-H'],
+            hist_channels = cluster_channels,
             gate_contour = gate_contour, 
             density_params = {'mode': 'scatter'}, 
-            hist_params = {'div': 4, 'edgecolor': 'g'},
+            hist_params = {'div': 4},
             savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, di))
 
         # Process MEF values
@@ -96,7 +103,7 @@ def main():
         print "\nCalculating standard curve..."
         to_mef = fc.mef.get_transform_fxn(gated_di, mef, 
                         cluster_method = bi['Clustering Method'], 
-                        cluster_channels = ['FL1-H', 'FL2-H', 'FL3-H'],
+                        cluster_channels = cluster_channels,
                         mef_channels = mef_channels, verbose = True, 
                         plot = True, plot_dir = beads_plot_dir)
 
