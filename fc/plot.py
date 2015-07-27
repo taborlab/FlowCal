@@ -137,19 +137,17 @@ def hist1d(data_list,
     for i, data in enumerate(data_list):
         # Extract channel
         y = data[:, channel]
-        # If bins are not specified, calculate bins from range
-        if bins is None:
+        # If bins are not specified, get bins from FCSData object
+        if bins is None and hasattr(y, 'channel_info'):
+            # Get bin information
             r = y.channel_info[0]['range']
-            if log == True:
-                dr = (numpy.log10(r[1]) - numpy.log10(r[0]))/float(r[2] - 1)
-                bins = numpy.logspace(numpy.log10(r[0]) - dr/2., 
-                                        numpy.log10(r[1]) + dr/2., 
-                                        (r[2]/div + 1))
-            else:
-                dr = (r[1] - r[0])/float(r[2] - 1)
-                bins = numpy.linspace(r[0] - dr/2., 
-                                        r[1] + dr/2., 
-                                        (r[2]/div + 1))
+            bd = y.channel_info[0]['bin_edges']
+            # Get bin scaled indices
+            xd = numpy.linspace(0, 1, r[2] + 1)
+            xs = numpy.linspace(0, 1, r[2]/div + 1)
+            # Generate sub-sampled bins
+            bins = numpy.interp(xs, xd, bd)
+
         # Check for properties specified as lists.
         kwargsi = kwargs.copy()
         if 'edgecolor' in kwargsi:
@@ -235,27 +233,21 @@ def density2d(data,
     assert len(channels) == 2, 'Two channels need to be specified.'
     data_plot = data[:, channels]
 
-    # Calculate bins if necessary
-    if bins is None:
+    # If bins are not specified, get bins from FCSData object
+    if bins is None and hasattr(data_plot, 'channel_info'):
+        # Get bin information
         rx = data_plot.channel_info[0]['range']
+        bdx = data_plot.channel_info[0]['bin_edges']
         ry = data_plot.channel_info[1]['range']
-        if log == True:
-            drx = (numpy.log10(rx[1]) - numpy.log10(rx[0]))/float(rx[2] - 1)
-            dry = (numpy.log10(ry[1]) - numpy.log10(ry[0]))/float(ry[2] - 1)
-            bins = numpy.array([numpy.logspace(numpy.log10(rx[0]), 
-                                            numpy.log10(rx[1]) + drx, 
-                                            (rx[2]/div + 1)),
-                                numpy.logspace(numpy.log10(ry[0]), 
-                                            numpy.log10(ry[1]) + dry, 
-                                            (ry[2]/div + 1)),
-                                ])
-        else:
-            drx = (rx[1] - rx[0])/float(rx[2] - 1)
-            dry = (ry[1] - ry[0])/float(ry[2] - 1)
-            bins = numpy.array([
-                numpy.linspace(rx[0], rx[1] + drx, (rx[2]/div + 1)),
-                numpy.linspace(ry[0], ry[1] + dry, (ry[2]/div + 1)),
-                ])
+        bdy = data_plot.channel_info[1]['bin_edges']
+        # Get bin scaled indices
+        xdx = numpy.linspace(0, 1, rx[2] + 1)
+        xsx = numpy.linspace(0, 1, rx[2]/div + 1)
+        xdy = numpy.linspace(0, 1, ry[2] + 1)
+        xsy = numpy.linspace(0, 1, ry[2]/div + 1)
+        # Generate sub-sampled bins
+        bins = numpy.array([numpy.interp(xsx, xdx, bdx), 
+                            numpy.interp(xsy, xdy, bdy)])
 
     # Calculate histogram
     H, xedges, yedges = numpy.histogram2d(data_plot[:,0],

@@ -74,8 +74,8 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
 
     return gated_data
 
-def density2d(data, channels = [0,1], bins = None, bins_log = False,
-    sigma = 10.0, gate_fraction = 0.65):
+def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
+    sigma = 10.0):
     '''Gate that preserves the points in the region with highest density.
 
     First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
@@ -86,9 +86,8 @@ def density2d(data, channels = [0,1], bins = None, bins_log = False,
     data            - NxD FCSData object or numpy array
     channels        - channels on which to perform gating
     bins            - bins argument to numpy.histogram2d. Autogenerate if None.
-    bins_log        - If bins is None, autogenerate bins in log space.
-    sigma           - standard deviation for Gaussian kernel
     gate_fraction   - fraction of data points to keep
+    sigma           - standard deviation for Gaussian kernel
 
     returns         - Gated MxD FCSData object or numpy array, 
                     - list of 2D numpy arrays of (x,y) coordinates of gate 
@@ -105,27 +104,11 @@ def density2d(data, channels = [0,1], bins = None, bins_log = False,
     assert data_ch.ndim > 1, 'Data should have at least 2 dimensions'
     assert data_ch.shape[0] > 1, 'Data must have more than 1 event'
 
-    # Generate bins if necessary
-    if bins is None:
-        rx = data_ch.channel_info[0]['range']
-        ry = data_ch.channel_info[1]['range']
-        if bins_log:
-            drx = (numpy.log10(rx[1]) - numpy.log10(rx[0]))/float(rx[2] - 1)
-            dry = (numpy.log10(ry[1]) - numpy.log10(ry[0]))/float(ry[2] - 1)
-            bins = numpy.array([numpy.logspace(numpy.log10(rx[0]), 
-                                               numpy.log10(rx[1]) + drx, 
-                                               (rx[2] + 1)),
-                                numpy.logspace(numpy.log10(ry[0]), 
-                                               numpy.log10(ry[1]) + dry, 
-                                               (ry[2] + 1)),
-                                ])
-        else:
-            drx = (rx[1] - rx[0])/float(rx[2] - 1)
-            dry = (ry[1] - ry[0])/float(ry[2] - 1)
-            bins = numpy.array([
-                numpy.linspace(rx[0], rx[1] + drx, (rx[2] + 1)),
-                numpy.linspace(ry[0], ry[1] + dry, (ry[2] + 1)),
-                ])
+    # Extract default bins if necessary
+    if bins is None and hasattr(data_ch, 'channel_info'):
+        bins = numpy.array([data_ch.channel_info[0]['bin_edges'],
+                            data_ch.channel_info[1]['bin_edges'],
+                            ])
 
     # Determine number of points to keep
     n = int(numpy.ceil(gate_fraction*float(data_ch.shape[0])))

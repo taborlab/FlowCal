@@ -99,7 +99,7 @@ if __name__ == "__main__":
     data_gated_contour = []
     for di in data_transf:
         print "{}...".format(str(di))
-        di_gated, gate_contour = fc.gate.density2d(data = di, bins_log = True,
+        di_gated, gate_contour = fc.gate.density2d(data = di, 
                                             gate_fraction = 0.3)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
