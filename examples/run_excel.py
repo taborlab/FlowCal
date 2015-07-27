@@ -139,8 +139,8 @@ def main():
     for ci, di in zip(cells_info, data_mef):
         print "{} (gate fraction = {:.2f})...".format(str(di), 
                 float(ci['Gate Fraction']))
-        di_gated, gate_contour = fc.gate.density2d(data = di, bins_log = True,
-                                        gate_fraction = float(ci['Gate Fraction']))
+        di_gated, gate_contour = fc.gate.density2d(data = di, 
+                                    gate_fraction = float(ci['Gate Fraction']))
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 

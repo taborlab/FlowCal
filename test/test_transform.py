@@ -119,6 +119,63 @@ class TestExponentiateFCS(unittest.TestCase):
               [1.,10**(1023/256.),1024]]
         self.assertEqual(cit, co)
 
+    def test_transform_bins_original_integrity(self):
+        dt = fc.transform.exponentiate(self.d)
+        vi = [self.d.channel_info[i]['bin_vals'] for i in range(5)]
+        ei = [self.d.channel_info[i]['bin_edges'] for i in range(5)]
+        vo = [range(1024)]*5
+        eo = [numpy.arange(-0.5, 1024.5, 1.0)]*5
+        numpy.testing.assert_array_equal(vi, vo)
+        numpy.testing.assert_array_equal(ei, eo)
+
+    def test_transform_bins_all(self):
+        dt = fc.transform.exponentiate(self.d)
+        vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
+        eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
+        vo = [numpy.logspace(0., 1023/256., 1024)]*5
+        eo = [numpy.logspace(-0.5/256., 1023.5/256., 1025)]*5
+        numpy.testing.assert_array_equal(vit, vo)
+        numpy.testing.assert_array_equal(eit, eo)
+
+    def test_transform_bins_channel(self):
+        dt = fc.transform.exponentiate(self.d, channels = 1)
+        vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
+        eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
+        vo = [numpy.arange(1024),
+              numpy.logspace(0., 1023/256., 1024),
+              numpy.arange(1024),
+              numpy.arange(1024),
+              numpy.arange(1024),
+              ]
+        eo = [numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.logspace(-0.5/256., 1023.5/256., 1025),
+              numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.arange(-0.5, 1024.5, 1.0),
+              ]
+        numpy.testing.assert_array_equal(vit, vo)
+        numpy.testing.assert_array_equal(eit, eo)
+
+    def test_transform_bins_channels(self):
+        dt = fc.transform.exponentiate(self.d, channels = [1,2,4])
+        vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
+        eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
+        vo = [numpy.arange(1024),
+              numpy.logspace(0., 1023/256., 1024),
+              numpy.logspace(0., 1023/256., 1024),
+              numpy.arange(1024),
+              numpy.logspace(0., 1023/256., 1024),
+              ]
+        eo = [numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.logspace(-0.5/256., 1023.5/256., 1025),
+              numpy.logspace(-0.5/256., 1023.5/256., 1025),
+              numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.logspace(-0.5/256., 1023.5/256., 1025),
+              ]
+        numpy.testing.assert_array_equal(vit, vo)
+        numpy.testing.assert_array_equal(eit, eo)
+        pass
+
     def test_transform_channels_str(self):
         dt = fc.transform.exponentiate(self.d, channels = ['SSC-H', 
                                                         'FL1-H', 'FL3-H'])
@@ -257,6 +314,26 @@ class TestMefFCS(unittest.TestCase):
               [0, 1023, 1024],
               [numpy.log(0 + 1), numpy.log(1023 + 1), 1024]]
         self.assertEqual(cit, co)
+
+    def test_mef_bins_channels(self):
+        dt = fc.transform.to_mef(self.d, ['FL1-H','FL3-H'], 
+            [self.sc1, self.sc2], ['FL1-H','FL3-H'])
+        vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
+        eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
+        vo = [numpy.arange(1024),
+              numpy.arange(1024),
+              numpy.arange(1024)**2,
+              numpy.arange(1024),
+              numpy.log(numpy.arange(1024) + 1),
+              ]
+        eo = [numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.arange(-0.5, 1024.5, 1.0)**2,
+              numpy.arange(-0.5, 1024.5, 1.0),
+              numpy.log(numpy.arange(-0.5, 1024.5, 1.0) + 1),
+              ]
+        numpy.testing.assert_array_equal(vit, vo)
+        numpy.testing.assert_array_equal(eit, eo)
 
 if __name__ == '__main__':
     unittest.main()

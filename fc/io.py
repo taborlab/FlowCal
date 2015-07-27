@@ -183,47 +183,57 @@ class TaborLabFCSData(np.ndarray):
         ch1 = {
             'label':text.get('$P1N'),
             'number':1,
-            'range':[0, int(text.get('$P1R'))-1, int(text.get('$P1R'))],
             'pmt_voltage':text.get('BD$WORD13'),
             '100x_lin_gain':text.get('BD$WORD18'),
             'amplifier':amp(text.get('BD$WORD23')),
-            'threshold':text.get('BD$WORD29')
+            'threshold':text.get('BD$WORD29'),
+            'range':[0, int(text.get('$P1R'))-1, int(text.get('$P1R'))],
+            'bin_vals': np.arange(int(text.get('$P1R'))),
+            'bin_edges': np.arange(int(text.get('$P1R')) + 1) - 0.5,
             }
         ch2 = {
             'label':text.get('$P2N'),
             'number':2,
-            'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
             'pmt_voltage':text.get('BD$WORD14'),
             '100x_lin_gain':text.get('BD$WORD19'),
             'amplifier':amp(text.get('BD$WORD24')),
-            'threshold':text.get('BD$WORD30')
+            'threshold':text.get('BD$WORD30'),
+            'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
+            'bin_vals': np.arange(int(text.get('$P2R'))),
+            'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
             }
         ch3 = {
             'label':text.get('$P3N'),
             'number':3,
-            'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
             'pmt_voltage':text.get('BD$WORD15'),
             '100x_lin_gain':text.get('BD$WORD20'),
             'amplifier':amp(text.get('BD$WORD25')),
-            'threshold':text.get('BD$WORD31')
+            'threshold':text.get('BD$WORD31'),
+            'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
+            'bin_vals': np.arange(int(text.get('$P3R'))),
+            'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
             }
         ch4 = {
             'label':text.get('$P4N'),
             'number':4,
-            'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
             'pmt_voltage':text.get('BD$WORD16'),
             '100x_lin_gain':text.get('BD$WORD21'),
             'amplifier':amp(text.get('BD$WORD26')),
-            'threshold':text.get('BD$WORD32')
+            'threshold':text.get('BD$WORD32'),
+            'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
+            'bin_vals': np.arange(int(text.get('$P4R'))),
+            'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
             }
         ch5 = {
             'label':text.get('$P5N'),
             'number':5,
-            'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
             'pmt_voltage':text.get('BD$WORD17'),
             '100x_lin_gain':text.get('BD$WORD22'),
             'amplifier':amp(text.get('BD$WORD27')),
-            'threshold':text.get('BD$WORD33')
+            'threshold':text.get('BD$WORD33'),
+            'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
+            'bin_vals': np.arange(int(text.get('$P5R'))),
+            'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
             }
         ch6 = {
             'label':text.get('$P6N'),

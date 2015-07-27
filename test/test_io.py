@@ -45,6 +45,33 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
         self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
 
+    def test_bins(self):
+        '''
+        Testing proper creation of bins
+        '''
+        # Bin values
+        np.testing.assert_array_equal(self.d.channel_info[0]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[1]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[2]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[3]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[4]['bin_vals'], 
+            np.arange(1024))
+        # Bin edges
+        np.testing.assert_array_equal(self.d.channel_info[0]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[1]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[2]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[3]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[4]['bin_edges'], 
+            np.arange(1025) - 0.5)
+
     def test_str(self):
         '''
         Testing string representation.
