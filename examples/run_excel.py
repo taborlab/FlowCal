@@ -23,7 +23,7 @@ import fc.mef
 import fc.stats
 
 def main():
-    # Launch dialog to select input file
+    # Launch dialogue to select input file
     Tk().withdraw() # don't show main window
     # OSX ONLY: Call bash script to prevent file select window from sticking after use
     if platformSys() == 'Darwin':
@@ -33,7 +33,7 @@ def main():
     else:
         input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
     if not input_form:
-        print "Canelled."
+        print "Cancelled."
         return
 
     # Get base directory
@@ -49,7 +49,7 @@ def main():
         os.makedirs(gated_plot_dir)
 
     # Generate path of output file
-    output_form = "{}/{}".format(basedir, input_filename + '_output.xls')
+    output_form = "{}/{}".format(basedir, input_filename + '_output.xlsx')
 
     # Get beads files data from input form
     beads_info = fc.excel_io.import_rows(input_form, "beads")
@@ -66,7 +66,7 @@ def main():
         di = fc.gate.high_low(di, ['FSC-H', 'SSC-H'])
         # Density gate
         print "Running density gate (fraction = {:.2f})..."\
-            .format(bi['Gate Fraction'])
+            .format(float(bi['Gate Fraction']))
         gated_di, gate_contour = fc.gate.density2d(data = di,
                                 gate_fraction = float(bi['Gate Fraction']))
         # Plot
@@ -138,9 +138,9 @@ def main():
     data_gated_contour = []
     for ci, di in zip(cells_info, data_mef):
         print "{} (gate fraction = {:.2f})...".format(str(di), 
-                ci['Gate Fraction'])
+                float(ci['Gate Fraction']))
         di_gated, gate_contour = fc.gate.density2d(data = di, bins_log = True,
-                                        gate_fraction = ci['Gate Fraction'])
+                                        gate_fraction = float(ci['Gate Fraction']))
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
@@ -165,7 +165,10 @@ def main():
     for ci, di, diug in zip(cells_info, data_gated, data):
         ci['Ungated Counts'] = diug.shape[0]
         ci['Gated Counts'] = di.shape[0]
-        ci['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
+        try:
+          ci['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
+        except ValueError:
+          pass
         for channel in ['FL1-H']:
             ci[channel + ' Gain'] = di[:,channel].channel_info[0]['pmt_voltage']
             ci[channel + ' Mean'] = fc.stats.mean(di, channel)

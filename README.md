@@ -18,4 +18,4 @@ The following Python packages are required:
 * `scipy` (0.15.1)
 * `scikit-learn` (0.16.1)
 * `xlrd` (0.9.3)
-* `xlwt` (1.0.0)
+* `openpyxl` (2.0.2)
