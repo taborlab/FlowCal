@@ -53,7 +53,7 @@ def transform(data, channels, transform_fxn, def_channels = None):
         channels = [channels]
     # Apply transformation
     data_t[:,channels] = transform_fxn(data_t[:,channels])
-    # Apply transformation to range
+    # Apply transformation to range, bin_values, and bin_edges
     if hasattr(data_t, 'channel_info'):
         for channel in channels:
             if isinstance(channel, basestring):
@@ -65,6 +65,12 @@ def transform(data, channels, transform_fxn, def_channels = None):
                 r[0] = transform_fxn(r[0])
                 r[1] = transform_fxn(r[1])
                 data_t.channel_info[ch]['range'] = r
+            if 'bin_vals' in data_t.channel_info[ch]:
+                b = transform_fxn(data_t.channel_info[ch]['bin_vals'])
+                data_t.channel_info[ch]['bin_vals'] = b
+            if 'bin_edges' in data_t.channel_info[ch]:
+                b = transform_fxn(data_t.channel_info[ch]['bin_edges'])
+                data_t.channel_info[ch]['bin_edges'] = b
 
     return data_t
 
@@ -148,12 +154,18 @@ def to_mef(data, channels, sc_list, sc_channels = None):
             continue
         # Apply transformation
         data_t[:,chi] = sc(data_t[:,chi])
-        # Apply transformation to range
+        # Apply transformation to range, bin_values, and bin_edges
         if hasattr(data_t, 'channel_info'):
             if 'range' in data_t.channel_info[chi]:
                 r = data_t.channel_info[chi]['range']
                 r[0] = sc(r[0])
                 r[1] = sc(r[1])
                 data_t.channel_info[chi]['range'] = r
+            if 'bin_vals' in data_t.channel_info[chi]:
+                b = sc(data_t.channel_info[chi]['bin_vals'])
+                data_t.channel_info[chi]['bin_vals'] = b
+            if 'bin_edges' in data_t.channel_info[chi]:
+                b = sc(data_t.channel_info[chi]['bin_edges'])
+                data_t.channel_info[chi]['bin_edges'] = b
 
     return data_t
