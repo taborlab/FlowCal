@@ -607,7 +607,7 @@ def density_and_hist(data,
 
     # Calculate plot size if necessary
     if figsize is None:
-        height = 3.25*n_plots
+        height = 0.315 + 2.935*n_plots
         figsize = (6, height)
 
     # Create plot
@@ -653,7 +653,7 @@ def density_and_hist(data,
                 alpha = 0.5, **hist_params_i)
             hist1d(gated_data, channel = hist_channel, 
                 alpha = 1.0, **hist_params_i)
-            pyplot.legend(['Ungated', 'Gated'])
+            pyplot.legend(['Ungated', 'Gated'], fontsize = 11)
         else:
             hist1d(data, channel = hist_channel, **hist_params_i)
     
