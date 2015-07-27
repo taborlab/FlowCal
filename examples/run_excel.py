@@ -25,11 +25,14 @@ import fc.stats
 def main():
     # Launch dialogue to select input file
     Tk().withdraw() # don't show main window
-    # OSX ONLY: Call bash script to prevent file select window from sticking after use
+    # OSX ONLY: Call bash script to prevent file select window from sticking 
+    # after use.
     if platformSys() == 'Darwin':
-        call("defaults write org.python.python ApplePersistenceIgnoreState YES", shell=True)
+        call("defaults write org.python.python ApplePersistenceIgnoreState YES", 
+            shell=True)
         input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
-        call("defaults write org.python.python ApplePersistenceIgnoreState NO", shell=True)    
+        call("defaults write org.python.python ApplePersistenceIgnoreState NO", 
+            shell=True)
     else:
         input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
     if not input_form:
