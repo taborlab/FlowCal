@@ -18,6 +18,7 @@ import numpy
 import scipy.ndimage.filters
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.font_manager import FontProperties
 
 def load_colormap(name, number):
     ''' Get colormap.
@@ -533,6 +534,103 @@ def mef_std_crv(peaks_ch,
         pyplot.close()
         gc.collect()
 
+def bar(data, 
+        labels,
+        n_in_group = 1, 
+        labels_in_group = [],
+        colors = None,
+        bar_width = 0.75, 
+        label_rotation = 0, 
+        val_labels = True, 
+        val_labels_fontsize = 'small',
+        ylim = None,
+        ylabel = None,
+        savefig = None,
+        **kwargs):
+    ''' Draw a barplot.
+
+    Individual bars can be grouped by specifying a number greater than one in
+    n_in_group. Each group of n_in_group bars will share the same label and 
+    will be plotted next to each other. Within a group, each bar can be 
+    differentiated by color and legend label.
+
+    data                - list or numpy array with the values to plot.
+    labels              - labels for each bar or bar group.
+    n_in_group          - number of bars per group.
+    labels_in_group     - labels within a group, used for a legend.
+    colors              - list of colors of length >= n_in_group.
+    bar_width           - bar width.
+    label_rotation      - angle to rotate the bar labels.
+    val_labels          - if True, include labels above each bar with its
+                            numberical value.
+    val_labels_fontsize - font size of the labels above each bar.
+    ylim                - limits on y axis
+    ylabel              - label for y axis
+    savefig             - if not None, it specifies the name of the file to 
+                           save the figure to.
+    **kwargs            - passed directly to matploblib's plot.
+    '''
+
+    # Default colors
+    if colors is None:
+        colors = load_colormap('diverging', n_in_group)
+
+    # Calculate coordinates of x axis.
+    x_coords = numpy.arange((len(data))/n_in_group)
+
+    # Initialize plot
+    ax = pyplot.gca()
+    bars_group = []
+    # Plot bars
+    for i in range(n_in_group):
+        x_coords_i = x_coords + i * bar_width / n_in_group
+        bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
+            bar_width / n_in_group, color = colors[i]))
+    ax.set_xticks(x_coords + bar_width / 2)
+
+    # Rotate labels if necessary
+    if label_rotation>0:
+        ax.set_xticklabels(labels, rotation = label_rotation, ha='right')
+    elif label_rotation < 0:        
+        ax.set_xticklabels(labels, rotation = label_rotation, ha='left')
+    else:
+        ax.set_xticklabels(labels)
+
+    # Set axes limits
+    pyplot.xlim((bar_width - 1, x_coords[-1] + 1))
+    if ylim:
+        pyplot.ylim(ylim)
+
+    # Set axes labels
+    if ylabel is not None:
+        pyplot.ylabel(ylabel)
+
+    # Add labels within group
+    if labels_in_group:
+        pyplot.legend(labels_in_group, loc = 'best')
+
+    # Add labels on top of bars
+    if val_labels:
+        dheight = pyplot.ylim()[1]*0.03
+        fp = FontProperties(size = val_labels_fontsize)
+        for bars in bars_group:
+            for bar in bars:
+                height = bar.get_height()
+                if height > 1000:
+                    text = '%3.0f'%height
+                elif height > 100:
+                    text = '%3.1f'%height
+                else:
+                    text = '%3.2f'%height
+                ax.text(bar.get_x() + bar.get_width()/2., height + dheight, 
+                    text, ha='center', va='bottom', fontproperties = fp)
+    
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = 300)
+        pyplot.close()
+        gc.collect()
 
 ##############################################################################
 # COMPLEX PLOTS

@@ -120,4 +120,10 @@ if __name__ == "__main__":
             pyplot.close()
             gc.collect()
 
+    # Generate bar plot
+    data_gfp = [numpy.median(di[:,'FL1-H']) for di in data_gated]
+    xlabels = ['Sample {}'.format(i + 1) for i in range(len(data_gfp))]
+    pyplot.figure(figsize = (7,3))
+    fc.plot.bar(data_gfp, xlabels, ylabel = 'MEFL', ylim = (0, 40000),
+        savefig = 'bar.png')
     
