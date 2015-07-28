@@ -72,7 +72,7 @@ setup(
                       'matplotlib>=1.4.3', 
                       'scikit-learn>=0.16.1', 
                       'xlrd>=0.9.3', 
-                      'xlwt>=1.0.0'],
+                      'openpyxl>=2.0.2'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
