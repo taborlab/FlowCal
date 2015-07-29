@@ -121,6 +121,7 @@ if __name__ == "__main__":
             gc.collect()
 
     # Generate bar plot
+    print "\nGenerating bar plots..."
     data_gfp = [numpy.median(di[:,'FL1-H']) for di in data_gated]
     xlabels = ['Sample {}'.format(i + 1) for i in range(len(data_gfp))]
     pyplot.figure(figsize = (7,3))

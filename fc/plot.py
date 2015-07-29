@@ -536,6 +536,7 @@ def mef_std_crv(peaks_ch,
 
 def bar(data, 
         labels,
+        data_error = None,
         n_in_group = 1, 
         labels_in_group = [],
         colors = None,
@@ -556,6 +557,7 @@ def bar(data,
 
     data                - list or numpy array with the values to plot.
     labels              - labels for each bar or bar group.
+    data_error          - size of the error bar to plot for each datapoint.
     n_in_group          - number of bars per group.
     labels_in_group     - labels within a group, used for a legend.
     colors              - list of colors of length >= n_in_group.
@@ -584,8 +586,13 @@ def bar(data,
     # Plot bars
     for i in range(n_in_group):
         x_coords_i = x_coords + i * bar_width / n_in_group
-        bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
-            bar_width / n_in_group, color = colors[i]))
+        if data_error is None:
+            bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
+                bar_width / n_in_group, color = colors[i]))
+        else:
+            bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
+                bar_width / n_in_group, color = colors[i]), 
+                yerr = data_error[i::n_in_group])
     ax.set_xticks(x_coords + bar_width / 2)
 
     # Rotate labels if necessary
