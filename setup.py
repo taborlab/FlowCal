@@ -9,6 +9,8 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+import fc
+
 here = path.abspath(path.dirname(__file__))
 
 # Get long description
@@ -21,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.0.0a0.dev0',
+    version=fc.__version__,
 
     description='Flow cytometry library',
     long_description=long_description,
