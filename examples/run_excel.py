@@ -2,10 +2,8 @@
 import gc
 import os
 import os.path
-import sys
 from platform import system as platformSys
 from subprocess import call
-sys.path.append('..')
 
 import numpy
 import scipy
