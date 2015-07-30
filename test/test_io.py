@@ -30,6 +30,20 @@ class TestTaborLabFCSDataLoading(unittest.TestCase):
         self.assertEqual(len(d.channel_info), 6)
         self.assertEqual(d.channels, channel_names)
 
+    def test_metadata_default(self):
+        '''
+        Test proper initialization of default metadata.
+        '''
+        d = fc.io.TaborLabFCSData(filename)
+        self.assertEqual(d.metadata, {})
+
+    def test_metadata_explicit(self):
+        '''
+        Test proper initialization of explicit metadata.
+        '''
+        d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
+        self.assertEqual(d.metadata, {'l2': 4, 'a': 'r'})
+
 class TestTaborLabFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.TaborLabFCSData(filename)
@@ -81,7 +95,7 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
 
 class TestTaborLabFCSDataSlicing(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.TaborLabFCSData(filename)
+        self.d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_1d_slicing_with_scalar(self):
@@ -220,10 +234,18 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         np.testing.assert_array_equal(ds[:,3], self.d[:,3])
         np.testing.assert_array_equal(ds[:,4], self.d[:,4])
 
+    def test_metadata_slicing(self):
+        '''
+        Testing preservation of metadata upon slicing.
+        '''
+        ds = self.d[:1000,['SSC-H', 'FL3-H']]
+        self.assertIsInstance(ds.metadata, dict)
+        self.assertEqual(ds.metadata, {'l2': 4, 'a': 'r'})
+
 
 class TestTaborLabFCSDataOperations(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.TaborLabFCSData(filename)
+        self.d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_sum_integer(self):
@@ -273,6 +295,14 @@ class TestTaborLabFCSDataOperations(unittest.TestCase):
         m = np.mean(self.d, axis = 0)
         self.assertIsInstance(m, fc.io.TaborLabFCSData)
         self.assertEqual(m.shape, (6,))
+
+    def test_metadata_sqrt(self):
+        '''
+        Testing preservation of metadata after taking the square root.
+        '''
+        ds = np.sqrt(self.d)
+        self.assertIsInstance(ds.metadata, dict)
+        self.assertEqual(ds.metadata, {'l2': 4, 'a': 'r'})
         
 if __name__ == '__main__':
     unittest.main()
