@@ -58,6 +58,8 @@ def main():
 
     print "\nProcessing beads..."
     for bi in beads_info:
+        bid = bi['File Path']
+        
         # Open file
         di = fc.io.TaborLabFCSData("{}/{}".format(basedir, bi['File Path']))
         print "{} ({} events).".format(str(di), di.shape[0])
@@ -90,11 +92,12 @@ def main():
         # Process MEF values
         mef = []
         mef_channels = []
-        if 'MEFL' in bi:
-            mefl = bi['MEFL'].split(',')
-            mefl = [int(e) if e.strip().isdigit() else numpy.nan for e in mefl]
-            mef.append(mefl)
-            mef_channels.append('FL1-H')
+        for channel in ['FL1-H']:
+            if channel+' Peaks' in bi:
+                peaks = bi[channel+' Peaks'].split(',')
+                peaks = [int(e) if e.strip().isdigit() else numpy.nan for e in peaks]
+                mef.append(peaks)
+                mef_channels.append(channel)
         mef = numpy.array(mef)
 
         # Obtain standard curve transformation
@@ -106,7 +109,7 @@ def main():
                         plot = True, plot_dir = beads_plot_dir)
 
         # Save MEF transformation function
-        to_mef_all[bi['File Path']] = to_mef
+        to_mef_all[bid] = to_mef
 
     # Process data files
     print "\nLoading data..."
@@ -116,48 +119,71 @@ def main():
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']))
+        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']),ci)
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
         print "{} ({} events, FL1-H gain = {}).".format(str(di), 
             di.shape[0], gain)
 
-    # Basic gating/trimming
-    ch_all = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']
-    data_trimmed = [fc.gate.start_end(di, num_start=250, num_end=100)\
-                                                         for di in data]
-    data_trimmed = [fc.gate.high_low(di, ch_all) for di in data_trimmed]
-    # Exponential transformation
-    data_transf = [fc.transform.exponentiate(di, ['FSC-H', 'SSC-H']) \
-                                                        for di in data_trimmed]
-
-    # Transform to MEF
-    print "\nPerforming MEF transformation..."
-    data_mef = []
-    for ci, di in zip(cells_info, data_transf):
-        print "{}...".format(str(di))
-        to_mef = to_mef_all[ci['Beads File Path']]
-        data_mef.append(to_mef(di, 'FL1-H'))
-
-    # Density gate
-    print "\nRunning density gate on data files..."
+    #Transform data
+    print "\nTransforming data..."
+    data_transf = []
+    transf_channels = []
+    for di in data:
+        print str(di)+ " (",
+        dt = fc.transform.exponentiate(di, ['FSC-H', 'SSC-H'])
+        transf_channel = []
+        for channel in ['FL1-H', 'FL2-H', 'FL3-H']:
+            if channel + ' Transform' not in dt.metadata:
+                print "Ignored " + channel + ",",
+            elif dt.metadata[channel + ' Transform'] == '':
+                print "Ignored " + channel + ",",
+            elif dt.metadata[channel + ' Transform'] == 'None':
+                print "No transform to " + channel + ",",
+                transf_channel.append(channel)
+            elif dt.metadata[channel + ' Transform'] == 'Exponential':
+                print "Exponentiated " + channel + ",",
+                dt = fc.transform.exponentiate(dt, [channel])
+                transf_channel.append(channel)
+            elif dt.metadata[channel + ' Transform'] == 'Mef':
+                print "MEFed " + channel + ",",
+                to_mef = to_mef_all[dt.metadata['Beads File Path']]
+                if channel not in to_mef.keywords['sc_channels']:
+                    raise ValueError("Beads does not contain peaks for channel")
+                dt = to_mef(dt, channel)
+                transf_channel.append(channel)
+            else:
+                print "Unexpected input for " + channel + ",",
+        print ")"
+        transf_channels.append(transf_channel)
+        data_transf.append(dt)
+        
+    # Gating/trimming
+    print "\n\nRunning start/end, high/low and density gate on data files..."
     data_gated = []
     data_gated_contour = []
-    for ci, di in zip(cells_info, data_mef):
+    for di, tc in zip(data_transf, transf_channels):
         print "{} (gate fraction = {:.2f})...".format(str(di), 
-                float(ci['Gate Fraction']))
-        di_gated, gate_contour = fc.gate.density2d(data = di, 
-                                    gate_fraction = float(ci['Gate Fraction']))
+                float(di.metadata['Gate Fraction']))
+
+        di_gated = fc.gate.start_end(di, num_start=250, num_end=100)
+        
+        #di_gated = fc.gate.high_low(di, tc)
+        
+        di_gated, gate_contour = fc.gate.density2d(data = di_gated, 
+                                    gate_fraction = float(di.metadata['Gate Fraction']))
+
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
     # Plot
     print "\nPlotting density diagrams and histograms of data"
-    for di, dig, dgc in zip(data_mef, data_gated, data_gated_contour):
+    for di, dim, dgc in zip(data_transf, data_gated, data_gated_contour):
         print "{}...".format(str(di))
+
         # Plot
-        fc.plot.density_and_hist(di, gated_data = dig, figsize = (7,7),
+        fc.plot.density_and_hist(di, gated_data = dim, figsize = (7,7),
             density_channels = ['FSC-H', 'SSC-H'], 
             hist_channels = ['FL1-H'], gate_contour = dgc, 
             density_params = {'mode': 'scatter', 'log': True}, 
@@ -170,30 +196,41 @@ def main():
     # Export to output excel file
     print "\nWriting output file..."
     # Calculate statistics
-    for ci, di, diug in zip(cells_info, data_gated, data):
-        ci['Ungated Counts'] = diug.shape[0]
-        ci['Gated Counts'] = di.shape[0]
+    for diug, di, tc in zip(data_transf, data_gated, transf_channels):
+        di.metadata['Ungated Counts'] = diug.shape[0]
+        di.metadata['Gated Counts'] = di.shape[0]
         try:
-          ci['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
+          di.metadata['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
         except ValueError:
           pass
-        for channel in ['FL1-H']:
-            ci[channel + ' Gain'] = di[:,channel].channel_info[0]['pmt_voltage']
-            ci[channel + ' Mean'] = fc.stats.mean(di, channel)
-            ci[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
-            ci[channel + ' Median'] = fc.stats.median(di, channel)
-            ci[channel + ' Mode'] = fc.stats.mode(di, channel)
-            ci[channel + ' Std'] = fc.stats.std(di, channel)
-            ci[channel + ' CV'] = fc.stats.CV(di, channel)
-            ci[channel + ' IQR'] = fc.stats.iqr(di, channel)
-            ci[channel + ' RCV'] = fc.stats.RCV(di, channel)
+        for channel in ['FL1-H','FL2-H','FL3-H']:
+            if channel in tc:
+                di.metadata[channel + ' Gain'] = di[:,channel].channel_info[0]['pmt_voltage']
+                di.metadata[channel + ' Mean'] = fc.stats.mean(di, channel)
+                di.metadata[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
+                di.metadata[channel + ' Median'] = fc.stats.median(di, channel)
+                di.metadata[channel + ' Mode'] = fc.stats.mode(di, channel)
+                di.metadata[channel + ' Std'] = fc.stats.std(di, channel)
+                di.metadata[channel + ' CV'] = fc.stats.CV(di, channel)
+                di.metadata[channel + ' IQR'] = fc.stats.iqr(di, channel)
+                di.metadata[channel + ' RCV'] = fc.stats.RCV(di, channel)
+            else:
+                di.metadata[channel + ' Gain'] = ''
+                di.metadata[channel + ' Mean'] = ''
+                di.metadata[channel + ' Geom. Mean'] = ''
+                di.metadata[channel + ' Median'] = ''
+                di.metadata[channel + ' Mode'] = ''
+                di.metadata[channel + ' Std'] = ''
+                di.metadata[channel + ' CV'] = ''
+                di.metadata[channel + ' IQR'] = ''
+                di.metadata[channel + ' RCV'] = ''
     # Convert data
-    headers = cells_info[0].keys()
+    headers = data_gated[0].metadata.keys()
     content = []
-    for ci in cells_info:
+    for di in data_gated:
         row = []
         for h in headers:
-            row.append(ci[h])
+            row.append(di.metadata[h])
         content.append(row)
     # Save output excel file
     ws = [headers] + content
