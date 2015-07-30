@@ -174,7 +174,7 @@ def main():
         ci['Ungated Counts'] = diug.shape[0]
         ci['Gated Counts'] = di.shape[0]
         try:
-          ci['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
+          ci['Acquisition Time (s)'] = di.acquisition_time
         except ValueError:
           pass
         for channel in ['FL1-H']:

@@ -92,6 +92,36 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         '''
         self.assertEqual(str(self.d), 'Data.001')
 
+    def test_time_step(self):
+        '''
+        Testing of the time step
+        '''
+        # Data.001 is a FCS2.0 file, use the timeticks parameter.
+        # We have previously looked at self.d.text['TIMETICKS']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.time_step, 0.2)
+
+    def test_acquisition_time_event(self):
+        '''
+        Testing acquisition time
+        '''
+        # Data.001 has the time channel, so the acquisition time should be
+        # calculated using the event list.
+        # We have previously looked at self.d[0, 'Time'] and self.d[-1, 'Time']
+        # to determine the correct output for this file.
+        self.assertEqual(self.d.acquisition_time, 74.8)
+
+    def test_acquisition_time_btim_etim(self):
+        '''
+        Testing acquisition time using the btim/etim method
+        '''
+        # Data.001 has the time channel, so we will remove it so that the
+        # BTIM and ETIM keyword arguments are used.
+        # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
+        # determine the correct output for this file.
+        d = self.d[:,['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']]
+        self.assertEqual(d.acquisition_time, 77)
+
 
 class TestTaborLabFCSDataSlicing(unittest.TestCase):
     def setUp(self):
