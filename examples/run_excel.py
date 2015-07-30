@@ -2,6 +2,7 @@
 import gc
 import os
 import os.path
+import collections
 from platform import system as platformSys
 from subprocess import call
 
@@ -126,52 +127,57 @@ def main():
         print "{} ({} events, FL1-H gain = {}).".format(str(di), 
             di.shape[0], gain)
 
+    #Parse transforms to conduct on data
+    transforms = []
+    for di in data:
+        channel_transf = collections.OrderedDict()
+        for channel in ['FL1-H', 'FL2-H', 'FL3-H']:
+            if channel + ' Transform' not in di.metadata:
+                pass
+            elif di.metadata[channel + ' Transform'] == '':
+                pass
+            elif di.metadata[channel + ' Transform'] == 'None':
+                channel_transf[channel] = 'None'
+            elif di.metadata[channel + ' Transform'] == 'Exponential':
+                channel_transf[channel] = 'Exponential'
+            elif di.metadata[channel + ' Transform'] == 'Mef':
+                channel_transf[ channel] = 'Mef'
+        transforms.append(channel_transf)
+
+    # Trim data
+    print "\nTrimming data..."    
+    data_trimmed = [fc.gate.start_end(di, num_start=250, num_end=100)\
+                                                     for di in data]
+    data_trimmed = [fc.gate.high_low(di, ['FSC-H', 'SSC-H'] + tf.keys())\
+        for di, tf in zip(data, transforms)]
+
     #Transform data
     print "\nTransforming data..."
     data_transf = []
-    transf_channels = []
-    for di in data:
-        print str(di)+ " (",
+    for di, tf in zip(data_trimmed, transforms):
         dt = fc.transform.exponentiate(di, ['FSC-H', 'SSC-H'])
-        transf_channel = []
-        for channel in ['FL1-H', 'FL2-H', 'FL3-H']:
-            if channel + ' Transform' not in dt.metadata:
-                print "Ignored " + channel + ",",
-            elif dt.metadata[channel + ' Transform'] == '':
-                print "Ignored " + channel + ",",
-            elif dt.metadata[channel + ' Transform'] == 'None':
-                print "No transform to " + channel + ",",
-                transf_channel.append(channel)
-            elif dt.metadata[channel + ' Transform'] == 'Exponential':
-                print "Exponentiated " + channel + ",",
+        print str(di)+' ('+', '.join([k+': '+c for k, c in tf.iteritems()])+')'
+        for channel, transform in tf.iteritems():
+            if transform == 'None':
+                pass
+            elif transform == 'Exponential':
                 dt = fc.transform.exponentiate(dt, [channel])
-                transf_channel.append(channel)
-            elif dt.metadata[channel + ' Transform'] == 'Mef':
-                print "MEFed " + channel + ",",
+            elif transform == 'Mef':
                 to_mef = to_mef_all[dt.metadata['Beads File Path']]
                 if channel not in to_mef.keywords['sc_channels']:
                     raise ValueError("Beads does not contain peaks for channel")
                 dt = to_mef(dt, channel)
-                transf_channel.append(channel)
             else:
                 print "Unexpected input for " + channel + ",",
-        print ")"
-        transf_channels.append(transf_channel)
         data_transf.append(dt)
         
-    # Gating/trimming
-    print "\n\nRunning start/end, high/low and density gate on data files..."
+    print '\nGating data...'
     data_gated = []
     data_gated_contour = []
-    for di, tc in zip(data_transf, transf_channels):
+    for di in data_transf:
         print "{} (gate fraction = {:.2f})...".format(str(di), 
                 float(di.metadata['Gate Fraction']))
-
-        di_gated = fc.gate.start_end(di, num_start=250, num_end=100)
-        
-        #di_gated = fc.gate.high_low(di, tc)
-        
-        di_gated, gate_contour = fc.gate.density2d(data = di_gated, 
+        di_gated, gate_contour = fc.gate.density2d(data = di, 
                                     gate_fraction = float(di.metadata['Gate Fraction']))
 
         data_gated.append(di_gated)
@@ -196,15 +202,22 @@ def main():
     # Export to output excel file
     print "\nWriting output file..."
     # Calculate statistics
-    for diug, di, tc in zip(data_transf, data_gated, transf_channels):
+    # Figure out which channels have stats
+    stat_channels = []
+    for tf in transforms:
+        for k, v in tf.iteritems():
+            if k not in stat_channels:
+                stat_channels.append(k)
+    for diug, di, tc in zip(data_transf, data_gated, transforms):
         di.metadata['Ungated Counts'] = diug.shape[0]
         di.metadata['Gated Counts'] = di.shape[0]
         try:
           di.metadata['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
         except ValueError:
           pass
-        for channel in ['FL1-H','FL2-H','FL3-H']:
-            if channel in tc:
+        
+        for channel in stat_channels:
+            if channel in tc.keys():
                 di.metadata[channel + ' Gain'] = di[:,channel].channel_info[0]['pmt_voltage']
                 di.metadata[channel + ' Mean'] = fc.stats.mean(di, channel)
                 di.metadata[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
