@@ -116,7 +116,7 @@ def main():
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']))
+        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']), ci)
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
@@ -135,20 +135,20 @@ def main():
     # Transform to MEF
     print "\nPerforming MEF transformation..."
     data_mef = []
-    for ci, di in zip(cells_info, data_transf):
+    for di in data_transf:
         print "{}...".format(str(di))
-        to_mef = to_mef_all[ci['Beads File Path']]
+        to_mef = to_mef_all[di.metadata['Beads File Path']]
         data_mef.append(to_mef(di, 'FL1-H'))
 
     # Density gate
     print "\nRunning density gate on data files..."
     data_gated = []
     data_gated_contour = []
-    for ci, di in zip(cells_info, data_mef):
+    for di in data_mef:
         print "{} (gate fraction = {:.2f})...".format(str(di), 
-                float(ci['Gate Fraction']))
+                        float(di.metadata['Gate Fraction']))
         di_gated, gate_contour = fc.gate.density2d(data = di, 
-                                    gate_fraction = float(ci['Gate Fraction']))
+                        gate_fraction = float(di.metadata['Gate Fraction']))
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 

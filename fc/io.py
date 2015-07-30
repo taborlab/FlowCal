@@ -28,11 +28,15 @@ class TaborLabFCSData(np.ndarray):
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
-            * 'range': [min, max, steps]
             * 'pmt_voltage' (i.e. gain)
             * '100x_lin_gain'
             * 'amplifier' (values = 'lin' or 'log')
             * 'threshold'
+            * 'range': [min, max, steps]
+            * 'bin_vals': numpy array with bin values
+            * 'bin_edges': numpy array with bin edges
+        * metadata  - dictionary with additional channel-independent, 
+                      sample-specific information.
 
     Instrument: BD FACScan flow cytometer
 
@@ -273,7 +277,7 @@ class TaborLabFCSData(np.ndarray):
 
         return (data, text, channel_info)
 
-    def __new__(cls, infile):
+    def __new__(cls, infile, metadata = {}):
         '''
         Class constructor. 
 
@@ -282,7 +286,7 @@ class TaborLabFCSData(np.ndarray):
         http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
         '''
 
-        # First, load all data from fcs file
+        # Load all data from fcs file
         data, text, channel_info = cls.load_from_file(infile)
 
         # Call constructor of numpy array
@@ -292,6 +296,7 @@ class TaborLabFCSData(np.ndarray):
         obj.infile = infile
         obj.text = text
         obj.channel_info = channel_info
+        obj.metadata = metadata
 
         # Finally, we must return the newly created object:
         return obj
@@ -307,6 +312,8 @@ class TaborLabFCSData(np.ndarray):
             self.text = deepcopy(obj.text)
         if hasattr(obj, 'channel_info'):
             self.channel_info = deepcopy(obj.channel_info)
+        if hasattr(obj, 'metadata'):
+            self.metadata = deepcopy(obj.metadata)
 
     def __array_wrap__(self, out_arr, context = None):
         '''Method called after numpy ufuncs.'''
