@@ -328,7 +328,41 @@ class TaborLabFCSData(np.ndarray):
 
     @property
     def channels(self):
+        ''' Return a list of the channel names
+        '''
         return [i['label'] for i in self.channel_info]
+
+    @property
+    def time_step(self):
+        ''' Return the time step of the time channel.
+
+            The time step is such that self[:,'Time']*self.time_step is in
+            seconds.
+
+            In FCS2.0, the TIMETICKS keyword parameter contains the time step
+            in milliseconds.
+        '''
+        return float(self.text['TIMETICKS'])/1000.
+
+    @property
+    def acquisition_time(self):
+        ''' Return the acquisition time for this sample, in seconds.
+
+        The acquisition time is calculated using the 'Time' channel by default.
+        If the 'Time' channel is not available, the ETIM and BTIM keyword
+        parameters will be used.
+        '''
+        # Check if the time channel is available
+        if 'Time' in self.channels:
+            # Use the event list
+            return (self[-1, 'Time'] - self[0, 'Time']) * self.time_step
+        else:
+            # Use BTIM and ETIM keywords
+            # In FCS2.0, times are specified as HH:MM:SS
+            import time
+            t0 = time.mktime(time.strptime(self.text['$BTIM'], '%H:%M:%S'))
+            tf = time.mktime(time.strptime(self.text['$ETIM'], '%H:%M:%S'))
+            return tf - t0
 
     def name_to_index(self, channels):
         '''Return the channel indexes for the named channels
