@@ -74,7 +74,7 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
 
     return gated_data
 
-def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
+def density2d(data, channels = ['FSC-H','SSC-H'], bins = None, gate_fraction = 0.65,
     sigma = 10.0):
     '''Gate that preserves the points in the region with highest density.
 

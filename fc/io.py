@@ -93,8 +93,8 @@ class TaborLabFCSData(np.ndarray):
         # Import relevant fields from HEADER section
         ###
         _version = f.read(10)
-
-        if _version != 'FCS2.0    ':
+        
+        if _version not in ['FCS2.0    ', 'FCS3.0    ']:
             raise TypeError('Incorrect FCS file version.')
         else:
             _version = _version.strip()
@@ -159,8 +159,12 @@ class TaborLabFCSData(np.ndarray):
         num_channels = int(text['$PAR'])
         bits_per_channel = [int(text['$P%dB'%c])
                             for c in xrange(1,num_channels+1)]
-        if not all(b==16 for b in bits_per_channel):
-            raise TypeError('channel bit width error: $PnB != 16 for all'
+        if all(b==16 for b in bits_per_channel):
+            bpc_all = 16
+        elif all(b==24 for b in bits_per_channel):
+            bpc_all = 24
+        else:
+            raise TypeError('channel bit width error: $PnB != 16 or 24 for all'
                             + ' parameters (channels)')
         
         if text['$NEXTDATA'] != '0':
@@ -184,92 +188,195 @@ class TaborLabFCSData(np.ndarray):
                 return 'log'
             raise ImportError('unrecognized amplifier setting')
 
-        ch1 = {
-            'label':text.get('$P1N'),
-            'number':1,
-            'pmt_voltage':text.get('BD$WORD13'),
-            '100x_lin_gain':text.get('BD$WORD18'),
-            'amplifier':amp(text.get('BD$WORD23')),
-            'threshold':text.get('BD$WORD29'),
-            'range':[0, int(text.get('$P1R'))-1, int(text.get('$P1R'))],
-            'bin_vals': np.arange(int(text.get('$P1R'))),
-            'bin_edges': np.arange(int(text.get('$P1R')) + 1) - 0.5,
-            }
-        ch2 = {
-            'label':text.get('$P2N'),
-            'number':2,
-            'pmt_voltage':text.get('BD$WORD14'),
-            '100x_lin_gain':text.get('BD$WORD19'),
-            'amplifier':amp(text.get('BD$WORD24')),
-            'threshold':text.get('BD$WORD30'),
-            'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
-            'bin_vals': np.arange(int(text.get('$P2R'))),
-            'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
-            }
-        ch3 = {
-            'label':text.get('$P3N'),
-            'number':3,
-            'pmt_voltage':text.get('BD$WORD15'),
-            '100x_lin_gain':text.get('BD$WORD20'),
-            'amplifier':amp(text.get('BD$WORD25')),
-            'threshold':text.get('BD$WORD31'),
-            'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
-            'bin_vals': np.arange(int(text.get('$P3R'))),
-            'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
-            }
-        ch4 = {
-            'label':text.get('$P4N'),
-            'number':4,
-            'pmt_voltage':text.get('BD$WORD16'),
-            '100x_lin_gain':text.get('BD$WORD21'),
-            'amplifier':amp(text.get('BD$WORD26')),
-            'threshold':text.get('BD$WORD32'),
-            'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
-            'bin_vals': np.arange(int(text.get('$P4R'))),
-            'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
-            }
-        ch5 = {
-            'label':text.get('$P5N'),
-            'number':5,
-            'pmt_voltage':text.get('BD$WORD17'),
-            '100x_lin_gain':text.get('BD$WORD22'),
-            'amplifier':amp(text.get('BD$WORD27')),
-            'threshold':text.get('BD$WORD33'),
-            'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
-            'bin_vals': np.arange(int(text.get('$P5R'))),
-            'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
-            }
-        ch6 = {
-            'label':text.get('$P6N'),
-            'number':6,
-            }
-
-        channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
+        if _version == 'FCS2.0':
+            ch1 = {
+                'label':text.get('$P1N'),
+                'number':1,
+                'pmt_voltage':text.get('BD$WORD13'),
+                '100x_lin_gain':text.get('BD$WORD18'),
+                'amplifier':amp(text.get('BD$WORD23')),
+                'threshold':text.get('BD$WORD29'),
+                'range':[0, int(text.get('$P1R'))-1, int(text.get('$P1R'))],
+                'bin_vals': np.arange(int(text.get('$P1R'))),
+                'bin_edges': np.arange(int(text.get('$P1R')) + 1) - 0.5,
+                }
+            ch2 = {
+                'label':text.get('$P2N'),
+                'number':2,
+                'pmt_voltage':text.get('BD$WORD14'),
+                '100x_lin_gain':text.get('BD$WORD19'),
+                'amplifier':amp(text.get('BD$WORD24')),
+                'threshold':text.get('BD$WORD30'),
+                'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
+                'bin_vals': np.arange(int(text.get('$P2R'))),
+                'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
+                }
+            ch3 = {
+                'label':text.get('$P3N'),
+                'number':3,
+                'pmt_voltage':text.get('BD$WORD15'),
+                '100x_lin_gain':text.get('BD$WORD20'),
+                'amplifier':amp(text.get('BD$WORD25')),
+                'threshold':text.get('BD$WORD31'),
+                'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
+                'bin_vals': np.arange(int(text.get('$P3R'))),
+                'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
+                }
+            ch4 = {
+                'label':text.get('$P4N'),
+                'number':4,
+                'pmt_voltage':text.get('BD$WORD16'),
+                '100x_lin_gain':text.get('BD$WORD21'),
+                'amplifier':amp(text.get('BD$WORD26')),
+                'threshold':text.get('BD$WORD32'),
+                'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
+                'bin_vals': np.arange(int(text.get('$P4R'))),
+                'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
+                }
+            ch5 = {
+                'label':text.get('$P5N'),
+                'number':5,
+                'pmt_voltage':text.get('BD$WORD17'),
+                '100x_lin_gain':text.get('BD$WORD22'),
+                'amplifier':amp(text.get('BD$WORD27')),
+                'threshold':text.get('BD$WORD33'),
+                'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
+                'bin_vals': np.arange(int(text.get('$P5R'))),
+                'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
+                }
+            ch6 = {
+                'label':text.get('$P6N'),
+                'number':6,
+                }
+            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
+        elif _version == 'FCS3.0':
+            ch1 = {
+                'label':text.get('$P1N'),
+                'number':1,
+                }
+            ch2 = {
+                'label':text.get('$P2N'),
+                'number':2,
+                'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
+                'pmt_voltage':text.get('$P2V'),
+                'bin_vals': np.arange(int(text.get('$P2R'))),
+                'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
+                }
+            ch3 = {
+                'label':text.get('$P3N'),
+                'number':3,
+                'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
+                'pmt_voltage':text.get('$P3V'),
+                'bin_vals': np.arange(int(text.get('$P3R'))),
+                'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
+                }
+            ch4 = {
+                'label':text.get('$P4N'),
+                'number':4,
+                'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
+                'pmt_voltage':text.get('$P4V'),
+                'bin_vals': np.arange(int(text.get('$P4R'))),
+                'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
+                }
+            ch5 = {
+                'label':text.get('$P5N'),
+                'number':5,
+                'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
+                'pmt_voltage':text.get('$P5V'),
+                'bin_vals': np.arange(int(text.get('$P5R'))),
+                'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
+                }
+            ch6 = {
+                'label':text.get('$P6N'),
+                'number':6,
+                'range':[0, int(text.get('$P6R'))-1, int(text.get('$P6R'))],
+                'pmt_voltage':text.get('$P6V'),
+                'bin_vals': np.arange(int(text.get('$P6R'))),
+                'bin_edges': np.arange(int(text.get('$P6R')) + 1) - 0.5,
+                }
+            ch7 = {
+                'label':text.get('$P7N'),
+                'number':7,
+                'range':[0, int(text.get('$P7R'))-1, int(text.get('$P7R'))],
+                'pmt_voltage':text.get('$P7V'),
+                'bin_vals': np.arange(int(text.get('$P7R'))),
+                'bin_edges': np.arange(int(text.get('$P7R')) + 1) - 0.5,
+                }
+            ch8 = {
+                'label':text.get('$P8N'),
+                'number':8,
+                'range':[0, int(text.get('$P8R'))-1, int(text.get('$P8R'))],
+                'pmt_voltage':text.get('$P8V'),
+                'bin_vals': np.arange(int(text.get('$P8R'))),
+                'bin_edges': np.arange(int(text.get('$P8R')) + 1) - 0.5,
+                }
+            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+            
+            def namefix(x):
+                return {
+                    'TIME' : 'Time',
+                    'FSC': 'FSC-H',
+                    'SSC': 'SSC-H',
+                    'FL1': 'FL1-H',
+                    'FL2': 'FL2-H',
+                    'FL3': 'FL3-H',
+                    'FSCW': 'FSC-W',
+                    'FSCA': 'FSC-A',
+                    'SSCW': 'SSC-W',
+                    'SSCA': 'SSC-A',
+                    'FL1W': 'FL1-W',
+                    'FL1A': 'FL1-A',
+                    'FL2W': 'FL2-W',
+                    'FL2A': 'FL2-A',
+                    'FL3W': 'FL3-W',
+                    'FL3A': 'FL3-A',
+                }[x]
+                
+            for channel in channel_info:
+                channel['label'] = namefix(channel['label'])  
+                
+            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
         
         ###
         # Import DATA section
         ###
-        shape = (int(text['$TOT']), int(text['$PAR']))
-
+        
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA section.
-        if (shape[0]*shape[1]*2) != ((_data_end+1)-_data_begin):
+        shape = (int(text['$TOT']), int(text['$PAR']))
+        if (shape[0]*shape[1]*bpc_all/8) != ((_data_end+1)-_data_begin):
             raise ImportError('DATA size does not match expected array size')
-
-        # Use a numpy memmap object to interpret the binary data straight from
-        # the file as a linear numpy array.
-        data = np.memmap(
-            f,
-            dtype=np.dtype('>u2'),      # big endian, unsigned 2-byte integer
-            mode='r',                   # read-only
-            offset=_data_begin,
-            shape=shape,
-            order='C'                   # memory layout is row-major
-            )
-
-        # Cast memmap object to regular numpy array stored in memory (as
-        # opposed to being backed by disk)
-        data = np.array(data)
+        
+        # Handle different bits per channel
+        if bpc_all == 16:
+            # Use a numpy memmap object to interpret the binary data straight 
+            # from the file as a linear numpy array.
+            data = np.memmap(
+                f,
+                dtype=np.dtype('>u2'),   # big endian, unsigned 2byte integer
+                mode='r',                # read-only
+                offset=_data_begin,
+                shape=shape,
+                order='C'                # memory layout is row-major
+                )
+                
+            # Cast memmap object to regular numpy array stored in memory (as
+            # opposed to being backed by disk)
+            data = np.array(data)
+            
+        if bpc_all == 24:
+            data = np.memmap(
+                f,
+                dtype=np.dtype('>u1, >u2'),#1 byte padding and 2-byte integer
+                mode='r',                   # read-only
+                offset=_data_begin,
+                shape=shape,
+                order='C'                   # memory layout is row-major
+                )
+                
+            # Cast memmap object to regular numpy array stored in memory (as
+            # opposed to being backed by disk). Throw out the higher-order bits
+            data = np.array([[chan[1] for chan in event] for event in data])
 
         # Close file if necessary
         if isinstance(infile, basestring):
