@@ -212,7 +212,7 @@ def main():
         di.metadata['Ungated Counts'] = diug.shape[0]
         di.metadata['Gated Counts'] = di.shape[0]
         try:
-          di.metadata['Gated Counts/millisecond'] = fc.stats.rate(di,'Time')
+          di.metadata['Acquisition Time (s)'] = di.acquisition_time
         except ValueError:
           pass
         
