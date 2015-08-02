@@ -93,7 +93,7 @@ def main():
         # Process MEF values
         mef = []
         mef_channels = []
-        for channel in ['FL1-H']:
+        for channel in ['FL1-H','FL2-H','FL3-H']:
             if channel+' Peaks' in bi:
                 peaks = bi[channel+' Peaks'].split(',')
                 peaks = [int(e) if e.strip().isdigit() else numpy.nan \
