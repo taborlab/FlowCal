@@ -119,10 +119,13 @@ if __name__ == "__main__":
             gc.collect()
 
     # Generate bar plot
-    print "\nGenerating bar plots..."
-    data_gfp = [numpy.median(di[:,'FL1-H']) for di in data_gated]
-    xlabels = ['Sample {}'.format(i + 1) for i in range(len(data_gfp))]
-    pyplot.figure(figsize = (7,3))
-    fc.plot.bar(data_gfp, xlabels, ylabel = 'MEFL', ylim = (0, 40000),
-        savefig = 'bar.png')
-    
+    print "\nGenerating bar plot..."
+
+    labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
+    fc.plot.hist_and_bar(data_gated, channel = 'FL1-H', labels = labels,
+        hist_params = {'log': True, 'div': 4,
+                'xlabel': 'MEFL', 'ylim': (0, 400)},
+        bar_params = {'ylabel': 'MEFL', 'ylim': (0, 40000)},
+        bar_stats_func = numpy.median, savefig = 'hist_bar.png')
+
+    print "\nDone."
