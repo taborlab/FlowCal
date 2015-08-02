@@ -20,6 +20,8 @@ from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
+save_dpi = 250
+
 def load_colormap(name, number):
     ''' Get colormap.
 
@@ -191,7 +193,7 @@ def hist1d(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -326,7 +328,7 @@ def density2d(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -382,7 +384,7 @@ def scatter2d(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -477,7 +479,7 @@ def scatter3d(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -531,7 +533,7 @@ def mef_std_crv(peaks_ch,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -636,7 +638,7 @@ def bar(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -757,7 +759,7 @@ def density_and_hist(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -872,6 +874,6 @@ def hist_and_bar(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
