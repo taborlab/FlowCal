@@ -195,16 +195,31 @@ def main():
 
     # Plot
     print "\nPlotting density diagrams and histograms of data"
-    for di, dim, dgc in zip(data_transf, data_gated, data_gated_contour):
+    for di, dim, dgc, tfs in\
+            zip(data_transf, data_gated, data_gated_contour, transforms):
         print "{}...".format(str(di))
-
+        # Construct hist parameters
+        hist_params = []
+        for channel, tf in tfs.iteritems():
+            param = {'div': 4}
+            if tf == 'None':
+                param['xlabel'] = channel + ': Channel'
+                param['log'] = False
+            elif tf == 'Exponential':
+                param['xlabel'] = channel + ': Arbitrary Units [AU]'
+                param['log'] = True
+            elif tf == 'Mef':
+                param['xlabel'] = channel + \
+                        ': Molecules of Equivalent Fluorophore [MEF]'
+                param['log'] = True
+            hist_params.append(param)
+        hist_params = hist_params if len(hist_params)>0 else None
         # Plot
-        fc.plot.density_and_hist(di, gated_data = dim, figsize = (7,7),
+        fc.plot.density_and_hist(di, gated_data = dim,
             density_channels = ['FSC-H', 'SSC-H'], 
-            hist_channels = ['FL1-H'], gate_contour = dgc, 
+            hist_channels = tfs.keys(), gate_contour = dgc, 
             density_params = {'mode': 'scatter', 'log': True}, 
-            hist_params = {'div': 4, 'log': True, 'edgecolor': 'g',
-                'xlabel': 'Molecules of Equivalent Fluorescein (MEFL)'},
+            hist_params = hist_params,
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
         pyplot.close()
         gc.collect()
