@@ -96,7 +96,8 @@ def main():
         for channel in ['FL1-H']:
             if channel+' Peaks' in bi:
                 peaks = bi[channel+' Peaks'].split(',')
-                peaks = [int(e) if e.strip().isdigit() else numpy.nan for e in peaks]
+                peaks = [int(e) if e.strip().isdigit() else numpy.nan \
+                    for e in peaks]
                 mef.append(peaks)
                 mef_channels.append(channel)
         mef = numpy.array(mef)
@@ -120,14 +121,17 @@ def main():
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']),ci)
+        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']),
+            ci)
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
         print "{} ({} events, FL1-H gain = {}).".format(str(di), 
             di.shape[0], gain)
 
-    #Parse transforms to conduct on data
+    # Parse transforms to conduct on data
+    # transforms is an array of dictionaries.
+    # Each dictionary contains the transformation type for each channel.
     transforms = []
     for di in data:
         channel_transf = collections.OrderedDict()
@@ -141,7 +145,10 @@ def main():
             elif di.metadata[channel + ' Transform'] == 'Exponential':
                 channel_transf[channel] = 'Exponential'
             elif di.metadata[channel + ' Transform'] == 'Mef':
-                channel_transf[ channel] = 'Mef'
+                channel_transf[channel] = 'Mef'
+            else:
+                raise ValueError("{} not recognized for channel {}.".format(
+                    di.metadata[channel + ' Transform'], channel))
         transforms.append(channel_transf)
 
     # Trim data
@@ -149,14 +156,17 @@ def main():
     data_trimmed = [fc.gate.start_end(di, num_start=250, num_end=100)\
                                                      for di in data]
     data_trimmed = [fc.gate.high_low(di, ['FSC-H', 'SSC-H'] + tf.keys())\
-        for di, tf in zip(data, transforms)]
+        for di, tf in zip(data_trimmed, transforms)]
 
-    #Transform data
+    # Transform data
     print "\nTransforming data..."
     data_transf = []
     for di, tf in zip(data_trimmed, transforms):
+        # Exponential transformation is applied by default to FSC and SSC
         dt = fc.transform.exponentiate(di, ['FSC-H', 'SSC-H'])
+        # Print transformations used in fluorescence channels
         print str(di)+' ('+', '.join([k+': '+c for k, c in tf.iteritems()])+')'
+        # Transform fluorescence channels
         for channel, transform in tf.iteritems():
             if transform == 'None':
                 pass
@@ -165,7 +175,7 @@ def main():
             elif transform == 'Mef':
                 to_mef = to_mef_all[dt.metadata['Beads File Path']]
                 if channel not in to_mef.keywords['sc_channels']:
-                    raise ValueError("Beads does not contain peaks for channel")
+                    raise ValueError("Beads do not contain peaks for channel")
                 dt = to_mef(dt, channel)
             else:
                 print "Unexpected input for " + channel + ",",
@@ -178,7 +188,7 @@ def main():
         print "{} (gate fraction = {:.2f})...".format(str(di), 
                 float(di.metadata['Gate Fraction']))
         di_gated, gate_contour = fc.gate.density2d(data = di, 
-                                    gate_fraction = float(di.metadata['Gate Fraction']))
+                        gate_fraction = float(di.metadata['Gate Fraction']))
 
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
@@ -218,9 +228,11 @@ def main():
         
         for channel in stat_channels:
             if channel in tc.keys():
-                di.metadata[channel + ' Gain'] = di[:,channel].channel_info[0]['pmt_voltage']
+                di.metadata[channel + ' Gain'] = \
+                                di[:,channel].channel_info[0]['pmt_voltage']
                 di.metadata[channel + ' Mean'] = fc.stats.mean(di, channel)
-                di.metadata[channel + ' Geom. Mean'] = fc.stats.gmean(di, channel)
+                di.metadata[channel + ' Geom. Mean'] = \
+                                fc.stats.gmean(di, channel)
                 di.metadata[channel + ' Median'] = fc.stats.median(di, channel)
                 di.metadata[channel + ' Mode'] = fc.stats.mode(di, channel)
                 di.metadata[channel + ' Std'] = fc.stats.std(di, channel)
