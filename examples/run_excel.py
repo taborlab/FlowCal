@@ -24,6 +24,11 @@ import fc.stats
 # Channels
 sc_channels = ['FSC-H', 'SSC-H']
 fl_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+# MEF type used per channel
+mef_names = {'FL1-H': 'Molecules of Equivalent Fluorescein, MEFL',
+            'FL2-H': 'Molecules of Equivalent Fluorophore, MEF',
+            'FL3-H': 'Molecules of Equivalent Cy5, MECY',
+            }
 
 def main():
     # Launch dialogue to select input file
@@ -208,17 +213,16 @@ def main():
         for channel, tf in tfs.iteritems():
             param = {'div': 4}
             if tf == 'None':
-                param['xlabel'] = channel + ': Channel'
+                param['xlabel'] = '{} (Channel Number)'.format(channel)
                 param['log'] = False
             elif tf == 'Exponential':
-                param['xlabel'] = channel + ': Arbitrary Units [AU]'
+                param['xlabel'] = '{} (Arbitrary Units, A.U.)'.format(channel)
                 param['log'] = True
             elif tf == 'Mef':
-                param['xlabel'] = channel + \
-                        ': Molecules of Equivalent Fluorophore [MEF]'
+                param['xlabel'] = '{} ({})'.format(channel, mef_names[channel])
                 param['log'] = True
             hist_params.append(param)
-        hist_params = hist_params if len(hist_params)>0 else None
+        hist_params = hist_params if len(hist_params) > 0 else None
         # Plot
         fc.plot.density_and_hist(di, gated_data = dim,
             density_channels = sc_channels,
