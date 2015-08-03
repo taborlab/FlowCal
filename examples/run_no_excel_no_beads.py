@@ -47,13 +47,14 @@ if __name__ == "__main__":
     data_transf = [fc.transform.exponentiate(di, ch_all) for di in data]
 
     # Density gate
-    print "\nRunning density gate on data files..."
+    print "\nRunning ellipse gate on data files..."
     data_gated = []
     data_gated_contour = []
     for di in data_transf:
         print "{}...".format(str(di))
-        di_gated, gate_contour = fc.gate.density2d(data = di, 
-                                            gate_fraction = 0.3)
+        di_gated, gate_contour = fc.gate.ellipse(data = di,
+            channels = ['FSC-H', 'SSC-H'], center = numpy.log10([200, 70]),
+            a = 0.15, b = 0.10, theta = numpy.pi/4, log = True)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
@@ -73,9 +74,13 @@ if __name__ == "__main__":
             gc.collect()
 
     # Generate bar plot
-    data_gfp = [numpy.median(di[:,'FL1-H']) for di in data_gated]
-    xlabels = ['Sample {}'.format(i + 1) for i in range(len(data_gfp))]
-    pyplot.figure(figsize = (7,3))
-    fc.plot.bar(data_gfp, xlabels, ylabel = 'GFP (A.U.)', ylim = (0, 600),
-        savefig = 'bar.png')
-    
+    print "\nGenerating bar plot..."
+
+    labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
+    fc.plot.hist_and_bar(data_gated, channel = 'FL1-H', labels = labels,
+        hist_params = {'log': True, 'div': 4,
+                'xlabel': 'GFP (A.U.)', 'ylim': (0, 400)},
+        bar_params = {'ylabel': 'GFP (A.U.)', 'ylim': (0, 600)},
+        bar_stats_func = numpy.median, savefig = 'hist_bar.png')
+
+    print "\nDone."
