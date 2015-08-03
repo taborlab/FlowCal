@@ -10,9 +10,9 @@
 # where data is a NxD numpy array describing N cytometry events observing D
 # data dimensions (channels), channels specify the channels in which to perform
 # gating, parameters are gate-specific parameters, and gated is the gated 
-# result. If channels is not specified, gating should be performed on all 
-# channels. Contour is an optional 2D numpy array of x-y coordinates tracing 
-# out a line which represents the gate (useful for plotting).
+# result.
+# Contour is an optional 2D numpy array of x-y coordinates tracing out a line
+# which represents the gate (useful for plotting).
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
@@ -27,7 +27,7 @@ import numpy
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
     
-def start_end(data, num_start=250, num_end=100):
+def start_end(data, num_start = 250, num_end = 100):
     '''Gate out num_start first and num_end last events collected.
 
     data      - NxD FCSData object or numpy array
@@ -47,7 +47,7 @@ def start_end(data, num_start=250, num_end=100):
     
     return gated_data
 
-def high_low(data, channels=None, high=(2**10)-1, low=0):
+def high_low(data, channels = None, high = (2**10)-1, low = 0):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
@@ -69,10 +69,61 @@ def high_low(data, channels=None, high=(2**10)-1, low=0):
             data_ch = data_ch.reshape((-1,1))
 
     # Gate
-    mask = numpy.all((data_ch < high) & (data_ch > low), axis=1)
+    mask = numpy.all((data_ch < high) & (data_ch > low), axis = 1)
     gated_data = data[mask]
 
     return gated_data
+
+def ellipse(data, channels, center, a, b, theta = 0, log = False):
+    '''Gate that preserves events inside an ellipse-shaped region.
+
+    Events are kept if they satisfy the following relationship:
+        (x/a)**2 + (y/b)**2 <= 1
+    where x and y are the coordinates of the event list, after substracting
+    center and rotating by -theta. This is mathematically equivalent to
+    maintaining the events inside an ellipse with major axis a, minor axis b,
+    center at center, and tilted by theta.
+
+    data        - NxD FCSData object or numpy array
+    channels    - Channels on which to perform gating
+    center      - Coordinates of the center of the ellipse
+    a           - Major axis of the ellipse
+    b           - Minor axis of the ellipse
+    theta       - Angle of the ellipse
+    log         - If True, apply log10 to the event list before gating.
+    '''
+    # Extract channels in which to gate
+    assert len(channels) == 2, '2 channels should be specified.'
+    data_ch = data[:,channels].view(numpy.ndarray)
+
+    # Log if necessary
+    if log:
+        data_ch = numpy.log10(data_ch)
+
+    # Center
+    center = numpy.array(center)
+    data_centered = data_ch - center
+
+    # Rotate
+    R = numpy.array([[numpy.cos(theta), numpy.sin(theta)],
+                    [-numpy.sin(theta), numpy.cos(theta)]])
+    data_rotated = numpy.dot(data_centered, R.T)
+
+    # Generate mask
+    mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
+
+    # Gate
+    data_gated = data[mask]
+
+    # Calculate contour
+    t = numpy.linspace(0,1,100)*2*numpy.pi
+    ci = numpy.array([a*numpy.cos(t), b*numpy.sin(t)]).T
+    ci = numpy.dot(ci, R) + center
+    if log:
+        ci = 10**ci
+    cntr = [ci]
+
+    return data_gated, cntr
 
 def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     sigma = 10.0):
