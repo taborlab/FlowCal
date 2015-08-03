@@ -29,6 +29,9 @@ mef_names = {'FL1-H': 'Molecules of Equivalent Fluorescein, MEFL',
             'FL2-H': 'Molecules of Equivalent Fluorophore, MEF',
             'FL3-H': 'Molecules of Equivalent Cy5, MECY',
             }
+# Colors for histograms
+cm = fc.plot.load_colormap('spectral', 3)
+hist_colors = dict(zip(fl_channels, cm[::-1]))
 
 def main():
     # Launch dialogue to select input file
@@ -211,7 +214,7 @@ def main():
         # Construct hist parameters
         hist_params = []
         for channel, tf in tfs.iteritems():
-            param = {'div': 4}
+            param = {'div': 4, 'facecolor': hist_colors[channel]}
             if tf == 'None':
                 param['xlabel'] = '{} (Channel Number)'.format(channel)
                 param['log'] = False
