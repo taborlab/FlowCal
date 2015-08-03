@@ -21,6 +21,10 @@ import fc.transform
 import fc.mef
 import fc.stats
 
+# Channels
+sc_channels = ['FSC-H', 'SSC-H']
+fl_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+
 def main():
     # Launch dialogue to select input file
     Tk().withdraw() # don't show main window
@@ -70,20 +74,22 @@ def main():
             cluster_channels = bi['Clustering Channels'].split(',')
             cluster_channels = [cc.strip() for cc in cluster_channels]
         else:
-            cluster_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+            cluster_channels = fl_channels
 
         # Trim
         di = fc.gate.start_end(di, num_start=250, num_end=100)
-        di = fc.gate.high_low(di, ['FSC-H', 'SSC-H'])
+        di = fc.gate.high_low(di, sc_channels)
         # Density gate
         print "Running density gate (fraction = {:.2f})..."\
             .format(float(bi['Gate Fraction']))
         gated_di, gate_contour = fc.gate.density2d(data = di,
-                                gate_fraction = float(bi['Gate Fraction']))
+            channels = sc_channels,
+            gate_fraction = float(bi['Gate Fraction']))
+
         # Plot
         pyplot.figure(figsize = (6,4))
         fc.plot.density_and_hist(di, gated_di, 
-            density_channels = ['FSC-H', 'SSC-H'], 
+            density_channels = sc_channels,
             hist_channels = cluster_channels,
             gate_contour = gate_contour, 
             density_params = {'mode': 'scatter'}, 
@@ -93,7 +99,7 @@ def main():
         # Process MEF values
         mef = []
         mef_channels = []
-        for channel in ['FL1-H','FL2-H','FL3-H']:
+        for channel in fl_channels:
             if channel+' Peaks' in bi:
                 peaks = bi[channel+' Peaks'].split(',')
                 peaks = [int(e) if e.strip().isdigit() else numpy.nan \
@@ -125,9 +131,7 @@ def main():
             ci)
         data.append(di)
 
-        gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
-        print "{} ({} events, FL1-H gain = {}).".format(str(di), 
-            di.shape[0], gain)
+        print "{} ({} events).".format(str(di), di.shape[0])
 
     # Parse transforms to conduct on data
     # transforms is an array of dictionaries.
@@ -135,7 +139,7 @@ def main():
     transforms = []
     for di in data:
         channel_transf = collections.OrderedDict()
-        for channel in ['FL1-H', 'FL2-H', 'FL3-H']:
+        for channel in fl_channels:
             if channel + ' Transform' not in di.metadata:
                 pass
             elif di.metadata[channel + ' Transform'] == '':
@@ -155,7 +159,7 @@ def main():
     print "\nTrimming data..."    
     data_trimmed = [fc.gate.start_end(di, num_start=250, num_end=100)\
                                                      for di in data]
-    data_trimmed = [fc.gate.high_low(di, ['FSC-H', 'SSC-H'] + tf.keys())\
+    data_trimmed = [fc.gate.high_low(di, sc_channels + tf.keys())\
         for di, tf in zip(data_trimmed, transforms)]
 
     # Transform data
@@ -163,7 +167,7 @@ def main():
     data_transf = []
     for di, tf in zip(data_trimmed, transforms):
         # Exponential transformation is applied by default to FSC and SSC
-        dt = fc.transform.exponentiate(di, ['FSC-H', 'SSC-H'])
+        dt = fc.transform.exponentiate(di, sc_channels)
         # Print transformations used in fluorescence channels
         print str(di)+' ('+', '.join([k+': '+c for k, c in tf.iteritems()])+')'
         # Transform fluorescence channels
@@ -187,8 +191,9 @@ def main():
     for di in data_transf:
         print "{} (gate fraction = {:.2f})...".format(str(di), 
                 float(di.metadata['Gate Fraction']))
-        di_gated, gate_contour = fc.gate.density2d(data = di, 
-                        gate_fraction = float(di.metadata['Gate Fraction']))
+        di_gated, gate_contour = fc.gate.density2d(data = di,
+            channels = sc_channels,
+            gate_fraction = float(di.metadata['Gate Fraction']))
 
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
@@ -216,7 +221,7 @@ def main():
         hist_params = hist_params if len(hist_params)>0 else None
         # Plot
         fc.plot.density_and_hist(di, gated_data = dim,
-            density_channels = ['FSC-H', 'SSC-H'], 
+            density_channels = sc_channels,
             hist_channels = tfs.keys(), gate_contour = dgc, 
             density_params = {'mode': 'scatter', 'log': True}, 
             hist_params = hist_params,
