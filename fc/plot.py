@@ -20,6 +20,8 @@ from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
+save_dpi = 250
+
 def load_colormap(name, number):
     ''' Get colormap.
 
@@ -84,6 +86,7 @@ def hist1d(data_list,
            bins = None,
            legend = False,
            legend_loc = 'best',
+           legend_fontsize = 'medium',
            xlabel = None,
            ylabel = None,
            xlim = None,
@@ -185,12 +188,12 @@ def hist1d(data_list,
     if title:
         pyplot.title(title)
     if legend:
-        pyplot.legend(loc = legend_loc)
+        pyplot.legend(loc = legend_loc, prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -325,7 +328,7 @@ def density2d(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -381,7 +384,7 @@ def scatter2d(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -476,7 +479,7 @@ def scatter3d(data_list,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -530,7 +533,7 @@ def mef_std_crv(peaks_ch,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -560,7 +563,7 @@ def bar(data,
     data_error          - size of the error bar to plot for each datapoint.
     n_in_group          - number of bars per group.
     labels_in_group     - labels within a group, used for a legend.
-    colors              - list of colors of length >= n_in_group.
+    colors              - list of colors of length == n_in_group.
     bar_width           - bar width.
     label_rotation      - angle to rotate the bar labels.
     val_labels          - if True, include labels above each bar with its
@@ -635,7 +638,7 @@ def bar(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
 
@@ -658,7 +661,7 @@ def density_and_hist(data,
                     figsize = None,
                     savefig = None,
                     ):
-    '''Makes a combined density/histograms plot of a FCSData file.
+    '''Makes a combined density/histograms plot of a FCSData object.
 
     This function calls hist1d and density2d to plot a density diagram and a 
     number of histograms in the same plot using one single function call. 
@@ -756,6 +759,121 @@ def density_and_hist(data,
     # Save if necessary
     if savefig is not None:
         pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = 300)
+        pyplot.savefig(savefig, dpi = save_dpi)
+        pyplot.close()
+        gc.collect()
+
+
+def hist_and_bar(data_list,
+                channel,
+                labels,
+                bar_stats_func = numpy.mean,
+                hist_params = {},
+                bar_params = {},
+                figsize = None,
+                savefig = None,
+                ):
+    '''Makes a combined histogram/bar plot of a set of FCSData objects.
+
+    This function calls hist1d and bar to plot a histogram and a bar plot of
+    several FCSData objects on a specified channel, using the same function
+    call. The number plotted in the bar plot is calculated from the events list
+    using the function specified in bar_stats_func.
+
+    Parameters can be passed directly to hist1d and bar using hist_params and
+    bar_params. n_in_group in bar_params is read by this function. If
+    n_in_group is greater than one, the histogram's default colors and
+    linestyles are modified in the following way: One color is used for a
+    group, and members of a group a differentiated by linestyle.
+
+
+    Arguments:
+    data_list       - A list of FCSData objects.
+    channel         - Channel to use.
+    labels          - Labels to assign to each sample or group of samples.
+    bar_stats_func  - Function to use to obtain a single number to plot in the
+                        bar plot.
+    hist_params     - Dictionary with the kwargs to pass to the hist1d
+                        function.
+    bar_params      - Dictionary with the kwargs to pass to the bar function.
+    figsize         - Figure size. If None, calculate a default based on the
+                        number of subplots.
+    savefig         - if not None, it specifies the name of the file to save
+                        the figure to.
+    '''
+
+    # Extract number of groups to plot
+    if 'n_in_group' in bar_params:
+        n_in_group = bar_params['n_in_group']
+    else:
+        n_in_group = 1
+
+    # Check appropriate length of labels array
+    assert len(data_list)/n_in_group == len(labels), \
+        "len(labels) should be the same as len(data_list)/n_in_group."
+
+    # Calculate plot size if necessary
+    if figsize is None:
+        width = len(labels)*1.5
+        figsize = (width, 6.2)
+
+    # Create plot
+    pyplot.figure(figsize = figsize)
+
+    # Plot histogram
+
+    # Default histogram type
+    if 'histtype' not in hist_params:
+        hist_params['histtype'] = 'step'
+    histtype = hist_params['histtype']
+
+    # Generate default colors
+    hist_def_colors_1 = load_colormap('spectral', len(labels))
+    hist_def_colors = []
+    for hi in hist_def_colors_1:
+        for j in range(n_in_group):
+            hist_def_colors.append(hi)
+    # Assign default colors if necessary
+    if histtype == 'stepfilled' and 'facecolor' not in hist_params:
+        hist_params['facecolor'] = hist_def_colors
+    elif histtype == 'step' and 'edgecolor' not in hist_params:
+        hist_params['edgecolor'] = hist_def_colors
+
+    # Generate default linestyles
+    hist_def_linestyles_1 = ['solid', 'dashed', 'dash_dot', 'dotted']
+    hist_def_linestyles = []
+    for i in range(len(labels)):
+        for j in range(n_in_group):
+            hist_def_linestyles.append(hist_def_linestyles_1[j])
+    # Assign default linestyles if necessary
+    if 'linestyle' not in hist_params:
+        hist_params['linestyle'] = hist_def_linestyles
+
+    # Default legend
+    if 'legend' not in hist_params:
+        hist_params['legend'] = True
+    if hist_params['legend'] and 'label' not in hist_params:
+        hist_labels = []
+        for i in range(len(labels)):
+            for j in range(n_in_group):
+                hist_labels.append(labels[i])
+        hist_params['label'] = hist_labels
+
+    # Actually plot histogram
+    pyplot.subplot(2, 1, 1)
+    hist1d(data_list, channel = channel, **hist_params)
+
+    # Bar plot
+    # Calculate quantities to plot
+    bar_data = [bar_stats_func(di[:, channel]) for di in data_list]
+
+    # Actually plot
+    pyplot.subplot(2, 1, 2)
+    bar(bar_data, labels, **bar_params)
+
+    # Save if necessary
+    if savefig is not None:
+        pyplot.tight_layout()
+        pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
         gc.collect()
