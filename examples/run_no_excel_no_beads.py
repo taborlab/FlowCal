@@ -32,7 +32,7 @@ if __name__ == "__main__":
     print "\nLoading data..."
     data = []
     for df in data_files:
-        di = fc.io.TaborLabFCSData('{}/{}'.format(directory, df))
+        di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']

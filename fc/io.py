@@ -14,7 +14,7 @@ from copy import deepcopy
 
 import numpy as np
 
-class TaborLabFCSData(np.ndarray):
+class FCSData(np.ndarray):
     '''Class describing FCS data which come off of the flow cytometer used
     in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
 
