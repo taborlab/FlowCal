@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Exponential transformation
     data_transf = [fc.transform.exponentiate(di, ch_all) for di in data]
 
-    # Density gate
+    # Ellipse gate
     print "\nRunning ellipse gate on data files..."
     data_gated = []
     data_gated_contour = []
