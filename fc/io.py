@@ -311,31 +311,6 @@ class TaborLabFCSData(np.ndarray):
                 'bin_edges': np.arange(int(text.get('$P8R')) + 1) - 0.5,
                 }
             channel_info = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
-            
-            def namefix(x):
-                return {
-                    'TIME' : 'Time',
-                    'FSC': 'FSC-H',
-                    'SSC': 'SSC-H',
-                    'FL1': 'FL1-H',
-                    'FL2': 'FL2-H',
-                    'FL3': 'FL3-H',
-                    'FSCW': 'FSC-W',
-                    'FSCA': 'FSC-A',
-                    'SSCW': 'SSC-W',
-                    'SSCA': 'SSC-A',
-                    'FL1W': 'FL1-W',
-                    'FL1A': 'FL1-A',
-                    'FL2W': 'FL2-W',
-                    'FL2A': 'FL2-A',
-                    'FL3W': 'FL3-W',
-                    'FL3A': 'FL3-A',
-                }[x]
-                
-            for channel in channel_info:
-                channel['label'] = namefix(channel['label'])  
-                
-            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
         
         ###
         # Import DATA section
