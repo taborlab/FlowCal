@@ -56,7 +56,7 @@ class TestExponentiateFCS(unittest.TestCase):
     def setUp(self):
         self.channel_names = ['FSC-H', 'SSC-H', 'FL1-H', 
                                 'FL2-H', 'FL3-H', 'Time']
-        self.filename = 'test/Data.001'
+        self.filename = 'test/Data001.fcs'
         self.d = fc.io.FCSData(self.filename)
         self.n_samples = self.d.shape[0]
 
@@ -251,7 +251,7 @@ class TestMefFCS(unittest.TestCase):
     def setUp(self):
         self.channel_names = ['FSC-H', 'SSC-H', 'FL1-H', 
                                 'FL2-H', 'FL3-H', 'Time']
-        self.d = fc.io.FCSData('test/Data.001')
+        self.d = fc.io.FCSData('test/Data001.fcs')
         self.n_samples = self.d.shape[0]
         self.sc0 = lambda x: x + 10
         self.sc1 = lambda x: x**2

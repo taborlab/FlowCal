@@ -10,16 +10,38 @@
 #   * numpy
 
 import os
-from copy import deepcopy
+import copy
+import collections
+import warnings
 
 import numpy as np
 
 class FCSData(np.ndarray):
-    '''Class describing FCS data which come off of the flow cytometer used
-    in Jeff Tabor's lab at Rice University [http://www.taborlab.rice.edu/].
+    '''Class describing an FCS Data file.
 
-    The class itself is an NxD numpy array describing N cytometry events 
-    observing D data dimensions extracted from FCS DATA section in the FCS file.
+    The following versions are supported:
+        - FCS 2.0
+        - FCS 3.0
+        - FCS 3.1
+        - FCS 2.0 from CellQuestPro 5.1.1/BD FACScan Flow Cytometer
+
+    We assume that the TEXT segment is such that:
+        - There is only one data set in the file.
+        - $MODE = 'L' (list mode, histogram mode not supported).
+        - $DATATYPE = 'I' (unsigned integer), 'F' (32-bit floating point), or
+            'D' (64-bit floating point). 'A' (ASCII) is not supported.
+        - If $DATATYPE = 'I', $PnB % 8 = 0 for all channels.
+        - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian)
+        - $GATE = 0
+
+    The object is an NxD numpy array representing N cytometry events with D
+    dimensions extracted from the FCS DATA segment of an FCS file. The TEXT
+    segment information is included in attributes. ANALYSIS information is not
+    processed.
+
+    Two additional attributes are implemented: channel_info stores information
+    related to each channels, including name, gain, precalculated bins, etc.
+    metadata keeps channel-independent, sample-specific information.
     
     Class Attributes:
         * infile - string or file-like object
@@ -38,34 +60,85 @@ class FCSData(np.ndarray):
         * metadata  - dictionary with additional channel-independent, 
                       sample-specific information.
 
-    Instrument: BD FACScan flow cytometer
-
-    FCS file assumptions:
-        * version = FCS2.0
-        * $DATATYPE = I (unsigned binary integers)
-        * $MODE = L (list mode)
-        * $BYTEORD = 4,3,2,1 (big endian)
-        * $PnB = 16 for all $PAR (meaning all channels use 2 bytes to describe
-            data. This allows for straightforward use of numpy.memmap which
-            results in a significant speedup)
-        * only 1 data set per file
+    References:
     
-    For more details, see the FCS2.0 standard:
-    
+    FCS2.0 Standard:
     [Dean, PN; Bagwell, CB; Lindmo, T; Murphy, RF; Salzman, GC (1990).
     "Data file standard for flow cytometry. Data File Standards Committee
     of the Society for Analytical Cytology.". Cytometry 11: 323-332.
     PMID 2340769]
-    
-    also, see mailing list post:
-    
-    [https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html]
 
-    for BD$WORD key-value interpretations for FCS files coming off of BD
-    instruments.
+    FCS3.0 Standard:
+    [Seamer LC, Bagwell CB, Barden L, Redelman D, Salzman GC, Wood JC,
+    Murphy RF. "Proposed new data file standard for flow cytometry, version
+    FCS 3.0.". Cytometry. 1997 Jun 1;28(2):118-22. PMID 9181300]
+
+    FCS3.1 Standard:
+    [Spidlen J et al. "Data File Standard for Flow Cytometry, version
+    FCS 3.1.". Cytometry A. 2010 Jan;77(1):97-100. PMID 19937951]
     
-    Based in part on the fcm python library [https://github.com/jfrelinger/fcm].
+    Description of special BS$WORD TEXT fields:
+    [https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html]
     '''
+
+    @staticmethod
+    def _read_fcs_text_segment(f, begin, end, delim = None):
+        '''
+        Parse region of specified file and interpret as TEXT segment.
+
+        Since the ANALYSIS and supplemental TEXT segments are encoded in the
+        same way, this function can also be used to parse them.
+
+        f       - file-like object
+        begin   - offset (in bytes) to first byte of TEXT segment
+        end     - offset (in bytes) to last byte of TEXT segment
+        delim   - 1-byte delimiter character (optional). If None, will extract
+                  delimiter as first byte of TEXT segment. See FCS standards.
+
+        returns - dictionary of KEY-VALUE pairs, string containing delimiter
+        '''
+        # Read delimiter if necessary
+        if delim is None:
+            f.seek(begin)
+            delim = str(f.read(1))
+        
+        # Offsets point to the byte BEFORE the indicated boundary. This way,
+        # you can seek to the offset and then read 1 byte to read the indicated
+        # boundary. This means the length of the TEXT section is
+        # ((end+1) - begin).
+        f.seek(begin)
+        text_raw = f.read((end + 1) - begin)
+
+        text_list = text_raw.split(delim)
+
+        # The first and last list items should be empty because the TEXT
+        # section starts and ends with the delimiter
+        if text_list[0] != '' or text_list[-1] != '':
+            raise ImportError('TEXT segment should start and '
+                + 'end with delimiter.')
+        else:
+            del text_list[0]
+            del text_list[-1]
+
+        # Detect if delimiter was used in keyword or value. This is technically
+        # legal, but I'm too lazy to try and fix it because I don't think it's
+        # relevant to us. According to the FCS2.0 standard, "If the separator
+        # appears in a keyword or in a keyword value, it must be 'quoted' by
+        # being repeated" and "null (zero length) keywords or keyword values
+        # are not permitted", so this issue should manifest itself as an empty
+        # element in the list.
+        if any(x=='' for x in text_list):
+            raise ImportError('Use of delimiter in keywords or keyword '
+                + 'values is not supported')
+
+        # List length should be even since all key-value entries should be pairs
+        if len(text_list) % 2 != 0:
+            raise ImportError('Odd number of elements in TEXT segment; '
+                + 'unpaired key or value.')
+
+        text = dict(zip(text_list[0::2], text_list[1::2]))
+
+        return text, delim
 
     @staticmethod
     def load_from_file(infile):
@@ -89,275 +162,251 @@ class FCSData(np.ndarray):
         else:
             f = infile
 
-        ###
-        # Import relevant fields from HEADER section
-        ###
-        _version = f.read(10)
+        ######################
+        # Read HEADER segment
+        ######################
+
+        # Process version, throw error if not supported
+        version = f.read(10).rstrip()
+        if version not in ['FCS2.0', 'FCS3.0', 'FCS3.1']:
+            raise TypeError('FCS version {} not supported.'.format(version))
+
+        # Get segment offsets
+        text_begin = int(f.read(8))
+        text_end = int(f.read(8))
         
-        if _version not in ['FCS2.0    ', 'FCS3.0    ']:
-            raise TypeError('Incorrect FCS file version.')
-        else:
-            _version = _version.strip()
-
-        _text_begin = int(f.read(8))
-        _text_end = int(f.read(8))
+        data_begin = int(f.read(8))
+        data_end = int(f.read(8))
         
-        _data_begin = int(f.read(8))
-        _data_end = int(f.read(8))
+        ab = f.read(8)
+        ae = f.read(8)
+        analysis_begin = (0 if ab == ' '*8 else int(ab))
+        analysis_end = (0 if ab == ' '*8 else int(ae))
 
-        ###
-        # Import key-value pairs from TEXT section
-        ###
-        f.seek(_text_begin)
-        _separator = f.read(1)
-        
-        # Offsets point to the byte BEFORE the indicated boundary. This way,
-        # you can seek to the offset and then read 1 byte to read the indicated
-        # boundary. This means the length of the TEXT section is
-        # ((end+1) - begin).
-        f.seek(_text_begin)
-        _text = f.read((_text_end+1) - _text_begin)
+        ####################
+        # Read TEXT segment
+        ####################
 
-        l = _text.split(_separator)
+        text, delim = FCSData._read_fcs_text_segment(
+            f = f,
+            begin = text_begin,
+            end = text_end)
 
-        # The first and last list items should be empty because the TEXT
-        # section starts and ends with the delimiter
-        if l[0] != '' or l[-1] != '':
-            raise ImportError('error parsing TEXT section')
-        else:
-            del l[0]
-            del l[-1]
+        # For FCS3.0 and above, supplemental TEXT segment offsets are always
+        # specified via required key-value pairs in the primary TEXT segment.
+        if version in ['FCS3.0','FCS3.1']:
+            stext_begin = int(text['$BEGINSTEXT'])
+            stext_end = int(text['$ENDSTEXT'])
+            if stext_begin and stext_end:
+                stext = FCSData._read_fcs_text_segment(
+                    buf = f,
+                    begin = stext_begin,
+                    end = stext_end,
+                    delim = delim)[0]
+                text.update(stext)
 
-        # Detect if delimiter was used in keyword or value. This is technically
-        # legal, but I'm too lazy to try and fix it because I don't think it's
-        # relevant to us. According to the FCS2.0 standard, "If the separator
-        # appears in a keyword or in a keyword value, it must be 'quoted' by
-        # being repeated" and "null (zero length) keywords or keyword values
-        # are not permitted", so this issue should manifest itself as an empty
-        # element in the list.
-        if any(x=='' for x in l):
-            raise ImportError('error parsing TEXT section: delimiter used in'
-                              + ' keyword or value.')
-
-        # List length should be even since all key-value entries should be pairs
-        if len(l) % 2 != 0:
-            raise ImportError('error parsing TEXT section: odd # of'
-                              + ' key-value entries')
-
-        text = dict(zip(l[0::2], l[1::2]))
-
-        # Confirm FCS file assumptions
-        if text['$DATATYPE'] != 'I':
-            raise TypeError('FCS file $DATATYPE is not I')
-
+        # Check Mode
         if text['$MODE'] != 'L':
-            raise TypeError('FCS file $MODE is not L')
+            raise NotImplementedError("Only $MODE = 'L' is supported"
+                + " (detected $MODE = '{}')".format(text['$MODE']))
 
-        if text['$BYTEORD'] != '4,3,2,1':
-            raise TypeError('FCS file $BYTEORD is not 4,3,2,1')
+        # Check datatype
+        if text['$DATATYPE'] not in ('I','F','D'):
+            raise NotImplementedError("Only $DATATYPE = 'I', 'F', and"
+                + " 'D' are supported (detected $DATATYPE ="
+                + " '{}')".format(text['$DATATYPE']))
 
+        # Extract number of bits per parameter
         num_channels = int(text['$PAR'])
-        bits_per_channel = [int(text['$P%dB'%c])
-                            for c in xrange(1,num_channels+1)]
-        if all(b==16 for b in bits_per_channel):
-            bpc_all = 16
-        elif all(b==24 for b in bits_per_channel):
-            bpc_all = 24
-        else:
-            raise TypeError('channel bit width error: $PnB != 16 or 24 for all'
-                            + ' parameters (channels)')
-        
-        if text['$NEXTDATA'] != '0':
-            raise TypeError('FCS file contains more than one data set')
+        bits_per_channel = [int(text['$P{0}B'.format(p)])
+                            for p in xrange(1, num_channels + 1)]
 
-        # From the following mailing list post:
-        #
-        # https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
-        #
-        # the BD$WORD keys are interpreted for BD instruments. Populate a list
-        # of dictionaries based on this interpretation to make it easier to
-        # extract parameters like the channel gain.
+        # Check that number of bits is multiple of 8 if $DATATYPE == 'I'
+        if text['$DATATYPE'] == 'I':
+            if not all(bw % 8 == 0 for bw in bits_per_channel):
+                raise NotImplementedError("If $DATATYPE = 'I', only byte"
+                    + ' aligned parameter bit widths are'
+                    + ' supported (detected {0})'.format(
+                        ', '.join('$P{0}B={1}'.format(
+                                    p, text['$P{0}B'.format(p)])
+                                for p in xrange(1, num_channels + 1)
+                                if bits_per_channel[p - 1] % 8 != 0)))
 
-        def amp(a):
-            'Mapping of amplifier VALUE to human-readable string'
-            if a is None:
-                return None
-            if a == '1':
-                return 'lin'
-            if a == '0':
-                return 'log'
-            raise ImportError('unrecognized amplifier setting')
+        # Check byte ordering
+        if text['$BYTEORD'] not in ('4,3,2,1', '2,1', '1,2,3,4', '1,2'):
+            raise NotImplementedError("Only big endian ($BYTEORD = '4,3,2,1'"
+                + " or '2,1') and little endian ($BYTEORD = '1,2,3,4' or"
+                + " '1,2') are supported (detected $BYTEORD ="
+                + " '{0}')".format(text['$BYTEORD']))
 
-        if _version == 'FCS2.0':
-            ch1 = {
-                'label':text.get('$P1N'),
-                'number':1,
-                'pmt_voltage':text.get('BD$WORD13'),
-                '100x_lin_gain':text.get('BD$WORD18'),
-                'amplifier':amp(text.get('BD$WORD23')),
-                'threshold':text.get('BD$WORD29'),
-                'range':[0, int(text.get('$P1R'))-1, int(text.get('$P1R'))],
-                'bin_vals': np.arange(int(text.get('$P1R'))),
-                'bin_edges': np.arange(int(text.get('$P1R')) + 1) - 0.5,
-                }
-            ch2 = {
-                'label':text.get('$P2N'),
-                'number':2,
-                'pmt_voltage':text.get('BD$WORD14'),
-                '100x_lin_gain':text.get('BD$WORD19'),
-                'amplifier':amp(text.get('BD$WORD24')),
-                'threshold':text.get('BD$WORD30'),
-                'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
-                'bin_vals': np.arange(int(text.get('$P2R'))),
-                'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
-                }
-            ch3 = {
-                'label':text.get('$P3N'),
-                'number':3,
-                'pmt_voltage':text.get('BD$WORD15'),
-                '100x_lin_gain':text.get('BD$WORD20'),
-                'amplifier':amp(text.get('BD$WORD25')),
-                'threshold':text.get('BD$WORD31'),
-                'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
-                'bin_vals': np.arange(int(text.get('$P3R'))),
-                'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
-                }
-            ch4 = {
-                'label':text.get('$P4N'),
-                'number':4,
-                'pmt_voltage':text.get('BD$WORD16'),
-                '100x_lin_gain':text.get('BD$WORD21'),
-                'amplifier':amp(text.get('BD$WORD26')),
-                'threshold':text.get('BD$WORD32'),
-                'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
-                'bin_vals': np.arange(int(text.get('$P4R'))),
-                'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
-                }
-            ch5 = {
-                'label':text.get('$P5N'),
-                'number':5,
-                'pmt_voltage':text.get('BD$WORD17'),
-                '100x_lin_gain':text.get('BD$WORD22'),
-                'amplifier':amp(text.get('BD$WORD27')),
-                'threshold':text.get('BD$WORD33'),
-                'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
-                'bin_vals': np.arange(int(text.get('$P5R'))),
-                'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
-                }
-            ch6 = {
-                'label':text.get('$P6N'),
-                'number':6,
-                }
-            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6]
-        elif _version == 'FCS3.0':
-            ch1 = {
-                'label':text.get('$P1N'),
-                'number':1,
-                }
-            ch2 = {
-                'label':text.get('$P2N'),
-                'number':2,
-                'range':[0, int(text.get('$P2R'))-1, int(text.get('$P2R'))],
-                'pmt_voltage':text.get('$P2V'),
-                'bin_vals': np.arange(int(text.get('$P2R'))),
-                'bin_edges': np.arange(int(text.get('$P2R')) + 1) - 0.5,
-                }
-            ch3 = {
-                'label':text.get('$P3N'),
-                'number':3,
-                'range':[0, int(text.get('$P3R'))-1, int(text.get('$P3R'))],
-                'pmt_voltage':text.get('$P3V'),
-                'bin_vals': np.arange(int(text.get('$P3R'))),
-                'bin_edges': np.arange(int(text.get('$P3R')) + 1) - 0.5,
-                }
-            ch4 = {
-                'label':text.get('$P4N'),
-                'number':4,
-                'range':[0, int(text.get('$P4R'))-1, int(text.get('$P4R'))],
-                'pmt_voltage':text.get('$P4V'),
-                'bin_vals': np.arange(int(text.get('$P4R'))),
-                'bin_edges': np.arange(int(text.get('$P4R')) + 1) - 0.5,
-                }
-            ch5 = {
-                'label':text.get('$P5N'),
-                'number':5,
-                'range':[0, int(text.get('$P5R'))-1, int(text.get('$P5R'))],
-                'pmt_voltage':text.get('$P5V'),
-                'bin_vals': np.arange(int(text.get('$P5R'))),
-                'bin_edges': np.arange(int(text.get('$P5R')) + 1) - 0.5,
-                }
-            ch6 = {
-                'label':text.get('$P6N'),
-                'number':6,
-                'range':[0, int(text.get('$P6R'))-1, int(text.get('$P6R'))],
-                'pmt_voltage':text.get('$P6V'),
-                'bin_vals': np.arange(int(text.get('$P6R'))),
-                'bin_edges': np.arange(int(text.get('$P6R')) + 1) - 0.5,
-                }
-            ch7 = {
-                'label':text.get('$P7N'),
-                'number':7,
-                'range':[0, int(text.get('$P7R'))-1, int(text.get('$P7R'))],
-                'pmt_voltage':text.get('$P7V'),
-                'bin_vals': np.arange(int(text.get('$P7R'))),
-                'bin_edges': np.arange(int(text.get('$P7R')) + 1) - 0.5,
-                }
-            ch8 = {
-                'label':text.get('$P8N'),
-                'number':8,
-                'range':[0, int(text.get('$P8R'))-1, int(text.get('$P8R'))],
-                'pmt_voltage':text.get('$P8V'),
-                'bin_vals': np.arange(int(text.get('$P8R'))),
-                'bin_edges': np.arange(int(text.get('$P8R')) + 1) - 0.5,
-                }
-            channel_info = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+        # Check number of gate parameter
+        if '$GATE' in text and int(text['$GATE']) > 0:
+            raise NotImplementedError("Gate parameter parsing not supported.")
+
+        # Check that there is no additional data set
+        if int(text['$NEXTDATA']):
+            warnings.warn('Additional data sets detected. Will ignore.'
+                + ' ($NEXTDATA = {0})'.format(text['$NEXTDATA']))
+
+        # Populate channel_info, to facilitate access to channel information.
+        channel_info = []
+        for i in range(1, num_channels + 1):
+            chi = {}
+            # Get label
+            chi['label'] = text.get('$P{}N'.format(i))
+
+            if chi['label'].lower() == 'time':
+                pass
+            else:
+                # Gain
+                if 'CellQuest Pro' in text.get('CREATOR'):
+                    chi['pmt_voltage'] = text.get('BD$WORD{}'.format(12 + i))
+                else:
+                    chi['pmt_voltage'] = text.get('$P{}V'.format(i))
+                # Amplification type
+                if '$P{}E'.format(i) in text:
+                    if text['$P{}E'.format(i)] == '0,0':
+                        chi['amplifier'] = 'lin'
+                    else:
+                        chi['amplifier'] = 'log'
+                else:
+                    chi['amplifier'] = None
+                # Range and bins
+                PnR = '$P{}R'.format(i)
+                chi['range'] = [0, int(text.get(PnR))-1, int(text.get(PnR))]
+                chi['bin_vals'] = np.arange(int(text.get(PnR)))
+                chi['bin_edges'] = np.arange(int(text.get(PnR)) + 1) - 0.5
+
+            channel_info.append(chi)
         
-        ###
-        # Import DATA section
-        ###
-        
-        # Sanity check that the total # of bytes that we're about to interpret
-        # is exactly the # of bytes in the DATA section.
-        shape = (int(text['$TOT']), int(text['$PAR']))
-        if (shape[0]*shape[1]*bpc_all/8) != ((_data_end+1)-_data_begin):
-            raise ImportError('DATA size does not match expected array size')
-        
-        # Handle different bits per channel
-        if bpc_all == 16:
-            # Use a numpy memmap object to interpret the binary data straight 
-            # from the file as a linear numpy array.
+        ####################
+        # Read DATA segment
+        ####################
+
+        # Update data_begin and data_end if necessary
+        if version in ('FCS3.0', 'FCS3.1'):
+            data_begin = int(text['$BEGINDATA'])
+            data_end = int(text['$ENDDATA'])
+
+        # Get relevant TEXT keyword values
+        n_events = int(text['$TOT'])
+        n_channels = int(text['$PAR'])
+        big_endian = text['$BYTEORD'] in ('4,3,2,1', '2,1')
+
+        # Check that the total number of bytes that we're about to read is
+        # exactly the number of bytes in the DATA segment.
+        # Assume that $DATATYPE is one of ('I', 'F', 'D')
+        total_bits = np.sum(bits_per_channel)
+        if (n_events * total_bits / 8) !=\
+                ((data_end + 1) - data_begin):
+            raise ImportError('DATA size does not match expected array'
+                + ' size (array size ='
+                + ' {0} bytes,'.format(n_events * total_bits / 8)
+                + ' DATA segment size = {0} bytes)'.format(
+                    data_end + 1 - data_begin))
+
+        # Integer data type
+        if text['$DATATYPE'] == 'I':
+
+            # Check if all parameters fit into preexisting data types
+            if (all(bw == 8  for bw in bits_per_channel) or
+                all(bw == 16 for bw in bits_per_channel) or
+                all(bw == 32 for bw in bits_per_channel) or
+                all(bw == 64 for bw in bits_per_channel)):
+
+                num_bits = bits_per_channel[0]
+
+                dtype = np.dtype('{0}u{1}'.format('>' if big_endian else '<',
+                                                  num_bits/8))
+                data = np.memmap(
+                    f,
+                    dtype=dtype,
+                    mode='r',
+                    offset=data_begin,
+                    shape=(n_events, n_channels),
+                    order='C')
+
+                # Cast memmap object to regular numpy array stored in memory
+                data = np.array(data)
+
+            # Special case: 24 bits, big endian, use the lowest 2 bytes
+            elif all(bw == 24 for bw in bits_per_channel):
+                # Timing: 0.35s for data003.fcs
+                # Most of the load is in the last line
+
+                dtype = np.dtype('>u1, >u2')
+                data = np.memmap(
+                    f,
+                    dtype=dtype,
+                    mode='r',
+                    offset=data_begin,
+                    shape=(n_events, n_channels),
+                    order='C')
+
+                # Keep only second word
+                data = np.array([[chi[1] for chi in event] for event in data])
+
+            else:
+                raise NotImplementedError("ERROR")
+
+        elif text['$DATATYPE'] in ('F', 'D'):
+            # Get number of bits
+            num_bits = 32 if text['$DATATYPE'] == 'F' else 64
+
+            # Confirm that bit widths are consistent with data type
+            if not all(bw == num_bits for bw in bits_per_channel):
+                raise ValueError("All channel bit widths should be"
+                    + " {0} if datatype is".format(num_bits)
+                    + " '{0}' (bit widths: ".format(text['$DATATYPE'])
+                    + "{0})".format(bits_per_channel))
+
+            dtype = np.dtype('{0}f{1}'.format('>' if big_endian else '<',
+                                              num_bits/8))
             data = np.memmap(
                 f,
-                dtype=np.dtype('>u2'),   # big endian, unsigned 2byte integer
-                mode='r',                # read-only
-                offset=_data_begin,
-                shape=shape,
-                order='C'                # memory layout is row-major
-                )
-                
-            # Cast memmap object to regular numpy array stored in memory (as
-            # opposed to being backed by disk)
+                dtype=dtype,
+                mode='r',
+                offset=data_begin,
+                shape=(n_events, n_channels),
+                order='C')
+
+            # Cast memmap object to regular numpy array stored in memory
             data = np.array(data)
-            
-        if bpc_all == 24:
-            data = np.memmap(
-                f,
-                dtype=np.dtype('>u1, >u2'),#1 byte padding and 2-byte integer
-                mode='r',                   # read-only
-                offset=_data_begin,
-                shape=shape,
-                order='C'                   # memory layout is row-major
-                )
-                
-            # Cast memmap object to regular numpy array stored in memory (as
-            # opposed to being backed by disk). Throw out the higher-order bits
-            data = np.array([[chan[1] for chan in event] for event in data])
+
+        elif text['$DATATYPE'] == 'A':
+            raise NotImplementedError("Only 'I' (unsigned binary integer),"
+                + " 'F' (single precision floating point), and 'D' (double"
+                + " precision floating point) data types are supported"
+                + " (detected datatype: '{0}')".format(text['$DATATYPE']))
+        else:
+            raise ValueError("Unrecognized datatype (detected datatype: "
+                + "'{0}')".format(text['$DATATYPE']))
+
+        ########################
+        # Read ANALYSIS segment
+        ########################
+
+        # Update analysis_begin and analysis_end if necessary
+        if version in ('FCS3.0', 'FCS3.1'):
+            analysis_begin = int(text['$BEGINANALYSIS'])
+            analysis_end = int(text['$ENDANALYSIS'])
+
+        # Read analysis segment
+        if analysis_begin and analysis_end:
+            analysis = FCSData._read_fcs_text_segment(
+                f = f,
+                begin = analysis_begin,
+                end = analysis_end,
+                delim = delim)[0]
+        else:
+            analysis = {}
+
 
         # Close file if necessary
         if isinstance(infile, basestring):
             f.close()
 
-        return (data, text, channel_info)
+        return (data, text, analysis, channel_info)
 
     def __new__(cls, infile, metadata = {}):
         '''
@@ -369,7 +418,7 @@ class FCSData(np.ndarray):
         '''
 
         # Load all data from fcs file
-        data, text, channel_info = cls.load_from_file(infile)
+        data, text, analysis, channel_info = cls.load_from_file(infile)
 
         # Call constructor of numpy array
         obj = data.view(cls)
@@ -377,6 +426,7 @@ class FCSData(np.ndarray):
         # Add attributes
         obj.infile = infile
         obj.text = text
+        obj.analysis = analysis
         obj.channel_info = channel_info
         obj.metadata = metadata
 
@@ -391,11 +441,13 @@ class FCSData(np.ndarray):
         # Otherwise, copy attributes from "parent"
         self.infile = getattr(obj, 'infile', None)
         if hasattr(obj, 'text'):
-            self.text = deepcopy(obj.text)
+            self.text = copy.deepcopy(obj.text)
+        if hasattr(obj, 'analysis'):
+            self.analysis = copy.deepcopy(obj.analysis)
         if hasattr(obj, 'channel_info'):
-            self.channel_info = deepcopy(obj.channel_info)
+            self.channel_info = copy.deepcopy(obj.channel_info)
         if hasattr(obj, 'metadata'):
-            self.metadata = deepcopy(obj.metadata)
+            self.metadata = copy.deepcopy(obj.metadata)
 
     def __array_wrap__(self, out_arr, context = None):
         '''Method called after numpy ufuncs.'''
