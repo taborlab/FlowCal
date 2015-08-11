@@ -198,7 +198,7 @@ def hist1d(data_list,
         gc.collect()
 
 def density2d(data, 
-            channels = [0,1], 
+            channels = [0,1],
             log = False, 
             div = 1, 
             bins = None, 
@@ -333,7 +333,7 @@ def density2d(data,
         gc.collect()
 
 def scatter2d(data_list, 
-                channels = [0,1], 
+                channels = [0,1],
                 savefig = None,
                 **kwargs):
 
@@ -390,7 +390,7 @@ def scatter2d(data_list,
 
 
 def scatter3d(data_list, 
-                channels = [0,1,2], 
+                channels = [0,1,2],
                 savefig = None,
                 **kwargs):
 

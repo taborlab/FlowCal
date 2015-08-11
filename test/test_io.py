@@ -3,7 +3,7 @@
 # test_io.py - Unit tests for io module
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/1/2015
+# Date: 8/10/2015
 #
 # Requires:
 #   * fc.io
@@ -14,39 +14,121 @@ import fc.io
 import numpy as np
 import unittest
 
-channel_names = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time']
-filename = 'test/Data.001'
+'''
+Files to test:
+    - Data001.fcs: FCS 2.0 from CellQuest Pro 5.1.1 / BD FACScan Flow Cytometer
+    - Data002.fcs: FCS 2.0 from FACSDiva 6.1.3 / BD FACSCanto II Flow Cytometer
+    - Data003.fcs: FCS 3.0 from FlowJo Collectors Edition 7.5 / 
+                    BD FACScan Flow Cytometer
+    - Data004.fcs: FCS 3.0 including floating-point data
+'''
+filenames = ['test/Data001.fcs',
+            'test/Data002.fcs',
+            'test/Data003.fcs',
+            'test/Data004.fcs',
+            ]
 
-class TestTaborLabFCSDataLoading(unittest.TestCase):
+class TestFCSDataLoading(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_loading(self):
+    def test_loading_1(self):
         '''
-        Testing proper loading from FCS file.
+        Testing proper loading from FCS file (2.0, CellQuest Pro).
         '''
-        d = fc.io.TaborLabFCSData(filename)
+        d = fc.io.FCSData(filenames[0])
         self.assertEqual(d.shape, (20949, 6))
         self.assertEqual(len(d.channel_info), 6)
-        self.assertEqual(d.channels, channel_names)
+        self.assertEqual(d.channels,
+            ['FSC-H',
+             'SSC-H',
+             'FL1-H',
+             'FL2-H',
+             'FL3-H',
+             'Time'])
 
+    def test_loading_2(self):
+        '''
+        Testing proper loading from FCS file (2.0, FACSDiva).
+        '''
+        d = fc.io.FCSData(filenames[1])
+        self.assertEqual(d.shape, (20000, 9))
+        self.assertEqual(len(d.channel_info), 9)
+        self.assertEqual(d.channels,
+            ['FSC-A',
+             'SSC-A',
+             'FITC-A',
+             'PE-A',
+             'PerCP-Cy5-5-A',
+             'PE-Cy7-A',
+             'APC-A',
+             'APC-Cy7-A',
+             'Time',
+            ])
+
+    def test_loading_3(self):
+        '''
+        Testing proper loading from FCS file (3.0, FlowJo).
+        '''
+        d = fc.io.FCSData(filenames[2])
+        self.assertEqual(d.shape, (25000, 8))
+        self.assertEqual(len(d.channel_info), 8)
+        self.assertEqual(d.channels,
+            ['TIME',
+             'FSC',
+             'SSC',
+             'FL1',
+             'FL2',
+             'FL3',
+             'FSCW',
+             'FSCA',
+            ])
+
+    def test_loading_4(self):
+        '''
+        Testing proper loading from FCS file (3.0, Floating-point).
+        '''
+        d = fc.io.FCSData(filenames[3])
+        self.assertEqual(d.shape, (50000, 14))
+        self.assertEqual(len(d.channel_info), 14)
+        self.assertEqual(d.channels,
+            ['FSC-A',
+            'FSC-H',
+            'FSC-W',
+            'SSC-A',
+            'SSC-H',
+            'SSC-W',
+            'FSC PMT-A',
+            'FSC PMT-H',
+            'FSC PMT-W',
+            'GFP-A',
+            'GFP-H',
+            'mCherry-A',
+            'mCherry-H',
+            'Time',
+            ])
+
+class TestFCSMetadata(unittest.TestCase):
+    def setUp(self):
+        pass
+        
     def test_metadata_default(self):
         '''
         Test proper initialization of default metadata.
         '''
-        d = fc.io.TaborLabFCSData(filename)
+        d = fc.io.FCSData(filenames[0])
         self.assertEqual(d.metadata, {})
 
     def test_metadata_explicit(self):
         '''
         Test proper initialization of explicit metadata.
         '''
-        d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
+        d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.assertEqual(d.metadata, {'l2': 4, 'a': 'r'})
 
 class TestTaborLabFCSAttributes(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.TaborLabFCSData(filename)
+        self.d = fc.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
 
     def test_range(self):
@@ -90,7 +172,7 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         '''
         Testing string representation.
         '''
-        self.assertEqual(str(self.d), 'Data.001')
+        self.assertEqual(str(self.d), 'Data001.fcs')
 
     def test_time_step(self):
         '''
@@ -123,106 +205,110 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         self.assertEqual(d.acquisition_time, 77)
 
 
-class TestTaborLabFCSDataSlicing(unittest.TestCase):
+class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
+        self.d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_1d_slicing_with_scalar(self):
         '''
-        Testing the 1D slicing with a scalar of a TaborLabFCSData object.
+        Testing the 1D slicing with a scalar of a FCSData object.
         '''
         ds = self.d[1]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (6,))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_1d_slicing_with_list(self):
         '''
-        Testing the 1D slicing with a list of a TaborLabFCSData object.
+        Testing the 1D slicing with a list of a FCSData object.
         '''
         ds = self.d[range(10)]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_slicing_channel_with_int(self):
         '''
-        Testing the channel slicing with an int of a TaborLabFCSData object.
+        Testing the channel slicing with an int of a FCSData object.
         '''
         ds = self.d[:,2]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
-        self.assertEqual(ds.channels, [channel_names[2]])
+        self.assertEqual(ds.channels, ['FL1-H'])
         self.assertEqual(len(ds.channel_info), 1)
 
     def test_slicing_channel_with_string(self):
         '''
-        Testing the channel slicing with a string of a TaborLabFCSData object.
+        Testing the channel slicing with a string of a FCSData object.
         '''
         ds = self.d[:,'SSC-H']
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
         self.assertEqual(ds.channels, ['SSC-H'])
         self.assertEqual(len(ds.channel_info), 1)
 
     def test_slicing_channel_with_int_array(self):
         '''
-        Testing the channel slicing with an int array of a TaborLabFCSData 
+        Testing the channel slicing with an int array of a FCSData 
         object.
         '''
         ds = self.d[:,[1,3]]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
-        self.assertEqual(ds.channels, [channel_names[1], channel_names[3]])
+        self.assertEqual(ds.channels, ['SSC-H', 'FL2-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
     def test_slicing_channel_with_string_array(self):
         '''
-        Testing the channel slicing with a string array of a TaborLabFCSData 
+        Testing the channel slicing with a string array of a FCSData 
         object.
         '''
         ds = self.d[:,['FSC-H', 'FL3-H']]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
         self.assertEqual(ds.channels, ['FSC-H', 'FL3-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
     def test_slicing_sample(self):
         '''
-        Testing the sample slicing of a TaborLabFCSData object.
+        Testing the sample slicing of a FCSData object.
         '''
         ds = self.d[:1000]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (1000,6))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_2d_slicing(self):
         '''
-        Testing 2D slicing of a TaborLabFCSData object.
+        Testing 2D slicing of a FCSData object.
         '''
         ds = self.d[:1000,['SSC-H', 'FL3-H']]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (1000,2))
         self.assertEqual(ds.channels, ['SSC-H', 'FL3-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
     def test_mask_slicing(self):
         '''
-        Testing mask slicing of a TaborLabFCSData object.
+        Testing mask slicing of a FCSData object.
         '''
         m = self.d[:,1]>500
         ds = self.d[m,:]
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_none_slicing_1(self):
         '''
-        Testing slicing with None on the first dimension of a TaborLabFCSData 
+        Testing slicing with None on the first dimension of a FCSData 
         object.
         '''
         ds = self.d[None,[0,2]]
@@ -230,7 +316,7 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
 
     def test_none_slicing_2(self):
         '''
-        Testing slicing with None on the second dimension of a TaborLabFCSData 
+        Testing slicing with None on the second dimension of a FCSData 
         object.
         '''
         ds = self.d[:,None]
@@ -238,12 +324,13 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
 
     def test_2d_slicing_assignment(self):
         '''
-        Test assignment to TaborLabFCSData using slicing
+        Test assignment to FCSData using slicing
         '''
         ds = self.d.copy()
         ds[:,[1,2]] = 5
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)
@@ -252,12 +339,13 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
 
     def test_2d_slicing_assignment_string(self):
         '''
-        Test assignment to TaborLabFCSData using slicing with channel names
+        Test assignment to FCSData using slicing with channel names
         '''
         ds = self.d.copy()
         ds[:,['SSC-H', 'FL1-H']] = 5
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)
@@ -273,57 +361,57 @@ class TestTaborLabFCSDataSlicing(unittest.TestCase):
         self.assertEqual(ds.metadata, {'l2': 4, 'a': 'r'})
 
 
-class TestTaborLabFCSDataOperations(unittest.TestCase):
+class TestFCSDataOperations(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.TaborLabFCSData(filename, {'l2': 4, 'a': 'r'})
+        self.d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_sum_integer(self):
         '''
-        Testing that the sum of a TaborLabFCSData object returns a 
-        TaborLabFCSData object.
+        Testing that the sum of a FCSData object returns a 
+        FCSData object.
         '''
         ds = self.d + 3
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds[254,3] - self.d[254,3], 3)
         
     def test_sqrt(self):
         '''
-        Testing that the square root of a TaborLabFCSData object returns a 
-        TaborLabFCSData object.
+        Testing that the square root of a FCSData object returns a 
+        FCSData object.
         '''
         ds = np.sqrt(self.d)
-        self.assertIsInstance(ds, fc.io.TaborLabFCSData)
+        self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds[254,3], np.sqrt(self.d[254,3]))
 
     def test_sum(self):
         '''
-        Testing that the sum of a TaborLabFCSData object returns an scalar.
+        Testing that the sum of a FCSData object returns an scalar.
         '''
         s = np.sum(self.d)
         self.assertIsInstance(s, np.uint64)
 
     def test_mean(self):
         '''
-        Testing that the mean of a TaborLabFCSData object returns an scalar.
+        Testing that the mean of a FCSData object returns an scalar.
         '''
         m = np.mean(self.d)
         self.assertIsInstance(m, float)
 
     def test_std(self):
         '''
-        Testing that the std of a TaborLabFCSData object returns an scalar.
+        Testing that the std of a FCSData object returns an scalar.
         '''
         s = np.std(self.d)
         self.assertIsInstance(s, float)
 
     def test_mean_axis(self):
         '''
-        Testing that the mean along the axis 0 of a TaborLabFCSData object 
-        returns a TaborLabFCSData object.
+        Testing that the mean along the axis 0 of a FCSData object 
+        returns a FCSData object.
         '''
         m = np.mean(self.d, axis = 0)
-        self.assertIsInstance(m, fc.io.TaborLabFCSData)
+        self.assertIsInstance(m, fc.io.FCSData)
         self.assertEqual(m.shape, (6,))
 
     def test_metadata_sqrt(self):

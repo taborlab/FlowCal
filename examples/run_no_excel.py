@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     # Process beads data
     print "\nProcessing beads..."
-    beads_data = fc.io.TaborLabFCSData('{}/{}'.format(directory, beads_file))
+    beads_data = fc.io.FCSData('{}/{}'.format(directory, beads_file))
     print "Beads file contains {} events.".format(beads_data.shape[0])
     # Trim
     beads_data = fc.gate.start_end(beads_data, num_start=250, num_end=100)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print "\nLoading data..."
     data = []
     for df in data_files:
-        di = fc.io.TaborLabFCSData('{}/{}'.format(directory, df))
+        di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']

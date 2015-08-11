@@ -74,7 +74,7 @@ def main():
         bid = bi['File Path']
         
         # Open file
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, bi['File Path']))
+        di = fc.io.FCSData("{}/{}".format(basedir, bi['File Path']))
         print "{} ({} events).".format(str(di), di.shape[0])
 
         # Extract channels used for clustering
@@ -135,7 +135,7 @@ def main():
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']),
+        di = fc.io.FCSData("{}/{}".format(basedir, ci['File Path']),
             ci)
         data.append(di)
 
