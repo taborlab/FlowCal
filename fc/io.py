@@ -114,8 +114,7 @@ class FCSData(np.ndarray):
         # The first and last list items should be empty because the TEXT
         # section starts and ends with the delimiter
         if text_list[0] != '' or text_list[-1] != '':
-            raise ImportError('TEXT segment should start and '
-                + 'end with delimiter.')
+            raise ImportError('Segment should start and end with delimiter.')
         else:
             del text_list[0]
             del text_list[-1]
@@ -133,7 +132,7 @@ class FCSData(np.ndarray):
 
         # List length should be even since all key-value entries should be pairs
         if len(text_list) % 2 != 0:
-            raise ImportError('Odd number of elements in TEXT segment; '
+            raise ImportError('Odd number of elements in segment; '
                 + 'unpaired key or value.')
 
         text = dict(zip(text_list[0::2], text_list[1::2]))
@@ -216,16 +215,16 @@ class FCSData(np.ndarray):
                 + " 'D' are supported (detected $DATATYPE ="
                 + " '{}')".format(text['$DATATYPE']))
 
-        # Extract number of bits per parameter
+        # Extract number channels and bits per channel
         num_channels = int(text['$PAR'])
         bits_per_channel = [int(text['$P{0}B'.format(p)])
                             for p in xrange(1, num_channels + 1)]
 
         # Check that number of bits is multiple of 8 if $DATATYPE == 'I'
         if text['$DATATYPE'] == 'I':
-            if not all(bw % 8 == 0 for bw in bits_per_channel):
+            if not all(bc % 8 == 0 for bc in bits_per_channel):
                 raise NotImplementedError("If $DATATYPE = 'I', only byte"
-                    + ' aligned parameter bit widths are'
+                    + ' aligned channel bit widths are'
                     + ' supported (detected {0})'.format(
                         ', '.join('$P{0}B={1}'.format(
                                     p, text['$P{0}B'.format(p)])
@@ -291,6 +290,7 @@ class FCSData(np.ndarray):
         # Get relevant TEXT keyword values
         n_events = int(text['$TOT'])
         n_channels = int(text['$PAR'])
+        data_shape = (n_events, n_channels)
         big_endian = text['$BYTEORD'] in ('4,3,2,1', '2,1')
 
         # Check that the total number of bytes that we're about to read is
@@ -309,10 +309,10 @@ class FCSData(np.ndarray):
         if text['$DATATYPE'] == 'I':
 
             # Check if all parameters fit into preexisting data types
-            if (all(bw == 8  for bw in bits_per_channel) or
-                all(bw == 16 for bw in bits_per_channel) or
-                all(bw == 32 for bw in bits_per_channel) or
-                all(bw == 64 for bw in bits_per_channel)):
+            if (all(bc == 8  for bc in bits_per_channel) or
+                all(bc == 16 for bc in bits_per_channel) or
+                all(bc == 32 for bc in bits_per_channel) or
+                all(bc == 64 for bc in bits_per_channel)):
 
                 num_bits = bits_per_channel[0]
 
@@ -323,41 +323,92 @@ class FCSData(np.ndarray):
                     dtype=dtype,
                     mode='r',
                     offset=data_begin,
-                    shape=(n_events, n_channels),
+                    shape=data_shape,
                     order='C')
 
                 # Cast memmap object to regular numpy array stored in memory
                 data = np.array(data)
 
-            # Special case: 24 bits, big endian, use the lowest 2 bytes
-            elif all(bw == 24 for bw in bits_per_channel):
-                # Timing: 0.35s for data003.fcs
-                # Most of the load is in the last line
+            else:
+                # The FCS standards technically allows for parameters to NOT be
+                # byte aligned, but parsing a DATA segment which is not byte
+                # aligned requires significantly more computation (and probably
+                # an external library which exposes bit level resolution to a
+                # block of memory). I don't think this is a common use case, so
+                # I'm just going to detect it and raise an error.
+                if (not all(bc % 8 == 0 for bc in bits_per_channel) or
+                    any(bc > 64 for bc in bits_per_channel)):
+                    raise NotImplementedError('Only byte aligned channel bit'
+                        + ' widths (bw % 8 = 0), <= 64 are supported'
+                        + ' (bits per channel: {0})'.format(bits_per_channel))
 
-                dtype = np.dtype('>u1, >u2')
-                data = np.memmap(
+                # Read data in as a byte array
+                byte_shape = (n_events, np.sum(bits_per_channel)/8)
+
+                byte_data = np.memmap(
                     f,
-                    dtype=dtype,
+                    dtype='uint8',  # endianness doesn't matter for 1 byte
                     mode='r',
                     offset=data_begin,
-                    shape=(n_events, n_channels),
+                    shape=byte_shape,
                     order='C')
 
-                # Keep only second word
-                data = np.array([[chi[1] for chi in event] for event in data])
+                # Upcast all data to fit nearest supported data type of largest
+                # bit width
+                upcast_bw = int(2**np.max(np.ceil(np.log2(bits_per_channel))))
 
-            else:
-                raise NotImplementedError("ERROR")
+                # Create new array of upcast data type and use byte data to
+                # populate it. The new array will have endianness native to
+                # user's machine; does not preserve endianness.
+                upcast_dtype = 'u{0}'.format(upcast_bw/8)
+                data = np.zeros(data_shape, dtype=upcast_dtype)
+
+                # Array mapping each column of data to first corresponding
+                # column in byte_data
+                byte_boundaries = np.roll(np.cumsum(bits_per_channel)/8, 1)
+                byte_boundaries[0] = 0
+
+                # Reconstitute columns of data by bit shifting appropriate
+                # columns in byte_data and accumulating them
+                for col in xrange(data.shape[1]):
+                    num_bytes = bits_per_channel[col]/8
+                    for b in xrange(num_bytes):
+                        byte_data_col = byte_boundaries[col] + b
+                        byteshift = (num_bytes - b - 1) if big_endian else b
+
+                        if byteshift > 0:
+                            # byte_data must be upcast or else bit shift fails
+                            data[:,col] += \
+                                byte_data[:,byte_data_col].astype(upcast_dtype)\
+                                << (byteshift*8)
+                        else:
+                            data[:,col] += byte_data[:,byte_data_col]
+
+            # To strictly follow the FCS standards, mask off the unused high
+            # bits as specified by the parameter range.
+            for col in xrange(data.shape[1]):
+                # Obtain bits used from range parameter
+                col_range = int(text['$P{}R'.format(col + 1)])
+                bits_used = int(np.ceil(np.log2(col_range)))
+
+                # Create a bit mask to mask off all but the lowest bits_used
+                # bits. bitmask is a native python int type which does not have
+                # an underlying size. The int type is effectively left-padded
+                # with 0s (infinitely), and the '&' operation preserves the
+                # dataype of the array, so this shouldn't be an issue.
+                bitmask = ~((~0) << bits_used)
+                data[:,col] &= bitmask
+
 
         elif text['$DATATYPE'] in ('F', 'D'):
             # Get number of bits
             num_bits = 32 if text['$DATATYPE'] == 'F' else 64
 
             # Confirm that bit widths are consistent with data type
-            if not all(bw == num_bits for bw in bits_per_channel):
-                raise ValueError("All channel bit widths should be"
+            if not all(bc == num_bits for bc in bits_per_channel):
+                raise ValueError("All bits per channel should be"
                     + " {0} if datatype is".format(num_bits)
-                    + " '{0}' (bit widths: ".format(text['$DATATYPE'])
+                    + " '{0}' (bits per channel: ".format(text['$DATATYPE'])
                     + "{0})".format(bits_per_channel))
 
             dtype = np.dtype('{0}f{1}'.format('>' if big_endian else '<',
@@ -367,7 +418,7 @@ class FCSData(np.ndarray):
                 dtype=dtype,
                 mode='r',
                 offset=data_begin,
-                shape=(n_events, n_channels),
+                shape=data_shape,
                 order='C')
 
             # Cast memmap object to regular numpy array stored in memory
@@ -400,7 +451,6 @@ class FCSData(np.ndarray):
                 delim = delim)[0]
         else:
             analysis = {}
-
 
         # Close file if necessary
         if isinstance(infile, basestring):
