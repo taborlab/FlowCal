@@ -3,7 +3,7 @@
 # test_io.py - Unit tests for io module
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/1/2015
+# Date: 8/10/2015
 #
 # Requires:
 #   * fc.io
@@ -14,39 +14,121 @@ import fc.io
 import numpy as np
 import unittest
 
-channel_names = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time']
-filename = 'test/Data.001'
+'''
+Files to test:
+    - Data001.fcs: FCS 2.0 from CellQuest Pro 5.1.1 / BD FACScan Flow Cytometer
+    - Data002.fcs: FCS 2.0 from FACSDiva 6.1.3 / BD FACSCanto II Flow Cytometer
+    - Data003.fcs: FCS 3.0 from FlowJo Collectors Edition 7.5 / 
+                    BD FACScan Flow Cytometer
+    - Data004.fcs: FCS 3.0 including floating-point data
+'''
+filenames = ['test/Data001.fcs',
+            'test/Data002.fcs',
+            'test/Data003.fcs',
+            'test/Data004.fcs',
+            ]
 
 class TestFCSDataLoading(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_loading(self):
+    def test_loading_1(self):
         '''
-        Testing proper loading from FCS file.
+        Testing proper loading from FCS file (2.0, CellQuest Pro).
         '''
-        d = fc.io.FCSData(filename)
+        d = fc.io.FCSData(filenames[0])
         self.assertEqual(d.shape, (20949, 6))
         self.assertEqual(len(d.channel_info), 6)
-        self.assertEqual(d.channels, channel_names)
+        self.assertEqual(d.channels,
+            ['FSC-H',
+             'SSC-H',
+             'FL1-H',
+             'FL2-H',
+             'FL3-H',
+             'Time'])
 
+    def test_loading_2(self):
+        '''
+        Testing proper loading from FCS file (2.0, FACSDiva).
+        '''
+        d = fc.io.FCSData(filenames[1])
+        self.assertEqual(d.shape, (20000, 9))
+        self.assertEqual(len(d.channel_info), 9)
+        self.assertEqual(d.channels,
+            ['FSC-A',
+             'SSC-A',
+             'FITC-A',
+             'PE-A',
+             'PerCP-Cy5-5-A',
+             'PE-Cy7-A',
+             'APC-A',
+             'APC-Cy7-A',
+             'Time',
+            ])
+
+    def test_loading_3(self):
+        '''
+        Testing proper loading from FCS file (3.0, FlowJo).
+        '''
+        d = fc.io.FCSData(filenames[2])
+        self.assertEqual(d.shape, (25000, 8))
+        self.assertEqual(len(d.channel_info), 8)
+        self.assertEqual(d.channels,
+            ['TIME',
+             'FSC',
+             'SSC',
+             'FL1',
+             'FL2',
+             'FL3',
+             'FSCW',
+             'FSCA',
+            ])
+
+    def test_loading_4(self):
+        '''
+        Testing proper loading from FCS file (3.0, Floating-point).
+        '''
+        d = fc.io.FCSData(filenames[3])
+        self.assertEqual(d.shape, (50000, 14))
+        self.assertEqual(len(d.channel_info), 14)
+        self.assertEqual(d.channels,
+            ['FSC-A',
+            'FSC-H',
+            'FSC-W',
+            'SSC-A',
+            'SSC-H',
+            'SSC-W',
+            'FSC PMT-A',
+            'FSC PMT-H',
+            'FSC PMT-W',
+            'GFP-A',
+            'GFP-H',
+            'mCherry-A',
+            'mCherry-H',
+            'Time',
+            ])
+
+class TestFCSMetadata(unittest.TestCase):
+    def setUp(self):
+        pass
+        
     def test_metadata_default(self):
         '''
         Test proper initialization of default metadata.
         '''
-        d = fc.io.FCSData(filename)
+        d = fc.io.FCSData(filenames[0])
         self.assertEqual(d.metadata, {})
 
     def test_metadata_explicit(self):
         '''
         Test proper initialization of explicit metadata.
         '''
-        d = fc.io.FCSData(filename, {'l2': 4, 'a': 'r'})
+        d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.assertEqual(d.metadata, {'l2': 4, 'a': 'r'})
 
 class TestTaborLabFCSAttributes(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filename)
+        self.d = fc.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
 
     def test_range(self):
@@ -90,7 +172,7 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         '''
         Testing string representation.
         '''
-        self.assertEqual(str(self.d), 'Data.001')
+        self.assertEqual(str(self.d), 'Data001.fcs')
 
     def test_time_step(self):
         '''
@@ -125,7 +207,7 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
 
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filename, {'l2': 4, 'a': 'r'})
+        self.d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_1d_slicing_with_scalar(self):
@@ -135,7 +217,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[1]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (6,))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_1d_slicing_with_list(self):
@@ -145,7 +228,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[range(10)]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_slicing_channel_with_int(self):
@@ -155,7 +239,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,2]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
-        self.assertEqual(ds.channels, [channel_names[2]])
+        self.assertEqual(ds.channels, ['FL1-H'])
         self.assertEqual(len(ds.channel_info), 1)
 
     def test_slicing_channel_with_string(self):
@@ -176,7 +260,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,[1,3]]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
-        self.assertEqual(ds.channels, [channel_names[1], channel_names[3]])
+        self.assertEqual(ds.channels, ['SSC-H', 'FL2-H'])
         self.assertEqual(len(ds.channel_info), 2)
 
     def test_slicing_channel_with_string_array(self):
@@ -197,7 +281,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:1000]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (1000,6))
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_2d_slicing(self):
@@ -217,7 +302,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         m = self.d[:,1]>500
         ds = self.d[m,:]
         self.assertIsInstance(ds, fc.io.FCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         self.assertEqual(len(ds.channel_info), 6)
 
     def test_none_slicing_1(self):
@@ -243,7 +329,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d.copy()
         ds[:,[1,2]] = 5
         self.assertIsInstance(ds, fc.io.FCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)
@@ -257,7 +344,8 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d.copy()
         ds[:,['SSC-H', 'FL1-H']] = 5
         self.assertIsInstance(ds, fc.io.FCSData)
-        self.assertEqual(ds.channels, channel_names)
+        self.assertEqual(ds.channels,
+            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)
@@ -275,7 +363,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
 class TestFCSDataOperations(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filename, {'l2': 4, 'a': 'r'})
+        self.d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.n_samples = self.d.shape[0]
 
     def test_sum_integer(self):
