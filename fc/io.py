@@ -36,24 +36,25 @@ class FCSData(np.ndarray):
 
     The object is an NxD numpy array representing N cytometry events with D
     dimensions extracted from the FCS DATA segment of an FCS file. The TEXT
-    segment information is included in attributes. ANALYSIS information is not
-    processed.
+    segment information is included in attributes. ANALYSIS information is
+    parsed as well.
 
     Two additional attributes are implemented: channel_info stores information
     related to each channels, including name, gain, precalculated bins, etc.
-    metadata keeps channel-independent, sample-specific information.
+    metadata keeps channel-independent, sample-specific information,
+    separate from text and analysis.
     
     Class Attributes:
-        * infile - string or file-like object
-        * text   - dictionary of KEY-VALUE pairs extracted from FCS TEXT
-                   section
+        * infile    - string or file-like object
+        * text      - dictionary of KEY-VALUE pairs extracted from FCS TEXT
+                        section
+        * analysis  - dictionary of KEY-VALUE pairs extracted from FCS TEXT
+                        section
         * channel_info - list of dictionaries describing each channels. Keys:
             * 'label'
             * 'number'
             * 'pmt_voltage' (i.e. gain)
-            * '100x_lin_gain'
             * 'amplifier' (values = 'lin' or 'log')
-            * 'threshold'
             * 'range': [min, max, steps]
             * 'bin_vals': numpy array with bin values
             * 'bin_edges': numpy array with bin edges
