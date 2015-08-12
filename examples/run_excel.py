@@ -250,7 +250,7 @@ def main():
         di.metadata['Gated Counts'] = di.shape[0]
         try:
           di.metadata['Acquisition Time (s)'] = di.acquisition_time
-        except ValueError:
+        except:
           pass
         
         for channel in stat_channels:
