@@ -721,7 +721,8 @@ def density_and_hist(data,
         # Plot gate contour
         if gate_contour is not None:
             for g in gate_contour:
-                pyplot.plot(g[:,0], g[:,1], color = 'r', linewidth = 1.5)
+                pyplot.plot(g[:,0], g[:,1], color = 'k',
+                    linewidth = 1.25)
         # Add title
         if 'title' not in density_params:
             if gated_data is not None:
