@@ -198,7 +198,7 @@ def hist1d(data_list,
         gc.collect()
 
 def density2d(data, 
-            channels = [0,1], 
+            channels = [0,1],
             log = False, 
             div = 1, 
             bins = None, 
@@ -333,7 +333,7 @@ def density2d(data,
         gc.collect()
 
 def scatter2d(data_list, 
-                channels = [0,1], 
+                channels = [0,1],
                 savefig = None,
                 **kwargs):
 
@@ -390,7 +390,7 @@ def scatter2d(data_list,
 
 
 def scatter3d(data_list, 
-                channels = [0,1,2], 
+                channels = [0,1,2],
                 savefig = None,
                 **kwargs):
 
@@ -721,7 +721,8 @@ def density_and_hist(data,
         # Plot gate contour
         if gate_contour is not None:
             for g in gate_contour:
-                pyplot.plot(g[:,0], g[:,1], color = 'r', linewidth = 1.5)
+                pyplot.plot(g[:,0], g[:,1], color = 'k',
+                    linewidth = 1.25)
         # Add title
         if 'title' not in density_params:
             if gated_data is not None:

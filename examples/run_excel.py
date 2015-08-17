@@ -22,12 +22,12 @@ import fc.mef
 import fc.stats
 
 # Channels
-sc_channels = ['FSC-H', 'SSC-H']
-fl_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+sc_channels = ['FSC', 'SSC']
+fl_channels = ['FL1', 'FL2', 'FL3']
 # MEF type used per channel
-mef_names = {'FL1-H': 'Molecules of Equivalent Fluorescein, MEFL',
-            'FL2-H': 'Molecules of Equivalent Fluorophore, MEF',
-            'FL3-H': 'Molecules of Equivalent Cy5, MECY',
+mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
+            'FL2': 'Molecules of Equivalent Fluorophore, MEF',
+            'FL3': 'Molecules of Equivalent Cy5, MECY',
             }
 # Colors for histograms
 cm = fc.plot.load_colormap('spectral', 3)
@@ -74,7 +74,7 @@ def main():
         bid = bi['File Path']
         
         # Open file
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, bi['File Path']))
+        di = fc.io.FCSData("{}/{}".format(basedir, bi['File Path']))
         print "{} ({} events).".format(str(di), di.shape[0])
 
         # Extract channels used for clustering
@@ -135,7 +135,7 @@ def main():
     # Load data files
     data = []
     for ci in cells_info:
-        di = fc.io.TaborLabFCSData("{}/{}".format(basedir, ci['File Path']),
+        di = fc.io.FCSData("{}/{}".format(basedir, ci['File Path']),
             ci)
         data.append(di)
 
@@ -248,10 +248,7 @@ def main():
     for diug, di, tc in zip(data_transf, data_gated, transforms):
         di.metadata['Ungated Counts'] = diug.shape[0]
         di.metadata['Gated Counts'] = di.shape[0]
-        try:
-          di.metadata['Acquisition Time (s)'] = di.acquisition_time
-        except ValueError:
-          pass
+        di.metadata['Acquisition Time (s)'] = di.acquisition_time
         
         for channel in stat_channels:
             if channel in tc.keys():

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     print "\nLoading data..."
     data = []
     for df in data_files:
-        di = fc.io.TaborLabFCSData('{}/{}'.format(directory, df))
+        di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Exponential transformation
     data_transf = [fc.transform.exponentiate(di, ch_all) for di in data]
 
-    # Density gate
+    # Ellipse gate
     print "\nRunning ellipse gate on data files..."
     data_gated = []
     data_gated_contour = []
