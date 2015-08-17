@@ -524,30 +524,56 @@ class FCSData(np.ndarray):
             The time step is such that self[:,'Time']*self.time_step is in
             seconds.
 
-            In FCS2.0, the TIMETICKS keyword parameter contains the time step
-            in milliseconds.
+            FCS Standard files store the timestep in the $TIMESTEP keyword.
+
+            In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
+            the time step in milliseconds.
         '''
-        return float(self.text['TIMETICKS'])/1000.
+        if 'TIMETICKS' in self.text:
+            return float(self.text['TIMETICKS'])/1000.
+        elif '$TIMESTEP' in self.text:
+            return float(self.text['$TIMESTEP'])
+        else:
+            raise IOError("Time information not available.")
 
     @property
     def acquisition_time(self):
         ''' Return the acquisition time for this sample, in seconds.
 
-        The acquisition time is calculated using the 'Time' channel by default.
-        If the 'Time' channel is not available, the ETIM and BTIM keyword
-        parameters will be used.
+        The acquisition time is calculated using the 'time' channel by default
+        (case independent). If the 'time' channel is not available, the ETIM
+        and BTIM keyword parameters will be used, if available.
         '''
+        # Get time channels indices
+        channel_i = [i for i, chi in enumerate(self.channels)\
+                                                    if chi.lower() == 'time']
+        if len(channel_i) > 1:
+            raise KeyError("More than one time channel in data.")
         # Check if the time channel is available
-        if 'Time' in self.channels:
+        elif len(channel_i) == 1:
             # Use the event list
-            return (self[-1, 'Time'] - self[0, 'Time']) * self.time_step
-        else:
+            ch = self.channels[channel_i[0]]
+            return (self[-1, ch] - self[0, ch]) * self.time_step
+        elif '$BTIM' and '$ETIM' in self.text:
             # Use BTIM and ETIM keywords
             # In FCS2.0, times are specified as HH:MM:SS
+            # In FCS3.0, times are specified as HH:MM:SS[.cc] (cc optional)
+            # First, separate string into HH:MM:SS and .cc parts
+            t0s = self.text['$BTIM'].split('.')
+            tfs = self.text['$ETIM'].split('.')
+            # Read HH:MM:SS portion
             import time
-            t0 = time.mktime(time.strptime(self.text['$BTIM'], '%H:%M:%S'))
-            tf = time.mktime(time.strptime(self.text['$ETIM'], '%H:%M:%S'))
+            t0 = time.mktime(time.strptime(t0s[0], '%H:%M:%S'))
+            tf = time.mktime(time.strptime(tfs[0], '%H:%M:%S'))
+            # Add .cc portion if available
+            if len(t0s) > 1:
+                t0 = t0 + float(t0s[1])/100
+            if len(tfs) > 1:
+                tf = tf + float(tfs[1])/100
+            # Subtract and return
             return tf - t0
+        else:
+            raise IOError("Time information not available.")
 
     def name_to_index(self, channels):
         '''Return the channel indexes for the named channels

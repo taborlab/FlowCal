@@ -204,6 +204,84 @@ class TestTaborLabFCSAttributes(unittest.TestCase):
         d = self.d[:,['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']]
         self.assertEqual(d.acquisition_time, 77)
 
+class TestTaborLabFCSAttributes3(unittest.TestCase):
+    def setUp(self):
+        self.d = fc.io.FCSData(filenames[2])
+        self.n_samples = self.d.shape[0]
+
+    def test_range(self):
+        '''
+        Testing proper loading of range information
+        '''
+        self.assertEqual(self.d.channel_info[1]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[2]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
+        self.assertEqual(self.d.channel_info[5]['range'], [0, 1023, 1024])
+
+    def test_bins(self):
+        '''
+        Testing proper creation of bins
+        '''
+        # Bin values
+        np.testing.assert_array_equal(self.d.channel_info[1]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[2]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[3]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[4]['bin_vals'], 
+            np.arange(1024))
+        np.testing.assert_array_equal(self.d.channel_info[5]['bin_vals'], 
+            np.arange(1024))
+        # Bin edges
+        np.testing.assert_array_equal(self.d.channel_info[1]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[2]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[3]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[4]['bin_edges'], 
+            np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d.channel_info[5]['bin_edges'], 
+            np.arange(1025) - 0.5)
+
+    def test_str(self):
+        '''
+        Testing string representation.
+        '''
+        self.assertEqual(str(self.d), 'Data003.fcs')
+
+    def test_time_step(self):
+        '''
+        Testing of the time step
+        '''
+        # Data.003 is a FCS3.0 file, use the $TIMESTEP parameter.
+        # We have previously looked at self.d.text['$TIMESTEP']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.time_step, 0.1)
+
+    def test_acquisition_time_event(self):
+        '''
+        Testing acquisition time
+        '''
+        # Data.003 has the time channel, so the acquisition time should be
+        # calculated using the event list.
+        # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
+        # to determine the correct output for this file.
+        self.assertEqual(self.d.acquisition_time, 134.8)
+
+    def test_acquisition_time_btim_etim(self):
+        '''
+        Testing acquisition time using the btim/etim method
+        '''
+        # Data.001 has the time channel, so we will remove it so that the
+        # BTIM and ETIM keyword arguments are used.
+        # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
+        # determine the correct output for this file.
+        d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
+        self.assertEqual(d.acquisition_time, 156)
+
 
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
