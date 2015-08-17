@@ -467,7 +467,7 @@ class TestFCSDataOperations(unittest.TestCase):
         Testing that the sum of a FCSData object returns an scalar.
         '''
         s = np.sum(self.d)
-        self.assertIsInstance(s, np.uint64)
+        self.assertIsInstance(s, np.uint)
 
     def test_mean(self):
         '''

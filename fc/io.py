@@ -561,17 +561,17 @@ class FCSData(np.ndarray):
             # First, separate string into HH:MM:SS and .cc parts
             t0s = self.text['$BTIM'].split('.')
             tfs = self.text['$ETIM'].split('.')
-            # Read HH:MM:SS portion
-            import time
-            t0 = time.mktime(time.strptime(t0s[0], '%H:%M:%S'))
-            tf = time.mktime(time.strptime(tfs[0], '%H:%M:%S'))
+            # Read HH:MM:SS portion and subtract
+            import datetime
+            t0 = datetime.datetime.strptime(t0s[0], '%H:%M:%S')
+            tf = datetime.datetime.strptime(tfs[0], '%H:%M:%S')
+            dt = (tf - t0).total_seconds()
             # Add .cc portion if available
             if len(t0s) > 1:
-                t0 = t0 + float(t0s[1])/100
+                dt = dt - float(t0s[1])/100
             if len(tfs) > 1:
-                tf = tf + float(tfs[1])/100
-            # Subtract and return
-            return tf - t0
+                dt = dt + float(tfs[1])/100
+            return dt
         else:
             raise IOError("Time information not available.")
 
