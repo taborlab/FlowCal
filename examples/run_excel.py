@@ -248,10 +248,7 @@ def main():
     for diug, di, tc in zip(data_transf, data_gated, transforms):
         di.metadata['Ungated Counts'] = diug.shape[0]
         di.metadata['Gated Counts'] = di.shape[0]
-        try:
-          di.metadata['Acquisition Time (s)'] = di.acquisition_time
-        except:
-          pass
+        di.metadata['Acquisition Time (s)'] = di.acquisition_time
         
         for channel in stat_channels:
             if channel in tc.keys():
