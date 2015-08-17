@@ -11,7 +11,6 @@
 import collections
 
 import xlrd
-import xlwt
 import openpyxl
 
 def import_rows(workbook_name, worksheet_name):
