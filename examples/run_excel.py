@@ -22,12 +22,12 @@ import fc.mef
 import fc.stats
 
 # Channels
-sc_channels = ['FSC-H', 'SSC-H']
-fl_channels = ['FL1-H', 'FL2-H', 'FL3-H']
+sc_channels = ['FSC', 'SSC']
+fl_channels = ['FL1', 'FL2', 'FL3']
 # MEF type used per channel
-mef_names = {'FL1-H': 'Molecules of Equivalent Fluorescein, MEFL',
-            'FL2-H': 'Molecules of Equivalent Fluorophore, MEF',
-            'FL3-H': 'Molecules of Equivalent Cy5, MECY',
+mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
+            'FL2': 'Molecules of Equivalent Fluorophore, MEF',
+            'FL3': 'Molecules of Equivalent Cy5, MECY',
             }
 # Colors for histograms
 cm = fc.plot.load_colormap('spectral', 3)
@@ -250,7 +250,7 @@ def main():
         di.metadata['Gated Counts'] = di.shape[0]
         try:
           di.metadata['Acquisition Time (s)'] = di.acquisition_time
-        except ValueError:
+        except:
           pass
         
         for channel in stat_channels:
