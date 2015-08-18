@@ -479,7 +479,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                          warnings and errors.
     plot              - If True, produce diagnostic plots.
     plot_dir          - Directory where to save diagnostics plots. Ignored if 
-                         plot is False.
+                         plot is False. If plot = True and plot_dir = None,
+                         plot without saving.
     full              - Whether to include intermediate results in the output.
                          If full is True, the function returns a named tuple
                          with fields as described below. If full is False, the
@@ -503,7 +504,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         prev_precision = numpy.get_printoptions()['precision']
         numpy.set_printoptions(precision=2)
     # Create directory if plot is True
-    if plot:
+    if plot and plot_dir is not None:
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
 
@@ -547,22 +548,30 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
         if len(cluster_channels) == 2:
+            if plot_dir is not None:
+                savefig = '{}/cluster_{}.png'.format(plot_dir, data_file_name)
+            else:
+                savefig = None
             # Plot
             pyplot.figure(figsize = (6,4))
             fc.plot.scatter2d(data_plot, 
-                    channels = cluster_channels, 
-                    savefig = '{}/cluster_{}.png'.format(plot_dir,
-                                                    data_file_name))
-            pyplot.close()
+                    channels = cluster_channels,
+                    savefig = savefig)
+            if plot_dir is not None:
+                pyplot.close()
             
         if len(cluster_channels) == 3:
+            if plot_dir is not None:
+                savefig = '{}/cluster_{}.png'.format(plot_dir, data_file_name)
+            else:
+                savefig = None
             # Plot
             pyplot.figure(figsize = (8,6))
             fc.plot.scatter3d(data_plot, 
-                    channels = cluster_channels, 
-                    savefig = '{}/cluster_{}.png'.format(plot_dir,
-                                                    data_file_name))
-            pyplot.close()
+                    channels = cluster_channels,
+                    savefig = savefig)
+            if plot_dir is not None:
+                pyplot.close()
 
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
@@ -643,10 +652,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
                 pyplot.ylim(ylim)
             # Save and close
-            pyplot.tight_layout()
-            pyplot.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
+            if plot_dir is not None:
+                pyplot.tight_layout()
+                pyplot.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
                                     mef_channel, data_file_name), dpi = 300)
-            pyplot.close()
+                pyplot.close()
 
         # 3. Select peaks for fitting
         # ===========================
@@ -700,6 +710,14 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             channel_name = data_channel.channel_info[0]['label']
             channel_gain = data_channel.channel_info[0]['pmt_voltage']
             xlabel = '{} (gain = {})'.format(channel_name, channel_gain)
+            # Compute filename to save
+            if plot_dir is not None:
+                savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
+                                                        mef_channel,
+                                                        data_file_name, 
+                                                        )
+            else:
+                savefig = None
             # Plot standard curve
             pyplot.figure(figsize = (6,4))
             fc.plot.mef_std_crv(sel_peaks_ch, 
@@ -708,11 +726,9 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                     sc,
                     xlabel = xlabel,
                     ylabel = 'MEF',
-                    savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
-                                                            mef_channel,
-                                                            data_file_name, 
-                                                            ))
-            pyplot.close()
+                    savefig = savefig)
+            if plot_dir is not None:
+                pyplot.close()
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
