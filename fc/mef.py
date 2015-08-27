@@ -276,13 +276,13 @@ def find_peaks_median(data):
 
     return peak
 
-def select_peaks(peaks_ch, 
-                peaks_mef, 
-                peaks_ch_std,
-                peaks_ch_std_mult_l = 2.5,
-                peaks_ch_std_mult_r = 2.5,
-                peaks_ch_min = 0, 
-                peaks_ch_max = 1023):
+def select_peaks_proximity(peaks_ch,
+                           peaks_mef,
+                           peaks_ch_std,
+                           peaks_ch_std_mult_l = 2.5,
+                           peaks_ch_std_mult_r = 2.5,
+                           peaks_ch_min = 0,
+                           peaks_ch_max = 1023):
     '''Select peaks for fitting based on proximity to the minimum and maximum 
     values.
 
@@ -437,7 +437,8 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
-    find_peaks_method = 'median',
+    find_peaks_method = 'median', find_peaks_params = {},
+    select_peaks_method = 'proximity', select_peaks_params = {},
     verbose = False, plot = False, plot_dir = None, full = False):
     '''Generate a function that transforms channel data into MEF data.
 
@@ -464,28 +465,31 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     Arguments:
     
-    data_beads        - an NxD numpy array or FCSData object.
-    peaks_mef         - a numpy array with the P known MEF values of the beads.
-                         If mef_channels is an iterable of lenght C, peaks mef
-                         should be a CxP array, where P is the number of MEF
-                         peaks.
-    mef_channels      - channel name, or iterable with channel names, on which
-                         to generate MEF transformation functions.
-    cluster_method    - method used for peak clustering.
-    cluster_params    - parameters to pass to the clustering method.
-    cluster_channels  - channels used for clustering.
-    find_peaks_method - Method used to find the peak value.
-    verbose           - whether to print information about step completion,
-                         warnings and errors.
-    plot              - If True, produce diagnostic plots.
-    plot_dir          - Directory where to save diagnostics plots. Ignored if 
-                         plot is False. If plot = True and plot_dir = None,
-                         plot without saving.
-    full              - Whether to include intermediate results in the output.
-                         If full is True, the function returns a named tuple
-                         with fields as described below. If full is False, the
-                         function only returns the calculated transformation
-                         function.
+    data_beads          - an NxD numpy array or FCSData object.
+    peaks_mef           - a numpy array with the P known MEF values of the
+                          beads. If mef_channels is an iterable of lenght C,
+                          peaks mef should be a CxP array, where P is the
+                          number of MEF peaks.
+    mef_channels        - channel name, or iterable with channel names, on
+                          which to generate MEF transformation functions.
+    cluster_method      - method used for peak clustering.
+    cluster_params      - parameters to pass to the clustering method.
+    cluster_channels    - channels used for clustering.
+    find_peaks_method   - Method used to find the peak value.
+    find_peaks_params   - parameters to pass to the peak finding method.
+    select_peaks_method - Method to use for peak selection
+    select_peaks_params - Parameters to pass to the peak selection method.
+    verbose             - whether to print information about step completion,
+                          warnings and errors.
+    plot                - If True, produce diagnostic plots.
+    plot_dir            - Directory where to save diagnostics plots. Ignored
+                          if plot is False. If plot = True and plot_dir = None,
+                          plot without saving.
+    full                - Whether to include intermediate results in the
+                          output. If full is True, the function returns a named
+                          tuple with fields as described below. If full is
+                          False, the function only returns the calculated
+                          transformation function.
 
     Returns: 
 
@@ -608,14 +612,24 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         min_fl = data_channel.channel_info[0]['range'][0]
         max_fl = data_channel.channel_info[0]['range'][1]
         if find_peaks_method == 'smoothed_mode':
+            # Set default values for limit values
+            if 'min_val' not in find_peaks_params:
+                find_peaks_params['min_val'] = min_fl
+            if 'max_val' not in find_peaks_params:
+                find_peaks_params['max_val'] = max_fl
+            # Get peak values
             peaks_hists = [find_peaks_smoothed_mode(di[:,mef_channel], 
-                                min_val = min_fl, max_val = max_fl)
-                                for di in data_clustered]
+                                                        **find_peaks_params)
+                                    for di in data_clustered]
             peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
             hists_smooth = [ph[1] for ph in peaks_hists]
         elif find_peaks_method == 'median':
-            peaks_ch = numpy.array([find_peaks_median(di[:,mef_channel]) 
-                                for di in data_clustered])
+            peaks_ch = numpy.array([find_peaks_median(di[:,mef_channel],
+                                                        **find_peaks_params)
+                                    for di in data_clustered])
+        else:
+            raise ValueError("Peak finding method {} not recognized."
+                .format(find_peaks_method))
         # Sort peaks and clusters
         ind_sorted = numpy.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
@@ -661,22 +675,31 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # 3. Select peaks for fitting
         # ===========================
         
-        # Get the standard deviation of each peak
-        peaks_std = numpy.array([numpy.std(di[:,mef_channel]) \
-            for di in data_sorted])
-        
         # Print information
         if verbose:
-            print "Standard deviations:"
-            print peaks_std
+            print "- STEP 3. PEAK SELECTION."
             print "MEF peaks provided:"
             print peaks_mef_channel
-            print "- STEP 3. PEAK SELECTION."
 
-        # Select peaks
-        sel_peaks_ch, sel_peaks_mef = select_peaks(peaks_sorted, 
-                peaks_mef_channel, peaks_ch_std = peaks_std,
-                peaks_ch_min = min_fl, peaks_ch_max = max_fl)
+        if select_peaks_method == 'proximity':
+            # Get the standard deviation of each peak
+            peaks_std = numpy.array([numpy.std(di[:,mef_channel]) \
+                for di in data_sorted])
+            if verbose:
+                print "Standard deviations of channel peaks:"
+                print peaks_std
+            # Set default limits
+            if 'peaks_ch_min' not in select_peaks_params:
+                select_peaks_params['peaks_ch_min'] = min_fl
+            if 'peaks_ch_max' not in select_peaks_params:
+                select_peaks_params['peaks_ch_max'] = max_fl
+            # Select peaks
+            sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(peaks_sorted,
+                    peaks_mef_channel, peaks_ch_std = peaks_std,
+                    **select_peaks_params)
+        else:
+            raise ValueError("Peak selection method {} not recognized."
+                .format(select_peaks_method))
 
         # Accumulate results
         if full:
