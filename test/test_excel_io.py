@@ -3,11 +3,10 @@
 # test_excel_io.py - Unit tests for excel_io module
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/1/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * fc.excel_io
-#   * numpy
 #
 
 import os

@@ -3,7 +3,7 @@ import gc
 import os
 import os.path
 
-import numpy
+import numpy as np
 import scipy
 from matplotlib import pyplot
 
@@ -38,7 +38,7 @@ mef_channels = ['FL1']
 mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
             }
 # MEF bead values
-mef_values = {'FL1': [numpy.nan, 792, 2079, 6588, 16471, 
+mef_values = {'FL1': [np.nan, 792, 2079, 6588, 16471, 
                                                     47497, 137049, 271647],
              }
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # Obtain standard curve transformation
     print "\nCalculating standard curve..."
-    peaks_mef = numpy.array([mef_values[chi] for chi in mef_channels])
+    peaks_mef = np.array([mef_values[chi] for chi in mef_channels])
     to_mef = fc.mef.get_transform_fxn(gated_beads_data, peaks_mef, 
                     cluster_method = 'gmm', 
                     cluster_channels = fl_channels,
@@ -151,6 +151,6 @@ if __name__ == "__main__":
         hist_params = {'log': True, 'div': 4,
                 'xlabel': 'MEFL', 'ylim': (0, 400)},
         bar_params = {'ylabel': 'MEFL', 'ylim': (0, 40000)},
-        bar_stats_func = numpy.median, savefig = 'hist_bar.png')
+        bar_stats_func = np.median, savefig = 'hist_bar.png')
 
     print "\nDone."

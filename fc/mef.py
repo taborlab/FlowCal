@@ -5,7 +5,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/7/2015
+# Date: 9/6/2015
 #
 # Requires:
 #   * numpy
@@ -18,7 +18,7 @@ import os
 import functools
 import collections
 
-import numpy
+import numpy as np
 from scipy.optimize import minimize
 import scipy.ndimage.filters
 from matplotlib import pyplot
@@ -60,7 +60,7 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     n_samples = len(labels)
 
     # Calculate number of samples in each cluster
-    n_samples_cluster = [numpy.sum(labels==li) for li in labels_all]
+    n_samples_cluster = [np.sum(labels==li) for li in labels_all]
 
     # Check that no cluster is too small.
     # Clusters are assumed to be uniformly distributed. Any cluster 10 std 
@@ -70,10 +70,10 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     # containing data for 2 or more bead types.
     p = 1./n_clusters_exp
     n_samples_exp = data.shape[0]*p
-    n_samples_std = numpy.sqrt(data.shape[0]*p*(1-p))
+    n_samples_std = np.sqrt(data.shape[0]*p*(1-p))
     while(True):
-        cluster_size = numpy.array([numpy.sum(labels==li) for li in labels_all])
-        cluster_i = numpy.argsort(cluster_size)
+        cluster_size = np.array([np.sum(labels==li) for li in labels_all])
+        cluster_i = np.argsort(cluster_size)
         if cluster_size[cluster_i[0]] < n_samples_exp - n_samples_std*10:
             labels[labels==labels_all[cluster_i[0]]] = labels_all[cluster_i[1]]
             labels_all.remove(labels_all[cluster_i[0]])
@@ -81,14 +81,14 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
             break
 
     # Change the cluster numbers to a contiguous positive sequence
-    labels_checked = -1*numpy.ones(len(labels))
+    labels_checked = -1*np.ones(len(labels))
     cn = 0
     for li in labels_all:
         labels_checked[labels==li] = cn
         cn = cn + 1
     labels = labels_checked
 
-    assert(numpy.any(labels==-1) == False)
+    assert(np.any(labels==-1) == False)
 
     return labels
 
@@ -102,17 +102,17 @@ def clustering_distance(data, n_clusters = 8):
     returns     - Nx1 numpy array, labeling each sample to a cluster.
     '''
     # Number of elements per cluster
-    fractions = numpy.ones(n_clusters)*1./n_clusters
+    fractions = np.ones(n_clusters)*1./n_clusters
 
     n_per_cluster = fractions*data.shape[0]
-    cluster_cum = numpy.append([0], numpy.cumsum(n_per_cluster))
+    cluster_cum = np.append([0], np.cumsum(n_per_cluster))
 
     # Get distance and sort based on it
-    dist = numpy.sum(data**2., axis = 1)
-    sorted_i = numpy.argsort(dist)
+    dist = np.sum(data**2., axis = 1)
+    sorted_i = np.argsort(dist)
 
     # Initialize labels
-    labels = numpy.ones(data.shape[0])*-1
+    labels = np.ones(data.shape[0])*-1
 
     # Assign labels
     for i in range(n_clusters):
@@ -149,15 +149,15 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
         data_clustered = [data[labels == i] for i in labels_all]
         
         # Initialize parameters for GMM
-        weights = numpy.tile(1.0 / n_clusters,
+        weights = np.tile(1.0 / n_clusters,
                                         n_clusters)
-        means = numpy.array([numpy.mean(di, axis = 0) 
+        means = np.array([np.mean(di, axis = 0) 
             for di in data_clustered])
         
         if data.shape[1] == 1:
-            covars = [numpy.cov(di.T).reshape(1,1) for di in data_clustered]
+            covars = [np.cov(di.T).reshape(1,1) for di in data_clustered]
         else:
-            covars = [numpy.cov(di.T) for di in data_clustered]
+            covars = [np.cov(di.T) for di in data_clustered]
 
         # Initialize GMM object
         gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
@@ -168,14 +168,14 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
 
     elif initialization == 'distance_sub':
         # Initialize parameters for GMM
-        weights = numpy.tile(1.0 / n_clusters,
+        weights = np.tile(1.0 / n_clusters,
                                         n_clusters)
         means = []
         covars = []
 
         # Get distance and sort based on it
-        dist = numpy.sum(data**2., axis = 1)
-        sorted_i = numpy.argsort(dist)
+        dist = np.sum(data**2., axis = 1)
+        sorted_i = np.argsort(dist)
 
         # Expected number of elements per cluster
         n_per_cluster = data.shape[0]/float(n_clusters)
@@ -190,12 +190,12 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
             ih = int((i+1-discard_frac)*n_per_cluster)
             sorted_i_i = sorted_i[il:ih]
             data_i = data[sorted_i_i]
-            means.append(numpy.mean(data_i, axis = 0))
+            means.append(np.mean(data_i, axis = 0))
             if data.shape[1] == 1:
-                covars.append(numpy.cov(data_i.T).reshape(1,1))
+                covars.append(np.cov(data_i.T).reshape(1,1))
             else:
-                covars.append(numpy.cov(data_i.T))
-        means = numpy.array(means)
+                covars.append(np.cov(data_i.T))
+        means = np.array(means)
 
         # Initialize GMM object
         gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
@@ -214,7 +214,7 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     # This avoids the complete elimination of a cluster if two or more clusters
     # have very similar means.
     resp = gmm.predict_proba(data)
-    labels = [numpy.random.choice(range(n_clusters), p = ri) for ri in resp]
+    labels = [np.random.choice(range(n_clusters), p = ri) for ri in resp]
 
     return labels
 
@@ -241,23 +241,23 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     '''
 
     # Calculate bin edges and centers
-    bin_edges = numpy.arange(min_val, max_val + 2) - 0.5
-    bin_edges[0] = -numpy.inf
-    bin_edges[-1] = numpy.inf
-    bin_centers = numpy.arange(min_val, max_val + 1)
+    bin_edges = np.arange(min_val, max_val + 2) - 0.5
+    bin_edges[0] = -np.inf
+    bin_edges[-1] = np.inf
+    bin_centers = np.arange(min_val, max_val + 1)
 
     # Identify peak
     # Calculate sample mean and standard deviation
-    # mu = numpy.mean(data)
-    sigma = numpy.std(data)
+    # mu = np.mean(data)
+    sigma = np.std(data)
     # Calculate histogram
-    hist, __ = numpy.histogram(data, bin_edges)
+    hist, __ = np.histogram(data, bin_edges)
     # Do Gaussian blur on histogram
     # We have found empirically that using one half of the distribution's 
     # standard deviation results in a nice fit.
     hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma/2.)
     # Extract peak
-    i_max = numpy.argmax(hist_smooth)
+    i_max = np.argmax(hist_smooth)
     peak = bin_centers[i_max]
 
     return peak, hist_smooth
@@ -272,7 +272,7 @@ def find_peaks_median(data):
     returns     - The median of data.
     '''
 
-    peak = numpy.median(data)
+    peak = np.median(data)
 
     return peak
 
@@ -341,11 +341,11 @@ def select_peaks(peaks_ch,
         ValueError('Number of MEF values and channel peaks does not match.')
     
     # Discard unknown (NaN) peaks
-    unknown_mef = numpy.isnan(sel_peaks_mef)
-    n_unknown_mef = numpy.sum(unknown_mef)
+    unknown_mef = np.isnan(sel_peaks_mef)
+    n_unknown_mef = np.sum(unknown_mef)
     if n_unknown_mef > 0:
-        sel_peaks_ch = sel_peaks_ch[numpy.invert(unknown_mef)]
-        sel_peaks_mef = sel_peaks_mef[numpy.invert(unknown_mef)]
+        sel_peaks_ch = sel_peaks_ch[np.invert(unknown_mef)]
+        sel_peaks_mef = sel_peaks_mef[np.invert(unknown_mef)]
 
     return sel_peaks_ch, sel_peaks_mef
 
@@ -398,27 +398,27 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         bead peak values."
         
     # Initialize parameters
-    params = numpy.zeros(3)
+    params = np.zeros(3)
     # Initial guesses:
     # 0: slope found by putting a line through the highest two peaks.
     # 1: y-intercept found by putting a line through highest two peaks.
     # 2: bead autofluorescence initialized to 100.
-    params[0] = (numpy.log(peaks_mef[-1]) - numpy.log(peaks_mef[-2])) / \
+    params[0] = (np.log(peaks_mef[-1]) - np.log(peaks_mef[-2])) / \
                     (peaks_ch[-1] - peaks_ch[-2])
-    params[1] = numpy.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
+    params[1] = np.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
     params[2] = 100.
 
     # Error function
     def err_fun(p, x, y):
-        return numpy.sum((numpy.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
+        return np.sum((np.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
         
     # Bead model function
     def fit_fun(p,x):
-        return numpy.exp(p[0] * x + p[1]) - p[2]
+        return np.exp(p[0] * x + p[1]) - p[2]
 
     # Channel-to-MEF standard curve transformation function
     def sc_fun(p,x):
-        return numpy.exp(p[0] * x + p[1])
+        return np.exp(p[0] * x + p[1])
     
     # Fit parameters
     err_par = lambda p: err_fun(p, peaks_ch, peaks_mef)
@@ -501,8 +501,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     '''
     if verbose:
-        prev_precision = numpy.get_printoptions()['precision']
-        numpy.set_printoptions(precision=2)
+        prev_precision = np.get_printoptions()['precision']
+        np.set_printoptions(precision=2)
     # Create directory if plot is True
     if plot and plot_dir is not None:
         if not os.path.exists(plot_dir):
@@ -526,7 +526,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         raise ValueError("Clustering method {} not recognized."
             .format(cluster_method))
 
-    labels_all = numpy.array(list(set(labels)))
+    labels_all = np.array(list(set(labels)))
     n_clusters = len(labels_all)
     data_clustered = [data_beads[labels == i] for i in labels_all]
 
@@ -535,16 +535,16 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         print "- STEP 1. CLUSTERING."
         print "Number of clusters found: {}".format(n_clusters)
         # Calculate percentage of each cluster
-        data_count = numpy.array([di.shape[0] for di in data_clustered])
+        data_count = np.array([di.shape[0] for di in data_clustered])
         data_perc = data_count*100.0/data_count.sum()
         print "Percentage of samples in each cluster:"
         print data_perc
     # Plot
     if plot:
         # Sort
-        cluster_dist = [numpy.sum((numpy.mean(di[:,cluster_channels], 
+        cluster_dist = [np.sum((np.mean(di[:,cluster_channels], 
                 axis = 0))**2) for di in data_clustered]
-        cluster_sorted_ind = numpy.argsort(cluster_dist)
+        cluster_sorted_ind = np.argsort(cluster_dist)
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
         if len(cluster_channels) == 2:
@@ -576,10 +576,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
         mef_channel_all = list(mef_channels)
-        peaks_mef_all = numpy.array(peaks_mef).copy()
+        peaks_mef_all = np.array(peaks_mef).copy()
     else:
         mef_channel_all = [mef_channels]
-        peaks_mef_all = numpy.array([peaks_mef])
+        peaks_mef_all = np.array([peaks_mef])
 
     # Initialize lists to acumulate results
     sc_all = []
@@ -611,13 +611,13 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             peaks_hists = [find_peaks_smoothed_mode(di[:,mef_channel], 
                                 min_val = min_fl, max_val = max_fl)
                                 for di in data_clustered]
-            peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
+            peaks_ch = np.array([ph[0] for ph in peaks_hists])
             hists_smooth = [ph[1] for ph in peaks_hists]
         elif find_peaks_method == 'median':
-            peaks_ch = numpy.array([find_peaks_median(di[:,mef_channel]) 
+            peaks_ch = np.array([find_peaks_median(di[:,mef_channel]) 
                                 for di in data_clustered])
         # Sort peaks and clusters
-        ind_sorted = numpy.argsort(peaks_ch)
+        ind_sorted = np.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
         data_sorted = [data_clustered[i] for i in ind_sorted]
 
@@ -644,7 +644,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 # Smoothed histogram, if applicable
                 if find_peaks_method == 'smoothed_mode':
                     h = hists_smooth[i]
-                    pyplot.plot(numpy.linspace(min_fl, max_fl, len(h)), h*4, 
+                    pyplot.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
                         color = c)
                 # Peak values
                 p = peaks_ch[i]
@@ -662,7 +662,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # ===========================
         
         # Get the standard deviation of each peak
-        peaks_std = numpy.array([numpy.std(di[:,mef_channel]) \
+        peaks_std = np.array([np.std(di[:,mef_channel]) \
             for di in data_sorted])
         
         # Print information
@@ -736,7 +736,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                                     sc_channels = mef_channel_all)
 
     if verbose:
-        numpy.set_printoptions(precision = prev_precision)
+        np.set_printoptions(precision = prev_precision)
 
     if full:
         # Clustering results

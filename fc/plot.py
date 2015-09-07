@@ -3,7 +3,7 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/6/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * numpy
@@ -14,7 +14,7 @@ import gc
 import os
 import csv
 
-import numpy
+import numpy as np
 import scipy.ndimage.filters
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
@@ -47,8 +47,8 @@ def load_colormap(name, number):
         elif number == 2:
             cm = [cm_raw[0], cm_raw[2]]
         elif number >= 3:
-            start = numpy.sum(range(number)) - 3
-            end = numpy.sum(range(number + 1)) - 3
+            start = np.sum(range(number)) - 3
+            end = np.sum(range(number + 1)) - 3
             cm = cm_raw[start:end]
         return cm
     elif name == 'diverging':
@@ -147,10 +147,10 @@ def hist1d(data_list,
             r = y.channel_info[0]['range']
             bd = y.channel_info[0]['bin_edges']
             # Get bin scaled indices
-            xd = numpy.linspace(0, 1, r[2] + 1)
-            xs = numpy.linspace(0, 1, r[2]/div + 1)
+            xd = np.linspace(0, 1, r[2] + 1)
+            xs = np.linspace(0, 1, r[2]/div + 1)
             # Generate sub-sampled bins
-            bins = numpy.interp(xs, xd, bd)
+            bins = np.interp(xs, xd, bd)
 
         # Check for properties specified as lists.
         kwargsi = kwargs.copy()
@@ -245,25 +245,25 @@ def density2d(data,
         ry = data_plot.channel_info[1]['range']
         bdy = data_plot.channel_info[1]['bin_edges']
         # Get bin scaled indices
-        xdx = numpy.linspace(0, 1, rx[2] + 1)
-        xsx = numpy.linspace(0, 1, rx[2]/div + 1)
-        xdy = numpy.linspace(0, 1, ry[2] + 1)
-        xsy = numpy.linspace(0, 1, ry[2]/div + 1)
+        xdx = np.linspace(0, 1, rx[2] + 1)
+        xsx = np.linspace(0, 1, rx[2]/div + 1)
+        xdy = np.linspace(0, 1, ry[2] + 1)
+        xsy = np.linspace(0, 1, ry[2]/div + 1)
         # Generate sub-sampled bins
-        bins = numpy.array([numpy.interp(xsx, xdx, bdx), 
-                            numpy.interp(xsy, xdy, bdy)])
+        bins = np.array([np.interp(xsx, xdx, bdx), 
+                            np.interp(xsy, xdy, bdy)])
 
     # Calculate histogram
-    H, xedges, yedges = numpy.histogram2d(data_plot[:,0],
+    H, xedges, yedges = np.histogram2d(data_plot[:,0],
                                         data_plot[:,1],
                                         bins = bins)
     # H needs to be rotated and flipped
-    H = numpy.rot90(H)
-    H = numpy.flipud(H)
+    H = np.rot90(H)
+    H = np.flipud(H)
 
     # Normalize
     if normed:
-        H = H/numpy.sum(H)
+        H = H/np.sum(H)
 
     # Smooth    
     if smooth:
@@ -278,11 +278,11 @@ def density2d(data,
 
     # Plotting mode
     if mode == 'scatter':
-        Hind = numpy.ravel(H)
-        xv, yv = numpy.meshgrid(xedges[:-1], yedges[:-1])
-        x = numpy.ravel(xv)[Hind != 0]
-        y = numpy.ravel(yv)[Hind != 0]
-        z = numpy.ravel(bH)[Hind != 0]
+        Hind = np.ravel(H)
+        xv, yv = np.meshgrid(xedges[:-1], yedges[:-1])
+        x = np.ravel(xv)[Hind != 0]
+        y = np.ravel(yv)[Hind != 0]
+        z = np.ravel(bH)[Hind != 0]
         pyplot.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
         pyplot.pcolormesh(xedges, yedges, bH, **kwargs)
@@ -301,17 +301,17 @@ def density2d(data,
         pyplot.gca().set_xscale('log')
         pyplot.gca().set_yscale('log')
         a = list(pyplot.axis())
-        a[0] = 10**(numpy.ceil(numpy.log10(xedges[0])))
-        a[1] = 10**(numpy.ceil(numpy.log10(xedges[-1])))
-        a[2] = 10**(numpy.ceil(numpy.log10(yedges[0])))
-        a[3] = 10**(numpy.ceil(numpy.log10(yedges[-1])))
+        a[0] = 10**(np.ceil(np.log10(xedges[0])))
+        a[1] = 10**(np.ceil(np.log10(xedges[-1])))
+        a[2] = 10**(np.ceil(np.log10(yedges[0])))
+        a[3] = 10**(np.ceil(np.log10(yedges[-1])))
         pyplot.axis(a)
     else:
         a = list(pyplot.axis())
-        a[0] = numpy.ceil(xedges[0])
-        a[1] = numpy.ceil(xedges[-1])
-        a[2] = numpy.ceil(yedges[0])
-        a[3] = numpy.ceil(yedges[-1])
+        a[0] = np.ceil(xedges[0])
+        a[1] = np.ceil(xedges[-1])
+        a[2] = np.ceil(yedges[0])
+        a[3] = np.ceil(yedges[-1])
         pyplot.axis(a)
     # pyplot.grid(True)
     if xlabel:
@@ -511,7 +511,7 @@ def mef_std_crv(peaks_ch,
     # Get colors
     colors = load_colormap('diverging', 3)
     # Generate x data
-    xdata = numpy.linspace(xlim[0],xlim[1],200)
+    xdata = np.linspace(xlim[0],xlim[1],200)
 
     # Plot
     pyplot.plot(peaks_ch, peaks_mef, 'o', 
@@ -581,7 +581,7 @@ def bar(data,
         colors = load_colormap('diverging', n_in_group)
 
     # Calculate coordinates of x axis.
-    x_coords = numpy.arange((len(data))/n_in_group)
+    x_coords = np.arange((len(data))/n_in_group)
 
     # Initialize plot
     ax = pyplot.gca()
@@ -768,7 +768,7 @@ def density_and_hist(data,
 def hist_and_bar(data_list,
                 channel,
                 labels,
-                bar_stats_func = numpy.mean,
+                bar_stats_func = np.mean,
                 hist_params = {},
                 bar_params = {},
                 figsize = None,

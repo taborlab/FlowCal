@@ -3,7 +3,7 @@ import gc
 import os
 import os.path
 
-import numpy
+import numpy as np
 import scipy
 from matplotlib import pyplot
 
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     for di in data_transf:
         print "{}...".format(str(di))
         di_gated, gate_contour = fc.gate.ellipse(data = di,
-            channels = ['FSC-H', 'SSC-H'], center = numpy.log10([200, 70]),
-            a = 0.15, b = 0.10, theta = numpy.pi/4, log = True)
+            channels = ['FSC-H', 'SSC-H'], center = np.log10([200, 70]),
+            a = 0.15, b = 0.10, theta = np.pi/4, log = True)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
@@ -81,6 +81,6 @@ if __name__ == "__main__":
         hist_params = {'log': True, 'div': 4,
                 'xlabel': 'GFP (A.U.)', 'ylim': (0, 400)},
         bar_params = {'ylabel': 'GFP (A.U.)', 'ylim': (0, 600)},
-        bar_stats_func = numpy.median, savefig = 'hist_bar.png')
+        bar_stats_func = np.median, savefig = 'hist_bar.png')
 
     print "\nDone."

@@ -5,13 +5,13 @@
 #
 # Authors: Brian Landry (brian.landry@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/13/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * numpy
 #   * scipy
 
-import numpy
+import numpy as np
 import scipy.stats
 
 def mean(data, channel):
@@ -24,7 +24,7 @@ def mean(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    return numpy.mean(data[:,channel])
+    return np.mean(data[:,channel])
 
 def gmean(data, channel):
     ''' Calculate the geometric mean.
@@ -47,7 +47,7 @@ def median(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    return numpy.median(data[:,channel])
+    return np.median(data[:,channel])
 
 def mode(data, channel):
     ''' Calculate the mode.
@@ -59,7 +59,7 @@ def mode(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    return numpy.argmax(numpy.bincount(data[:,channel].astype('int32')))
+    return np.argmax(np.bincount(data[:,channel].astype('int32')))
 
 def std(data, channel):
     ''' Calculate the standard deviation.
@@ -71,7 +71,7 @@ def std(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    return numpy.std(data[:,channel])
+    return np.std(data[:,channel])
 
 def CV(data, channel):
     ''' Calculate the Coefficient of Variation.
@@ -83,7 +83,7 @@ def CV(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    return numpy.std(data[:,channel])/numpy.mean(data[:,channel])
+    return np.std(data[:,channel])/np.mean(data[:,channel])
 
 def iqr(data, channel):
     ''' Calculate the Interquartile Range.
@@ -95,7 +95,7 @@ def iqr(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    q75, q25 = numpy.percentile(data[:,channel], [75 ,25])
+    q75, q25 = np.percentile(data[:,channel], [75 ,25])
     return q75 - q25
 
 def RCV(data, channel):
@@ -108,5 +108,5 @@ def RCV(data, channel):
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
 
-    q75, q25 = numpy.percentile(data[:,channel], [75 ,25])
-    return (q75 - q25)/numpy.median(data[:,channel])
+    q75, q25 = np.percentile(data[:,channel], [75 ,25])
+    return (q75 - q25)/np.median(data[:,channel])

@@ -6,7 +6,7 @@ import collections
 from platform import system as platformSys
 from subprocess import call
 
-import numpy
+import numpy as np
 import scipy
 from matplotlib import pyplot
 
@@ -110,11 +110,11 @@ def main():
         for channel in fl_channels:
             if channel+' Peaks' in bi:
                 peaks = bi[channel+' Peaks'].split(',')
-                peaks = [int(e) if e.strip().isdigit() else numpy.nan \
+                peaks = [int(e) if e.strip().isdigit() else np.nan \
                     for e in peaks]
                 mef.append(peaks)
                 mef_channels.append(channel)
-        mef = numpy.array(mef)
+        mef = np.array(mef)
 
         # Obtain standard curve transformation
         print "\nCalculating standard curve..."
