@@ -50,14 +50,14 @@ if __name__ == "__main__":
         os.makedirs(gated_plot_dir)
 
     # Process beads data
-    print "\nProcessing beads..."
+    print("\nProcessing beads...")
     beads_data = fc.io.FCSData('{}/{}'.format(directory, beads_file))
-    print "Beads file contains {} events.".format(beads_data.shape[0])
+    print("Beads file contains {} events.".format(beads_data.shape[0]))
     # Trim
     beads_data = fc.gate.start_end(beads_data, num_start=250, num_end=100)
     beads_data = fc.gate.high_low(beads_data, sc_channels)
     # Density gate
-    print "\nRunning density gate on beads data..."
+    print("\nRunning density gate on beads data...")
     gated_beads_data, gate_contour = fc.gate.density2d(data = beads_data,
                                                     channels = sc_channels,
                                                     gate_fraction = 0.3)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     gc.collect()
 
     # Obtain standard curve transformation
-    print "\nCalculating standard curve..."
+    print("\nCalculating standard curve...")
     peaks_mef = numpy.array([mef_values[chi] for chi in mef_channels])
     to_mef = fc.mef.get_transform_fxn(gated_beads_data, peaks_mef, 
                     cluster_method = 'gmm', 
@@ -84,15 +84,15 @@ if __name__ == "__main__":
 
 
     # Process data files
-    print "\nLoading data..."
+    print("\nLoading data...")
     data = []
     for df in data_files:
         di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         gain = di[:,'FL1'].channel_info[0]['pmt_voltage']
-        print "{} ({} events, FL1 gain = {}).".format(str(di), 
-            di.shape[0], gain)
+        print("{} ({} events, FL1 gain = {}).".format(str(di),
+            di.shape[0], gain))
 
     # Basic gating/trimming
     data = [fc.gate.start_end(di, num_start=250, num_end=100) for di in data]
@@ -103,15 +103,15 @@ if __name__ == "__main__":
     data_transf = [fc.transform.exponentiate(di, sc_channels) for di in data]
 
     # Transform to MEF
-    print "\nTransforming to MEF..."
+    print("\nTransforming to MEF...")
     data_transf = [to_mef(di, mef_channels) for di in data_transf]
 
     # Density gate
-    print "\nRunning density gate on data files..."
+    print("\nRunning density gate on data files...")
     data_gated = []
     data_gated_contour = []
     for di in data_transf:
-        print "{}...".format(str(di))
+        print("{}...".format(str(di)))
         di_gated, gate_contour = fc.gate.density2d(data = di,
                                             channels = sc_channels,
                                             gate_fraction = 0.2)
@@ -121,9 +121,9 @@ if __name__ == "__main__":
     # Plot
     xlabels = [mef_names[chi] for chi in mef_channels]
     if plot_gated:
-        print "\nPlotting density diagrams and histograms of data"
+        print("\nPlotting density diagrams and histograms of data")
         for di, dig, dgc in zip(data_transf, data_gated, data_gated_contour):
-            print "{}...".format(str(di))
+            print("{}...".format(str(di)))
             # Create histogram parameters
             hist_params = []
             for chi in mef_channels:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             gc.collect()
 
     # Generate bar plot
-    print "\nGenerating bar plot..."
+    print("\nGenerating bar plot...")
 
     labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
     fc.plot.hist_and_bar(data_gated, channel = 'FL1', labels = labels,
@@ -153,4 +153,4 @@ if __name__ == "__main__":
         bar_params = {'ylabel': 'MEFL', 'ylim': (0, 40000)},
         bar_stats_func = numpy.median, savefig = 'hist_bar.png')
 
-    print "\nDone."
+    print("\nDone.")

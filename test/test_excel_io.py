@@ -41,7 +41,7 @@ def is_equal(tc, r, re):
             try:
                 tc.assertEqual(r[i][k], re[i][k])
             except AssertionError as e:
-                print 'Error in row {}, column {}.'.format(i + 1, k)
+                print("Error in row {}, column {}.".format(i + 1, k))
                 raise e
 
 class TestImport(unittest.TestCase):

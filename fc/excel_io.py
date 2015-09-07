@@ -62,7 +62,7 @@ def import_rows(workbook_name, worksheet_name):
 
             # If row is empty, break
             if sum([v != None for k, v in row_data.iteritems()]) == 0:
-                print [v is None for k, v in row_data.iteritems()]
+                print([v is None for k, v in row_data.iteritems()])
                 break
             
             # Save row

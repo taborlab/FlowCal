@@ -47,7 +47,7 @@ def main():
     else:
         input_form = askopenfilename(filetypes = [('Excel files', '*.xlsx')])
     if not input_form:
-        print "Cancelled."
+        print("Cancelled.")
         return
 
     # Get base directory
@@ -69,13 +69,13 @@ def main():
     beads_info = fc.excel_io.import_rows(input_form, "beads")
     to_mef_all = {}
 
-    print "\nProcessing beads..."
+    print("\nProcessing beads...")
     for bi in beads_info:
         bid = bi['File Path']
         
         # Open file
         di = fc.io.FCSData("{}/{}".format(basedir, bi['File Path']))
-        print "{} ({} events).".format(str(di), di.shape[0])
+        print("{} ({} events).".format(str(di), di.shape[0]))
 
         # Extract channels used for clustering
         if 'Clustering Channels' in bi:
@@ -88,8 +88,8 @@ def main():
         di = fc.gate.start_end(di, num_start=250, num_end=100)
         di = fc.gate.high_low(di, sc_channels)
         # Density gate
-        print "Running density gate (fraction = {:.2f})..."\
-            .format(float(bi['Gate Fraction']))
+        print("Running density gate (fraction = {:.2f})..."
+            .format(float(bi['Gate Fraction'])))
         gated_di, gate_contour = fc.gate.density2d(data = di,
             channels = sc_channels,
             gate_fraction = float(bi['Gate Fraction']))
@@ -117,7 +117,7 @@ def main():
         mef = numpy.array(mef)
 
         # Obtain standard curve transformation
-        print "\nCalculating standard curve..."
+        print("\nCalculating standard curve...")
         to_mef = fc.mef.get_transform_fxn(gated_di, mef, 
                         cluster_method = bi['Clustering Method'], 
                         cluster_channels = cluster_channels,
@@ -128,7 +128,7 @@ def main():
         to_mef_all[bid] = to_mef
 
     # Process data files
-    print "\nLoading data..."
+    print("\nLoading data...")
     # Get beads files data from input form
     cells_info = fc.excel_io.import_rows(input_form, "cells")
 
@@ -139,7 +139,7 @@ def main():
             ci)
         data.append(di)
 
-        print "{} ({} events).".format(str(di), di.shape[0])
+        print("{} ({} events).".format(str(di), di.shape[0]))
 
     # Parse transforms to conduct on data
     # transforms is an array of dictionaries.
@@ -164,20 +164,21 @@ def main():
         transforms.append(channel_transf)
 
     # Trim data
-    print "\nTrimming data..."    
+    print("\nTrimming data...")
     data_trimmed = [fc.gate.start_end(di, num_start=250, num_end=100)\
                                                      for di in data]
     data_trimmed = [fc.gate.high_low(di, sc_channels + tf.keys())\
         for di, tf in zip(data_trimmed, transforms)]
 
     # Transform data
-    print "\nTransforming data..."
+    print("\nTransforming data...")
     data_transf = []
     for di, tf in zip(data_trimmed, transforms):
         # Exponential transformation is applied by default to FSC and SSC
         dt = fc.transform.exponentiate(di, sc_channels)
         # Print transformations used in fluorescence channels
-        print str(di)+' ('+', '.join([k+': '+c for k, c in tf.iteritems()])+')'
+        print(str(di) + ' (' + ', '.join([k+': '+c for k, c in tf.iteritems()])
+            + ')')
         # Transform fluorescence channels
         for channel, transform in tf.iteritems():
             if transform == 'None':
@@ -190,15 +191,15 @@ def main():
                     raise ValueError("Beads do not contain peaks for channel")
                 dt = to_mef(dt, channel)
             else:
-                print "Unexpected input for " + channel + ",",
+                print("Unexpected input for " + channel)
         data_transf.append(dt)
         
-    print '\nGating data...'
+    print("\nGating data...")
     data_gated = []
     data_gated_contour = []
     for di in data_transf:
-        print "{} (gate fraction = {:.2f})...".format(str(di), 
-                float(di.metadata['Gate Fraction']))
+        print("{} (gate fraction = {:.2f})...".format(str(di),
+              float(di.metadata['Gate Fraction'])))
         di_gated, gate_contour = fc.gate.density2d(data = di,
             channels = sc_channels,
             gate_fraction = float(di.metadata['Gate Fraction']))
@@ -207,10 +208,10 @@ def main():
         data_gated_contour.append(gate_contour)
 
     # Plot
-    print "\nPlotting density diagrams and histograms of data"
+    print("\nPlotting density diagrams and histograms of data")
     for di, dim, dgc, tfs in\
             zip(data_transf, data_gated, data_gated_contour, transforms):
-        print "{}...".format(str(di))
+        print("{}...".format(str(di)))
         # Construct hist parameters
         hist_params = []
         for channel, tf in tfs.iteritems():
@@ -237,7 +238,7 @@ def main():
         gc.collect()
 
     # Export to output excel file
-    print "\nWriting output file..."
+    print("\nWriting output file...")
     # Calculate statistics
     # Figure out which channels have stats
     stat_channels = []
@@ -285,7 +286,7 @@ def main():
     ws = [headers] + content
     fc.excel_io.export_workbook(output_form, {'cells': ws})
 
-    print "\nDone."
+    print("\nDone.")
     raw_input("Press Enter to exit...")
 
 if __name__ == "__main__":
