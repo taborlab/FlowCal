@@ -5,7 +5,7 @@ import os.path
 
 import numpy as np
 import scipy
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 import fc.io
 import fc.gate
@@ -62,7 +62,7 @@ if __name__ == "__main__":
                                                     channels = sc_channels,
                                                     gate_fraction = 0.3)
     # Plot
-    pyplot.figure(figsize = (6,4))
+    plt.figure(figsize = (6,4))
     fc.plot.density_and_hist(beads_data, gated_beads_data, 
         density_channels = sc_channels,
         hist_channels = fl_channels,
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         density_params = {'mode': 'scatter'}, 
         hist_params = {'ylim': (0, 1000), 'div': 4},
         savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
-    pyplot.close()
+    plt.close()
     gc.collect()
 
     # Obtain standard curve transformation
@@ -140,7 +140,7 @@ if __name__ == "__main__":
                 density_params = {'mode': 'scatter', 'log': True}, 
                 hist_params = hist_params,
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
-            pyplot.close()
+            plt.close()
             gc.collect()
 
     # Generate bar plot

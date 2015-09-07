@@ -5,7 +5,7 @@ import os.path
 
 import numpy as np
 import scipy
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 import fc.io
 import fc.gate
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                 density_params = {'mode': 'scatter', 'log': True}, 
                 hist_params = {'div': 4, 'log': True, 'edgecolor': 'g'},
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
-            pyplot.close()
+            plt.close()
             gc.collect()
 
     # Generate bar plot

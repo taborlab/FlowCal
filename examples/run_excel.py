@@ -8,7 +8,7 @@ from subprocess import call
 
 import numpy as np
 import scipy
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
@@ -95,7 +95,7 @@ def main():
             gate_fraction = float(bi['Gate Fraction']))
 
         # Plot
-        pyplot.figure(figsize = (6,4))
+        plt.figure(figsize = (6,4))
         fc.plot.density_and_hist(di, gated_di, 
             density_channels = sc_channels,
             hist_channels = cluster_channels,
@@ -233,7 +233,7 @@ def main():
             density_params = {'mode': 'scatter', 'log': True}, 
             hist_params = hist_params,
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
-        pyplot.close()
+        plt.close()
         gc.collect()
 
     # Export to output excel file

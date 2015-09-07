@@ -5,7 +5,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/6/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * numpy
@@ -21,7 +21,7 @@ import collections
 import numpy as np
 from scipy.optimize import minimize
 import scipy.ndimage.filters
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN 
 from sklearn.mixture import GMM 
 
@@ -553,12 +553,12 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            pyplot.figure(figsize = (6,4))
+            plt.figure(figsize = (6,4))
             fc.plot.scatter2d(data_plot, 
                     channels = cluster_channels,
                     savefig = savefig)
             if plot_dir is not None:
-                pyplot.close()
+                plt.close()
             
         if len(cluster_channels) == 3:
             if plot_dir is not None:
@@ -566,12 +566,12 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            pyplot.figure(figsize = (8,6))
+            plt.figure(figsize = (8,6))
             fc.plot.scatter3d(data_plot, 
                     channels = cluster_channels,
                     savefig = savefig)
             if plot_dir is not None:
-                pyplot.close()
+                plt.close()
 
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
@@ -636,7 +636,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             # Get colors for peaks
             colors = fc.plot.load_colormap('spectral', n_clusters)
             # Plot histograms
-            pyplot.figure(figsize = (8,4))
+            plt.figure(figsize = (8,4))
             fc.plot.hist1d(data_plot, channel = mef_channel, div = 4, 
                 alpha = 0.75)
             # Plot smoothed histograms and peaks
@@ -644,19 +644,19 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 # Smoothed histogram, if applicable
                 if find_peaks_method == 'smoothed_mode':
                     h = hists_smooth[i]
-                    pyplot.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
+                    plt.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
                         color = c)
                 # Peak values
                 p = peaks_ch[i]
-                ylim = pyplot.ylim()
-                pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
-                pyplot.ylim(ylim)
+                ylim = plt.ylim()
+                plt.plot([p, p], [ylim[0], ylim[1]], color = c)
+                plt.ylim(ylim)
             # Save and close
             if plot_dir is not None:
-                pyplot.tight_layout()
-                pyplot.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
+                plt.tight_layout()
+                plt.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
                                     mef_channel, data_file_name), dpi = 300)
-                pyplot.close()
+                plt.close()
 
         # 3. Select peaks for fitting
         # ===========================
@@ -719,7 +719,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot standard curve
-            pyplot.figure(figsize = (6,4))
+            plt.figure(figsize = (6,4))
             fc.plot.mef_std_crv(sel_peaks_ch, 
                     sel_peaks_mef,
                     sc_beads,
@@ -728,7 +728,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                     ylabel = 'MEF',
                     savefig = savefig)
             if plot_dir is not None:
-                pyplot.close()
+                plt.close()
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
