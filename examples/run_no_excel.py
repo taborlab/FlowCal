@@ -7,11 +7,7 @@ import numpy
 import scipy
 from matplotlib import pyplot
 
-import fc.io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
+import fc
 
 # Directories
 directory = 'FCFiles'
