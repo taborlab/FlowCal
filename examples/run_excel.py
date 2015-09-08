@@ -13,13 +13,7 @@ from matplotlib import pyplot
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
-import fc.io
-import fc.excel_io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
-import fc.stats
+import fc
 
 # Channels
 sc_channels = ['FSC', 'SSC']
