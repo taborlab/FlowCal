@@ -3,14 +3,13 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/6/2015
+# Date: 8/27/2015
 #
 # Requires:
 #   * numpy
 #   * matplotlib
 #   * scipy
 
-import gc
 import os
 import csv
 
@@ -195,7 +194,6 @@ def hist1d(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 def density2d(data, 
             channels = [0,1],
@@ -330,7 +328,6 @@ def density2d(data,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 def scatter2d(data_list, 
                 channels = [0,1],
@@ -386,7 +383,6 @@ def scatter2d(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 
 def scatter3d(data_list, 
@@ -481,7 +477,6 @@ def scatter3d(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 def mef_std_crv(peaks_ch, 
                 peaks_mef,
@@ -535,7 +530,6 @@ def mef_std_crv(peaks_ch,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 def bar(data, 
         labels,
@@ -640,7 +634,6 @@ def bar(data,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 ##############################################################################
 # COMPLEX PLOTS
@@ -762,7 +755,6 @@ def density_and_hist(data,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()
 
 
 def hist_and_bar(data_list,
@@ -877,4 +869,3 @@ def hist_and_bar(data_list,
         pyplot.tight_layout()
         pyplot.savefig(savefig, dpi = save_dpi)
         pyplot.close()
-        gc.collect()

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 
@@ -67,7 +66,6 @@ if __name__ == "__main__":
                 hist_params = {'div': 4, 'log': True, 'edgecolor': 'g'},
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
             pyplot.close()
-            gc.collect()
 
     # Generate bar plot
     print "\nGenerating bar plot..."

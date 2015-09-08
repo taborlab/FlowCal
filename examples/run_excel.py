@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 import collections
@@ -228,7 +227,6 @@ def main():
             hist_params = hist_params,
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
         pyplot.close()
-        gc.collect()
 
     # Export to output excel file
     print "\nWriting output file..."
