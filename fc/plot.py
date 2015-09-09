@@ -10,7 +10,6 @@
 #   * matplotlib
 #   * scipy
 
-import gc
 import os
 import csv
 
@@ -195,7 +194,6 @@ def hist1d(data_list,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 def density2d(data, 
             channels = [0,1],
@@ -330,7 +328,6 @@ def density2d(data,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 def scatter2d(data_list, 
                 channels = [0,1],
@@ -386,7 +383,6 @@ def scatter2d(data_list,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 
 def scatter3d(data_list, 
@@ -481,7 +477,6 @@ def scatter3d(data_list,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 def mef_std_crv(peaks_ch, 
                 peaks_mef,
@@ -535,7 +530,6 @@ def mef_std_crv(peaks_ch,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 def bar(data, 
         labels,
@@ -640,7 +634,6 @@ def bar(data,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 ##############################################################################
 # COMPLEX PLOTS
@@ -762,7 +755,6 @@ def density_and_hist(data,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()
 
 
 def hist_and_bar(data_list,
@@ -877,4 +869,3 @@ def hist_and_bar(data_list,
         plt.tight_layout()
         plt.savefig(savefig, dpi = save_dpi)
         plt.close()
-        gc.collect()

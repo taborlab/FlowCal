@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 
@@ -7,11 +6,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-import fc.io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
+import fc
 
 # Directories
 directory = 'FCFiles'
@@ -71,7 +66,6 @@ if __name__ == "__main__":
         hist_params = {'ylim': (0, 1000), 'div': 4},
         savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
     plt.close()
-    gc.collect()
 
     # Obtain standard curve transformation
     print "\nCalculating standard curve..."
@@ -141,7 +135,6 @@ if __name__ == "__main__":
                 hist_params = hist_params,
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
-            gc.collect()
 
     # Generate bar plot
     print "\nGenerating bar plot..."

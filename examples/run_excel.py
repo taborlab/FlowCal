@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 import collections
@@ -13,13 +12,7 @@ import matplotlib.pyplot as plt
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
-import fc.io
-import fc.excel_io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
-import fc.stats
+import fc
 
 # Channels
 sc_channels = ['FSC', 'SSC']
@@ -234,7 +227,6 @@ def main():
             hist_params = hist_params,
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
         plt.close()
-        gc.collect()
 
     # Export to output excel file
     print "\nWriting output file..."
