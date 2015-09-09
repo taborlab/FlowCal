@@ -1,25 +1,18 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 import collections
 from platform import system as platformSys
 from subprocess import call
 
-import numpy
+import numpy as np
 import scipy
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
-import fc.io
-import fc.excel_io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
-import fc.stats
+import fc
 
 # Channels
 sc_channels = ['FSC', 'SSC']
@@ -95,7 +88,7 @@ def main():
             gate_fraction = float(bi['Gate Fraction']))
 
         # Plot
-        pyplot.figure(figsize = (6,4))
+        plt.figure(figsize = (6,4))
         fc.plot.density_and_hist(di, gated_di, 
             density_channels = sc_channels,
             hist_channels = cluster_channels,
@@ -110,11 +103,11 @@ def main():
         for channel in fl_channels:
             if channel+' Peaks' in bi:
                 peaks = bi[channel+' Peaks'].split(',')
-                peaks = [int(e) if e.strip().isdigit() else numpy.nan \
+                peaks = [int(e) if e.strip().isdigit() else np.nan \
                     for e in peaks]
                 mef.append(peaks)
                 mef_channels.append(channel)
-        mef = numpy.array(mef)
+        mef = np.array(mef)
 
         # Obtain standard curve transformation
         print("\nCalculating standard curve...")
@@ -234,8 +227,7 @@ def main():
             density_params = {'mode': 'scatter', 'log': True}, 
             hist_params = hist_params,
             savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
-        pyplot.close()
-        gc.collect()
+        plt.close()
 
     # Export to output excel file
     print("\nWriting output file...")

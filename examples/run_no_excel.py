@@ -1,17 +1,12 @@
 #!/usr/bin/python
-import gc
 import os
 import os.path
 
-import numpy
+import numpy as np
 import scipy
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
-import fc.io
-import fc.gate
-import fc.plot
-import fc.transform
-import fc.mef
+import fc
 
 # Directories
 directory = 'FCFiles'
@@ -38,7 +33,7 @@ mef_channels = ['FL1']
 mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
             }
 # MEF bead values
-mef_values = {'FL1': [numpy.nan, 792, 2079, 6588, 16471, 
+mef_values = {'FL1': [np.nan, 792, 2079, 6588, 16471, 
                                                     47497, 137049, 271647],
              }
 
@@ -62,7 +57,7 @@ if __name__ == "__main__":
                                                     channels = sc_channels,
                                                     gate_fraction = 0.3)
     # Plot
-    pyplot.figure(figsize = (6,4))
+    plt.figure(figsize = (6,4))
     fc.plot.density_and_hist(beads_data, gated_beads_data, 
         density_channels = sc_channels,
         hist_channels = fl_channels,
@@ -70,12 +65,11 @@ if __name__ == "__main__":
         density_params = {'mode': 'scatter'}, 
         hist_params = {'ylim': (0, 1000), 'div': 4},
         savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
-    pyplot.close()
-    gc.collect()
+    plt.close()
 
     # Obtain standard curve transformation
     print("\nCalculating standard curve...")
-    peaks_mef = numpy.array([mef_values[chi] for chi in mef_channels])
+    peaks_mef = np.array([mef_values[chi] for chi in mef_channels])
     to_mef = fc.mef.get_transform_fxn(gated_beads_data, peaks_mef, 
                     cluster_method = 'gmm', 
                     cluster_channels = fl_channels,
@@ -140,8 +134,7 @@ if __name__ == "__main__":
                 density_params = {'mode': 'scatter', 'log': True}, 
                 hist_params = hist_params,
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
-            pyplot.close()
-            gc.collect()
+            plt.close()
 
     # Generate bar plot
     print("\nGenerating bar plot...")
@@ -151,6 +144,6 @@ if __name__ == "__main__":
         hist_params = {'log': True, 'div': 4,
                 'xlabel': 'MEFL', 'ylim': (0, 400)},
         bar_params = {'ylabel': 'MEFL', 'ylim': (0, 40000)},
-        bar_stats_func = numpy.median, savefig = 'hist_bar.png')
+        bar_stats_func = np.median, savefig = 'hist_bar.png')
 
     print("\nDone.")
