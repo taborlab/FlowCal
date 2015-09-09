@@ -3,7 +3,7 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 8/27/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * numpy
@@ -13,9 +13,9 @@
 import os
 import csv
 
-import numpy
+import numpy as np
 import scipy.ndimage.filters
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
@@ -46,8 +46,8 @@ def load_colormap(name, number):
         elif number == 2:
             cm = [cm_raw[0], cm_raw[2]]
         elif number >= 3:
-            start = numpy.sum(range(number)) - 3
-            end = numpy.sum(range(number + 1)) - 3
+            start = np.sum(range(number)) - 3
+            end = np.sum(range(number + 1)) - 3
             cm = cm_raw[start:end]
         return cm
     elif name == 'diverging':
@@ -146,10 +146,10 @@ def hist1d(data_list,
             r = y.channel_info[0]['range']
             bd = y.channel_info[0]['bin_edges']
             # Get bin scaled indices
-            xd = numpy.linspace(0, 1, r[2] + 1)
-            xs = numpy.linspace(0, 1, r[2]/div + 1)
+            xd = np.linspace(0, 1, r[2] + 1)
+            xs = np.linspace(0, 1, r[2]/div + 1)
             # Generate sub-sampled bins
-            bins = numpy.interp(xs, xd, bd)
+            bins = np.interp(xs, xd, bd)
 
         # Check for properties specified as lists.
         kwargsi = kwargs.copy()
@@ -162,38 +162,38 @@ def hist1d(data_list,
         if 'label' in kwargsi:
             kwargsi['label'] = kwargsi['label'][i]
         # Actually plot
-        pyplot.hist(y, bins, histtype = histtype, **kwargsi)
+        plt.hist(y, bins, histtype = histtype, **kwargsi)
         if log == True:
-            pyplot.gca().set_xscale('log')
+            plt.gca().set_xscale('log')
 
     # Final configuration
     if xlabel is None:
-        pyplot.xlabel(data[:,channel].channel_info[0]['label'])
+        plt.xlabel(data[:,channel].channel_info[0]['label'])
     else:
-        pyplot.xlabel(xlabel)
+        plt.xlabel(xlabel)
     if ylabel is None:
         if 'normed' in kwargs:
-            pyplot.ylabel('Probability')
+            plt.ylabel('Probability')
         else:
-            pyplot.ylabel('Counts')
+            plt.ylabel('Counts')
     else:
-        pyplot.ylabel(ylabel)
+        plt.ylabel(ylabel)
     if xlim is None:
-        pyplot.xlim((bins[0], bins[-1]))
+        plt.xlim((bins[0], bins[-1]))
     else:
-        pyplot.xlim(xlim)
+        plt.xlim(xlim)
     if ylim:
-        pyplot.ylim(ylim)
+        plt.ylim(ylim)
     if title:
-        pyplot.title(title)
+        plt.title(title)
     if legend:
-        pyplot.legend(loc = legend_loc, prop={'size': legend_fontsize})
+        plt.legend(loc = legend_loc, prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 def density2d(data, 
             channels = [0,1],
@@ -243,25 +243,25 @@ def density2d(data,
         ry = data_plot.channel_info[1]['range']
         bdy = data_plot.channel_info[1]['bin_edges']
         # Get bin scaled indices
-        xdx = numpy.linspace(0, 1, rx[2] + 1)
-        xsx = numpy.linspace(0, 1, rx[2]/div + 1)
-        xdy = numpy.linspace(0, 1, ry[2] + 1)
-        xsy = numpy.linspace(0, 1, ry[2]/div + 1)
+        xdx = np.linspace(0, 1, rx[2] + 1)
+        xsx = np.linspace(0, 1, rx[2]/div + 1)
+        xdy = np.linspace(0, 1, ry[2] + 1)
+        xsy = np.linspace(0, 1, ry[2]/div + 1)
         # Generate sub-sampled bins
-        bins = numpy.array([numpy.interp(xsx, xdx, bdx), 
-                            numpy.interp(xsy, xdy, bdy)])
+        bins = np.array([np.interp(xsx, xdx, bdx), 
+                            np.interp(xsy, xdy, bdy)])
 
     # Calculate histogram
-    H, xedges, yedges = numpy.histogram2d(data_plot[:,0],
+    H, xedges, yedges = np.histogram2d(data_plot[:,0],
                                         data_plot[:,1],
                                         bins = bins)
     # H needs to be rotated and flipped
-    H = numpy.rot90(H)
-    H = numpy.flipud(H)
+    H = np.rot90(H)
+    H = np.flipud(H)
 
     # Normalize
     if normed:
-        H = H/numpy.sum(H)
+        H = H/np.sum(H)
 
     # Smooth    
     if smooth:
@@ -276,58 +276,58 @@ def density2d(data,
 
     # Plotting mode
     if mode == 'scatter':
-        Hind = numpy.ravel(H)
-        xv, yv = numpy.meshgrid(xedges[:-1], yedges[:-1])
-        x = numpy.ravel(xv)[Hind != 0]
-        y = numpy.ravel(yv)[Hind != 0]
-        z = numpy.ravel(bH)[Hind != 0]
-        pyplot.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
+        Hind = np.ravel(H)
+        xv, yv = np.meshgrid(xedges[:-1], yedges[:-1])
+        x = np.ravel(xv)[Hind != 0]
+        y = np.ravel(yv)[Hind != 0]
+        z = np.ravel(bH)[Hind != 0]
+        plt.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
-        pyplot.pcolormesh(xedges, yedges, bH, **kwargs)
+        plt.pcolormesh(xedges, yedges, bH, **kwargs)
     else:
         raise ValueError("Mode {} not recognized.".format(mode))
 
     # Plot
     if colorbar:
-        cbar = pyplot.colorbar()
+        cbar = plt.colorbar()
         if normed:
             cbar.ax.set_ylabel('Probability')
         else:
             cbar.ax.set_ylabel('Counts')
     # Reset axis and log if necessary
     if log:
-        pyplot.gca().set_xscale('log')
-        pyplot.gca().set_yscale('log')
-        a = list(pyplot.axis())
-        a[0] = 10**(numpy.ceil(numpy.log10(xedges[0])))
-        a[1] = 10**(numpy.ceil(numpy.log10(xedges[-1])))
-        a[2] = 10**(numpy.ceil(numpy.log10(yedges[0])))
-        a[3] = 10**(numpy.ceil(numpy.log10(yedges[-1])))
-        pyplot.axis(a)
+        plt.gca().set_xscale('log')
+        plt.gca().set_yscale('log')
+        a = list(plt.axis())
+        a[0] = 10**(np.ceil(np.log10(xedges[0])))
+        a[1] = 10**(np.ceil(np.log10(xedges[-1])))
+        a[2] = 10**(np.ceil(np.log10(yedges[0])))
+        a[3] = 10**(np.ceil(np.log10(yedges[-1])))
+        plt.axis(a)
     else:
-        a = list(pyplot.axis())
-        a[0] = numpy.ceil(xedges[0])
-        a[1] = numpy.ceil(xedges[-1])
-        a[2] = numpy.ceil(yedges[0])
-        a[3] = numpy.ceil(yedges[-1])
-        pyplot.axis(a)
-    # pyplot.grid(True)
+        a = list(plt.axis())
+        a[0] = np.ceil(xedges[0])
+        a[1] = np.ceil(xedges[-1])
+        a[2] = np.ceil(yedges[0])
+        a[3] = np.ceil(yedges[-1])
+        plt.axis(a)
+    # plt.grid(True)
     if xlabel:
-        pyplot.xlabel(xlabel)
+        plt.xlabel(xlabel)
     else:
-        pyplot.xlabel(data_plot.channel_info[0]['label'])
+        plt.xlabel(data_plot.channel_info[0]['label'])
     if ylabel:
-        pyplot.ylabel(ylabel)
+        plt.ylabel(ylabel)
     else:
-        pyplot.ylabel(data_plot.channel_info[1]['label'])
+        plt.ylabel(data_plot.channel_info[1]['label'])
     if title:
-        pyplot.title(title)
+        plt.title(title)
 
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 def scatter2d(data_list, 
                 channels = [0,1],
@@ -364,7 +364,7 @@ def scatter2d(data_list,
         if 'color' in kwargsi:
             kwargsi['color'] = kwargs['color'][i]
         # ch0 vs ch2
-        pyplot.scatter(data_plot[:,0], data_plot[:,1],
+        plt.scatter(data_plot[:,0], data_plot[:,1],
             s = 5, alpha = 0.25, **kwargsi)
 
     # Extract info about channels
@@ -373,16 +373,16 @@ def scatter2d(data_list,
         gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage'] for i in [0,1]]
         range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1]]
 
-        pyplot.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
-        pyplot.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
-        pyplot.xlim(range_ch[0][0], range_ch[0][1])
-        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+        plt.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
+        plt.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
+        plt.xlim(range_ch[0][0], range_ch[0][1])
+        plt.ylim(range_ch[1][0], range_ch[1][1])
 
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 
 def scatter3d(data_list, 
@@ -414,7 +414,7 @@ def scatter3d(data_list,
         kwargs['color'] = load_colormap('spectral', len(data_list))
 
     # Initial setup
-    ax_3d = pyplot.gcf().add_subplot(222, projection='3d')
+    ax_3d = plt.gcf().add_subplot(222, projection='3d')
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -423,16 +423,16 @@ def scatter3d(data_list,
         if 'color' in kwargsi:
             kwargsi['color'] = kwargs['color'][i]
         # ch0 vs ch2
-        pyplot.subplot(221)
-        pyplot.scatter(data_plot[:,0], data_plot[:,2],
+        plt.subplot(221)
+        plt.scatter(data_plot[:,0], data_plot[:,2],
             s = 5, alpha = 0.25, **kwargsi)
         # ch0 vs ch1
-        pyplot.subplot(223)
-        pyplot.scatter(data_plot[:,0], data_plot[:,1],
+        plt.subplot(223)
+        plt.scatter(data_plot[:,0], data_plot[:,1],
             s = 5, alpha = 0.25, **kwargsi)
         # ch2 vs ch1
-        pyplot.subplot(224)
-        pyplot.scatter(data_plot[:,2], data_plot[:,1],
+        plt.subplot(224)
+        plt.scatter(data_plot[:,2], data_plot[:,1],
             s = 5, alpha = 0.25, **kwargsi)
         # 3d
         ax_3d.scatter(data_plot[:,0], data_plot[:,1], data_plot[:,2], 
@@ -446,21 +446,21 @@ def scatter3d(data_list,
         range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1,2]]
 
         # ch0 vs ch2
-        pyplot.subplot(221)
-        pyplot.ylabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-        pyplot.xlim(range_ch[0][0], range_ch[0][1])
-        pyplot.ylim(range_ch[2][0], range_ch[2][1])
+        plt.subplot(221)
+        plt.ylabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
+        plt.xlim(range_ch[0][0], range_ch[0][1])
+        plt.ylim(range_ch[2][0], range_ch[2][1])
         # ch0 vs ch1
-        pyplot.subplot(223)
-        pyplot.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
-        pyplot.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
-        pyplot.xlim(range_ch[0][0], range_ch[0][1])
-        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+        plt.subplot(223)
+        plt.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
+        plt.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
+        plt.xlim(range_ch[0][0], range_ch[0][1])
+        plt.ylim(range_ch[1][0], range_ch[1][1])
         # ch2 vs ch1
-        pyplot.subplot(224)
-        pyplot.xlabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-        pyplot.xlim(range_ch[2][0], range_ch[2][1])
-        pyplot.ylim(range_ch[1][0], range_ch[1][1])
+        plt.subplot(224)
+        plt.xlabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
+        plt.xlim(range_ch[2][0], range_ch[2][1])
+        plt.ylim(range_ch[1][0], range_ch[1][1])
         # 3d
         ax_3d.set_xlim(range_ch[0][0], range_ch[0][1])
         ax_3d.set_ylim(range_ch[1][0], range_ch[1][1])
@@ -474,9 +474,9 @@ def scatter3d(data_list,
 
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 def mef_std_crv(peaks_ch, 
                 peaks_mef,
@@ -506,30 +506,30 @@ def mef_std_crv(peaks_ch,
     # Get colors
     colors = load_colormap('diverging', 3)
     # Generate x data
-    xdata = numpy.linspace(xlim[0],xlim[1],200)
+    xdata = np.linspace(xlim[0],xlim[1],200)
 
     # Plot
-    pyplot.plot(peaks_ch, peaks_mef, 'o', 
+    plt.plot(peaks_ch, peaks_mef, 'o', 
         label = 'Beads', color = colors[0])
-    pyplot.plot(xdata, sc_beads(xdata), 
+    plt.plot(xdata, sc_beads(xdata), 
         label = 'Beads model', color = colors[1])
-    pyplot.plot(xdata, sc_abs(xdata), 
+    plt.plot(xdata, sc_abs(xdata), 
         label = 'Standard curve', color = colors[2])
-    pyplot.yscale('log')
-    pyplot.xlim(xlim)
-    pyplot.ylim(ylim)
-    pyplot.grid(True)
+    plt.yscale('log')
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+    plt.grid(True)
     if xlabel:
-        pyplot.xlabel(xlabel)
+        plt.xlabel(xlabel)
     if xlabel:
-        pyplot.ylabel(ylabel)
-    pyplot.legend(loc = 'best')
+        plt.ylabel(ylabel)
+    plt.legend(loc = 'best')
     
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 def bar(data, 
         labels,
@@ -575,19 +575,19 @@ def bar(data,
         colors = load_colormap('diverging', n_in_group)
 
     # Calculate coordinates of x axis.
-    x_coords = numpy.arange((len(data))/n_in_group)
+    x_coords = np.arange((len(data))/n_in_group)
 
     # Initialize plot
-    ax = pyplot.gca()
+    ax = plt.gca()
     bars_group = []
     # Plot bars
     for i in range(n_in_group):
         x_coords_i = x_coords + i * bar_width / n_in_group
         if data_error is None:
-            bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
+            bars_group.append(plt.bar(x_coords_i, data[i::n_in_group], 
                 bar_width / n_in_group, color = colors[i]))
         else:
-            bars_group.append(pyplot.bar(x_coords_i, data[i::n_in_group], 
+            bars_group.append(plt.bar(x_coords_i, data[i::n_in_group], 
                 bar_width / n_in_group, color = colors[i]), 
                 yerr = data_error[i::n_in_group])
     ax.set_xticks(x_coords + bar_width / 2)
@@ -601,21 +601,21 @@ def bar(data,
         ax.set_xticklabels(labels)
 
     # Set axes limits
-    pyplot.xlim((bar_width - 1, x_coords[-1] + 1))
+    plt.xlim((bar_width - 1, x_coords[-1] + 1))
     if ylim:
-        pyplot.ylim(ylim)
+        plt.ylim(ylim)
 
     # Set axes labels
     if ylabel is not None:
-        pyplot.ylabel(ylabel)
+        plt.ylabel(ylabel)
 
     # Add labels within group
     if labels_in_group:
-        pyplot.legend(labels_in_group, loc = 'best')
+        plt.legend(labels_in_group, loc = 'best')
 
     # Add labels on top of bars
     if val_labels:
-        dheight = pyplot.ylim()[1]*0.03
+        dheight = plt.ylim()[1]*0.03
         fp = FontProperties(size = val_labels_fontsize)
         for bars in bars_group:
             for bar in bars:
@@ -631,9 +631,9 @@ def bar(data,
     
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 ##############################################################################
 # COMPLEX PLOTS
@@ -704,17 +704,17 @@ def density_and_hist(data,
         figsize = (6, height)
 
     # Create plot
-    pyplot.figure(figsize = figsize)
+    plt.figure(figsize = figsize)
 
     # Density plot
     if plot_density:
-        pyplot.subplot(n_plots, 1, 1)
+        plt.subplot(n_plots, 1, 1)
         # Plot density diagram
         density2d(data, channels = density_channels, **density_params)
         # Plot gate contour
         if gate_contour is not None:
             for g in gate_contour:
-                pyplot.plot(g[:,0], g[:,1], color = 'k',
+                plt.plot(g[:,0], g[:,1], color = 'k',
                     linewidth = 1.25)
         # Add title
         if 'title' not in density_params:
@@ -723,7 +723,7 @@ def density_and_hist(data,
                 title = "{} ({:.1f}% retained)".format(str(data), ret)
             else:
                 title = str(data)
-            pyplot.title(title)
+            plt.title(title)
 
     # Colors
     if n_plots - 1 < 3:
@@ -735,7 +735,7 @@ def density_and_hist(data,
     # Histogram
     for i, hist_channel in enumerate(hist_channels):
         # Define subplot
-        pyplot.subplot(n_plots, 1, plot_density + i + 1)
+        plt.subplot(n_plots, 1, plot_density + i + 1)
         # Default colors
         hist_params_i = hist_params[i].copy()
         if 'facecolor' not in hist_params_i:
@@ -746,21 +746,21 @@ def density_and_hist(data,
                 alpha = 0.5, **hist_params_i)
             hist1d(gated_data, channel = hist_channel, 
                 alpha = 1.0, **hist_params_i)
-            pyplot.legend(['Ungated', 'Gated'], fontsize = 11)
+            plt.legend(['Ungated', 'Gated'], fontsize = 11)
         else:
             hist1d(data, channel = hist_channel, **hist_params_i)
     
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
 
 
 def hist_and_bar(data_list,
                 channel,
                 labels,
-                bar_stats_func = numpy.mean,
+                bar_stats_func = np.mean,
                 hist_params = {},
                 bar_params = {},
                 figsize = None,
@@ -811,7 +811,7 @@ def hist_and_bar(data_list,
         figsize = (width, 6.2)
 
     # Create plot
-    pyplot.figure(figsize = figsize)
+    plt.figure(figsize = figsize)
 
     # Plot histogram
 
@@ -853,7 +853,7 @@ def hist_and_bar(data_list,
         hist_params['label'] = hist_labels
 
     # Actually plot histogram
-    pyplot.subplot(2, 1, 1)
+    plt.subplot(2, 1, 1)
     hist1d(data_list, channel = channel, **hist_params)
 
     # Bar plot
@@ -861,11 +861,11 @@ def hist_and_bar(data_list,
     bar_data = [bar_stats_func(di[:, channel]) for di in data_list]
 
     # Actually plot
-    pyplot.subplot(2, 1, 2)
+    plt.subplot(2, 1, 2)
     bar(bar_data, labels, **bar_params)
 
     # Save if necessary
     if savefig is not None:
-        pyplot.tight_layout()
-        pyplot.savefig(savefig, dpi = save_dpi)
-        pyplot.close()
+        plt.tight_layout()
+        plt.savefig(savefig, dpi = save_dpi)
+        plt.close()
