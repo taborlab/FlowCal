@@ -686,8 +686,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             peaks_std = np.array([np.std(di[:,mef_channel]) \
                 for di in data_sorted])
             if verbose:
-                print "Standard deviations of channel peaks:"
-                print peaks_std
+                print("Standard deviations of channel peaks:")
+                print(peaks_std)
             # Set default limits
             if 'peaks_ch_min' not in select_peaks_params:
                 select_peaks_params['peaks_ch_min'] = min_fl
