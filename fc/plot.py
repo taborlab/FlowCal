@@ -799,6 +799,10 @@ def hist_and_bar(data_list,
                         the figure to.
     '''
 
+    # Copy hist_params and bar_params, due to possible modifications
+    hist_params = hist_params.copy()
+    bar_params = bar_params.copy()
+
     # Extract number of groups to plot
     if 'n_in_group' in bar_params:
         n_in_group = bar_params['n_in_group']
@@ -853,7 +857,12 @@ def hist_and_bar(data_list,
         hist_labels = []
         for i in range(len(labels)):
             for j in range(n_in_group):
-                hist_labels.append(labels[i])
+                if 'labels_in_group' in bar_params:
+                    hist_labels.append('{} ({})'.format(labels[i],
+                        bar_params['labels_in_group'][j]))
+                else:
+                    hist_labels.append(labels[i])
+
         hist_params['label'] = hist_labels
 
     # Actually plot histogram
