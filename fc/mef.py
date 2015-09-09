@@ -536,13 +536,13 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     # Print information
     if verbose:
-        print "- STEP 1. CLUSTERING."
-        print "Number of clusters found: {}".format(n_clusters)
+        print("- STEP 1. CLUSTERING.")
+        print("Number of clusters found: {}".format(n_clusters))
         # Calculate percentage of each cluster
         data_count = np.array([di.shape[0] for di in data_clustered])
         data_perc = data_count*100.0/data_count.sum()
-        print "Percentage of samples in each cluster:"
-        print data_perc
+        print("Percentage of samples in each cluster:")
+        print(data_perc)
     # Plot
     if plot:
         # Sort
@@ -603,7 +603,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         data_channel = data_beads[:,mef_channel]
         # Print information
         if verbose: 
-            print "- MEF transformation for channel {}...".format(mef_channel)
+            print("- MEF transformation for channel {}...".format(mef_channel))
 
         # Step 2. Find peaks in each one of the clusters. 
         # ===============================================
@@ -642,9 +642,9 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 peaks_hists_all.append(hists_smooth)
         # Print information
         if verbose:
-            print "- STEP 2. PEAK IDENTIFICATION."
-            print "Channel peaks identified:"
-            print peaks_sorted
+            print("- STEP 2. PEAK IDENTIFICATION.")
+            print("Channel peaks identified:")
+            print(peaks_sorted)
         # Plot
         if plot:
             # Get colors for peaks
@@ -677,17 +677,17 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         
         # Print information
         if verbose:
-            print "- STEP 3. PEAK SELECTION."
-            print "MEF peaks provided:"
-            print peaks_mef_channel
+            print("- STEP 3. PEAK SELECTION.")
+            print("MEF peaks provided:")
+            print(peaks_mef_channel)
 
         if select_peaks_method == 'proximity':
             # Get the standard deviation of each peak
             peaks_std = np.array([np.std(di[:,mef_channel]) \
                 for di in data_sorted])
             if verbose:
-                print "Standard deviations of channel peaks:"
-                print peaks_std
+                print("Standard deviations of channel peaks:")
+                print(peaks_std)
             # Set default limits
             if 'peaks_ch_min' not in select_peaks_params:
                 select_peaks_params['peaks_ch_min'] = min_fl
@@ -707,20 +707,20 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             sel_peaks_mef_all.append(sel_peaks_mef)
         # Print information
         if verbose:
-            print "{} peaks retained.".format(len(sel_peaks_ch))
-            print "Selected channel peaks:"
-            print sel_peaks_ch
-            print "Selected MEF peaks:"
-            print sel_peaks_mef
+            print("{} peaks retained.".format(len(sel_peaks_ch)))
+            print("Selected channel peaks:")
+            print(sel_peaks_ch)
+            print("Selected MEF peaks:")
+            print(sel_peaks_mef)
 
         # 4. Get standard curve
         # ======================
         sc, sc_beads, sc_params = fit_standard_curve(sel_peaks_ch, 
             sel_peaks_mef)
         if verbose:
-            print "- STEP 4. STANDARDS CURVE FITTING."
-            print "Fitted parameters:"
-            print sc_params
+            print("- STEP 4. STANDARDS CURVE FITTING.")
+            print("Fitted parameters:")
+            print(sc_params)
 
         sc_all.append(sc)
         if full:

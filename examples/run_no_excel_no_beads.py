@@ -24,15 +24,15 @@ if __name__ == "__main__":
         os.makedirs(gated_plot_dir)
 
     # Process data files
-    print "\nLoading data..."
+    print("\nLoading data...")
     data = []
     for df in data_files:
         di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
-        print "{} ({} events, FL1-H gain = {}).".format(str(di), 
-            di.shape[0], gain)
+        print("{} ({} events, FL1-H gain = {}).".format(str(di),
+            di.shape[0], gain))
 
     # Basic gating/trimming
     ch_all = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']
@@ -42,11 +42,11 @@ if __name__ == "__main__":
     data_transf = [fc.transform.exponentiate(di, ch_all) for di in data]
 
     # Ellipse gate
-    print "\nRunning ellipse gate on data files..."
+    print("\nRunning ellipse gate on data files...")
     data_gated = []
     data_gated_contour = []
     for di in data_transf:
-        print "{}...".format(str(di))
+        print("{}...".format(str(di)))
         di_gated, gate_contour = fc.gate.ellipse(data = di,
             channels = ['FSC-H', 'SSC-H'], center = np.log10([200, 70]),
             a = 0.15, b = 0.10, theta = np.pi/4, log = True)
@@ -55,9 +55,9 @@ if __name__ == "__main__":
 
     # Plot
     if plot_gated:
-        print "\nPlotting density diagrams and histograms of data"
+        print("\nPlotting density diagrams and histograms of data")
         for di, dig, dgc in zip(data_transf, data_gated, data_gated_contour):
-            print "{}...".format(str(di))
+            print("{}...".format(str(di)))
             # Plot
             fc.plot.density_and_hist(di, gated_data = dig, figsize = (7,7),
                 density_channels = ['FSC-H', 'SSC-H'], 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             plt.close()
 
     # Generate bar plot
-    print "\nGenerating bar plot..."
+    print("\nGenerating bar plot...")
 
     labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
     fc.plot.hist_and_bar(data_gated, channel = 'FL1-H', labels = labels,
@@ -77,4 +77,4 @@ if __name__ == "__main__":
         bar_params = {'ylabel': 'GFP (A.U.)', 'ylim': (0, 600)},
         bar_stats_func = np.median, savefig = 'hist_bar.png')
 
-    print "\nDone."
+    print("\nDone.")
