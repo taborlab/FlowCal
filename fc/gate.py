@@ -47,7 +47,7 @@ def start_end(data, num_start = 250, num_end = 100):
     
     return gated_data
 
-def high_low(data, channels = None, high = (2**10)-1, low = 0):
+def high_low(data, channels = None, high = None, low = None):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
@@ -67,6 +67,16 @@ def high_low(data, channels = None, high = (2**10)-1, low = 0):
         data_ch = data[:,channels]
         if data_ch.ndim == 1:
             data_ch = data_ch.reshape((-1,1))
+
+    # Default values for high and low
+    if high is None and hasattr(data_ch, 'channel_info'):
+        high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1]\
+                    for channel in data_ch.channels]
+        high = np.array(high)
+    if low is None and hasattr(data_ch, 'channel_info'):
+        low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]\
+                    for channel in data_ch.channels]
+        low = np.array(low)
 
     # Gate
     mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
