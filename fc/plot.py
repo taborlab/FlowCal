@@ -15,11 +15,22 @@ import csv
 
 import numpy as np
 import scipy.ndimage.filters
+import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
-save_dpi = 250
+# Use default from palettable if available
+try:
+    import palettable
+except ImportError, e:
+    cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
+else:
+    cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
+        .qualitative.Set1_6.mpl_colors
+
+matplotlib.rcParams['savefig.dpi'] = 250
 
 def load_colormap(name, number):
     ''' Get colormap.
@@ -132,9 +143,11 @@ def hist1d(data_list,
 
     # Default colors
     if histtype == 'stepfilled' and 'facecolor' not in kwargs:
-        kwargs['facecolor'] = load_colormap('spectral', len(data_list))
+        kwargs['facecolor'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
     elif histtype == 'step' and 'edgecolor' not in kwargs:
-        kwargs['edgecolor'] = load_colormap('spectral', len(data_list))
+        kwargs['edgecolor'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -192,7 +205,7 @@ def hist1d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def density2d(data, 
@@ -250,6 +263,10 @@ def density2d(data,
         # Generate sub-sampled bins
         bins = np.array([np.interp(xsx, xdx, bdx), 
                             np.interp(xsy, xdy, bdy)])
+
+    # If colormap is not specified, use the default of this module
+    if 'cmap' not in kwargs:
+        kwargs['cmap'] = cmap_default
 
     # Calculate histogram
     H, xedges, yedges = np.histogram2d(data_plot[:,0],
@@ -326,7 +343,7 @@ def density2d(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def scatter2d(data_list, 
@@ -355,7 +372,8 @@ def scatter2d(data_list,
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = load_colormap('spectral', len(data_list))
+        kwargs['color'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -381,7 +399,7 @@ def scatter2d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 
@@ -411,7 +429,8 @@ def scatter3d(data_list,
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = load_colormap('spectral', len(data_list))
+        kwargs['color'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Initial setup
     ax_3d = plt.gcf().add_subplot(222, projection='3d')
@@ -475,7 +494,7 @@ def scatter3d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def mef_std_crv(peaks_ch, 
@@ -528,7 +547,7 @@ def mef_std_crv(peaks_ch,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def bar(data, 
@@ -636,7 +655,7 @@ def bar(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 ##############################################################################
@@ -730,12 +749,8 @@ def density_and_hist(data,
             plt.title(title)
 
     # Colors
-    if n_plots - 1 < 3:
-        n_colors = 3
-    else:
-        n_colors = n_plots - 1
-    colors = load_colormap('spectral', n_colors)
-    colors = colors[::-1]
+    n_colors = n_plots - 1
+    colors = [cmap_default(i) for i in np.linspace(0, 1, n_colors)]
     # Histogram
     for i, hist_channel in enumerate(hist_channels):
         # Define subplot
@@ -757,7 +772,7 @@ def density_and_hist(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 
@@ -829,7 +844,8 @@ def hist_and_bar(data_list,
     histtype = hist_params['histtype']
 
     # Generate default colors
-    hist_def_colors_1 = load_colormap('spectral', len(labels))
+    hist_def_colors_1 = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(labels))]
     hist_def_colors = []
     for hi in hist_def_colors_1:
         for j in range(n_in_group):
@@ -880,5 +896,5 @@ def hist_and_bar(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()

@@ -648,7 +648,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Plot
         if plot:
             # Get colors for peaks
-            colors = fc.plot.load_colormap('spectral', n_clusters)
+            colors = [fc.plot.cmap_default(i)\
+                                for i in np.linspace(0, 1, n_clusters)]
             # Plot histograms
             plt.figure(figsize = (8,4))
             fc.plot.hist1d(data_plot, channel = mef_channel, div = 4, 
