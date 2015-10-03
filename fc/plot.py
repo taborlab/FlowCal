@@ -715,7 +715,7 @@ def density_and_hist(data,
                 alpha = 0.5, **hist_params_i)
             hist1d(gated_data, channel = hist_channel, 
                 alpha = 1.0, **hist_params_i)
-            plt.legend(['Ungated', 'Gated'], fontsize = 11)
+            plt.legend(['Ungated', 'Gated'], loc = 'best', fontsize = 'medium')
         else:
             hist1d(data, channel = hist_channel, **hist_params_i)
     
