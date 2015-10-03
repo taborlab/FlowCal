@@ -69,11 +69,12 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.9.2', 
-                      'scipy>=0.15.1', 
-                      'matplotlib>=1.4.3', 
-                      'scikit-learn>=0.16.1', 
-                      'xlrd>=0.9.3', 
+    install_requires=['numpy>=1.9.2',
+                      'scipy>=0.15.1',
+                      'matplotlib>=1.4.3',
+                      'palettable>=2.1.1',
+                      'scikit-learn>=0.16.1',
+                      'xlrd>=0.9.3',
                       'openpyxl==2.0.2'],
 
     # List additional groups of dependencies here (e.g. development
