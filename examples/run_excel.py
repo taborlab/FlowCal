@@ -8,6 +8,7 @@ from subprocess import call
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+import palettable
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
@@ -23,8 +24,9 @@ mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
             'FL3': 'Molecules of Equivalent Cy5, MECY',
             }
 # Colors for histograms
-cm = fc.plot.load_colormap('spectral', 3)
-hist_colors = dict(zip(fl_channels, cm[::-1]))
+cm = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+hist_colors_list = [cm(i) for i in np.linspace(0,1,len(fl_channels))]
+hist_colors = dict(zip(fl_channels, hist_colors_list))
 
 def main():
     # Launch dialogue to select input file
