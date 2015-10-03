@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
-# Use default from palettable if available
+# Use default colors from palettable if available
 try:
     import palettable
 except ImportError, e:
@@ -28,57 +28,9 @@ except ImportError, e:
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
     matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
-        .qualitative.Set1_6.mpl_colors
+        .qualitative.Paired_12.mpl_colors[1::2]
 
 matplotlib.rcParams['savefig.dpi'] = 250
-
-def load_colormap(name, number):
-    ''' Get colormap.
-
-    If name specifies one of the provided colormaps, then open it.
-
-    Colormap csvs have been extracted from http://colorbrewer2.org/.
-    '''
-    # Get path of module's directory
-    __location__ = os.path.realpath(
-        os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    if name == 'spectral':
-        # load raw csv data
-        cm_raw = []
-        with open(__location__ + '/spectral.csv', 'rb') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                cm_raw.append((float(row[0])/255,
-                                float(row[1])/255, 
-                                float(row[2])/255))
-        # Get appropriate colormap for number of elements
-        if number == 1:
-            cm = [cm_raw[0]]
-        elif number == 2:
-            cm = [cm_raw[0], cm_raw[2]]
-        elif number >= 3:
-            start = np.sum(range(number)) - 3
-            end = np.sum(range(number + 1)) - 3
-            cm = cm_raw[start:end]
-        return cm
-    elif name == 'diverging':
-        # load raw csv data
-        cm_raw = []
-        with open(__location__ + '/diverging.csv', 'rb') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                cm_raw.append((float(row[0])/255,
-                                float(row[1])/255, 
-                                float(row[2])/255))
-        # Get appropriate colormap for number of elements
-        if number <= 6:
-            cm = cm_raw[:number]
-        else:
-            cm = [cm_raw[i%6] for i in range(number)]
-        return cm
-    else:
-        raise ValueError("Colormap {} not recognized.".format(name))
-
 
 ##############################################################################
 # SIMPLE PLOTS
@@ -522,18 +474,16 @@ def mef_std_crv(peaks_ch,
     **kwargs   - passed directly to matploblib's plot.
     '''    
 
-    # Get colors
-    colors = load_colormap('diverging', 3)
     # Generate x data
     xdata = np.linspace(xlim[0],xlim[1],200)
 
     # Plot
     plt.plot(peaks_ch, peaks_mef, 'o', 
-        label = 'Beads', color = colors[0])
+        label = 'Beads')
     plt.plot(xdata, sc_beads(xdata), 
-        label = 'Beads model', color = colors[1])
+        label = 'Beads model')
     plt.plot(xdata, sc_abs(xdata), 
-        label = 'Standard curve', color = colors[2])
+        label = 'Standard curve')
     plt.yscale('log')
     plt.xlim(xlim)
     plt.ylim(ylim)
@@ -593,7 +543,7 @@ def bar(data,
 
     # Default colors
     if colors is None:
-        colors = load_colormap('diverging', n_in_group)
+        colors = matplotlib.rcParams['axes.color_cycle']
 
     # Calculate coordinates of x axis.
     x_coords = np.arange((len(data))/n_in_group)

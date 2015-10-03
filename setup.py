@@ -90,7 +90,7 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         '.': ['CONTRIBUTE.rst'],
-        'fc': ['diverging.csv', 'spectral.csv'],
+        'fc': [],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
