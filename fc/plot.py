@@ -15,59 +15,22 @@ import csv
 
 import numpy as np
 import scipy.ndimage.filters
+import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 
-save_dpi = 250
+# Use default colors from palettable if available
+try:
+    import palettable
+except ImportError, e:
+    cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
+else:
+    cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
+        .qualitative.Paired_12.mpl_colors[1::2]
 
-def load_colormap(name, number):
-    ''' Get colormap.
-
-    If name specifies one of the provided colormaps, then open it.
-
-    Colormap csvs have been extracted from http://colorbrewer2.org/.
-    '''
-    # Get path of module's directory
-    __location__ = os.path.realpath(
-        os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    if name == 'spectral':
-        # load raw csv data
-        cm_raw = []
-        with open(__location__ + '/spectral.csv', 'rb') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                cm_raw.append((float(row[0])/255,
-                                float(row[1])/255, 
-                                float(row[2])/255))
-        # Get appropriate colormap for number of elements
-        if number == 1:
-            cm = [cm_raw[0]]
-        elif number == 2:
-            cm = [cm_raw[0], cm_raw[2]]
-        elif number >= 3:
-            start = np.sum(range(number)) - 3
-            end = np.sum(range(number + 1)) - 3
-            cm = cm_raw[start:end]
-        return cm
-    elif name == 'diverging':
-        # load raw csv data
-        cm_raw = []
-        with open(__location__ + '/diverging.csv', 'rb') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                cm_raw.append((float(row[0])/255,
-                                float(row[1])/255, 
-                                float(row[2])/255))
-        # Get appropriate colormap for number of elements
-        if number <= 6:
-            cm = cm_raw[:number]
-        else:
-            cm = [cm_raw[i%6] for i in range(number)]
-        return cm
-    else:
-        raise ValueError("Colormap {} not recognized.".format(name))
-
+matplotlib.rcParams['savefig.dpi'] = 250
 
 ##############################################################################
 # SIMPLE PLOTS
@@ -132,9 +95,11 @@ def hist1d(data_list,
 
     # Default colors
     if histtype == 'stepfilled' and 'facecolor' not in kwargs:
-        kwargs['facecolor'] = load_colormap('spectral', len(data_list))
+        kwargs['facecolor'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
     elif histtype == 'step' and 'edgecolor' not in kwargs:
-        kwargs['edgecolor'] = load_colormap('spectral', len(data_list))
+        kwargs['edgecolor'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -192,7 +157,7 @@ def hist1d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def density2d(data, 
@@ -250,6 +215,10 @@ def density2d(data,
         # Generate sub-sampled bins
         bins = np.array([np.interp(xsx, xdx, bdx), 
                             np.interp(xsy, xdy, bdy)])
+
+    # If colormap is not specified, use the default of this module
+    if 'cmap' not in kwargs:
+        kwargs['cmap'] = cmap_default
 
     # Calculate histogram
     H, xedges, yedges = np.histogram2d(data_plot[:,0],
@@ -326,7 +295,7 @@ def density2d(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def scatter2d(data_list, 
@@ -355,7 +324,8 @@ def scatter2d(data_list,
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = load_colormap('spectral', len(data_list))
+        kwargs['color'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -381,7 +351,7 @@ def scatter2d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 
@@ -411,7 +381,8 @@ def scatter3d(data_list,
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = load_colormap('spectral', len(data_list))
+        kwargs['color'] = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(data_list))]
 
     # Initial setup
     ax_3d = plt.gcf().add_subplot(222, projection='3d')
@@ -475,7 +446,7 @@ def scatter3d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def mef_std_crv(peaks_ch, 
@@ -503,18 +474,16 @@ def mef_std_crv(peaks_ch,
     **kwargs   - passed directly to matploblib's plot.
     '''    
 
-    # Get colors
-    colors = load_colormap('diverging', 3)
     # Generate x data
     xdata = np.linspace(xlim[0],xlim[1],200)
 
     # Plot
     plt.plot(peaks_ch, peaks_mef, 'o', 
-        label = 'Beads', color = colors[0])
+        label = 'Beads')
     plt.plot(xdata, sc_beads(xdata), 
-        label = 'Beads model', color = colors[1])
+        label = 'Beads model')
     plt.plot(xdata, sc_abs(xdata), 
-        label = 'Standard curve', color = colors[2])
+        label = 'Standard curve')
     plt.yscale('log')
     plt.xlim(xlim)
     plt.ylim(ylim)
@@ -528,7 +497,7 @@ def mef_std_crv(peaks_ch,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 def bar(data, 
@@ -574,7 +543,7 @@ def bar(data,
 
     # Default colors
     if colors is None:
-        colors = load_colormap('diverging', n_in_group)
+        colors = matplotlib.rcParams['axes.color_cycle']
 
     # Calculate coordinates of x axis.
     x_coords = np.arange((len(data))/n_in_group)
@@ -636,7 +605,7 @@ def bar(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 ##############################################################################
@@ -730,12 +699,8 @@ def density_and_hist(data,
             plt.title(title)
 
     # Colors
-    if n_plots - 1 < 3:
-        n_colors = 3
-    else:
-        n_colors = n_plots - 1
-    colors = load_colormap('spectral', n_colors)
-    colors = colors[::-1]
+    n_colors = n_plots - 1
+    colors = [cmap_default(i) for i in np.linspace(0, 1, n_colors)]
     # Histogram
     for i, hist_channel in enumerate(hist_channels):
         # Define subplot
@@ -757,7 +722,7 @@ def density_and_hist(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()
 
 
@@ -829,7 +794,8 @@ def hist_and_bar(data_list,
     histtype = hist_params['histtype']
 
     # Generate default colors
-    hist_def_colors_1 = load_colormap('spectral', len(labels))
+    hist_def_colors_1 = [cmap_default(i)\
+                                for i in np.linspace(0, 1, len(labels))]
     hist_def_colors = []
     for hi in hist_def_colors_1:
         for j in range(n_in_group):
@@ -880,5 +846,5 @@ def hist_and_bar(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig, dpi = save_dpi)
+        plt.savefig(savefig)
         plt.close()

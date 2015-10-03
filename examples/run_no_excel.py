@@ -5,6 +5,7 @@ import os.path
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+import palettable
 
 import fc
 
@@ -24,8 +25,9 @@ data_files = ['data_{:03d}.fcs'.format(i) for i in range(1,6)]
 sc_channels = ['FSC', 'SSC']
 fl_channels = ['FL1', 'FL2', 'FL3']
 # Colors for histograms
-cm = fc.plot.load_colormap('spectral', 3)
-hist_colors = dict(zip(fl_channels, cm[::-1]))
+cm = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+hist_colors_list = [cm(i) for i in np.linspace(0,1,len(fl_channels))]
+hist_colors = dict(zip(fl_channels, hist_colors_list))
 
 # MEF channels
 mef_channels = ['FL1']
