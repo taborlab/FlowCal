@@ -439,7 +439,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
     find_peaks_method = 'median', find_peaks_params = {},
     select_peaks_method = 'proximity', select_peaks_params = {},
-    verbose = False, plot = False, plot_dir = None, full = False):
+    verbose = False, plot = False, plot_dir = None, plot_filename = None,
+    full = False):
     '''Generate a function that transforms channel data into MEF data.
 
     This is performed using flow cytometry beads data, contained in the 
@@ -485,6 +486,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     plot_dir            - Directory where to save diagnostics plots. Ignored
                           if plot is False. If plot = True and plot_dir = None,
                           plot without saving.
+    plot_filename       - Name to use for plot files. If None, use the filename
+                          of the FCSData file provided.
     full                - Whether to include intermediate results in the
                           output. If full is True, the function returns a named
                           tuple with fields as described below. If full is
@@ -512,8 +515,9 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
 
-    # Extract beads file name
-    data_file_name = str(data_beads)
+    # Default plot filename
+    if plot_filename is None:
+        plot_filename = str(data_beads)
 
     # 1. Cluster
     # ===========
@@ -553,7 +557,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             
         if len(cluster_channels) == 2:
             if plot_dir is not None:
-                savefig = '{}/cluster_{}.png'.format(plot_dir, data_file_name)
+                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
             else:
                 savefig = None
             # Plot
@@ -566,7 +570,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             
         if len(cluster_channels) == 3:
             if plot_dir is not None:
-                savefig = '{}/cluster_{}.png'.format(plot_dir, data_file_name)
+                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
             else:
                 savefig = None
             # Plot
@@ -670,7 +674,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             if plot_dir is not None:
                 plt.tight_layout()
                 plt.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
-                                    mef_channel, data_file_name), dpi = 300)
+                                    mef_channel, plot_filename), dpi = 300)
                 plt.close()
 
         # 3. Select peaks for fitting
@@ -738,7 +742,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             if plot_dir is not None:
                 savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
                                                         mef_channel,
-                                                        data_file_name, 
+                                                        plot_filename,
                                                         )
             else:
                 savefig = None
