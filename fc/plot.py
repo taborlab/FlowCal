@@ -505,6 +505,7 @@ def bar(data,
         data_error = None,
         n_in_group = 1, 
         labels_in_group = [],
+        legend_loc = 'best',
         legend_fontsize = 'medium',
         colors = None,
         bar_width = 0.75, 
@@ -527,6 +528,7 @@ def bar(data,
     data_error          - size of the error bar to plot for each datapoint.
     n_in_group          - number of bars per group.
     labels_in_group     - labels within a group, used for a legend.
+    legend_loc          - location of the legend.
     legend_fontsize     - font size used for the legend.
     colors              - list of colors of length == n_in_group.
     bar_width           - bar width.
@@ -583,7 +585,7 @@ def bar(data,
     # Add labels within group
     if labels_in_group:
         plt.legend(labels_in_group,
-                   loc = 'best',
+                   loc = legend_loc,
                    prop = {'size': legend_fontsize})
 
     # Add labels on top of bars
@@ -807,7 +809,7 @@ def hist_and_bar(data_list,
         hist_params['edgecolor'] = hist_def_colors
 
     # Generate default linestyles
-    hist_def_linestyles_1 = ['solid', 'dashed', 'dash_dot', 'dotted']
+    hist_def_linestyles_1 = ['solid', 'dashed', 'dashdot', 'dotted']
     hist_def_linestyles = []
     for i in range(len(labels)):
         for j in range(n_in_group):
