@@ -13,12 +13,12 @@
 
 import fc.io
 import fc.transform
-import numpy
+import numpy as np
 import unittest
 
 class TestExponentiateArray(unittest.TestCase):
     def setUp(self):
-        self.d = numpy.array([
+        self.d = np.array([
             [1, 7, 2],
             [2, 8, 3],
             [3, 9, 4],
@@ -34,23 +34,23 @@ class TestExponentiateArray(unittest.TestCase):
     def test_transform_original_integrity(self):
         db = self.d.copy()
         dt = fc.transform.exponentiate(self.d)
-        numpy.testing.assert_array_equal(self.d, db)
+        np.testing.assert_array_equal(self.d, db)
 
     def test_transform_all(self):
         dt = fc.transform.exponentiate(self.d)
-        numpy.testing.assert_array_equal(dt, 10**(self.d/256.0))
+        np.testing.assert_array_equal(dt, 10**(self.d/256.0))
 
     def test_transform_channel(self):
         dt = fc.transform.exponentiate(self.d, channels = 1)
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
 
     def test_transform_channels(self):
         dt = fc.transform.exponentiate(self.d, channels = [1,2])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        numpy.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
 
 class TestExponentiateFCS(unittest.TestCase):
     def setUp(self):
@@ -63,29 +63,29 @@ class TestExponentiateFCS(unittest.TestCase):
     def test_transform_original_integrity(self):
         db = self.d.copy()
         dt = fc.transform.exponentiate(self.d)
-        numpy.testing.assert_array_equal(self.d, db)
+        np.testing.assert_array_equal(self.d, db)
 
     def test_transform_all(self):
         dt = fc.transform.exponentiate(self.d)
-        numpy.testing.assert_array_equal(dt, 10**(self.d/256.0))
+        np.testing.assert_array_equal(dt, 10**(self.d/256.0))
 
     def test_transform_channel(self):
         dt = fc.transform.exponentiate(self.d, channels = 1)
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2])
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], self.d[:,4])
-        numpy.testing.assert_array_equal(dt[:,5], self.d[:,5])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], self.d[:,4])
+        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
 
     def test_transform_channels(self):
         dt = fc.transform.exponentiate(self.d, channels = [1,2,4])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        numpy.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
-        numpy.testing.assert_array_equal(dt[:,5], self.d[:,5])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
+        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
 
     def test_transform_range_original_integrity(self):
         dt = fc.transform.exponentiate(self.d)
@@ -124,71 +124,71 @@ class TestExponentiateFCS(unittest.TestCase):
         vi = [self.d.channel_info[i]['bin_vals'] for i in range(5)]
         ei = [self.d.channel_info[i]['bin_edges'] for i in range(5)]
         vo = [range(1024)]*5
-        eo = [numpy.arange(-0.5, 1024.5, 1.0)]*5
-        numpy.testing.assert_array_equal(vi, vo)
-        numpy.testing.assert_array_equal(ei, eo)
+        eo = [np.arange(-0.5, 1024.5, 1.0)]*5
+        np.testing.assert_array_equal(vi, vo)
+        np.testing.assert_array_equal(ei, eo)
 
     def test_transform_bins_all(self):
         dt = fc.transform.exponentiate(self.d)
         vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
         eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
-        vo = [numpy.logspace(0., 1023/256., 1024)]*5
-        eo = [numpy.logspace(-0.5/256., 1023.5/256., 1025)]*5
-        numpy.testing.assert_array_equal(vit, vo)
-        numpy.testing.assert_array_equal(eit, eo)
+        vo = [np.logspace(0., 1023/256., 1024)]*5
+        eo = [np.logspace(-0.5/256., 1023.5/256., 1025)]*5
+        np.testing.assert_array_equal(vit, vo)
+        np.testing.assert_array_equal(eit, eo)
 
     def test_transform_bins_channel(self):
         dt = fc.transform.exponentiate(self.d, channels = 1)
         vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
         eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
-        vo = [numpy.arange(1024),
-              numpy.logspace(0., 1023/256., 1024),
-              numpy.arange(1024),
-              numpy.arange(1024),
-              numpy.arange(1024),
+        vo = [np.arange(1024),
+              np.logspace(0., 1023/256., 1024),
+              np.arange(1024),
+              np.arange(1024),
+              np.arange(1024),
               ]
-        eo = [numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.logspace(-0.5/256., 1023.5/256., 1025),
-              numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.arange(-0.5, 1024.5, 1.0),
+        eo = [np.arange(-0.5, 1024.5, 1.0),
+              np.logspace(-0.5/256., 1023.5/256., 1025),
+              np.arange(-0.5, 1024.5, 1.0),
+              np.arange(-0.5, 1024.5, 1.0),
+              np.arange(-0.5, 1024.5, 1.0),
               ]
-        numpy.testing.assert_array_equal(vit, vo)
-        numpy.testing.assert_array_equal(eit, eo)
+        np.testing.assert_array_equal(vit, vo)
+        np.testing.assert_array_equal(eit, eo)
 
     def test_transform_bins_channels(self):
         dt = fc.transform.exponentiate(self.d, channels = [1,2,4])
         vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
         eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
-        vo = [numpy.arange(1024),
-              numpy.logspace(0., 1023/256., 1024),
-              numpy.logspace(0., 1023/256., 1024),
-              numpy.arange(1024),
-              numpy.logspace(0., 1023/256., 1024),
+        vo = [np.arange(1024),
+              np.logspace(0., 1023/256., 1024),
+              np.logspace(0., 1023/256., 1024),
+              np.arange(1024),
+              np.logspace(0., 1023/256., 1024),
               ]
-        eo = [numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.logspace(-0.5/256., 1023.5/256., 1025),
-              numpy.logspace(-0.5/256., 1023.5/256., 1025),
-              numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.logspace(-0.5/256., 1023.5/256., 1025),
+        eo = [np.arange(-0.5, 1024.5, 1.0),
+              np.logspace(-0.5/256., 1023.5/256., 1025),
+              np.logspace(-0.5/256., 1023.5/256., 1025),
+              np.arange(-0.5, 1024.5, 1.0),
+              np.logspace(-0.5/256., 1023.5/256., 1025),
               ]
-        numpy.testing.assert_array_equal(vit, vo)
-        numpy.testing.assert_array_equal(eit, eo)
+        np.testing.assert_array_equal(vit, vo)
+        np.testing.assert_array_equal(eit, eo)
         pass
 
     def test_transform_channels_str(self):
         dt = fc.transform.exponentiate(self.d, channels = ['SSC-H', 
                                                         'FL1-H', 'FL3-H'])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        numpy.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
-        numpy.testing.assert_array_equal(dt[:,5], self.d[:,5])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
+        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
 
 class TestMefArray(unittest.TestCase):
     def setUp(self):
-        self.d = numpy.array([
+        self.d = np.array([
             [1, 7, 2],
             [2, 8, 3],
             [3, 9, 4],
@@ -202,7 +202,7 @@ class TestMefArray(unittest.TestCase):
             ])
         self.sc0 = lambda x: x + 10
         self.sc1 = lambda x: x**2
-        self.sc2 = lambda x: numpy.log(x)
+        self.sc2 = lambda x: np.log(x)
 
     def test_mef_length_error(self):
         self.assertRaises(AssertionError, fc.transform.to_mef, 
@@ -214,34 +214,34 @@ class TestMefArray(unittest.TestCase):
 
     def test_mef_1d_1(self):
         dt = fc.transform.to_mef(self.d, 1, [self.sc1, self.sc2], [1,2])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
 
     def test_mef_1d_2(self):
         dt = fc.transform.to_mef(self.d, 2, [self.sc1, self.sc2], [1,2])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1])
-        numpy.testing.assert_array_equal(dt[:,2], numpy.log(self.d[:,2]))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], np.log(self.d[:,2]))
 
     def test_mef_2d(self):
         dt = fc.transform.to_mef(self.d, [1,2], [self.sc1, self.sc2], [1,2])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
-        numpy.testing.assert_array_equal(dt[:,2], numpy.log(self.d[:,2]))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
+        np.testing.assert_array_equal(dt[:,2], np.log(self.d[:,2]))
 
     def test_mef_default_channel(self):
         dt = fc.transform.to_mef(self.d, None, [self.sc1, self.sc2], [1,2])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
-        numpy.testing.assert_array_equal(dt[:,2], numpy.log(self.d[:,2]))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
+        np.testing.assert_array_equal(dt[:,2], np.log(self.d[:,2]))
 
     def test_mef_default_sc_channel(self):
         dt = fc.transform.to_mef(self.d, None, 
             [self.sc0, self.sc1, self.sc2], None)
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0] + 10)
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
-        numpy.testing.assert_array_equal(dt[:,2], numpy.log(self.d[:,2]))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0] + 10)
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1]**2.)
+        np.testing.assert_array_equal(dt[:,2], np.log(self.d[:,2]))
 
     def test_mef_default_sc_channel_error(self):
         self.assertRaises(AssertionError, fc.transform.to_mef, 
@@ -255,7 +255,7 @@ class TestMefFCS(unittest.TestCase):
         self.n_samples = self.d.shape[0]
         self.sc0 = lambda x: x + 10
         self.sc1 = lambda x: x**2
-        self.sc2 = lambda x: numpy.log(x + 1)
+        self.sc2 = lambda x: np.log(x + 1)
 
     def test_mef_length_error(self):
         self.assertRaises(AssertionError, fc.transform.to_mef, 
@@ -268,41 +268,41 @@ class TestMefFCS(unittest.TestCase):
     def test_mef_1d_1(self):
         dt = fc.transform.to_mef(self.d, 'FL1-H', 
             [self.sc1, self.sc2], ['FL1-H','FL3-H'])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1])
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], self.d[:,4])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], self.d[:,4])
 
     def test_mef_1d_2(self):
         dt = fc.transform.to_mef(self.d, 'FL3-H', 
             [self.sc1, self.sc2], ['FL1-H','FL3-H'])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1])
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2])
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], 
-            numpy.log(self.d[:,4].astype(numpy.float64) + 1))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], 
+            np.log(self.d[:,4].astype(np.float64) + 1))
 
     def test_mef_2d(self):
         dt = fc.transform.to_mef(self.d, ['FL1-H','FL3-H'], 
             [self.sc1, self.sc2], ['FL1-H','FL3-H'])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1])
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], 
-            numpy.log(self.d[:,4].astype(numpy.float64) + 1))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], 
+            np.log(self.d[:,4].astype(np.float64) + 1))
 
     def test_mef_default_channel(self):
         dt = fc.transform.to_mef(self.d, None, 
             [self.sc1, self.sc2], ['FL1-H','FL3-H'])
-        numpy.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        numpy.testing.assert_array_equal(dt[:,1], self.d[:,1])
-        numpy.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
-        numpy.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        numpy.testing.assert_array_equal(dt[:,4], 
-            numpy.log(self.d[:,4].astype(numpy.float64) + 1))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2]**2.)
+        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
+        np.testing.assert_array_equal(dt[:,4], 
+            np.log(self.d[:,4].astype(np.float64) + 1))
 
     def test_mef_range_channels(self):
         dt = fc.transform.to_mef(self.d, ['FL1-H','FL3-H'], 
@@ -312,7 +312,7 @@ class TestMefFCS(unittest.TestCase):
               [0, 1023, 1024],
               [0**2, 1023**2, 1024],
               [0, 1023, 1024],
-              [numpy.log(0 + 1), numpy.log(1023 + 1), 1024]]
+              [np.log(0 + 1), np.log(1023 + 1), 1024]]
         self.assertEqual(cit, co)
 
     def test_mef_bins_channels(self):
@@ -320,20 +320,20 @@ class TestMefFCS(unittest.TestCase):
             [self.sc1, self.sc2], ['FL1-H','FL3-H'])
         vit = [dt.channel_info[i]['bin_vals'] for i in range(5)]
         eit = [dt.channel_info[i]['bin_edges'] for i in range(5)]
-        vo = [numpy.arange(1024),
-              numpy.arange(1024),
-              numpy.arange(1024)**2,
-              numpy.arange(1024),
-              numpy.log(numpy.arange(1024) + 1),
+        vo = [np.arange(1024),
+              np.arange(1024),
+              np.arange(1024)**2,
+              np.arange(1024),
+              np.log(np.arange(1024) + 1),
               ]
-        eo = [numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.arange(-0.5, 1024.5, 1.0)**2,
-              numpy.arange(-0.5, 1024.5, 1.0),
-              numpy.log(numpy.arange(-0.5, 1024.5, 1.0) + 1),
+        eo = [np.arange(-0.5, 1024.5, 1.0),
+              np.arange(-0.5, 1024.5, 1.0),
+              np.arange(-0.5, 1024.5, 1.0)**2,
+              np.arange(-0.5, 1024.5, 1.0),
+              np.log(np.arange(-0.5, 1024.5, 1.0) + 1),
               ]
-        numpy.testing.assert_array_equal(vit, vo)
-        numpy.testing.assert_array_equal(eit, eo)
+        np.testing.assert_array_equal(vit, vo)
+        np.testing.assert_array_equal(eit, eo)
 
 if __name__ == '__main__':
     unittest.main()

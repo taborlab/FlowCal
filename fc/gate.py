@@ -16,14 +16,14 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/5/2015
+# Date: 9/6/2015
 #
 # Requires:
 #   * numpy
 #   * scipy
 #   * matplotlib
 
-import numpy
+import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
     
@@ -40,14 +40,14 @@ def start_end(data, num_start = 250, num_end = 100):
         raise ValueError('Number of events to discard greater than total' + 
             ' number.')
     
-    mask = numpy.ones(shape=data.shape[0],dtype=bool)
+    mask = np.ones(shape=data.shape[0],dtype=bool)
     mask[:num_start] = False
     mask[-num_end:] = False
     gated_data = data[mask]
     
     return gated_data
 
-def high_low(data, channels = None, high = (2**10)-1, low = 0):
+def high_low(data, channels = None, high = None, low = None):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
@@ -68,8 +68,18 @@ def high_low(data, channels = None, high = (2**10)-1, low = 0):
         if data_ch.ndim == 1:
             data_ch = data_ch.reshape((-1,1))
 
+    # Default values for high and low
+    if high is None and hasattr(data_ch, 'channel_info'):
+        high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1]\
+                    for channel in data_ch.channels]
+        high = np.array(high)
+    if low is None and hasattr(data_ch, 'channel_info'):
+        low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]\
+                    for channel in data_ch.channels]
+        low = np.array(low)
+
     # Gate
-    mask = numpy.all((data_ch < high) & (data_ch > low), axis = 1)
+    mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
     gated_data = data[mask]
 
     return gated_data
@@ -94,20 +104,20 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     '''
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
-    data_ch = data[:,channels].view(numpy.ndarray)
+    data_ch = data[:,channels].view(np.ndarray)
 
     # Log if necessary
     if log:
-        data_ch = numpy.log10(data_ch)
+        data_ch = np.log10(data_ch)
 
     # Center
-    center = numpy.array(center)
+    center = np.array(center)
     data_centered = data_ch - center
 
     # Rotate
-    R = numpy.array([[numpy.cos(theta), numpy.sin(theta)],
-                    [-numpy.sin(theta), numpy.cos(theta)]])
-    data_rotated = numpy.dot(data_centered, R.T)
+    R = np.array([[np.cos(theta), np.sin(theta)],
+                    [-np.sin(theta), np.cos(theta)]])
+    data_rotated = np.dot(data_centered, R.T)
 
     # Generate mask
     mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
@@ -116,9 +126,9 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     data_gated = data[mask]
 
     # Calculate contour
-    t = numpy.linspace(0,1,100)*2*numpy.pi
-    ci = numpy.array([a*numpy.cos(t), b*numpy.sin(t)]).T
-    ci = numpy.dot(ci, R) + center
+    t = np.linspace(0,1,100)*2*np.pi
+    ci = np.array([a*np.cos(t), b*np.sin(t)]).T
+    ci = np.dot(ci, R) + center
     if log:
         ci = 10**ci
     cntr = [ci]
@@ -157,22 +167,22 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
 
     # Extract default bins if necessary
     if bins is None and hasattr(data_ch, 'channel_info'):
-        bins = numpy.array([data_ch.channel_info[0]['bin_edges'],
+        bins = np.array([data_ch.channel_info[0]['bin_edges'],
                             data_ch.channel_info[1]['bin_edges'],
                             ])
 
     # Determine number of points to keep
-    n = int(numpy.ceil(gate_fraction*float(data_ch.shape[0])))
+    n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
 
     # Make 2D histogram and get bins
-    H,xe,ye = numpy.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
     # Get lists of indices per bin
-    ix = numpy.digitize(data_ch[:,0], bins=xe) - 1
-    iy = numpy.digitize(data_ch[:,1], bins=ye) - 1
+    ix = np.digitize(data_ch[:,0], bins=xe) - 1
+    iy = np.digitize(data_ch[:,1], bins=ye) - 1
 
-    filler = numpy.frompyfunc(lambda x: list(), 1, 1)
-    Hi = numpy.empty_like(H, dtype=numpy.object)
+    filler = np.frompyfunc(lambda x: list(), 1, 1)
+    Hi = np.empty_like(H, dtype=np.object)
     filler(Hi, Hi)
     for i, (xi, yi) in enumerate(zip(ix, iy)):
         Hi[xi, yi].append(i)
@@ -187,29 +197,29 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    D = bH / numpy.sum(bH)
+    D = bH / np.sum(bH)
 
     # Sort each (x,y) point by density
     vD = D.ravel()
     vH = H.ravel()
-    sidx = numpy.argsort(vD)[::-1]
+    sidx = np.argsort(vD)[::-1]
     svH = vH[sidx]  # linearized counts array sorted by density
 
     # Find minimum number of accepted (x,y) points needed to reach specified
     # number of data points
-    csvH = numpy.cumsum(svH)
-    Nidx = numpy.nonzero(csvH >= n)[0][0]    # we want to include this index
+    csvH = np.cumsum(svH)
+    Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
     # Get indices of events to keep
     vHi = Hi.ravel()
     mask = vHi[sidx[:(Nidx+1)]]
-    mask = numpy.array([item for sublist in mask for item in sublist])
-    mask = numpy.sort(mask)
+    mask = np.array([item for sublist in mask for item in sublist])
+    mask = np.sort(mask)
     gated_data = data[mask]
 
     # Use matplotlib contour plotter (implemented in C) to generate contour(s)
     # at the probability associated with the last accepted point.
-    x,y = numpy.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
+    x,y = np.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
     mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
     tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
@@ -225,7 +235,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         codes = tr[num_cntrs+idx]
 
         # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
-        if not numpy.all((codes==1)|(codes==2)):
+        if not np.all((codes==1)|(codes==2)):
             raise Exception('Contour error: unrecognized path code')
 
         cntr.append(vertices)

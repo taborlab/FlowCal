@@ -5,7 +5,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/7/2015
+# Date: 9/7/2015
 #
 # Requires:
 #   * numpy
@@ -18,10 +18,10 @@ import os
 import functools
 import collections
 
-import numpy
+import numpy as np
 from scipy.optimize import minimize
 import scipy.ndimage.filters
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN 
 from sklearn.mixture import GMM 
 
@@ -60,7 +60,7 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     n_samples = len(labels)
 
     # Calculate number of samples in each cluster
-    n_samples_cluster = [numpy.sum(labels==li) for li in labels_all]
+    n_samples_cluster = [np.sum(labels==li) for li in labels_all]
 
     # Check that no cluster is too small.
     # Clusters are assumed to be uniformly distributed. Any cluster 10 std 
@@ -70,10 +70,10 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     # containing data for 2 or more bead types.
     p = 1./n_clusters_exp
     n_samples_exp = data.shape[0]*p
-    n_samples_std = numpy.sqrt(data.shape[0]*p*(1-p))
+    n_samples_std = np.sqrt(data.shape[0]*p*(1-p))
     while(True):
-        cluster_size = numpy.array([numpy.sum(labels==li) for li in labels_all])
-        cluster_i = numpy.argsort(cluster_size)
+        cluster_size = np.array([np.sum(labels==li) for li in labels_all])
+        cluster_i = np.argsort(cluster_size)
         if cluster_size[cluster_i[0]] < n_samples_exp - n_samples_std*10:
             labels[labels==labels_all[cluster_i[0]]] = labels_all[cluster_i[1]]
             labels_all.remove(labels_all[cluster_i[0]])
@@ -81,14 +81,14 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
             break
 
     # Change the cluster numbers to a contiguous positive sequence
-    labels_checked = -1*numpy.ones(len(labels))
+    labels_checked = -1*np.ones(len(labels))
     cn = 0
     for li in labels_all:
         labels_checked[labels==li] = cn
         cn = cn + 1
     labels = labels_checked
 
-    assert(numpy.any(labels==-1) == False)
+    assert(np.any(labels==-1) == False)
 
     return labels
 
@@ -102,17 +102,17 @@ def clustering_distance(data, n_clusters = 8):
     returns     - Nx1 numpy array, labeling each sample to a cluster.
     '''
     # Number of elements per cluster
-    fractions = numpy.ones(n_clusters)*1./n_clusters
+    fractions = np.ones(n_clusters)*1./n_clusters
 
     n_per_cluster = fractions*data.shape[0]
-    cluster_cum = numpy.append([0], numpy.cumsum(n_per_cluster))
+    cluster_cum = np.append([0], np.cumsum(n_per_cluster))
 
     # Get distance and sort based on it
-    dist = numpy.sum(data**2., axis = 1)
-    sorted_i = numpy.argsort(dist)
+    dist = np.sum(data**2., axis = 1)
+    sorted_i = np.argsort(dist)
 
     # Initialize labels
-    labels = numpy.ones(data.shape[0])*-1
+    labels = np.ones(data.shape[0])*-1
 
     # Assign labels
     for i in range(n_clusters):
@@ -149,15 +149,15 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
         data_clustered = [data[labels == i] for i in labels_all]
         
         # Initialize parameters for GMM
-        weights = numpy.tile(1.0 / n_clusters,
+        weights = np.tile(1.0 / n_clusters,
                                         n_clusters)
-        means = numpy.array([numpy.mean(di, axis = 0) 
+        means = np.array([np.mean(di, axis = 0) 
             for di in data_clustered])
         
         if data.shape[1] == 1:
-            covars = [numpy.cov(di.T).reshape(1,1) for di in data_clustered]
+            covars = [np.cov(di.T).reshape(1,1) for di in data_clustered]
         else:
-            covars = [numpy.cov(di.T) for di in data_clustered]
+            covars = [np.cov(di.T) for di in data_clustered]
 
         # Initialize GMM object
         gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
@@ -168,14 +168,14 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
 
     elif initialization == 'distance_sub':
         # Initialize parameters for GMM
-        weights = numpy.tile(1.0 / n_clusters,
+        weights = np.tile(1.0 / n_clusters,
                                         n_clusters)
         means = []
         covars = []
 
         # Get distance and sort based on it
-        dist = numpy.sum(data**2., axis = 1)
-        sorted_i = numpy.argsort(dist)
+        dist = np.sum(data**2., axis = 1)
+        sorted_i = np.argsort(dist)
 
         # Expected number of elements per cluster
         n_per_cluster = data.shape[0]/float(n_clusters)
@@ -190,12 +190,12 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
             ih = int((i+1-discard_frac)*n_per_cluster)
             sorted_i_i = sorted_i[il:ih]
             data_i = data[sorted_i_i]
-            means.append(numpy.mean(data_i, axis = 0))
+            means.append(np.mean(data_i, axis = 0))
             if data.shape[1] == 1:
-                covars.append(numpy.cov(data_i.T).reshape(1,1))
+                covars.append(np.cov(data_i.T).reshape(1,1))
             else:
-                covars.append(numpy.cov(data_i.T))
-        means = numpy.array(means)
+                covars.append(np.cov(data_i.T))
+        means = np.array(means)
 
         # Initialize GMM object
         gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
@@ -214,7 +214,7 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     # This avoids the complete elimination of a cluster if two or more clusters
     # have very similar means.
     resp = gmm.predict_proba(data)
-    labels = [numpy.random.choice(range(n_clusters), p = ri) for ri in resp]
+    labels = [np.random.choice(range(n_clusters), p = ri) for ri in resp]
 
     return labels
 
@@ -241,23 +241,23 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     '''
 
     # Calculate bin edges and centers
-    bin_edges = numpy.arange(min_val, max_val + 2) - 0.5
-    bin_edges[0] = -numpy.inf
-    bin_edges[-1] = numpy.inf
-    bin_centers = numpy.arange(min_val, max_val + 1)
+    bin_edges = np.arange(min_val, max_val + 2) - 0.5
+    bin_edges[0] = -np.inf
+    bin_edges[-1] = np.inf
+    bin_centers = np.arange(min_val, max_val + 1)
 
     # Identify peak
     # Calculate sample mean and standard deviation
-    # mu = numpy.mean(data)
-    sigma = numpy.std(data)
+    # mu = np.mean(data)
+    sigma = np.std(data)
     # Calculate histogram
-    hist, __ = numpy.histogram(data, bin_edges)
+    hist, __ = np.histogram(data, bin_edges)
     # Do Gaussian blur on histogram
     # We have found empirically that using one half of the distribution's 
     # standard deviation results in a nice fit.
     hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma/2.)
     # Extract peak
-    i_max = numpy.argmax(hist_smooth)
+    i_max = np.argmax(hist_smooth)
     peak = bin_centers[i_max]
 
     return peak, hist_smooth
@@ -272,17 +272,17 @@ def find_peaks_median(data):
     returns     - The median of data.
     '''
 
-    peak = numpy.median(data)
+    peak = np.median(data)
 
     return peak
 
-def select_peaks(peaks_ch, 
-                peaks_mef, 
-                peaks_ch_std,
-                peaks_ch_std_mult_l = 2.5,
-                peaks_ch_std_mult_r = 2.5,
-                peaks_ch_min = 0, 
-                peaks_ch_max = 1023):
+def select_peaks_proximity(peaks_ch,
+                           peaks_mef,
+                           peaks_ch_std,
+                           peaks_ch_std_mult_l = 2.5,
+                           peaks_ch_std_mult_r = 2.5,
+                           peaks_ch_min = 0,
+                           peaks_ch_max = 1023):
     '''Select peaks for fitting based on proximity to the minimum and maximum 
     values.
 
@@ -341,11 +341,11 @@ def select_peaks(peaks_ch,
         ValueError('Number of MEF values and channel peaks does not match.')
     
     # Discard unknown (NaN) peaks
-    unknown_mef = numpy.isnan(sel_peaks_mef)
-    n_unknown_mef = numpy.sum(unknown_mef)
+    unknown_mef = np.isnan(sel_peaks_mef)
+    n_unknown_mef = np.sum(unknown_mef)
     if n_unknown_mef > 0:
-        sel_peaks_ch = sel_peaks_ch[numpy.invert(unknown_mef)]
-        sel_peaks_mef = sel_peaks_mef[numpy.invert(unknown_mef)]
+        sel_peaks_ch = sel_peaks_ch[np.invert(unknown_mef)]
+        sel_peaks_mef = sel_peaks_mef[np.invert(unknown_mef)]
 
     return sel_peaks_ch, sel_peaks_mef
 
@@ -398,27 +398,27 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         bead peak values."
         
     # Initialize parameters
-    params = numpy.zeros(3)
+    params = np.zeros(3)
     # Initial guesses:
     # 0: slope found by putting a line through the highest two peaks.
     # 1: y-intercept found by putting a line through highest two peaks.
     # 2: bead autofluorescence initialized to 100.
-    params[0] = (numpy.log(peaks_mef[-1]) - numpy.log(peaks_mef[-2])) / \
+    params[0] = (np.log(peaks_mef[-1]) - np.log(peaks_mef[-2])) / \
                     (peaks_ch[-1] - peaks_ch[-2])
-    params[1] = numpy.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
+    params[1] = np.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
     params[2] = 100.
 
     # Error function
     def err_fun(p, x, y):
-        return numpy.sum((numpy.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
+        return np.sum((np.log(y + p[2]) - ( p[0] * x + p[1] ))**2)
         
     # Bead model function
     def fit_fun(p,x):
-        return numpy.exp(p[0] * x + p[1]) - p[2]
+        return np.exp(p[0] * x + p[1]) - p[2]
 
     # Channel-to-MEF standard curve transformation function
     def sc_fun(p,x):
-        return numpy.exp(p[0] * x + p[1])
+        return np.exp(p[0] * x + p[1])
     
     # Fit parameters
     err_par = lambda p: err_fun(p, peaks_ch, peaks_mef)
@@ -437,8 +437,10 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
-    find_peaks_method = 'median',
-    verbose = False, plot = False, plot_dir = None, full = False):
+    find_peaks_method = 'median', find_peaks_params = {},
+    select_peaks_method = 'proximity', select_peaks_params = {},
+    verbose = False, plot = False, plot_dir = None, plot_filename = None,
+    full = False):
     '''Generate a function that transforms channel data into MEF data.
 
     This is performed using flow cytometry beads data, contained in the 
@@ -464,27 +466,33 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     Arguments:
     
-    data_beads        - an NxD numpy array or FCSData object.
-    peaks_mef         - a numpy array with the P known MEF values of the beads.
-                         If mef_channels is an iterable of lenght C, peaks mef
-                         should be a CxP array, where P is the number of MEF
-                         peaks.
-    mef_channels      - channel name, or iterable with channel names, on which
-                         to generate MEF transformation functions.
-    cluster_method    - method used for peak clustering.
-    cluster_params    - parameters to pass to the clustering method.
-    cluster_channels  - channels used for clustering.
-    find_peaks_method - Method used to find the peak value.
-    verbose           - whether to print information about step completion,
-                         warnings and errors.
-    plot              - If True, produce diagnostic plots.
-    plot_dir          - Directory where to save diagnostics plots. Ignored if 
-                         plot is False.
-    full              - Whether to include intermediate results in the output.
-                         If full is True, the function returns a named tuple
-                         with fields as described below. If full is False, the
-                         function only returns the calculated transformation
-                         function.
+    data_beads          - an NxD numpy array or FCSData object.
+    peaks_mef           - a numpy array with the P known MEF values of the
+                          beads. If mef_channels is an iterable of lenght C,
+                          peaks mef should be a CxP array, where P is the
+                          number of MEF peaks.
+    mef_channels        - channel name, or iterable with channel names, on
+                          which to generate MEF transformation functions.
+    cluster_method      - method used for peak clustering.
+    cluster_params      - parameters to pass to the clustering method.
+    cluster_channels    - channels used for clustering.
+    find_peaks_method   - Method used to find the peak value.
+    find_peaks_params   - parameters to pass to the peak finding method.
+    select_peaks_method - Method to use for peak selection
+    select_peaks_params - Parameters to pass to the peak selection method.
+    verbose             - whether to print information about step completion,
+                          warnings and errors.
+    plot                - If True, produce diagnostic plots.
+    plot_dir            - Directory where to save diagnostics plots. Ignored
+                          if plot is False. If plot = True and plot_dir = None,
+                          plot without saving.
+    plot_filename       - Name to use for plot files. If None, use the filename
+                          of the FCSData file provided.
+    full                - Whether to include intermediate results in the
+                          output. If full is True, the function returns a named
+                          tuple with fields as described below. If full is
+                          False, the function only returns the calculated
+                          transformation function.
 
     Returns: 
 
@@ -500,15 +508,16 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     '''
     if verbose:
-        prev_precision = numpy.get_printoptions()['precision']
-        numpy.set_printoptions(precision=2)
+        prev_precision = np.get_printoptions()['precision']
+        np.set_printoptions(precision=2)
     # Create directory if plot is True
-    if plot:
+    if plot and plot_dir is not None:
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
 
-    # Extract beads file name
-    data_file_name = str(data_beads)
+    # Default plot filename
+    if plot_filename is None:
+        plot_filename = str(data_beads)
 
     # 1. Cluster
     # ===========
@@ -525,52 +534,60 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         raise ValueError("Clustering method {} not recognized."
             .format(cluster_method))
 
-    labels_all = numpy.array(list(set(labels)))
+    labels_all = np.array(list(set(labels)))
     n_clusters = len(labels_all)
     data_clustered = [data_beads[labels == i] for i in labels_all]
 
     # Print information
     if verbose:
-        print "- STEP 1. CLUSTERING."
-        print "Number of clusters found: {}".format(n_clusters)
+        print("- STEP 1. CLUSTERING.")
+        print("Number of clusters found: {}".format(n_clusters))
         # Calculate percentage of each cluster
-        data_count = numpy.array([di.shape[0] for di in data_clustered])
+        data_count = np.array([di.shape[0] for di in data_clustered])
         data_perc = data_count*100.0/data_count.sum()
-        print "Percentage of samples in each cluster:"
-        print data_perc
+        print("Percentage of samples in each cluster:")
+        print(data_perc)
     # Plot
     if plot:
         # Sort
-        cluster_dist = [numpy.sum((numpy.mean(di[:,cluster_channels], 
+        cluster_dist = [np.sum((np.mean(di[:,cluster_channels], 
                 axis = 0))**2) for di in data_clustered]
-        cluster_sorted_ind = numpy.argsort(cluster_dist)
+        cluster_sorted_ind = np.argsort(cluster_dist)
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
         if len(cluster_channels) == 2:
+            if plot_dir is not None:
+                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
+            else:
+                savefig = None
             # Plot
-            pyplot.figure(figsize = (6,4))
+            plt.figure(figsize = (6,4))
             fc.plot.scatter2d(data_plot, 
-                    channels = cluster_channels, 
-                    savefig = '{}/cluster_{}.png'.format(plot_dir,
-                                                    data_file_name))
-            pyplot.close()
+                    channels = cluster_channels,
+                    savefig = savefig)
+            if plot_dir is not None:
+                plt.close()
             
         if len(cluster_channels) == 3:
+            if plot_dir is not None:
+                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
+            else:
+                savefig = None
             # Plot
-            pyplot.figure(figsize = (8,6))
+            plt.figure(figsize = (8,6))
             fc.plot.scatter3d(data_plot, 
-                    channels = cluster_channels, 
-                    savefig = '{}/cluster_{}.png'.format(plot_dir,
-                                                    data_file_name))
-            pyplot.close()
+                    channels = cluster_channels,
+                    savefig = savefig)
+            if plot_dir is not None:
+                plt.close()
 
     # mef_channels and peaks_mef should be iterables.
     if hasattr(mef_channels, '__iter__'):
         mef_channel_all = list(mef_channels)
-        peaks_mef_all = numpy.array(peaks_mef).copy()
+        peaks_mef_all = np.array(peaks_mef).copy()
     else:
         mef_channel_all = [mef_channels]
-        peaks_mef_all = numpy.array([peaks_mef])
+        peaks_mef_all = np.array([peaks_mef])
 
     # Initialize lists to acumulate results
     sc_all = []
@@ -590,7 +607,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         data_channel = data_beads[:,mef_channel]
         # Print information
         if verbose: 
-            print "- MEF transformation for channel {}...".format(mef_channel)
+            print("- MEF transformation for channel {}...".format(mef_channel))
 
         # Step 2. Find peaks in each one of the clusters. 
         # ===============================================
@@ -599,16 +616,26 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         min_fl = data_channel.channel_info[0]['range'][0]
         max_fl = data_channel.channel_info[0]['range'][1]
         if find_peaks_method == 'smoothed_mode':
+            # Set default values for limit values
+            if 'min_val' not in find_peaks_params:
+                find_peaks_params['min_val'] = min_fl
+            if 'max_val' not in find_peaks_params:
+                find_peaks_params['max_val'] = max_fl
+            # Get peak values
             peaks_hists = [find_peaks_smoothed_mode(di[:,mef_channel], 
-                                min_val = min_fl, max_val = max_fl)
-                                for di in data_clustered]
-            peaks_ch = numpy.array([ph[0] for ph in peaks_hists])
+                                                        **find_peaks_params)
+                                    for di in data_clustered]
+            peaks_ch = np.array([ph[0] for ph in peaks_hists])
             hists_smooth = [ph[1] for ph in peaks_hists]
         elif find_peaks_method == 'median':
-            peaks_ch = numpy.array([find_peaks_median(di[:,mef_channel]) 
-                                for di in data_clustered])
+            peaks_ch = np.array([find_peaks_median(di[:,mef_channel],
+                                                        **find_peaks_params)
+                                    for di in data_clustered])
+        else:
+            raise ValueError("Peak finding method {} not recognized."
+                .format(find_peaks_method))
         # Sort peaks and clusters
-        ind_sorted = numpy.argsort(peaks_ch)
+        ind_sorted = np.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
         data_sorted = [data_clustered[i] for i in ind_sorted]
 
@@ -619,15 +646,16 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 peaks_hists_all.append(hists_smooth)
         # Print information
         if verbose:
-            print "- STEP 2. PEAK IDENTIFICATION."
-            print "Channel peaks identified:"
-            print peaks_sorted
+            print("- STEP 2. PEAK IDENTIFICATION.")
+            print("Channel peaks identified:")
+            print(peaks_sorted)
         # Plot
         if plot:
             # Get colors for peaks
-            colors = fc.plot.load_colormap('spectral', n_clusters)
+            colors = [fc.plot.cmap_default(i)\
+                                for i in np.linspace(0, 1, n_clusters)]
             # Plot histograms
-            pyplot.figure(figsize = (8,4))
+            plt.figure(figsize = (8,4))
             fc.plot.hist1d(data_plot, channel = mef_channel, div = 4, 
                 alpha = 0.75)
             # Plot smoothed histograms and peaks
@@ -635,38 +663,48 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 # Smoothed histogram, if applicable
                 if find_peaks_method == 'smoothed_mode':
                     h = hists_smooth[i]
-                    pyplot.plot(numpy.linspace(min_fl, max_fl, len(h)), h*4, 
+                    plt.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
                         color = c)
                 # Peak values
                 p = peaks_ch[i]
-                ylim = pyplot.ylim()
-                pyplot.plot([p, p], [ylim[0], ylim[1]], color = c)
-                pyplot.ylim(ylim)
+                ylim = plt.ylim()
+                plt.plot([p, p], [ylim[0], ylim[1]], color = c)
+                plt.ylim(ylim)
             # Save and close
-            pyplot.tight_layout()
-            pyplot.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
-                                    mef_channel, data_file_name), dpi = 300)
-            pyplot.close()
+            if plot_dir is not None:
+                plt.tight_layout()
+                plt.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
+                                    mef_channel, plot_filename), dpi = 300)
+                plt.close()
 
         # 3. Select peaks for fitting
         # ===========================
         
-        # Get the standard deviation of each peak
-        peaks_std = numpy.array([numpy.std(di[:,mef_channel]) \
-            for di in data_sorted])
-        
         # Print information
         if verbose:
-            print "Standard deviations:"
-            print peaks_std
-            print "MEF peaks provided:"
-            print peaks_mef_channel
-            print "- STEP 3. PEAK SELECTION."
+            print("- STEP 3. PEAK SELECTION.")
+            print("MEF peaks provided:")
+            print(peaks_mef_channel)
 
-        # Select peaks
-        sel_peaks_ch, sel_peaks_mef = select_peaks(peaks_sorted, 
-                peaks_mef_channel, peaks_ch_std = peaks_std,
-                peaks_ch_min = min_fl, peaks_ch_max = max_fl)
+        if select_peaks_method == 'proximity':
+            # Get the standard deviation of each peak
+            peaks_std = np.array([np.std(di[:,mef_channel]) \
+                for di in data_sorted])
+            if verbose:
+                print("Standard deviations of channel peaks:")
+                print(peaks_std)
+            # Set default limits
+            if 'peaks_ch_min' not in select_peaks_params:
+                select_peaks_params['peaks_ch_min'] = min_fl
+            if 'peaks_ch_max' not in select_peaks_params:
+                select_peaks_params['peaks_ch_max'] = max_fl
+            # Select peaks
+            sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(peaks_sorted,
+                    peaks_mef_channel, peaks_ch_std = peaks_std,
+                    **select_peaks_params)
+        else:
+            raise ValueError("Peak selection method {} not recognized."
+                .format(select_peaks_method))
 
         # Accumulate results
         if full:
@@ -674,20 +712,20 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             sel_peaks_mef_all.append(sel_peaks_mef)
         # Print information
         if verbose:
-            print "{} peaks retained.".format(len(sel_peaks_ch))
-            print "Selected channel peaks:"
-            print sel_peaks_ch
-            print "Selected MEF peaks:"
-            print sel_peaks_mef
+            print("{} peaks retained.".format(len(sel_peaks_ch)))
+            print("Selected channel peaks:")
+            print(sel_peaks_ch)
+            print("Selected MEF peaks:")
+            print(sel_peaks_mef)
 
         # 4. Get standard curve
         # ======================
         sc, sc_beads, sc_params = fit_standard_curve(sel_peaks_ch, 
             sel_peaks_mef)
         if verbose:
-            print "- STEP 4. STANDARDS CURVE FITTING."
-            print "Fitted parameters:"
-            print sc_params
+            print("- STEP 4. STANDARDS CURVE FITTING.")
+            print("Fitted parameters:")
+            print(sc_params)
 
         sc_all.append(sc)
         if full:
@@ -700,19 +738,25 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             channel_name = data_channel.channel_info[0]['label']
             channel_gain = data_channel.channel_info[0]['pmt_voltage']
             xlabel = '{} (gain = {})'.format(channel_name, channel_gain)
+            # Compute filename to save
+            if plot_dir is not None:
+                savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
+                                                        mef_channel,
+                                                        plot_filename,
+                                                        )
+            else:
+                savefig = None
             # Plot standard curve
-            pyplot.figure(figsize = (6,4))
+            plt.figure(figsize = (6,4))
             fc.plot.mef_std_crv(sel_peaks_ch, 
                     sel_peaks_mef,
                     sc_beads,
                     sc,
                     xlabel = xlabel,
                     ylabel = 'MEF',
-                    savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
-                                                            mef_channel,
-                                                            data_file_name, 
-                                                            ))
-            pyplot.close()
+                    savefig = savefig)
+            if plot_dir is not None:
+                plt.close()
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
@@ -720,7 +764,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                                     sc_channels = mef_channel_all)
 
     if verbose:
-        numpy.set_printoptions(precision = prev_precision)
+        np.set_printoptions(precision = prev_precision)
 
     if full:
         # Clustering results
