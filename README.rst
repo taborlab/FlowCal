@@ -20,6 +20,7 @@ Python 2.7 is required. The following Python packages should also be present:
 * ``numpy`` (1.9.2)
 * ``scipy`` (0.15.1)
 * ``matplotlib`` (1.4.3)
+* ``palettable`` (2.1.1)
 * ``scikit-learn`` (0.16.1)
 * ``xlrd`` (0.9.3)
 * ``openpyxl`` (2.0.2)
