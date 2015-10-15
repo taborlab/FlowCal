@@ -3,22 +3,20 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
+#         John T. Sexton (john.t.sexton@rice.edu)
+# Date: 10/15/2015
 #
 # Requires:
 #   * numpy
 #   * matplotlib
 #   * scipy
 
-import os
-import csv
-
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
+import pandas as pd
 
 # Use default colors from palettable if available
 try:
@@ -27,7 +25,7 @@ except ImportError, e:
     cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
-    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
+    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer \
         .qualitative.Paired_12.mpl_colors[1::2]
 
 matplotlib.rcParams['savefig.dpi'] = 250
@@ -160,25 +158,25 @@ def hist1d(data_list,
         plt.savefig(savefig)
         plt.close()
 
-def density2d(data, 
-            channels = [0,1],
-            log = False, 
-            div = 1, 
-            bins = None, 
-            smooth = True,
-            sigma = 10.0,
-            mode = 'mesh',
-            colorbar = False,
-            normed = False,
-            xlabel = None,
-            ylabel = None,
-            title = None,
-            savefig = None,
-            **kwargs):
-    '''Plot 2D density plot
+def density2d(data,
+              columns = [0,1],
+              log = False,
+              div = 1,
+              bins = None,
+              smooth = True,
+              sigma = 10.0,
+              mode = 'mesh',
+              colorbar = False,
+              normed = False,
+              xlabel = None,
+              ylabel = None,
+              title = None,
+              savefig = None,
+              **kwargs):
+    '''Plot 2D density plot.
 
     data        - a NxD FCSData object.
-    channels    - channels to use in the density plot.
+    columns     - columns to use in the density plot.
     log         - whether the x axis should be in log units.
     div         - number to divide the default number of bins. Ignored if bins 
                    argument is not None.
@@ -196,9 +194,13 @@ def density2d(data,
     kwargs      - passed directly to matplotlib's scatter or pcolormesh.
     '''
 
-    # Extract channels to plot
-    assert len(channels) == 2, 'Two channels need to be specified.'
-    data_plot = data[:, channels]
+    # Extract columns to plot
+    if len(columns) != 2:
+        raise ValueError('two columns must be specified')
+    if isinstance(data, pd.DataFrame):
+        data_plot = data.ix[:,columns].as_matrix()
+    else:
+        data_plot = data[:,columns]
 
     # If bins are not specified, get bins from FCSData object
     if bins is None and hasattr(data_plot, 'channel_info'):
@@ -221,16 +223,23 @@ def density2d(data,
         kwargs['cmap'] = cmap_default
 
     # Calculate histogram
-    H, xedges, yedges = np.histogram2d(data_plot[:,0],
-                                        data_plot[:,1],
-                                        bins = bins)
-    # H needs to be rotated and flipped
-    H = np.rot90(H)
-    H = np.flipud(H)
+    if bins is None:
+        H, xedges, yedges = np.histogram2d(data_plot[:,0], data_plot[:,1])
+    else:
+        H, xedges, yedges = np.histogram2d(data_plot[:,0],
+                                           data_plot[:,1],
+                                           bins=bins)
+
+    # numpy histograms are organized such that the 1st dimension (eg. FSC) =
+    # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
+    # Visualized as is, this results in x-axis = SSC and y-axis = FSC, which
+    # is not what we're used to. Transpose the histogram array to fix the
+    # axes.
+    H = H.T
 
     # Normalize
     if normed:
-        H = H/np.sum(H)
+        H = H / np.sum(H)
 
     # Smooth    
     if smooth:
@@ -241,7 +250,7 @@ def density2d(data,
             mode='constant',
             cval=0.0)
     else:
-        bH = H
+        bH = None
 
     # Plotting mode
     if mode == 'scatter':
@@ -249,12 +258,12 @@ def density2d(data,
         xv, yv = np.meshgrid(xedges[:-1], yedges[:-1])
         x = np.ravel(xv)[Hind != 0]
         y = np.ravel(yv)[Hind != 0]
-        z = np.ravel(bH)[Hind != 0]
+        z = np.ravel(H if bH is None else bH)[Hind != 0]
         plt.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
-        plt.pcolormesh(xedges, yedges, bH, **kwargs)
+        plt.pcolormesh(xedges, yedges, H if bH is None else bH, **kwargs)
     else:
-        raise ValueError("Mode {} not recognized.".format(mode))
+        raise ValueError("Mode {} not recognized".format(mode))
 
     # Plot
     if colorbar:
@@ -280,15 +289,17 @@ def density2d(data,
         a[2] = np.ceil(yedges[0])
         a[3] = np.ceil(yedges[-1])
         plt.axis(a)
-    # plt.grid(True)
+
     if xlabel:
         plt.xlabel(xlabel)
-    else:
+    elif hasattr(data_plot, 'channel_info'):
         plt.xlabel(data_plot.channel_info[0]['label'])
+
     if ylabel:
         plt.ylabel(ylabel)
-    else:
+    elif hasattr(data_plot, 'channel_info'):
         plt.ylabel(data_plot.channel_info[1]['label'])
+
     if title:
         plt.title(title)
 
