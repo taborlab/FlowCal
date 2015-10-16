@@ -3,7 +3,8 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
+#         John T. Sexton (john.t.sexton@rice.edu)
+# Date: 10/16/2015
 #
 # Requires:
 #   * numpy
@@ -27,7 +28,7 @@ except ImportError, e:
     cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
-    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
+    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer \
         .qualitative.Paired_12.mpl_colors[1::2]
 
 matplotlib.rcParams['savefig.dpi'] = 250
@@ -42,29 +43,28 @@ matplotlib.rcParams['savefig.dpi'] = 250
 ##############################################################################
 
 def hist1d(data_list,
-           channel = 0,
-           log = False,
-           div = 1,
-           bins = None,
-           legend = False,
-           legend_loc = 'best',
-           legend_fontsize = 'medium',
-           xlabel = None,
-           ylabel = None,
-           xlim = None,
-           ylim = None,
-           title = None,
-           histtype = 'stepfilled',
-           savefig = None,
+           channel=0,
+           log=False,
+           div=1,
+           bins=None,
+           legend=False,
+           legend_loc='best',
+           legend_fontsize='medium',
+           xlabel=None,
+           ylabel=None,
+           xlim=None,
+           ylim=None,
+           title=None,
+           histtype='stepfilled',
+           savefig=None,
            **kwargs):
-
-    '''Plot 1D histogram of a list of data objects
+    '''Plot 1D histogram of a list of data objects.
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channel    - channel to use on the data objects.
     log        - whether the x axis should be in log units.
     div        - number to divide the default number of bins. Ignored if bins 
-                argument is not None.
+                 argument is not None.
     bins       - bins argument to plt.hist.
     legend     - whether to include a legend.
     legend_loc - location of the legend to include.
@@ -75,10 +75,10 @@ def hist1d(data_list,
     title      - Title for the plot
     histtype   - histogram type
     savefig    - if not None, it specifies the name of the file to save the 
-                figure to.
+                 figure to.
     **kwargs   - passed directly to matploblib's hist. 'edgecolor', 
-                'facecolor', 'linestyle', and 'label' can be specified as a 
-                lists, with an element for each data object.
+                 'facecolor', 'linestyle', and 'label' can be specified as a 
+                 lists, with an element for each data object.
     '''    
 
     # Convert to list if necessary
@@ -160,28 +160,28 @@ def hist1d(data_list,
         plt.savefig(savefig)
         plt.close()
 
-def density2d(data, 
-            channels = [0,1],
-            log = False, 
-            div = 1, 
-            bins = None, 
-            smooth = True,
-            sigma = 10.0,
-            mode = 'mesh',
-            colorbar = False,
-            normed = False,
-            xlabel = None,
-            ylabel = None,
-            title = None,
-            savefig = None,
-            **kwargs):
-    '''Plot 2D density plot
+def density2d(data,
+              channels=[0,1],
+              log=False,
+              div=1,
+              bins=None,
+              smooth=True,
+              sigma=10.0,
+              mode='mesh',
+              colorbar=False,
+              normed=False,
+              xlabel=None,
+              ylabel=None,
+              title=None,
+              savefig=None,
+              **kwargs):
+    '''Plot 2D density plot.
 
     data        - a NxD FCSData object.
     channels    - channels to use in the density plot.
     log         - whether the x axis should be in log units.
-    div         - number to divide the default number of bins. Ignored if bins 
-                   argument is not None.
+    div         - number to divide the default number of bins. Ignored if bins
+                  argument is not None.
     bins        - bins to use for numpy.histogram2d.
     smooth      - Whether to apply gaussian smoothing to the histogram
     sigma       - Sigma parameter used for the gaussian smoothing.
@@ -192,12 +192,13 @@ def density2d(data,
     ylabel      - Label to use on the y axis
     title       - Title for the plot.
     savefig     - if not None, it specifies the name of the file to save the 
-                   figure to.
+                  figure to.
     kwargs      - passed directly to matplotlib's scatter or pcolormesh.
     '''
 
     # Extract channels to plot
-    assert len(channels) == 2, 'Two channels need to be specified.'
+    if len(channels) != 2:
+        raise ValueError("two channels must be specified")
     data_plot = data[:, channels]
 
     # If bins are not specified, get bins from FCSData object
@@ -230,7 +231,7 @@ def density2d(data,
 
     # Normalize
     if normed:
-        H = H/np.sum(H)
+        H = H / np.sum(H)
 
     # Smooth    
     if smooth:
@@ -254,7 +255,7 @@ def density2d(data,
     elif mode == 'mesh':
         plt.pcolormesh(xedges, yedges, bH, **kwargs)
     else:
-        raise ValueError("Mode {} not recognized.".format(mode))
+        raise ValueError("Mode {} not recognized".format(mode))
 
     # Plot
     if colorbar:
@@ -280,7 +281,7 @@ def density2d(data,
         a[2] = np.ceil(yedges[0])
         a[3] = np.ceil(yedges[-1])
         plt.axis(a)
-    # plt.grid(True)
+
     if xlabel:
         plt.xlabel(xlabel)
     else:
@@ -298,12 +299,8 @@ def density2d(data,
         plt.savefig(savefig)
         plt.close()
 
-def scatter2d(data_list, 
-                channels = [0,1],
-                savefig = None,
-                **kwargs):
-
-    '''Plot a 2D scatter plot of a list of data objects
+def scatter2d(data_list, channels=[0,1], savefig=None, **kwargs):
+    '''Plot a 2D scatter plot of a list of data object.
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channels   - channels to use on the data objects.
@@ -314,7 +311,8 @@ def scatter2d(data_list,
     '''    
 
     # Check appropriate number of channels
-    assert len(channels) == 2, 'Two channels need to be specified.'
+    if len(channels) != 2:
+        raise ValueError("two channels must be specified")
 
     # Convert to list if necessary
     if not isinstance(data_list, list):
@@ -355,12 +353,8 @@ def scatter2d(data_list,
         plt.close()
 
 
-def scatter3d(data_list, 
-                channels = [0,1,2],
-                savefig = None,
-                **kwargs):
-
-    '''Plot a 3D scatter plot and projections of a list of data objects
+def scatter3d(data_list, channels=[0,1,2], savefig=None, **kwargs):
+    '''Plot a 3D scatter plot and projections of a list of data objects.
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channels   - channels to use on the data objects.
@@ -371,7 +365,8 @@ def scatter3d(data_list,
     '''    
 
     # Check appropriate number of channels
-    assert len(channels) == 3, 'Three channels need to be specified.'
+    if len(channels) != 3:
+        raise ValueError("three channels must be specified")
 
     # Convert to list if necessary
     if not isinstance(data_list, list):
@@ -449,15 +444,15 @@ def scatter3d(data_list,
         plt.savefig(savefig)
         plt.close()
 
-def mef_std_crv(peaks_ch, 
+def mef_std_crv(peaks_ch,
                 peaks_mef,
                 sc_beads,
                 sc_abs,
-                xlim = (0., 1023.),
-                ylim = (1, 1e8),
-                xlabel = None,
-                ylabel = None,
-                savefig = None,
+                xlim=(0.,1023.),
+                ylim=(1,1e8),
+                xlabel=None,
+                ylabel=None,
+                savefig=None,
                 **kwargs):
     '''Plot the standard curves of a beads model.
 
@@ -500,23 +495,23 @@ def mef_std_crv(peaks_ch,
         plt.savefig(savefig)
         plt.close()
 
-def bar(data, 
+def bar(data,
         labels,
-        data_error = None,
-        n_in_group = 1, 
-        labels_in_group = [],
-        legend_loc = 'best',
-        legend_fontsize = 'medium',
-        colors = None,
-        bar_width = 0.75, 
-        label_rotation = 0, 
-        val_labels = True, 
-        val_labels_fontsize = 'small',
-        ylim = None,
-        ylabel = None,
-        savefig = None,
+        data_error=None,
+        n_in_group=1,
+        labels_in_group=[],
+        legend_loc='best',
+        legend_fontsize='medium',
+        colors=None,
+        bar_width=0.75,
+        label_rotation=0,
+        val_labels=True,
+        val_labels_fontsize='small',
+        ylim=None,
+        ylabel=None,
+        savefig=None,
         **kwargs):
-    ''' Draw a barplot.
+    '''Draw a barplot.
 
     Individual bars can be grouped by specifying a number greater than one in
     n_in_group. Each group of n_in_group bars will share the same label and 
@@ -620,15 +615,14 @@ def bar(data,
 ##############################################################################
 
 def density_and_hist(data,
-                    gated_data = None,
-                    gate_contour = None,
-                    density_channels = None,
-                    density_params = {},
-                    hist_channels = None,
-                    hist_params = {},
-                    figsize = None,
-                    savefig = None,
-                    ):
+                     gated_data=None,
+                     gate_contour=None,
+                     density_channels=None,
+                     density_params={},
+                     hist_channels=None,
+                     hist_params={},
+                     figsize=None,
+                     savefig=None):
     '''Makes a combined density/histograms plot of a FCSData object.
 
     This function calls hist1d and density2d to plot a density diagram and a 
@@ -662,8 +656,8 @@ def density_and_hist(data,
 
     # Check number of plots
     if density_channels is None and hist_channels is None:
-        raise ValueError("density_channels and hist_channels cannot be both \
-            None.")
+        raise ValueError("density_channels and hist_channels cannot be both"
+            + " None.")
     # Change hist_channels to iterable if necessary
     if not hasattr(hist_channels, "__iter__"):
         hist_channels = [hist_channels]
@@ -729,14 +723,13 @@ def density_and_hist(data,
 
 
 def hist_and_bar(data_list,
-                channel,
-                labels,
-                bar_stats_func = np.mean,
-                hist_params = {},
-                bar_params = {},
-                figsize = None,
-                savefig = None,
-                ):
+                 channel,
+                 labels,
+                 bar_stats_func=np.mean,
+                 hist_params={},
+                 bar_params={},
+                 figsize=None,
+                 savefig=None):
     '''Makes a combined histogram/bar plot of a set of FCSData objects.
 
     This function calls hist1d and bar to plot a histogram and a bar plot of
@@ -777,8 +770,9 @@ def hist_and_bar(data_list,
         n_in_group = 1
 
     # Check appropriate length of labels array
-    assert len(data_list)/n_in_group == len(labels), \
-        "len(labels) should be the same as len(data_list)/n_in_group."
+    if len(data_list) / n_in_group != len(labels):
+        raise ValueError("len(labels) should be the same as"
+            + " len(data_list)/n_in_group")
 
     # Calculate plot size if necessary
     if figsize is None:
