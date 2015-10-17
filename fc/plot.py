@@ -3,7 +3,8 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
+#         John T. Sexton (john.t.sexton@rice.edu)
+# Date: 10/16/2015
 #
 # Requires:
 #   * numpy
@@ -224,9 +225,13 @@ def density2d(data,
     H, xedges, yedges = np.histogram2d(data_plot[:,0],
                                         data_plot[:,1],
                                         bins = bins)
-    # H needs to be rotated and flipped
-    H = np.rot90(H)
-    H = np.flipud(H)
+
+    # numpy histograms are organized such that the 1st dimension (eg. FSC) =
+    # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
+    # Visualized as is, this results in x-axis = SSC and y-axis = FSC, which
+    # is not what we're used to. Transpose the histogram array to fix the
+    # axes.
+    H = H.T
 
     # Normalize
     if normed:
