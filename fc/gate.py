@@ -16,7 +16,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/6/2015
+# Date: 10/17/2015
 #
 # Requires:
 #   * numpy
@@ -55,9 +55,10 @@ def high_low(data, channels = None, high = None, low = None):
 
     data     - NxD FCSData object or numpy array
     channels - channels on which to perform gating
-    high     - high value to discard
-    low      - low value to discard
-
+    high     - high value to discard (default = np.Inf if unable to extract
+               from input data)
+    low      - low value to discard (default = -np.Inf if unable to extract
+               from input data)
     returns  - Gated MxD FCSData object or numpy array'''
     
     # Extract channels in which to gate
@@ -69,14 +70,20 @@ def high_low(data, channels = None, high = None, low = None):
             data_ch = data_ch.reshape((-1,1))
 
     # Default values for high and low
-    if high is None and hasattr(data_ch, 'channel_info'):
-        high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1]\
+    if high is None:
+        if hasattr(data_ch, 'channel_info'):
+            high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1] 
                     for channel in data_ch.channels]
-        high = np.array(high)
-    if low is None and hasattr(data_ch, 'channel_info'):
-        low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]\
-                    for channel in data_ch.channels]
-        low = np.array(low)
+            high = np.array(high)
+        else:
+            high = np.Inf
+    if low is None:
+        if hasattr(data_ch, 'channel_info'):
+            low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]
+                   for channel in data_ch.channels]
+            low = np.array(low)
+        else:
+            low = -np.Inf
 
     # Gate
     mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
