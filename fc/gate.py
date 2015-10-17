@@ -51,7 +51,7 @@ def start_end(data, num_start = 250, num_end = 100, mask=False):
     else:
         return data[m]
 
-def high_low(data, channels = None, high = None, low = None):
+def high_low(data, channels = None, high = None, low = None, mask=False):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
@@ -61,8 +61,10 @@ def high_low(data, channels = None, high = None, low = None):
     channels - channels on which to perform gating
     high     - high value to discard
     low      - low value to discard
+    mask     - Boolean flag to return Boolean mask array instead of data
 
-    returns  - Gated MxD FCSData object or numpy array'''
+    returns  - gated data or Boolean mask array
+    '''
     
     # Extract channels in which to gate
     if channels is None:
@@ -83,10 +85,12 @@ def high_low(data, channels = None, high = None, low = None):
         low = np.array(low)
 
     # Gate
-    mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
-    gated_data = data[mask]
+    m = np.all((data_ch < high) & (data_ch > low), axis = 1)
 
-    return gated_data
+    if mask:
+        return m
+    else:
+        return data_ch[m]
 
 def ellipse(data, channels, center, a, b, theta = 0, log = False):
     '''Gate that preserves events inside an ellipse-shaped region.
