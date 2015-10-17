@@ -16,7 +16,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/6/2015
+# Date: 10/17/2015
 #
 # Requires:
 #   * numpy
@@ -27,25 +27,29 @@ import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
     
-def start_end(data, num_start = 250, num_end = 100):
+def start_end(data, num_start = 250, num_end = 100, mask=False):
     '''Gate out num_start first and num_end last events collected.
 
     data      - NxD FCSData object or numpy array
     num_start - number of points to discard from the beginning of data
     num_end   - number of points to discard from the end of data
+    mask      - Boolean flag to return Boolean mask array instead of data
 
-    returns  - Gated MxD FCSData object or numpy array'''
+    returns   - gated data or Boolean mask array
+    '''
     
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
             ' number.')
     
-    mask = np.ones(shape=data.shape[0],dtype=bool)
-    mask[:num_start] = False
-    mask[-num_end:] = False
-    gated_data = data[mask]
+    m = np.ones(shape=data.shape[0],dtype=bool)
+    m[:num_start] = False
+    m[-num_end:] = False
     
-    return gated_data
+    if mask:
+        return m
+    else:
+        return data[m]
 
 def high_low(data, channels = None, high = None, low = None):
     '''Gate out high and low values across all specified dimensions.
