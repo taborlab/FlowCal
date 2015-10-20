@@ -195,7 +195,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         Hi[xi, yi].append(i)
 
     # Blur 2D histogram
-    bH = scipy.ndimage.filters.gaussian_filter(
+    sH = scipy.ndimage.filters.gaussian_filter(
         H,
         sigma=sigma,
         order=0,
@@ -204,7 +204,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    D = bH / np.sum(bH)
+    D = sH / np.sum(sH)
 
     # Sort each (x,y) point by density
     vD = D.ravel()
