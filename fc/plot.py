@@ -4,15 +4,12 @@
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
 #         John T. Sexton (john.t.sexton@rice.edu)
-# Date: 10/16/2015
+# Date: 10/19/2015
 #
 # Requires:
 #   * numpy
 #   * matplotlib
 #   * scipy
-
-import os
-import csv
 
 import numpy as np
 import scipy.ndimage.filters
