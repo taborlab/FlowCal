@@ -236,14 +236,14 @@ def density2d(data,
 
     # Smooth    
     if smooth:
-        bH = scipy.ndimage.filters.gaussian_filter(
+        sH = scipy.ndimage.filters.gaussian_filter(
             H,
             sigma=sigma,
             order=0,
             mode='constant',
             cval=0.0)
     else:
-        bH = H
+        sH = None
 
     # Plotting mode
     if mode == 'scatter':
@@ -251,10 +251,10 @@ def density2d(data,
         xv, yv = np.meshgrid(xedges[:-1], yedges[:-1])
         x = np.ravel(xv)[Hind != 0]
         y = np.ravel(yv)[Hind != 0]
-        z = np.ravel(bH)[Hind != 0]
+        z = np.ravel(H if sH is None else sH)[Hind != 0]
         plt.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
-        plt.pcolormesh(xedges, yedges, bH, **kwargs)
+        plt.pcolormesh(xedges, yedges, H if sH is None else sH, **kwargs)
     else:
         raise ValueError("Mode {} not recognized.".format(mode))
 
