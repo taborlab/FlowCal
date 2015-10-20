@@ -3,15 +3,12 @@
 # plot.py - Module containing plotting functions for flow cytometry data sets.
 #
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
+# Date: 10/19/2015
 #
 # Requires:
 #   * numpy
 #   * matplotlib
 #   * scipy
-
-import os
-import csv
 
 import numpy as np
 import scipy.ndimage.filters
