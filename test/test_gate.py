@@ -116,6 +116,12 @@ class TestHighLowGate(unittest.TestCase):
             fc.gate.high_low(self.d2, channels = 0, high=10, low=1),
             self.d2[np.array([0,1,1,1,1,1,1,1,1,0], dtype=bool)]
             )
+
+    def test_high_low_2d_6(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(self.d2, channels = 0),
+            self.d2[np.array([1,1,1,1,1,1,1,1,1,1], dtype=bool)]
+            )
         
 class TestDensity2dGating(unittest.TestCase):
     
