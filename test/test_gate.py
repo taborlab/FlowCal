@@ -117,6 +117,28 @@ class TestHighLowGate(unittest.TestCase):
             self.d2[np.array([0,1,1,1,1,1,1,1,1,0], dtype=bool)]
             )
         
+class TestDensity2dGating(unittest.TestCase):
+    
+    def setUp(self):
+        '''
+        Testing proper result of density gating.
+
+        This function applied the density2d gate to Data003.fcs with a gating
+        fraction of 0.3. The result is compared to the (previously calculated)
+        output of gate.density2d at d23ec66f9039bbe104ff05ede0e3600b9a550078
+        using the following command:
+        fc.gate.density2d(fc.io.FCSData('Data003.fcs'),
+                          channels = ['FSC', 'SSC'],
+                          gate_fraction = 0.3)[0]
+        '''
+        self.ungated_data = fc.io.FCSData('test/Data003.fcs')
+        self.gated_data = np.load('test/Data003_gate_density2d.npy')
+
+    def test_density2d(self):
+        gated_data = fc.gate.density2d(self.ungated_data,
+                                       channels = ['FSC', 'SSC'],
+                                       gate_fraction = 0.3)[0]
+        np.testing.assert_array_equal(gated_data, self.gated_data)
 
 if __name__ == '__main__':
     unittest.main()
