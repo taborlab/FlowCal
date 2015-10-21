@@ -59,8 +59,10 @@ def high_low(data, channels = None, high = None, low = None, mask=False):
 
     data     - NxD FCSData object or numpy array
     channels - channels on which to perform gating
-    high     - high value to discard
-    low      - low value to discard
+    high     - high value to discard (default = np.Inf if unable to extract
+               from input data)
+    low      - low value to discard (default = -np.Inf if unable to extract
+               from input data)
     mask     - Boolean flag to return Boolean mask array instead of data
 
     returns  - gated data or Boolean mask array
@@ -75,14 +77,20 @@ def high_low(data, channels = None, high = None, low = None, mask=False):
             data_ch = data_ch.reshape((-1,1))
 
     # Default values for high and low
-    if high is None and hasattr(data_ch, 'channel_info'):
-        high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1]\
+    if high is None:
+        if hasattr(data_ch, 'channel_info'):
+            high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1] 
                     for channel in data_ch.channels]
-        high = np.array(high)
-    if low is None and hasattr(data_ch, 'channel_info'):
-        low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]\
-                    for channel in data_ch.channels]
-        low = np.array(low)
+            high = np.array(high)
+        else:
+            high = np.Inf
+    if low is None:
+        if hasattr(data_ch, 'channel_info'):
+            low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]
+                   for channel in data_ch.channels]
+            low = np.array(low)
+        else:
+            low = -np.Inf
 
     # Gate
     m = np.all((data_ch < high) & (data_ch > low), axis = 1)
@@ -196,7 +204,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         Hi[xi, yi].append(i)
 
     # Blur 2D histogram
-    bH = scipy.ndimage.filters.gaussian_filter(
+    sH = scipy.ndimage.filters.gaussian_filter(
         H,
         sigma=sigma,
         order=0,
@@ -205,7 +213,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
         truncate=6.0)
 
     # Normalize filtered histogram to make it a valid probability mass function
-    D = bH / np.sum(bH)
+    D = sH / np.sum(sH)
 
     # Sort each (x,y) point by density
     vD = D.ravel()
