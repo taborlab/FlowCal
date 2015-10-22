@@ -16,7 +16,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 10/17/2015
+# Date: 10/22/2015
 #
 # Requires:
 #   * numpy
@@ -98,7 +98,7 @@ def high_low(data, channels = None, high = None, low = None, mask=False):
     if mask:
         return m
     else:
-        return data_ch[m]
+        return data[m]
 
 def ellipse(data, channels, center, a, b, theta = 0, log = False):
     '''Gate that preserves events inside an ellipse-shaped region.
