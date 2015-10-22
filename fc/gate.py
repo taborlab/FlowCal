@@ -159,7 +159,7 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False, mask=False):
         return data_gated, cntr
 
 def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
-    sigma = 10.0):
+    sigma = 10.0, mask=False):
     '''Gate that preserves the points in the region with highest density.
 
     First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
@@ -172,10 +172,11 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     bins            - bins argument to numpy.histogram2d. Autogenerate if None.
     gate_fraction   - fraction of data points to keep
     sigma           - standard deviation for Gaussian kernel
+    mask            - Boolean flag to return Boolean mask array instead of
+                      data
 
-    returns         - Gated MxD FCSData object or numpy array, 
-                    - list of 2D numpy arrays of (x,y) coordinates of gate 
-                        contour(s)
+    returns         - (gated data and list of 2D numpy arrays of (x,y)
+                      coordinates of gate contour(s)) or Boolean mask array
     '''
 
     # Extract channels in which to gate
@@ -235,10 +236,10 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
 
     # Get indices of events to keep
     vHi = Hi.ravel()
-    mask = vHi[sidx[:(Nidx+1)]]
-    mask = np.array([item for sublist in mask for item in sublist])
-    mask = np.sort(mask)
-    gated_data = data[mask]
+    m = vHi[sidx[:(Nidx+1)]]
+    m = np.array([item for sublist in m for item in sublist])
+    m = np.sort(m)
+    gated_data = data[m]
 
     # Use matplotlib contour plotter (implemented in C) to generate contour(s)
     # at the probability associated with the last accepted point.
@@ -263,4 +264,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
 
         cntr.append(vertices)
 
-    return gated_data, cntr
+    if mask:
+        return m
+    else:
+        return gated_data, cntr
