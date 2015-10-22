@@ -117,6 +117,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False, mask=False):
     b           - Minor axis of the ellipse
     theta       - Angle of the ellipse
     log         - If True, apply log10 to the event list before gating.
+    mask        - Boolean flag to return Boolean mask array instead of data
+
+    returns     - (gated data and list of 2D numpy arrays of (x,y)
+                  coordinates of gate contour(s)) or Boolean mask array
     '''
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
