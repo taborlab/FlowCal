@@ -100,7 +100,7 @@ def high_low(data, channels = None, high = None, low = None, mask=False):
     else:
         return data[m]
 
-def ellipse(data, channels, center, a, b, theta = 0, log = False):
+def ellipse(data, channels, center, a, b, theta = 0, log = False, mask=False):
     '''Gate that preserves events inside an ellipse-shaped region.
 
     Events are kept if they satisfy the following relationship:
@@ -136,10 +136,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     data_rotated = np.dot(data_centered, R.T)
 
     # Generate mask
-    mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
+    m = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
 
     # Gate
-    data_gated = data[mask]
+    data_gated = data[m]
 
     # Calculate contour
     t = np.linspace(0,1,100)*2*np.pi
@@ -149,7 +149,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
         ci = 10**ci
     cntr = [ci]
 
-    return data_gated, cntr
+    if mask:
+        return m
+    else:
+        return data_gated, cntr
 
 def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     sigma = 10.0):
