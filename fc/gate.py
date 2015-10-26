@@ -16,7 +16,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 10/17/2015
+# Date: 10/22/2015
 #
 # Requires:
 #   * numpy
@@ -27,27 +27,31 @@ import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
     
-def start_end(data, num_start = 250, num_end = 100):
+def start_end(data, num_start = 250, num_end = 100, mask=False):
     '''Gate out num_start first and num_end last events collected.
 
     data      - NxD FCSData object or numpy array
     num_start - number of points to discard from the beginning of data
     num_end   - number of points to discard from the end of data
+    mask      - Boolean flag to return Boolean mask array instead of data
 
-    returns  - Gated MxD FCSData object or numpy array'''
+    returns   - gated data or Boolean mask array
+    '''
     
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
             ' number.')
     
-    mask = np.ones(shape=data.shape[0],dtype=bool)
-    mask[:num_start] = False
-    mask[-num_end:] = False
-    gated_data = data[mask]
+    m = np.ones(shape=data.shape[0],dtype=bool)
+    m[:num_start] = False
+    m[-num_end:] = False
     
-    return gated_data
+    if mask:
+        return m
+    else:
+        return data[m]
 
-def high_low(data, channels = None, high = None, low = None):
+def high_low(data, channels = None, high = None, low = None, mask=False):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
@@ -59,7 +63,10 @@ def high_low(data, channels = None, high = None, low = None):
                from input data)
     low      - low value to discard (default = -np.Inf if unable to extract
                from input data)
-    returns  - Gated MxD FCSData object or numpy array'''
+    mask     - Boolean flag to return Boolean mask array instead of data
+
+    returns  - gated data or Boolean mask array
+    '''
     
     # Extract channels in which to gate
     if channels is None:
@@ -86,12 +93,14 @@ def high_low(data, channels = None, high = None, low = None):
             low = -np.Inf
 
     # Gate
-    mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
-    gated_data = data[mask]
+    m = np.all((data_ch < high) & (data_ch > low), axis = 1)
 
-    return gated_data
+    if mask:
+        return m
+    else:
+        return data[m]
 
-def ellipse(data, channels, center, a, b, theta = 0, log = False):
+def ellipse(data, channels, center, a, b, theta = 0, log = False, mask=False):
     '''Gate that preserves events inside an ellipse-shaped region.
 
     Events are kept if they satisfy the following relationship:
@@ -108,6 +117,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     b           - Minor axis of the ellipse
     theta       - Angle of the ellipse
     log         - If True, apply log10 to the event list before gating.
+    mask        - Boolean flag to return Boolean mask array instead of data
+
+    returns     - (gated data and list of 2D numpy arrays of (x,y)
+                  coordinates of gate contour(s)) or Boolean mask array
     '''
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
@@ -127,10 +140,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     data_rotated = np.dot(data_centered, R.T)
 
     # Generate mask
-    mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
+    m = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
 
     # Gate
-    data_gated = data[mask]
+    data_gated = data[m]
 
     # Calculate contour
     t = np.linspace(0,1,100)*2*np.pi
@@ -140,10 +153,13 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
         ci = 10**ci
     cntr = [ci]
 
-    return data_gated, cntr
+    if mask:
+        return m
+    else:
+        return data_gated, cntr
 
 def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
-    sigma = 10.0):
+    sigma = 10.0, mask=False):
     '''Gate that preserves the points in the region with highest density.
 
     First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
@@ -156,10 +172,11 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     bins            - bins argument to numpy.histogram2d. Autogenerate if None.
     gate_fraction   - fraction of data points to keep
     sigma           - standard deviation for Gaussian kernel
+    mask            - Boolean flag to return Boolean mask array instead of
+                      data
 
-    returns         - Gated MxD FCSData object or numpy array, 
-                    - list of 2D numpy arrays of (x,y) coordinates of gate 
-                        contour(s)
+    returns         - (gated data and list of 2D numpy arrays of (x,y)
+                      coordinates of gate contour(s)) or Boolean mask array
     '''
 
     # Extract channels in which to gate
@@ -219,10 +236,10 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
 
     # Get indices of events to keep
     vHi = Hi.ravel()
-    mask = vHi[sidx[:(Nidx+1)]]
-    mask = np.array([item for sublist in mask for item in sublist])
-    mask = np.sort(mask)
-    gated_data = data[mask]
+    m = vHi[sidx[:(Nidx+1)]]
+    m = np.array([item for sublist in m for item in sublist])
+    m = np.sort(m)
+    gated_data = data[m]
 
     # Use matplotlib contour plotter (implemented in C) to generate contour(s)
     # at the probability associated with the last accepted point.
@@ -247,4 +264,7 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
 
         cntr.append(vertices)
 
-    return gated_data, cntr
+    if mask:
+        return m
+    else:
+        return gated_data, cntr
