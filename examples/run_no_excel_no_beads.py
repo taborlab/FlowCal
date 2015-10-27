@@ -47,7 +47,7 @@ if __name__ == "__main__":
     data_gated_contour = []
     for di in data_transf:
         print("{}...".format(str(di)))
-        di_gated, mask, gate_contour = fc.gate.ellipse(data = di,
+        di_gated, __, gate_contour = fc.gate.ellipse(data = di,
             channels = ['FSC-H', 'SSC-H'], center = np.log10([200, 70]),
             a = 0.15, b = 0.10, theta = np.pi/4, log = True, full_output=True)
         data_gated.append(di_gated)
