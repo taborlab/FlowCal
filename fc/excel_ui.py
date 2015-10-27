@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """Module containing the Microsoft Excel User Interface.
 
 Authors: Brian Landry (brian.landry@rice.edu)
