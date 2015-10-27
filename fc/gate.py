@@ -27,7 +27,28 @@
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
-from collections import namedtuple
+import collections
+
+###
+# namedtuple Gate Function Output Classes
+###
+
+StartEndGateOutput = collections.namedtuple(
+    'StartEndGateOutput',
+    ['gated_data', 'mask'])
+HighLowGateOutput = collections.namedtuple(
+    'HighLowGateOutput',
+    ['gated_data', 'mask'])
+EllipseGateOutput = collections.namedtuple(
+    'EllipseGateOutput',
+    ['gated_data', 'mask', 'contour'])
+Density2dGateOutput = collections.namedtuple(
+    'Density2dGateOutput',
+    ['gated_data', 'mask', 'contour'])
+
+###
+# Gate Functions
+###
 
 def start_end(data, num_start = 250, num_end = 100, full_output=False):
     '''Gate out num_start first and num_end last events collected.
@@ -51,8 +72,7 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
     gated_data = data[mask]
 
     if full_output:
-        GateOutput = namedtuple('StartEndGateOutput', ['gated_data', 'mask'])
-        return GateOutput(gated_data=gated_data, mask=mask)
+        return StartEndGateOutput(gated_data=gated_data, mask=mask)
     else:
         return gated_data
 
@@ -103,8 +123,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
     gated_data = data[mask]
 
     if full_output:
-        GateOutput = namedtuple('HighLowGateOutput', ['gated_data', 'mask'])
-        return GateOutput(gated_data=gated_data, mask=mask)
+        return HighLowGateOutput(gated_data=gated_data, mask=mask)
     else:
         return gated_data
 
@@ -164,9 +183,8 @@ def ellipse(data, channels,
             ci = 10**ci
         cntr = [ci]
 
-        GateOutput = namedtuple('EllipseGateOutput',
-                                ['gated_data', 'mask', 'contour'])
-        return GateOutput(gated_data=data_gated, mask=mask, contour=cntr)
+        return EllipseGateOutput(
+            gated_data=data_gated, mask=mask, contour=cntr)
     else:
         return data_gated
 
@@ -278,9 +296,7 @@ def density2d(data, channels=[0,1],
 
             cntr.append(vertices)
 
-
-        GateOutput = namedtuple('Density2dGateOutput',
-                                ['gated_data', 'mask', 'contour'])
-        return GateOutput(gated_data=gated_data, mask=mask, contour=cntr)
+        return Density2dGateOutput(
+            gated_data=gated_data, mask=mask, contour=cntr)
     else:
         return gated_data
