@@ -85,9 +85,9 @@ def main():
         # Density gate
         print("Running density gate (fraction = {:.2f})..."
             .format(float(bi['Gate Fraction'])))
-        gated_di, gate_contour = fc.gate.density2d(data = di,
-            channels = sc_channels,
-            gate_fraction = float(bi['Gate Fraction']))
+        gated_di, gate_mask, gate_contour = fc.gate.density2d(
+            data=di, channels=sc_channels,
+            gate_fraction=float(bi['Gate Fraction']), full_output=True)
 
         # Plot
         plt.figure(figsize = (6,4))
@@ -195,9 +195,9 @@ def main():
     for di in data_transf:
         print("{} (gate fraction = {:.2f})...".format(str(di),
               float(di.metadata['Gate Fraction'])))
-        di_gated, gate_contour = fc.gate.density2d(data = di,
-            channels = sc_channels,
-            gate_fraction = float(di.metadata['Gate Fraction']))
+        di_gated, gate_mask, gate_contour = fc.gate.density2d(
+            data=di, channels=sc_channels,
+            gate_fraction=float(di.metadata['Gate Fraction']), full_output=True)
 
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)

@@ -2,21 +2,22 @@
 #
 # gate.py - Module containing flow cytometry gate functions.
 #
-# All gate functions should be of one of the following forms:
+# All gate functions should be of the following form:
 #
-#     gated = gate(data, channels, parameters)
-#     gated, contour = gate(data, channels, parameters)
+#     gated_data = gate(data, channels, parameters)
+#     (gated_data, mask, contour, ...) = gate(data, channels, parameters,
+#                                             full_output=True)
 #
 # where data is a NxD numpy array describing N cytometry events observing D
-# data dimensions (channels), channels specify the channels in which to perform
-# gating, parameters are gate-specific parameters, and gated is the gated 
-# result.
-# Contour is an optional 2D numpy array of x-y coordinates tracing out a line
-# which represents the gate (useful for plotting).
+# data dimensions, channels specifies the channels in which to perform gating,
+# and parameters are gate-specific parameters. gated_data is the gated result,
+# mask is a Boolean array specifying the gate mask, and contour is an
+# optional 2D numpy array of x-y coordinates tracing out line(s) which
+# represent the gate (useful for plotting).
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 10/17/2015
+# Date: 10/27/2015
 #
 # Requires:
 #   * numpy
@@ -26,15 +27,19 @@
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
-    
-def start_end(data, num_start = 250, num_end = 100):
+from collections import namedtuple
+
+def start_end(data, num_start = 250, num_end = 100, full_output=False):
     '''Gate out num_start first and num_end last events collected.
 
-    data      - NxD FCSData object or numpy array
-    num_start - number of points to discard from the beginning of data
-    num_end   - number of points to discard from the end of data
+    data        - NxD FCSData object or numpy array
+    num_start   - number of points to discard from the beginning of data
+    num_end     - number of points to discard from the end of data
+    full_output - flag specifying to return namedtuple with additional outputs
 
-    returns  - Gated MxD FCSData object or numpy array'''
+    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
+                  (gated_data, mask)
+    '''
     
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
@@ -44,22 +49,30 @@ def start_end(data, num_start = 250, num_end = 100):
     mask[:num_start] = False
     mask[-num_end:] = False
     gated_data = data[mask]
-    
-    return gated_data
 
-def high_low(data, channels = None, high = None, low = None):
+    if full_output:
+        GateOutput = namedtuple('StartEndGateOutput', ['gated_data', 'mask'])
+        return GateOutput(gated_data=gated_data, mask=mask)
+    else:
+        return gated_data
+
+def high_low(data, channels=None, high=None, low=None, full_output=False):
     '''Gate out high and low values across all specified dimensions.
 
     For every i, if any value of data[i,channels] is less or equal than low, 
     or greater or equal than high, it will not be included in the final result.
 
-    data     - NxD FCSData object or numpy array
-    channels - channels on which to perform gating
-    high     - high value to discard (default = np.Inf if unable to extract
-               from input data)
-    low      - low value to discard (default = -np.Inf if unable to extract
-               from input data)
-    returns  - Gated MxD FCSData object or numpy array'''
+    data        - NxD FCSData object or numpy array
+    channels    - channels on which to perform gating
+    high        - high value to discard (default = np.Inf if unable to extract
+                  from input data)
+    low         - low value to discard (default = -np.Inf if unable to extract
+                  from input data)
+    full_output - flag specifying to return namedtuple with additional outputs
+
+    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
+                  (gated_data, mask)
+    '''
     
     # Extract channels in which to gate
     if channels is None:
@@ -89,9 +102,15 @@ def high_low(data, channels = None, high = None, low = None):
     mask = np.all((data_ch < high) & (data_ch > low), axis = 1)
     gated_data = data[mask]
 
-    return gated_data
+    if full_output:
+        GateOutput = namedtuple('HighLowGateOutput', ['gated_data', 'mask'])
+        return GateOutput(gated_data=gated_data, mask=mask)
+    else:
+        return gated_data
 
-def ellipse(data, channels, center, a, b, theta = 0, log = False):
+def ellipse(data, channels,
+            center, a, b, theta=0,
+            log=False, full_output=False):
     '''Gate that preserves events inside an ellipse-shaped region.
 
     Events are kept if they satisfy the following relationship:
@@ -108,6 +127,10 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     b           - Minor axis of the ellipse
     theta       - Angle of the ellipse
     log         - If True, apply log10 to the event list before gating.
+    full_output - flag specifying to return namedtuple with additional outputs
+
+    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
+                  (gated_data, mask, contour)
     '''
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
@@ -132,18 +155,24 @@ def ellipse(data, channels, center, a, b, theta = 0, log = False):
     # Gate
     data_gated = data[mask]
 
-    # Calculate contour
-    t = np.linspace(0,1,100)*2*np.pi
-    ci = np.array([a*np.cos(t), b*np.sin(t)]).T
-    ci = np.dot(ci, R) + center
-    if log:
-        ci = 10**ci
-    cntr = [ci]
+    if full_output:
+        # Calculate contour
+        t = np.linspace(0,1,100)*2*np.pi
+        ci = np.array([a*np.cos(t), b*np.sin(t)]).T
+        ci = np.dot(ci, R) + center
+        if log:
+            ci = 10**ci
+        cntr = [ci]
 
-    return data_gated, cntr
+        GateOutput = namedtuple('EllipseGateOutput',
+                                ['gated_data', 'mask', 'contour'])
+        return GateOutput(gated_data=data_gated, mask=mask, contour=cntr)
+    else:
+        return data_gated
 
-def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
-    sigma = 10.0):
+def density2d(data, channels=[0,1],
+              bins=None, gate_fraction=0.65, sigma=10.0,
+              full_output=False):
     '''Gate that preserves the points in the region with highest density.
 
     First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
@@ -156,10 +185,11 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     bins            - bins argument to numpy.histogram2d. Autogenerate if None.
     gate_fraction   - fraction of data points to keep
     sigma           - standard deviation for Gaussian kernel
+    full_output     - flag specifying to return namedtuple with additional
+                      outputs
 
-    returns         - Gated MxD FCSData object or numpy array, 
-                    - list of 2D numpy arrays of (x,y) coordinates of gate 
-                        contour(s)
+    returns         - (Gated MxD FCSData object or numpy array) or namedtuple
+                      with (gated_data, mask, contour)
     '''
 
     # Extract channels in which to gate
@@ -224,27 +254,33 @@ def density2d(data, channels = [0,1], bins = None, gate_fraction = 0.65,
     mask = np.sort(mask)
     gated_data = data[mask]
 
-    # Use matplotlib contour plotter (implemented in C) to generate contour(s)
-    # at the probability associated with the last accepted point.
-    x,y = np.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
-    mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
-    tr = mpl_cntr.trace(vD[sidx[Nidx]])
+    if full_output:
+        # Use matplotlib contour plotter (implemented in C) to generate contour(s)
+        # at the probability associated with the last accepted point.
+        x,y = np.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
+        mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
+        tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
-    # trace returns a list of arrays which contain vertices and path codes
-    # used in matplotlib Path objects (see http://stackoverflow.com/a/18309914
-    # and the documentation for matplotlib.path.Path for more details). I'm
-    # just going to make sure the path codes aren't unfamiliar and then extract
-    # all of the vertices and pack them into a list of 2D contours.
-    cntr = []
-    num_cntrs = len(tr)/2
-    for idx in xrange(num_cntrs):
-        vertices = tr[idx]
-        codes = tr[num_cntrs+idx]
+        # trace returns a list of arrays which contain vertices and path codes
+        # used in matplotlib Path objects (see http://stackoverflow.com/a/18309914
+        # and the documentation for matplotlib.path.Path for more details). I'm
+        # just going to make sure the path codes aren't unfamiliar and then extract
+        # all of the vertices and pack them into a list of 2D contours.
+        cntr = []
+        num_cntrs = len(tr)/2
+        for idx in xrange(num_cntrs):
+            vertices = tr[idx]
+            codes = tr[num_cntrs+idx]
 
-        # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
-        if not np.all((codes==1)|(codes==2)):
-            raise Exception('Contour error: unrecognized path code')
+            # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
+            if not np.all((codes==1)|(codes==2)):
+                raise Exception('Contour error: unrecognized path code')
 
-        cntr.append(vertices)
+            cntr.append(vertices)
 
-    return gated_data, cntr
+
+        GateOutput = namedtuple('Density2dGateOutput',
+                                ['gated_data', 'mask', 'contour'])
+        return GateOutput(gated_data=gated_data, mask=mask, contour=cntr)
+    else:
+        return gated_data
