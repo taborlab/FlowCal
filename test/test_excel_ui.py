@@ -12,8 +12,9 @@ Requires:
 import os
 import collections
 import unittest
+import numpy as np
 
-import fc.excel_ui
+import fc
 
 class TestReadWorkbook(unittest.TestCase):
     """Class to test excel_ui.read_workbook()
@@ -465,6 +466,51 @@ class TestReadTable(unittest.TestCase):
                           fc.excel_ui.read_table,
                           input_table,
                           id_header)
+
+class TestLoadFCSFromTable(unittest.TestCase):
+    """Class to test excel_ui.load_fcs_from_table()
+
+    """
+
+    def test_load_fcs_from_table(self):
+        """Test that excel_ui.load_fcs_from_table produces the correct
+        output.
+
+        """
+
+        # Input table
+        table = collections.OrderedDict()
+
+        row = collections.OrderedDict()
+        row["ID"] = "S001"
+        row["File Path"] = "test/Data001.fcs"
+        row["Gate Fraction"] = 0.3
+        table[row["ID"]] = row
+
+        row = collections.OrderedDict()
+        row["ID"] = "S002"
+        row["File Path"] = "test/Data003.fcs"
+        row["Gate Fraction"] = 0.5
+        table[row["ID"]] = row
+
+        filename_key = "File Path"
+
+        # Expected output
+        fcs_files_expected = []
+        fcs_files_expected.append(fc.io.FCSData("test/Data001.fcs",
+                                                metadata = table["S001"]))
+        fcs_files_expected.append(fc.io.FCSData("test/Data003.fcs",
+                                                metadata = table["S002"]))
+
+        # Load files from table
+        fcs_files = fc.excel_ui.load_fcs_from_table(table, filename_key)
+
+        # Compare
+        for fcs_file, fcs_file_expected in zip(fcs_files, fcs_files_expected):
+            # FCSData contents
+            np.testing.assert_array_equal(fcs_file, fcs_file_expected)
+            # metadata
+            self.assertEqual(fcs_file.metadata, fcs_file_expected.metadata)
 
 
 if __name__ == '__main__':

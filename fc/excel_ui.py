@@ -11,6 +11,8 @@ import collections
 import xlrd
 import openpyxl
 
+import fc
+
 def read_workbook(workbook_name):
     """Open an Excel workbook and return the content of all worksheets.
 
@@ -169,3 +171,27 @@ def read_table(table_list, id_header = 'ID'):
         table[row_dict[id_header]] = row_dict
 
     return table
+
+def load_fcs_from_table(table, filename_key):
+    """Load FCS files from a table, and add table information as metadata.
+
+    This function accepts a table formatted in the same way as the output
+    of the ``read_table`` function. For each row, an FCS file with filename
+    given by `filename_key` is loaded as an fc.io.FCSData object, and the
+    rows's fields are used as metadata.
+
+    Parameters
+    ----------
+    table : dict or OrderedDict
+        Table data, as a dictionary of dictionaries.
+    filename_key : str
+        The field containing the name of the FCS file to load on each row.
+
+    Returns
+    -------
+    list
+        List of FCSData objects corresponding to the loaded FCS files.
+
+    """
+    return [fc.io.FCSData(row[filename_key], metadata = row) \
+                for row_id, row in table.items()]
