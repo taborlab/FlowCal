@@ -7,9 +7,17 @@ Last Modified: 10/29/2015
 
 """
 
+import os
+import os.path
 import collections
 import xlrd
 import openpyxl
+
+import platform
+import subprocess
+
+from Tkinter import Tk
+from tkFileDialog import askopenfilename
 
 import fc
 
@@ -100,7 +108,7 @@ def write_workbook(workbook_name, content):
         e.message = "Error writing to {}".format(workbook_name)
         raise
 
-def read_table(table_list, id_header = 'ID'):
+def read_table(table_list, id_header='ID'):
     """Read a table as a list of lists and return it as a OrderedDict of
     OrderedDicts.
 
@@ -175,10 +183,11 @@ def read_table(table_list, id_header = 'ID'):
 def load_fcs_from_table(table, filename_key):
     """Load FCS files from a table, and add table information as metadata.
 
-    This function accepts a table formatted in the same way as the output
-    of the ``read_table`` function. For each row, an FCS file with filename
-    given by `filename_key` is loaded as an fc.io.FCSData object, and the
-    rows's fields are used as metadata.
+    This function accepts a table formatted as an OrderedDict of
+    OrderedDicts, the same format as the output of the ``read_table``
+    function. For each row, an FCS file with filename given by
+    `filename_key` is loaded as an fc.io.FCSData object, and the rows's
+    fields are used as metadata.
 
     Parameters
     ----------
@@ -195,3 +204,80 @@ def load_fcs_from_table(table, filename_key):
     """
     return [fc.io.FCSData(row[filename_key], metadata = row) \
                 for row_id, row in table.items()]
+
+def process_fcs_from_excel_file(filename,
+                                verbose=False,
+                                plot=False,
+                                beads_plot_dir=None,
+                                samples_plot_dir=None):
+    raise NotImplementedError
+
+def write_output_excel_file(samples,
+                            beads_samples,
+                            filename,
+                            stats=True,
+                            histograms=True):
+    raise NotImplementedError
+
+def show_open_file_dialog(filetypes):
+    """Show an open file dialog and return the path of the file selected.
+
+    Parameters
+    ----------
+    filetypes : list of tuples
+        Types of file to show on the dialog. Each tuple on the list must
+        have two elements associated with a filetype: the first element is
+        a description, and the second is the associated extension.
+
+    Returns
+    -------
+    filename: str
+        The path of the filename selected, or an empty string if no file
+        was chosen.
+
+    """
+    # The following line is used to Tk's main window is not shown
+    Tk().withdraw()
+
+    # OSX ONLY: Call bash script to prevent file select window from sticking
+    # after use.
+    if platform.system() == 'Darwin':
+        subprocess.call("defaults write org.python.python " +
+                "ApplePersistenceIgnoreState YES", shell=True)
+        filename = askopenfilename(filetypes=filetypes)
+        subprocess.call("defaults write org.python.python " +
+                "ApplePersistenceIgnoreState NO", shell=True)
+    else:
+        filename = askopenfilename(filetypes=filetypes)
+
+    return filename
+
+def run():
+    """Run the MS Excel User Interface.
+
+    This function shows a dialog to open an input Excel workbook, loads FCS
+    files and processes them as specified in the spreadsheet, and
+    generates plots and an output excel file with statistics for each
+    sample.
+
+    """
+    # Open input excel file
+    input_wb = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
+
+    # Get list of processed FCSData objects from the spreadsheet
+    samples, beads_samples = process_fcs_from_excel_file(input_wb,
+                                                         verbose=True,
+                                                         plot=True)
+
+    # Generate output excel file
+    input_dir, input_filename_full = os.path.split(input_wb)
+    input_filename, __ = os.path.splitext(input_filename_full)
+    output_form = "{}/{}".format(input_dir, input_filename + '_output.xlsx')
+    write_output_excel_file(samples,
+                            beads_samples,
+                            output_form,
+                            stats=True,
+                            histograms=False)
+
+if __name__ == '__main__':
+    run()
