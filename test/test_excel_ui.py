@@ -16,6 +16,9 @@ import unittest
 import fc.excel_ui
 
 class TestReadWorkbook(unittest.TestCase):
+    """Class to test excel_ui.read_workbook()
+
+    """
     def setUp(self):
         # Name of the file to read
         self.filename = 'test/test_excel_ui.xlsx'
@@ -157,6 +160,7 @@ class TestReadWorkbook(unittest.TestCase):
 
     def test_read_workbook(self):
         """Test for proper reading of an Excel workbook.
+
         """
         # Load contents from the workbook
         content = fc.excel_ui.read_workbook(self.filename)
@@ -164,6 +168,9 @@ class TestReadWorkbook(unittest.TestCase):
         self.assertEqual(self.content_expected, content)
 
 class TestWriteWorkbook(unittest.TestCase):
+    """Class to test excel_ui.write_workbook()
+
+    """
     def setUp(self):
         # Name of the file to write to
         self.filename = 'test/test_write_workbook.xlsx'
@@ -186,6 +193,7 @@ class TestWriteWorkbook(unittest.TestCase):
 
     def test_write_workbook(self):
         """Test for proper writing of an Excel workbook.
+
         """
         # Write excel workbook
         fc.excel_ui.write_workbook(self.filename, self.content)
@@ -195,6 +203,7 @@ class TestWriteWorkbook(unittest.TestCase):
 
     def test_write_workbook_content_is_not_dict_error(self):
         """Test that using a list as the content raises a TypeError.
+
         """
         # 
         self.assertRaises(TypeError,
@@ -205,6 +214,7 @@ class TestWriteWorkbook(unittest.TestCase):
     def test_write_workbook_content_is_empty_error(self):
         """Test that using an empty OrderedDict as the content raises a
         ValueError.
+
         """
         # 
         self.assertRaises(ValueError,
@@ -214,12 +224,247 @@ class TestWriteWorkbook(unittest.TestCase):
 
     def test_write_workbook_filename_error(self):
         """Test that writing to a bad file name raises an IOError.
+
         """
         # 
         self.assertRaises(IOError,
                           fc.excel_ui.write_workbook,
                           '',
                           self.content)
+
+class TestReadTable(unittest.TestCase):
+    """Class to test excel_ui.read_table()
+
+    """
+    def test_read_table(self):
+        """Test that excel_ui.read_table produces the correct output.
+
+        """
+        # Input data
+        input_table = [[u'ID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC002',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       ]
+        id_header = 'ID'
+
+        # Expected output
+        expected_output = collections.OrderedDict()
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC001'
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        expected_output['FC001'] = row
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC002'
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        expected_output['FC002'] = row
+
+        # Run read_table
+        table = fc.excel_ui.read_table(input_table, id_header)
+
+        # Compare to expected output
+        self.assertEqual(table, expected_output)
+
+
+    def test_read_table_ignore_empty_id(self):
+        """Test that excel_ui.read_table produces the correct output when
+        the input has a row that should with an empty `header_id` field.
+
+        """
+        # Input data
+        input_table = [[u'ID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC002',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       [u'',
+                        u'Fake flow cytometer',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       ]
+        id_header = 'ID'
+
+        # Expected output
+        expected_output = collections.OrderedDict()
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC001'
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        expected_output['FC001'] = row
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC002'
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        expected_output['FC002'] = row
+
+        # Run read_table
+        table = fc.excel_ui.read_table(input_table, id_header)
+
+        # Compare to expected output
+        self.assertEqual(table, expected_output)
+
+    def test_read_table_no_id_error(self):
+        """Test that excel_ui.read_table produces a ValueError when
+        `id_header` it not in the table's header.
+
+        """
+        # Input data
+        input_table = [[u'UID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC002',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       ]
+        id_header = 'ID'
+
+        # Run function and check for error
+        self.assertRaises(ValueError,
+                          fc.excel_ui.read_table,
+                          input_table,
+                          id_header)
+
+    def test_read_table_repeated_id_error(self):
+        """Test that excel_ui.read_table produces a ValueError when
+        the value of the `id_header` column is repeated in two rows.
+
+        """
+        # Input data
+        input_table = [[u'ID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       ]
+        id_header = 'ID'
+
+        # Run function and check for error
+        self.assertRaises(ValueError,
+                          fc.excel_ui.read_table,
+                          input_table,
+                          id_header)
+
+    def test_read_table_variable_row_length_error(self):
+        """Test that excel_ui.read_table produces a ValueError when
+        the input table has different list lengths.
+
+        """
+        # Input data
+        input_table = [[u'ID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        u'Additional field',
+                        ],
+                       ]
+        id_header = 'ID'
+
+        # Run function and check for error
+        self.assertRaises(ValueError,
+                          fc.excel_ui.read_table,
+                          input_table,
+                          id_header)
 
 
 if __name__ == '__main__':
