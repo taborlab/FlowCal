@@ -6,6 +6,7 @@ Last Modified: 10/30/2015
 
 """
 
+import re
 import os
 import os.path
 import collections
@@ -596,8 +597,70 @@ def parse_samples_table(samples_table,
 
     return samples
 
-def add_stats(samples, samples_table):
-    pass
+def add_stats(samples_table, samples):
+    """Add stats fields to samples table.
+
+    The following numbers are added to each row:
+    - Number of Events
+    - Acquisition Time (s)
+    
+    The following stats are added for each row, for each channel in which
+    fluorescence units have been specified:
+    - Gain
+    - Mean
+    - Geometric Mean
+    - Media
+    - Mode
+    - Standard Deviation
+    - Coefficient of Variation (CV)
+    - Inter-Quartile Range
+    - Robust Coefficient of Variation (RCV)
+
+    Parameters
+    ----------
+    samples_table : dict or OrderedDict
+        Table specifying samples to analyze
+    samples : list
+        FCSData objects from which to calculate statistics. ``samples[i]``
+        should correspond to ``samples_table.values()[i]``
+
+    """
+    # Add per-row stats
+    for row, sample in zip(samples_table.values(), samples):
+        row['Number of Events'] = sample.shape[0]
+        row['Acquisition Time (s)'] = sample.acquisition_time
+
+    # List of channels that require stats columns
+    headers = samples_table.values()[0].keys()
+    r = re.compile(r'^(\S)*(\s)*Units$')
+    stats_headers = [h for h in headers if r.match(h)]
+    stats_channels = [s[:-5].strip() for s in stats_headers]
+
+    # Iterate through channels
+    for header, channel in zip(stats_headers, stats_channels):
+        for row, sample in zip(samples_table.values(), samples):
+            # If units are specified, calculate stats. If not, leave empty.
+            if row[header]:
+                row[channel + ' Gain'] = \
+                            sample[:, channel].channel_info[0]['pmt_voltage']
+                row[channel + ' Mean'] = fc.stats.mean(sample, channel)
+                row[channel + ' Geom. Mean'] = fc.stats.gmean(sample, channel)
+                row[channel + ' Median'] = fc.stats.median(sample, channel)
+                row[channel + ' Mode'] = fc.stats.mode(sample, channel)
+                row[channel + ' Std'] = fc.stats.std(sample, channel)
+                row[channel + ' CV'] = fc.stats.CV(sample, channel)
+                row[channel + ' IQR'] = fc.stats.iqr(sample, channel)
+                row[channel + ' RCV'] = fc.stats.RCV(sample, channel)
+            else:
+                row[channel + ' Gain'] = ''
+                row[channel + ' Mean'] = ''
+                row[channel + ' Geom. Mean'] = ''
+                row[channel + ' Median'] = ''
+                row[channel + ' Mode'] = ''
+                row[channel + ' Std'] = ''
+                row[channel + ' CV'] = ''
+                row[channel + ' IQR'] = ''
+                row[channel + ' RCV'] = ''
 
 def show_open_file_dialog(filetypes):
     """Show an open file dialog and return the path of the file selected.
@@ -681,6 +744,9 @@ def run(verbose=True, plot=True):
         verbose=verbose,
         plot=plot,
         plot_dir='plot_samples')
+
+    # Add stats to samples table
+    add_stats(samples_table, samples)
 
     # Generate output workbook object
     output_wb = collections.OrderedDict()
