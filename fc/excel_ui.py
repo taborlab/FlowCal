@@ -110,7 +110,7 @@ def write_workbook(workbook_name, content):
         e.message = "Error writing to {}".format(workbook_name)
         raise
 
-def read_table(table_list, id_header='ID'):
+def list_to_table(table_list, id_header='ID'):
     """Read a table as a list of lists and return it as a OrderedDict of
     OrderedDicts.
 
@@ -182,11 +182,54 @@ def read_table(table_list, id_header='ID'):
 
     return table
 
+def table_to_list(table):
+    """Read a table as an dict of dicts and return it as a list of lists.
+
+    This function accepts a table in a dict of dicts format. Each one of
+    the inner dicts is interpreted as as row, in which the keys are the
+    table headers, and the values are the contents of each field. `table`
+    is a dictionary containing these rows. All of the rows should have the
+    same headers. The table is then converted to a list of lists, in which
+    the first list is the table header, and the subsequents lists are each
+    one of the rows. The rows are ordered according to table.keys()
+
+    Parameters
+    ----------
+    table : dict or OrderedDict
+        Table data, as a dict of dicts.
+
+    Returns
+    -------
+    table_list : list of lists
+        The contents of the table as an list of lists.
+
+    Raises
+    ------
+    ValueError
+        If the keys of all rows are not the same.
+
+    """
+    # Extract table headers
+    headers = table.values()[0].keys()
+    # Check that all rows have the same keys
+    for k, row in table.items():
+        if row.keys() != headers:
+            raise ValueError("All rows should have the same keys")
+
+    # Initialize output
+    table_list = [headers]
+
+    # Extract rows
+    for k, row in table.items():
+        table_list.append(row.values())
+
+    return table_list
+
 def load_fcs_from_table(table, filename_key):
     """Load FCS files from a table, and add table information as metadata.
 
     This function accepts a table formatted as an OrderedDict of
-    OrderedDicts, the same format as the output of the ``read_table``
+    OrderedDicts, the same format as the output of the ``list_to_table``
     function. For each row, an FCS file with filename given by
     `filename_key` is loaded as an fc.io.FCSData object, and the rows's
     fields are used as metadata.
@@ -246,7 +289,7 @@ def parse_beads_table(beads_table,
     base_dir : str, optional
         Directory from where all the other paths are specified from.
     verbose: bool, optional
-        Whether to print information messages during the excecution of this
+        Whether to print information messages during the execution of this
         function.
     plot : bool, optional
         Whether to generate and save density/histogram plots of each
@@ -296,8 +339,8 @@ def parse_beads_table(beads_table,
         fl_channels = [s.strip() for s in fl_channels]
 
         ### BEADS DATA ###
-        beads_sample = fc.io.FCSData(os.path.join(base_dir,
-                                                  beads_row['File Path']))
+        filename = os.path.join(base_dir, beads_row['File Path'])
+        beads_sample = fc.io.FCSData(filename, beads_row)
         if verbose:
             print "{} loaded ({} events).".format(beads_id,
                                                   beads_sample.shape[0])
@@ -417,7 +460,7 @@ def parse_samples_table(samples_table,
     base_dir : str, optional
         Directory from where all the other paths are specified from.
     verbose: bool, optional
-        Whether to print information messages during the excecution of this
+        Whether to print information messages during the execution of this
         function.
     plot : bool, optional
         Whether to generate and save density/histogram plots of each
@@ -553,12 +596,8 @@ def parse_samples_table(samples_table,
 
     return samples
 
-def write_output_workbook(samples,
-                          beads_samples,
-                          filename,
-                          stats=True,
-                          histograms=True):
-    raise NotImplementedError
+def add_stats(samples, samples_table):
+    pass
 
 def show_open_file_dialog(filetypes):
     """Show an open file dialog and return the path of the file selected.
@@ -593,12 +632,21 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run():
+def run(verbose=True, plot=True):
     """Run the MS Excel User Interface.
 
     This function shows a dialog to open an input Excel workbook, loads FCS
     files and processes them as specified in the spreadsheet, and
     generates plots and an output workbook with statistics for each sample.
+
+    Parameters
+    ----------
+    verbose: bool, optional
+        Whether to print information messages during the execution of this
+        function.
+    plot : bool, optional
+        Whether to generate and save density/histogram plots of each
+        sample, and each beads sample.
 
     """
     # Open input workbook
@@ -611,17 +659,17 @@ def run():
 
     # Read workbook and extract relevant tables
     wb_content = read_workbook(input_path)
-    instruments_table = read_table(wb_content['Instruments'])
-    beads_table = read_table(wb_content['Beads'])
-    samples_table = read_table(wb_content['Samples'])
+    instruments_table = list_to_table(wb_content['Instruments'])
+    beads_table = list_to_table(wb_content['Beads'])
+    samples_table = list_to_table(wb_content['Samples'])
 
     # Process beads samples
     beads_samples, to_mef = parse_beads_table(
         beads_table,
         instruments_table,
         base_dir=input_dir,
-        verbose=True,
-        plot=True,
+        verbose=verbose,
+        plot=plot,
         plot_dir='plot_beads')
 
     # Process samples
@@ -630,18 +678,20 @@ def run():
         instruments_table,
         to_mef=to_mef,
         base_dir=input_dir,
-        verbose=True,
-        plot=True,
+        verbose=verbose,
+        plot=plot,
         plot_dir='plot_samples')
 
-    # # Generate output excel file
-    # output_form = "{}/{}".format(input_dir,
-    #                              input_filename_no_ext + '_output.xlsx')
-    # write_output_workbook(samples,
-    #                       beads_samples,
-    #                       output_form,
-    #                       stats=True,
-    #                       histograms=False)
+    # Generate output workbook object
+    output_wb = collections.OrderedDict()
+    output_wb['Instruments'] = table_to_list(instruments_table)
+    output_wb['Beads'] = table_to_list(beads_table)
+    output_wb['Samples'] = table_to_list(samples_table)
+
+    # Write output excel file
+    output_filename = "{}_output.xlsx".format(input_filename_no_ext)
+    output_path = os.path.join(input_dir, output_filename)
+    write_workbook(output_path, output_wb)
 
 if __name__ == '__main__':
-    run()
+    run(verbose = True, plot = False)

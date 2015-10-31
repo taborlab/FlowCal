@@ -281,12 +281,12 @@ class TestWriteWorkbook(unittest.TestCase):
                           '',
                           self.content)
 
-class TestReadTable(unittest.TestCase):
-    """Class to test excel_ui.read_table()
+class TestTableConversion(unittest.TestCase):
+    """Class to test excel_ui.list_to_table() and excel_ui.table_to_list()
 
     """
-    def test_read_table(self):
-        """Test that excel_ui.read_table produces the correct output.
+    def test_list_to_table(self):
+        """Test that excel_ui.list_to_table produces the correct output.
 
         """
         # Input data
@@ -335,15 +335,15 @@ class TestReadTable(unittest.TestCase):
         row[u'Time Channel'] = u'TIME'
         expected_output['FC002'] = row
 
-        # Run read_table
-        table = fc.excel_ui.read_table(input_table, id_header)
+        # Run list_to_table
+        table = fc.excel_ui.list_to_table(input_table, id_header)
 
         # Compare to expected output
         self.assertEqual(table, expected_output)
 
 
-    def test_read_table_ignore_empty_id(self):
-        """Test that excel_ui.read_table produces the correct output when
+    def test_list_to_table_ignore_empty_id(self):
+        """Test that excel_ui.list_to_table produces the correct output when
         the input has a row that should with an empty `header_id` field.
 
         """
@@ -400,14 +400,14 @@ class TestReadTable(unittest.TestCase):
         row[u'Time Channel'] = u'TIME'
         expected_output['FC002'] = row
 
-        # Run read_table
-        table = fc.excel_ui.read_table(input_table, id_header)
+        # Run list_to_table
+        table = fc.excel_ui.list_to_table(input_table, id_header)
 
         # Compare to expected output
         self.assertEqual(table, expected_output)
 
-    def test_read_table_no_id_error(self):
-        """Test that excel_ui.read_table produces a ValueError when
+    def test_list_to_table_no_id_error(self):
+        """Test that excel_ui.list_to_table produces a ValueError when
         `id_header` it not in the table's header.
 
         """
@@ -438,12 +438,12 @@ class TestReadTable(unittest.TestCase):
 
         # Run function and check for error
         self.assertRaises(ValueError,
-                          fc.excel_ui.read_table,
+                          fc.excel_ui.list_to_table,
                           input_table,
                           id_header)
 
-    def test_read_table_repeated_id_error(self):
-        """Test that excel_ui.read_table produces a ValueError when
+    def test_list_to_table_repeated_id_error(self):
+        """Test that excel_ui.list_to_table produces a ValueError when
         the value of the `id_header` column is repeated in two rows.
 
         """
@@ -474,12 +474,12 @@ class TestReadTable(unittest.TestCase):
 
         # Run function and check for error
         self.assertRaises(ValueError,
-                          fc.excel_ui.read_table,
+                          fc.excel_ui.list_to_table,
                           input_table,
                           id_header)
 
-    def test_read_table_variable_row_length_error(self):
-        """Test that excel_ui.read_table produces a ValueError when
+    def test_list_to_table_variable_row_length_error(self):
+        """Test that excel_ui.list_to_table produces a ValueError when
         the input table has different list lengths.
 
         """
@@ -511,9 +511,94 @@ class TestReadTable(unittest.TestCase):
 
         # Run function and check for error
         self.assertRaises(ValueError,
-                          fc.excel_ui.read_table,
+                          fc.excel_ui.list_to_table,
                           input_table,
                           id_header)
+
+    def test_table_to_list(self):
+        """Test that excel_ui.table_to_list produces the correct output.
+
+        """
+        # Input data
+        input_table = collections.OrderedDict()
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC001'
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        input_table['FC001'] = row
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC002'
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        input_table['FC002'] = row
+
+        # Expected output
+        expected_output = [[u'ID',
+                        u'Description',
+                        u'Forward Scatter Channel',
+                        u'Side Scatter Channel',
+                        u'Fluorescence Channels',
+                        u'Time Channel',
+                        ],
+                       [u'FC001',
+                        u'Moake\'s Flow Cytometer',
+                        u'FSC-H',
+                        u'SSC-H',
+                        u'FL1-H, FL2-H, FL3-H',
+                        u'Time',
+                        ],
+                       [u'FC002',
+                        u'Moake\'s Flow Cytometer (new acquisition card)',
+                        u'FSC',
+                        u'SSC',
+                        u'FL1, FL2, FL3',
+                        u'TIME',
+                        ],
+                       ]
+
+        # Run table_to_list
+        table = fc.excel_ui.table_to_list(input_table)
+
+        # Compare to expected output
+        self.assertEqual(table, expected_output)
+
+    def test_table_to_list_different_header_error(self):
+        """Test that excel_ui.table_to_list produces the correct output.
+
+        """
+        # Input data
+        input_table = collections.OrderedDict()
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC001'
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        input_table['FC001'] = row
+
+        row = collections.OrderedDict()
+        row[u'ID'] = u'FC002'
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time'] = u'TIME'  # Different header than first row
+        input_table['FC002'] = row
+
+        # Run table_to_list
+        self.assertRaises(ValueError,
+                          fc.excel_ui.table_to_list,
+                          input_table)
 
 class TestLoadFCSFromTable(unittest.TestCase):
     """Class to test excel_ui.load_fcs_from_table()
