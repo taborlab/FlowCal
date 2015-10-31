@@ -10,7 +10,7 @@ import fc
 
 # Directories
 directory = 'FCFiles'
-gated_plot_dir = 'plot_gated'.format(directory)
+gated_plot_dir = 'plot_samples'
 
 # Plot options
 plot_gated = True
