@@ -1,9 +1,8 @@
 """Module containing the Microsoft Excel User Interface.
 
-Authors: Brian Landry (brian.landry@rice.edu)
-         Sebastian M. Castillo-Hair (smc9@rice.edu)
+Authors: Sebastian M. Castillo-Hair (smc9@rice.edu)
 
-Last Modified: 10/29/2015
+Last Modified: 10/30/2015
 
 """
 
@@ -18,6 +17,9 @@ import subprocess
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+
+import numpy as np
+from matplotlib import pyplot as plt
 
 import fc
 
@@ -199,24 +201,363 @@ def load_fcs_from_table(table, filename_key):
     Returns
     -------
     list
-        List of FCSData objects corresponding to the loaded FCS files.
+        FCSData objects corresponding to the loaded FCS files.
 
     """
     return [fc.io.FCSData(row[filename_key], metadata = row) \
                 for row_id, row in table.items()]
 
-def process_fcs_from_excel_file(filename,
-                                verbose=False,
-                                plot=False,
-                                beads_plot_dir=None,
-                                samples_plot_dir=None):
-    raise NotImplementedError
+def parse_beads_table(beads_table,
+                      instruments_table,
+                      base_dir="",
+                      verbose=False,
+                      plot=False,
+                      plot_dir=""):
+    """Load FCS files corresponding to beads, process them, and generate
+    standard curves for each, according to table structures specifying
+    instruments and beads samples.
 
-def write_output_excel_file(samples,
-                            beads_samples,
-                            filename,
-                            stats=True,
-                            histograms=True):
+    TODO: Describe format of table.
+
+    This function processes the entries in `beads_table`. For each row, the
+    function does the following:
+    - Load the FCS file specified in the filed "File Path".
+    - Transform the forward scatter/side scatter channels if needed.
+    - Remove the 250 first and 100 last events.
+    - Remove saturated events in the forward scatter and side scatter
+      channels.
+    - Apply density gating on the forward scatter/side scatter channels.
+    - Generate a standard curve transformation function, for each
+      fluorescence channel in which the associated MEF values are
+      specified.
+    - Generate forward/side scatter density plots and fluorescence
+      histograms, and plots of the clustering and fitting steps of
+      standard curve generation, if `plot` = True.
+    
+    Names of forward/side scatter and fluorescence channels are taken from
+    `instruments_table`.
+
+    Parameters
+    ----------
+    beads_table : OrderedDict or dict
+        Table specifying beads samples to be processed.
+    instruments_table : OrderedDict or dict
+        Table specifying instruments.
+    base_dir : str, optional
+        Directory from where all the other paths are specified from.
+    verbose: bool, optional
+        Whether to print information messages during the excecution of this
+        function.
+    plot : bool, optional
+        Whether to generate and save density/histogram plots of each
+        sample, and each beads sample.
+    plot_dir : str, optional
+        The directory where to save the generated plots of beads samples,
+        relative to `base_dir`. If `plot` is False, this parameter is
+        ignored.
+
+    Returns
+    -------
+    beads_samples : list of FCSData objects
+        A list of processed, gated, and transformed samples, as specified
+        in `beads_table`, in the order of ``beads_table.keys()``.
+    to_mef : OrderedDict
+        A dictionary of MEF transformation functions, indexed by
+        ``beads_table.keys()``.
+
+    """
+    # Do nothing if beads table is empty
+    if not beads_table:
+        return
+
+    if verbose:
+        print "\nProcessing beads ({} entries)...".format(len(beads_table))
+
+    # Check that plotting directory exist, create otherwise
+    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+        os.makedirs(os.path.join(base_dir, plot_dir))
+
+    # Initialize output variables
+    beads_samples = []
+    to_mef = collections.OrderedDict()
+
+    # Iterate through table
+    for beads_id, beads_row in beads_table.items():
+
+        ### INSTRUMENT DATA ###
+        # Get the appropriate row in the instrument table
+        instruments_row = instruments_table[beads_row['Instrument ID']]
+        # Scatter channels: Foward Scatter, Side Scatter
+        sc_channels = [instruments_row['Forward Scatter Channel'],
+                       instruments_row['Side Scatter Channel'],
+                       ]
+        # Fluorescence channels is a comma-separated list
+        fl_channels = instruments_row['Fluorescence Channels'].split(',')
+        fl_channels = [s.strip() for s in fl_channels]
+
+        ### BEADS DATA ###
+        beads_sample = fc.io.FCSData(os.path.join(base_dir,
+                                                  beads_row['File Path']))
+        if verbose:
+            print "{} loaded ({} events).".format(beads_id,
+                                                  beads_sample.shape[0])
+        # Parse clustering channels data
+        cluster_channels = beads_row['Clustering Channels'].split(',')
+        cluster_channels = [cc.strip() for cc in cluster_channels]
+
+        ### GATE ###
+        # Remove first and last samples
+        beads_sample = fc.gate.start_end(beads_sample,
+                                         num_start=250,
+                                         num_end=100)
+        # Remove saturating samples in forward/side scatter
+        beads_sample = fc.gate.high_low(beads_sample,
+                                        channels=sc_channels)
+        # Density gating
+        if verbose:
+            print "Running density gate (fraction = {:.2f})...".format(
+                beads_row['Gate Fraction'])
+        beads_sample_gated, gate_contour = fc.gate.density2d(
+            data=beads_sample,
+            channels=sc_channels,
+            gate_fraction=beads_row['Gate Fraction'])
+
+        # Plot forward/side scatter density plot and fluorescence histograms
+        if plot:
+            figname = os.path.join(base_dir,
+                                   plot_dir,
+                                   "density_hist_{}.png".format(beads_id))
+            plt.figure(figsize = (6,4))
+            fc.plot.density_and_hist(
+                beads_sample,
+                beads_sample_gated, 
+                density_channels=sc_channels,
+                hist_channels=cluster_channels,
+                gate_contour=gate_contour, 
+                density_params={'mode': 'scatter'}, 
+                hist_params={'div': 4},
+                savefig=figname)
+
+        # Save sample
+        beads_samples.append(beads_sample_gated)
+
+        # Process MEF values
+        # For each channel specified in mef_channels, check whether a list of
+        # MEF values is provided in the spreadsheet, and save them.
+        # If there is no such list in the spreadsheet, throw error.
+        mef_values = []
+        mef_channels = []
+        for fl_channel in fl_channels:
+            if '{} MEF Values'.format(fl_channel) in beads_row:
+                # Save channel name
+                mef_channels.append(fl_channel)
+                # Parse list of values
+                mef = beads_row[fl_channel + ' MEF Values'].split(',')
+                mef = [int(e) if e.strip().isdigit() else np.nan \
+                    for e in mef]
+                mef_values.append(mef)
+        mef_values = np.array(mef_values)
+
+        # Obtain standard curve transformation
+        if mef_channels:
+            if verbose:
+                print "\nCalculating standard curve..."
+            to_mef[beads_id] = fc.mef.get_transform_fxn(
+                beads_sample_gated,
+                mef_values, 
+                cluster_method='gmm', 
+                cluster_channels=cluster_channels,
+                mef_channels=mef_channels,
+                select_peaks_method='proximity',
+                select_peaks_params={'peaks_ch_max': 1015},
+                verbose=verbose, 
+                plot=plot,
+                plot_filename=beads_id,
+                plot_dir=os.path.join(base_dir, plot_dir))
+
+    return beads_samples, to_mef
+
+def parse_samples_table(samples_table,
+                        instruments_table,
+                        to_mef=None,
+                        base_dir="",
+                        verbose=False,
+                        plot=False,
+                        plot_dir=""):
+    """Load FCS files and process them according to table structures
+    specifying instruments and samples.
+
+    The function processes each entry in `samples_table`, and does the
+    following:
+    - Load the FCS file specified in the field "File Path".
+    - Transform the forward scatter/side scatter channels if needed.
+    - Remove the 250 first and 100 last events.
+    - Remove saturated events in the forward scatter and side scatter
+      channels.
+    - Apply density gating on the forward scatter/side scatter channels.
+    - Transform the fluorescence channels to the units specified in the
+      column "<Channel name> Units".
+    - Plot combined forward/side scatter density plots and fluorescence
+      historgrams, if `plot` = True.
+    
+    Names of forward/side scatter and fluorescence channels are taken from
+    `instruments_table`.
+
+    Parameters
+    ----------
+    samples_table : OrderedDict or dict
+        Table specifying samples to be processed.
+    instruments_table : OrderedDict or dict
+        Table specifying instruments.
+    to_mef : dict or OrderedDict, optional
+        Dictionary containing MEF transformation functions. If any entry
+        in `samples_table` requires transformation to MEF, a key: value
+        pair must exist in to_mef, with the key being equal to the
+        contents of field "Beads ID".
+    base_dir : str, optional
+        Directory from where all the other paths are specified from.
+    verbose: bool, optional
+        Whether to print information messages during the excecution of this
+        function.
+    plot : bool, optional
+        Whether to generate and save density/histogram plots of each
+        sample, and each beads sample.
+    plot_dir : str, optional
+        The directory where to save the generated plots of beads samples,
+        relative to `base_dir`. If `plot` is False, this parameter is
+        ignored.
+
+    Returns
+    -------
+    samples : list of FCSData objects
+        A list of processed, gated, and transformed samples, as specified
+        in `samples_table`, in the order of ``samples_table.keys()``.
+
+    """
+    # Do nothing if samples table is empty
+    if not samples_table:
+        return
+
+    if verbose:
+        print "\nProcessing samples ({} entries)...".format(len(samples_table))
+
+    # Check that plotting directory exist, create otherwise
+    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+        os.makedirs(os.path.join(base_dir, plot_dir))
+
+    # Load sample files
+    samples = []
+    for sample_id, sample_row in samples_table.items():
+
+        ### INSTRUMENT DATA ###
+        # Get the appropriate row in the instrument table
+        instruments_row = instruments_table[sample_row['Instrument ID']]
+        # Scatter channels: Foward Scatter, Side Scatter
+        sc_channels = [instruments_row['Forward Scatter Channel'],
+                       instruments_row['Side Scatter Channel'],
+                       ]
+        # Fluorescence channels is a comma-separated list
+        fl_channels = instruments_row['Fluorescence Channels'].split(',')
+        fl_channels = [s.strip() for s in fl_channels]
+
+        ### SAMPLE DATA ###
+        filename = os.path.join(base_dir, sample_row['File Path'])
+        sample = fc.io.FCSData(filename, sample_row)
+        if verbose:
+            print "{} loaded ({} events).".format(sample_id,
+                                                  sample.shape[0])
+
+        ### TRANSFORM ###
+        if verbose:
+            print "Performing data transformation..."
+        # Transform FSC/SSC to relative units
+        sample = fc.transform.exponentiate(sample, sc_channels)
+
+        # Parse fluorescence channels in which to transform
+        report_channels = []
+        report_units = []
+        for fl_channel in fl_channels:
+            # Check whether there is a column with units for fl_channel
+            if "{} Units".format(fl_channel) not in sample_row \
+                    or sample_row['{} Units'.format(fl_channel)] == '':
+                continue
+
+            # Decide what transformation to perform
+            units = sample_row['{} Units'.format(fl_channel)].strip()
+            if units == 'Channel':
+                units_long = "Channel Number"
+            elif units == 'RFI':
+                units_long = "Relative Fluorescence Intensity (RFI)"
+                sample = fc.transform.exponentiate(sample, fl_channel)
+            elif units == 'MEF':
+                units_long = "Molecules of Equivalent Fluorophore (MEF)"
+                to_mef_sample =  to_mef[sample_row['Beads ID']]
+                sample = to_mef_sample(sample, fl_channel)
+            else:
+                raise ValueError("Units {} not recognized for sample {}.".format(
+                    units, sample_id))
+
+            # Register that reporting in this channel must be done
+            report_channels.append(fl_channel)
+            report_units.append(units_long)
+
+
+        ### GATE ###
+        if verbose:
+            print "Performing gating..."
+        # Remove first and last samples
+        sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
+        # Remove saturating samples in forward/side scatter
+        sample_gated = fc.gate.high_low(sample_gated, sc_channels)
+        # # Remove saturating samples in channels to report
+        sample_gated = fc.gate.high_low(sample_gated, report_channels)
+        # Density gating
+        sample_gated, gate_contour = fc.gate.density2d(
+            data=sample_gated,
+            channels=sc_channels,
+            gate_fraction=sample_row['Gate Fraction'])
+
+        # Accumulate
+        samples.append(sample_gated)
+
+        # Plot forward/side scatter density plot and fluorescence histograms
+        if plot:
+            if verbose:
+                print "Plotting density plot and histogram..."
+            # Define density plot parameters
+            density_params = {}
+            density_params['mode'] = 'scatter'
+            density_params['log'] = True
+            # Define histogram plot parameters
+            hist_params = []
+            for ru in report_units:
+                param = {}
+                param['div'] = 4
+                param['xlabel'] = ru
+                param['log'] = ru != 'Channel Number'
+                hist_params.append(param)
+                
+            # Plot
+            figname = os.path.join(base_dir,
+                                   plot_dir,
+                                   "{}.png".format(sample_id))
+            fc.plot.density_and_hist(
+                sample,
+                sample_gated,
+                gate_contour=gate_contour,
+                density_channels=sc_channels,
+                density_params=density_params,
+                hist_channels=report_channels,
+                hist_params=hist_params,
+                savefig=figname)
+
+    return samples
+
+def write_output_workbook(samples,
+                          beads_samples,
+                          filename,
+                          stats=True,
+                          histograms=True):
     raise NotImplementedError
 
 def show_open_file_dialog(filetypes):
@@ -257,27 +598,50 @@ def run():
 
     This function shows a dialog to open an input Excel workbook, loads FCS
     files and processes them as specified in the spreadsheet, and
-    generates plots and an output excel file with statistics for each
-    sample.
+    generates plots and an output workbook with statistics for each sample.
 
     """
-    # Open input excel file
-    input_wb = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
+    # Open input workbook
+    input_path = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
+    if not input_path:
+        return
+    # Extract directory, filename, and filename with no extension from path
+    input_dir, input_filename = os.path.split(input_path)
+    input_filename_no_ext, __ = os.path.splitext(input_filename)
 
-    # Get list of processed FCSData objects from the spreadsheet
-    samples, beads_samples = process_fcs_from_excel_file(input_wb,
-                                                         verbose=True,
-                                                         plot=True)
+    # Read workbook and extract relevant tables
+    wb_content = read_workbook(input_path)
+    instruments_table = read_table(wb_content['Instruments'])
+    beads_table = read_table(wb_content['Beads'])
+    samples_table = read_table(wb_content['Samples'])
 
-    # Generate output excel file
-    input_dir, input_filename_full = os.path.split(input_wb)
-    input_filename, __ = os.path.splitext(input_filename_full)
-    output_form = "{}/{}".format(input_dir, input_filename + '_output.xlsx')
-    write_output_excel_file(samples,
-                            beads_samples,
-                            output_form,
-                            stats=True,
-                            histograms=False)
+    # Process beads samples
+    beads_samples, to_mef = parse_beads_table(
+        beads_table,
+        instruments_table,
+        base_dir=input_dir,
+        verbose=True,
+        plot=True,
+        plot_dir='plot_beads')
+
+    # Process samples
+    samples = parse_samples_table(
+        samples_table,
+        instruments_table,
+        to_mef=to_mef,
+        base_dir=input_dir,
+        verbose=True,
+        plot=True,
+        plot_dir='plot_samples')
+
+    # # Generate output excel file
+    # output_form = "{}/{}".format(input_dir,
+    #                              input_filename_no_ext + '_output.xlsx')
+    # write_output_workbook(samples,
+    #                       beads_samples,
+    #                       output_form,
+    #                       stats=True,
+    #                       histograms=False)
 
 if __name__ == '__main__':
     run()
