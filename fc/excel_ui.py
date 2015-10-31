@@ -760,4 +760,4 @@ def run(verbose=True, plot=True):
     write_workbook(output_path, output_wb)
 
 if __name__ == '__main__':
-    run(verbose = True, plot = False)
+    run(verbose = True, plot = True)
