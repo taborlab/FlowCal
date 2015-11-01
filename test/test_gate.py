@@ -4,7 +4,7 @@
 #
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 5/30/2015
+# Date:    10/31/2015
 #
 # Requires:
 #   * fc.gate
@@ -123,10 +123,10 @@ class TestHighLowGate(unittest.TestCase):
             self.d2[np.array([1,1,1,1,1,1,1,1,1,1], dtype=bool)]
             )
         
-class TestDensity2dGating(unittest.TestCase):
+class TestDensity2dGate1(unittest.TestCase):
     
     def setUp(self):
-        '''
+        """
         Testing proper result of density gating.
 
         This function applied the density2d gate to Data003.fcs with a gating
@@ -136,7 +136,7 @@ class TestDensity2dGating(unittest.TestCase):
         fc.gate.density2d(fc.io.FCSData('Data003.fcs'),
                           channels = ['FSC', 'SSC'],
                           gate_fraction = 0.3)[0]
-        '''
+        """
         self.ungated_data = fc.io.FCSData('test/Data003.fcs')
         self.gated_data = np.load('test/Data003_gate_density2d.npy')
 
@@ -146,6 +146,262 @@ class TestDensity2dGating(unittest.TestCase):
                                        gate_fraction = 0.3)
         np.testing.assert_array_equal(gated_data, self.gated_data)
 
+class TestDensity2dGate2(unittest.TestCase):
+
+    def setUp(self):
+        """Set up data sets."""
+
+        # "pyramid" with density peak at (2,2)
+        d1 = [(x,y) for x in range(5) for y in range(5)]
+        d1.extend([
+            (2,2), (2,2),
+            (2,1), (1,2), (2,3), (3,2)
+            ])
+        self.pyramid = np.array(d1)
+
+        # "slope" with highest density at (4,4)
+        d2 = []
+        for idx in xrange(1,5):
+            d2.extend([(x,y) for x in range(idx,5) for y in range(idx,5)])
+        self.slope = np.array(d2)
+
+    # Test normal use case behaviors
+
+    def test_pyramid_1_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/31, sigma=0.0),
+            np.array([
+                [1,2],
+                [2,1],
+                [2,2],
+                [2,3],
+                [3,2],
+                [2,2],
+                [2,2],
+                [2,1],
+                [1,2],
+                [2,3],
+                [3,2],
+                ])
+            )
+
+    def test_pyramid_1_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/31, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [1,2],
+                [2,1],
+                [2,2],
+                [2,3],
+                [3,2],
+                [2,2],
+                [2,2],
+                [2,1],
+                [1,2],
+                [2,3],
+                [3,2],
+                ])
+            )
+
+    def test_pyramid_1_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/31, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1,0,0,0,0,0,0,0,
+                1,1,1,1,1,1], dtype=bool)
+            )
+
+    def test_pyramid_2_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/31, sigma=0.0),
+            np.array([
+                [2,2],
+                [2,2],
+                [2,2],
+                ])
+            )
+
+    def test_pyramid_2_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/31, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [2,2],
+                [2,2],
+                [2,2],
+                ])
+            )
+
+    def test_pyramid_2_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/31, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
+                1,1,0,0,0,0], dtype=bool)
+            )
+
+    def test_slope_1_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=4.0/30, sigma=0.0),
+            np.array([
+                [4,4],
+                [4,4],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_1_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=4.0/30, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [4,4],
+                [4,4],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_1_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=4.0/30, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
+                0,0,0,1,1], dtype=bool)
+            )
+
+    def test_slope_2_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0),
+            np.array([
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_2_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_2_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,1,0,1,1,
+                1,1,1,1,1], dtype=bool)
+            )
+
+    # Confirm everything gets through with 1.0 gate_fraction
+
+    def test_gate_fraction_1_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=1.0, sigma=0.0),
+            self.pyramid
+            )
+
+    def test_gate_fraction_1_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=1.0, sigma=0.0,
+                full_output=True).gated_data,
+            self.pyramid
+            )
+
+    def test_gate_fraction_1_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=1.0, sigma=0.0,
+                full_output=True).mask,
+            np.array([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+                1,1,1,1,1,1], dtype=bool)
+            )
+
+    # Confirm nothing gets through with 0.0 gate_fraction
+
+    def test_gate_fraction_2_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0),
+            np.array([])
+            )
+
+    def test_gate_fraction_2_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([])
+            )
+
+    def test_gate_fraction_2_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0], dtype=bool)
+            )
+
 if __name__ == '__main__':
     unittest.main()
-    
