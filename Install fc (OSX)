@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Change current working directory
+cd -- "$(dirname "$BASH_SOURCE")"
 # Install fc
 python setup.py install
 # Pause
