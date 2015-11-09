@@ -531,15 +531,15 @@ def parse_samples_table(samples_table,
             if units == 'Channel':
                 units_long = "Channel Number"
             elif units == 'RFI':
-                units_long = "Relative Fluorescence Intensity (RFI)"
+                units_long = "Relative Fluorescence Intensity, RFI"
                 sample = fc.transform.exponentiate(sample, fl_channel)
             elif units == 'MEF':
-                units_long = "Molecules of Equivalent Fluorophore (MEF)"
+                units_long = "Molecules of Equivalent Fluorophore, MEF"
                 to_mef_sample =  to_mef[sample_row['Beads ID']]
                 sample = to_mef_sample(sample, fl_channel)
             else:
-                raise ValueError("Units {} not recognized for sample {}.".format(
-                    units, sample_id))
+                raise ValueError("Units {} not recognized for sample {}.".
+                    format(units, sample_id))
 
             # Register that reporting in this channel must be done
             report_channels.append(fl_channel)
@@ -574,10 +574,10 @@ def parse_samples_table(samples_table,
             density_params['log'] = True
             # Define histogram plot parameters
             hist_params = []
-            for ru in report_units:
+            for rc, ru in zip(report_channels, report_units):
                 param = {}
                 param['div'] = 4
-                param['xlabel'] = ru
+                param['xlabel'] = '{} ({})'.format(rc, ru)
                 param['log'] = ru != 'Channel Number'
                 hist_params.append(param)
                 
