@@ -1,19 +1,15 @@
-#!/usr/bin/python
-#
-# io.py - Module containing wrapper classes for flow cytometry data files.
-#
+"""
+Wrapper classes and utiliy functions for interpreting FCS files.
+"""
+
 # Authors: John T. Sexton (john.t.sexton@rice.edu)
 #          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 6/30/2015
-#
-# Requires:
-#   * numpy
+# Date:    10/29/2015
 
 import os
 import copy
 import collections
 import warnings
-
 import numpy as np
 
 class FCSData(np.ndarray):

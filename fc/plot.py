@@ -1,15 +1,10 @@
-#!/usr/bin/python
-#
-# plot.py - Module containing plotting functions for flow cytometry data sets.
-#
+"""
+Functions for visualizing flow cytometry data.
+"""
+
 # Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
 #         John T. Sexton (john.t.sexton@rice.edu)
-# Date: 10/19/2015
-#
-# Requires:
-#   * numpy
-#   * matplotlib
-#   * scipy
+# Date:   10/30/2015
 
 import numpy as np
 import scipy.ndimage.filters
@@ -56,7 +51,7 @@ def hist1d(data_list,
            savefig = None,
            **kwargs):
 
-    '''Plot 1D histogram of a list of data objects
+    """Plot 1D histogram of a list of data objects
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channel    - channel to use on the data objects.
@@ -77,7 +72,7 @@ def hist1d(data_list,
     **kwargs   - passed directly to matploblib's hist. 'edgecolor', 
                 'facecolor', 'linestyle', and 'label' can be specified as a 
                 lists, with an element for each data object.
-    '''    
+    """    
 
     # Convert to list if necessary
     if not isinstance(data_list, list):
@@ -173,7 +168,7 @@ def density2d(data,
             title = None,
             savefig = None,
             **kwargs):
-    '''Plot 2D density plot
+    """Plot 2D density plot
 
     data        - a NxD FCSData object.
     channels    - channels to use in the density plot.
@@ -192,7 +187,7 @@ def density2d(data,
     savefig     - if not None, it specifies the name of the file to save the 
                    figure to.
     kwargs      - passed directly to matplotlib's scatter or pcolormesh.
-    '''
+    """
 
     # Extract channels to plot
     assert len(channels) == 2, 'Two channels need to be specified.'
@@ -305,7 +300,7 @@ def scatter2d(data_list,
                 savefig = None,
                 **kwargs):
 
-    '''Plot a 2D scatter plot of a list of data objects
+    """Plot a 2D scatter plot of a list of data objects
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channels   - channels to use on the data objects.
@@ -313,7 +308,7 @@ def scatter2d(data_list,
                 figure to.
     **kwargs   - passed directly to matploblib's plot functions. 'color' can be 
                 specified as a list, with an element for each data object.
-    '''    
+    """    
 
     # Check appropriate number of channels
     assert len(channels) == 2, 'Two channels need to be specified.'
@@ -362,7 +357,7 @@ def scatter3d(data_list,
                 savefig = None,
                 **kwargs):
 
-    '''Plot a 3D scatter plot and projections of a list of data objects
+    """Plot a 3D scatter plot and projections of a list of data objects
 
     data_list  - a NxD FCSData object or numpy array, or a list of them.
     channels   - channels to use on the data objects.
@@ -370,7 +365,7 @@ def scatter3d(data_list,
                 figure to.
     **kwargs   - passed directly to matploblib's functions. 'color' can be 
                 specified as a list, with an element for each data object.
-    '''    
+    """    
 
     # Check appropriate number of channels
     assert len(channels) == 3, 'Three channels need to be specified.'
@@ -461,7 +456,7 @@ def mef_std_crv(peaks_ch,
                 ylabel = None,
                 savefig = None,
                 **kwargs):
-    '''Plot the standard curves of a beads model.
+    """Plot the standard curves of a beads model.
 
     peaks_ch   - experimental values of peaks in channel space.
     peaks_mef  - theoretical MEF values of peaks
@@ -474,7 +469,7 @@ def mef_std_crv(peaks_ch,
     savefig    - if not None, it specifies the name of the file to save the 
                 figure to.
     **kwargs   - passed directly to matploblib's plot.
-    '''    
+    """    
 
     # Generate x data
     xdata = np.linspace(xlim[0],xlim[1],200)
@@ -518,7 +513,7 @@ def bar(data,
         ylabel = None,
         savefig = None,
         **kwargs):
-    ''' Draw a barplot.
+    """ Draw a barplot.
 
     Individual bars can be grouped by specifying a number greater than one in
     n_in_group. Each group of n_in_group bars will share the same label and 
@@ -543,7 +538,7 @@ def bar(data,
     savefig             - if not None, it specifies the name of the file to 
                            save the figure to.
     **kwargs            - passed directly to matploblib's plot.
-    '''
+    """
 
     # Default colors
     if colors is None:
@@ -631,7 +626,7 @@ def density_and_hist(data,
                     figsize = None,
                     savefig = None,
                     ):
-    '''Makes a combined density/histograms plot of a FCSData object.
+    """Makes a combined density/histograms plot of a FCSData object.
 
     This function calls hist1d and density2d to plot a density diagram and a 
     number of histograms in the same plot using one single function call. 
@@ -660,7 +655,7 @@ def density_and_hist(data,
                             the number of subplots.
     savefig             - if not None, it specifies the name of the file to 
                             save the figure to.
-    '''
+    """
 
     # Check number of plots
     if density_channels is None and hist_channels is None:
@@ -739,7 +734,7 @@ def hist_and_bar(data_list,
                 figsize = None,
                 savefig = None,
                 ):
-    '''Makes a combined histogram/bar plot of a set of FCSData objects.
+    """Makes a combined histogram/bar plot of a set of FCSData objects.
 
     This function calls hist1d and bar to plot a histogram and a bar plot of
     several FCSData objects on a specified channel, using the same function
@@ -766,7 +761,7 @@ def hist_and_bar(data_list,
                         number of subplots.
     savefig         - if not None, it specifies the name of the file to save
                         the figure to.
-    '''
+    """
 
     # Copy hist_params and bar_params, due to possible modifications
     hist_params = hist_params.copy()
