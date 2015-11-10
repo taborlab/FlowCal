@@ -1,9 +1,6 @@
 """
 `gate` module unit tests.
 """
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date:    10/30/2015
 
 import fc.gate
 import numpy as np
@@ -84,21 +81,21 @@ class TestHighLowGate(unittest.TestCase):
 
     def test_1d_1_gated_data_1(self):
         np.testing.assert_array_equal(
-            fc.gate.high_low(self.d1, high=10, low=1),
-            np.array([[2,3,4,5,6,7,8,9]]).T
+            fc.gate.high_low(self.d1, high=8, low=2),
+            np.array([[3,4,5,6,7]]).T
             )
 
     def test_1d_1_gated_data_2(self):
         np.testing.assert_array_equal(
             fc.gate.high_low(
-                self.d1, high=10, low=1, full_output=True).gated_data,
-            np.array([[2,3,4,5,6,7,8,9]]).T
+                self.d1, high=8, low=2, full_output=True).gated_data,
+            np.array([[3,4,5,6,7]]).T
             )
 
     def test_1d_1_mask(self):
         np.testing.assert_array_equal(
-            fc.gate.high_low(self.d1, high=10, low=1, full_output=True).mask,
-            np.array([0,1,1,1,1,1,1,1,1,0], dtype=bool)
+            fc.gate.high_low(self.d1, high=8, low=2, full_output=True).mask,
+            np.array([0,0,1,1,1,1,1,0,0,0], dtype=bool)
             )
 
     def test_1d_2_gated_data_1(self):
@@ -138,27 +135,6 @@ class TestHighLowGate(unittest.TestCase):
         np.testing.assert_array_equal(
             fc.gate.high_low(self.d1, full_output=True).mask,
             np.array([1,1,1,1,1,1,1,1,1,1], dtype=bool)
-            )
-
-    # Test that inequalities work
-
-    def test_1d_inequalities_gated_data_1(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(self.d1, high=8, low=2),
-            np.array([[3,4,5,6,7]]).T
-            )
-
-    def test_1d_inequalities_gated_data_2(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(
-                self.d1, high=8, low=2, full_output=True).gated_data,
-            np.array([[3,4,5,6,7]]).T
-            )
-
-    def test_1d_inequalities_mask(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(self.d1, high=8, low=2, full_output=True).mask,
-            np.array([0,0,1,1,1,1,1,0,0,0], dtype=bool)
             )
 
     ###
@@ -306,6 +282,64 @@ class TestHighLowGate(unittest.TestCase):
             np.array([1,1,1,1,1,1,1,1,1,1], dtype=bool)
             )
 
+    def test_2d_5_gated_data_1(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(self.d2, high=9, low=2),
+            np.array([
+                [7, 3, 8],
+                ])
+            )
+
+    def test_2d_5_gated_data_2(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(
+                self.d2, high=9, low=2, full_output=True).gated_data,
+            np.array([
+                [7, 3, 8],
+                ])
+            )
+
+    def test_2d_5_mask(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(self.d2, high=9, low=2, full_output=True).mask,
+            np.array([0,0,0,0,0,0,1,0,0,0], dtype=bool)
+            )
+
+    def test_2d_6_gated_data_1(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(self.d2, channels=1, high=9, low=2),
+            np.array([
+                [1, 7, 2],
+                [2, 8, 3],
+                [7, 3, 8],
+                [8, 4, 9],
+                [9, 5, 10],
+                [10, 6, 1],
+                ])
+            )
+
+    def test_2d_6_gated_data_2(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(
+                self.d2, channels=1, high=9, low=2, full_output=True
+                ).gated_data,
+            np.array([
+                [1, 7, 2],
+                [2, 8, 3],
+                [7, 3, 8],
+                [8, 4, 9],
+                [9, 5, 10],
+                [10, 6, 1],
+                ])
+            )
+
+    def test_2d_6_mask(self):
+        np.testing.assert_array_equal(
+            fc.gate.high_low(
+                self.d2, channels=1, high=9, low=2, full_output=True).mask,
+            np.array([1,1,0,0,0,0,1,1,1,1], dtype=bool)
+            )
+
     # Test channels
 
     def test_2d_channels_gated_data_1(self):
@@ -428,66 +462,6 @@ class TestHighLowGate(unittest.TestCase):
         np.testing.assert_array_equal(
             fc.gate.high_low(self.d2, channels=0, full_output=True).mask,
             np.array([1,1,1,1,1,1,1,1,1,1], dtype=bool)
-            )
-
-    # Test that inequalities work
-
-    def test_2d_inequalities_1_gated_data_1(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(self.d2, high=9, low=2),
-            np.array([
-                [7, 3, 8],
-                ])
-            )
-
-    def test_2d_inequalities_1_gated_data_2(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(
-                self.d2, high=9, low=2, full_output=True).gated_data,
-            np.array([
-                [7, 3, 8],
-                ])
-            )
-
-    def test_2d_inequalities_1_mask(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(self.d2, high=9, low=2, full_output=True).mask,
-            np.array([0,0,0,0,0,0,1,0,0,0], dtype=bool)
-            )
-
-    def test_2d_inequalities_2_gated_data_1(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(self.d2, channels=1, high=9, low=2),
-            np.array([
-                [1, 7, 2],
-                [2, 8, 3],
-                [7, 3, 8],
-                [8, 4, 9],
-                [9, 5, 10],
-                [10, 6, 1],
-                ])
-            )
-
-    def test_2d_inequalities_2_gated_data_2(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(
-                self.d2, channels=1, high=9, low=2, full_output=True
-                ).gated_data,
-            np.array([
-                [1, 7, 2],
-                [2, 8, 3],
-                [7, 3, 8],
-                [8, 4, 9],
-                [9, 5, 10],
-                [10, 6, 1],
-                ])
-            )
-
-    def test_2d_inequalities_2_mask(self):
-        np.testing.assert_array_equal(
-            fc.gate.high_low(
-                self.d2, channels=1, high=9, low=2, full_output=True).mask,
-            np.array([1,1,0,0,0,0,1,1,1,1], dtype=bool)
             )
         
 class TestDensity2dGating(unittest.TestCase):
