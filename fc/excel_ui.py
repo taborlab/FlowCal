@@ -1,9 +1,5 @@
 """Module containing the Microsoft Excel User Interface.
 
-Authors: Sebastian M. Castillo-Hair (smc9@rice.edu)
-
-Last Modified: 10/30/2015
-
 """
 
 import re
