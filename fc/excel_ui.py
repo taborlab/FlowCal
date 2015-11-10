@@ -361,10 +361,11 @@ def parse_beads_table(beads_table,
         if verbose:
             print "Running density gate (fraction = {:.2f})...".format(
                 beads_row['Gate Fraction'])
-        beads_sample_gated, gate_contour = fc.gate.density2d(
+        beads_sample_gated, __, gate_contour = fc.gate.density2d(
             data=beads_sample,
             channels=sc_channels,
-            gate_fraction=beads_row['Gate Fraction'])
+            gate_fraction=beads_row['Gate Fraction'],
+            full_output=True)
 
         # Plot forward/side scatter density plot and fluorescence histograms
         if plot:
@@ -556,10 +557,11 @@ def parse_samples_table(samples_table,
         # # Remove saturating samples in channels to report
         sample_gated = fc.gate.high_low(sample_gated, report_channels)
         # Density gating
-        sample_gated, gate_contour = fc.gate.density2d(
+        sample_gated, __, gate_contour = fc.gate.density2d(
             data=sample_gated,
             channels=sc_channels,
-            gate_fraction=sample_row['Gate Fraction'])
+            gate_fraction=sample_row['Gate Fraction'],
+            full_output=True)
 
         # Accumulate
         samples.append(sample_gated)
