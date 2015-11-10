@@ -1,15 +1,19 @@
 """
 Functions for gating flow cytometry data.
+
 All gate functions should be of the following form:
+
     gated_data = gate(data, channels, parameters)
     (gated_data, mask, contour, ...) = gate(data, channels, parameters,
                                             full_output=True)
+
 where data is a NxD numpy array describing N cytometry events observing D
 data dimensions, channels specifies the channels in which to perform
 gating, and parameters are gate-specific parameters. gated_data is the
 gated result, mask is a bool array specifying the gate mask, and
 contour is an optional 2D numpy array of x-y coordinates tracing out
 line(s) which represent the gate (useful for plotting).
+
 """
 
 import numpy as np
@@ -40,10 +44,12 @@ Density2dGateOutput = collections.namedtuple(
 
 def start_end(data, num_start = 250, num_end = 100, full_output=False):
     """Gate out first and last events.
+
     Gate out first and last events from `data`. This is a naive
     implementation which simply removes a set number of events from the
     beginning and end of `data` (as opposed to taking into account any
     optionally specified time information).
+
     Parameters
     ----------
     data : FCSData or numpy array
@@ -53,6 +59,7 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
         Number of events to gate out from beginning and end of `data`.
     full_output : bool
         Flag specifying to return `namedtuple` with additional outputs.
+
     Returns
     -------
     gated_data : FCSData or numpy array, if full_output==False
@@ -64,11 +71,13 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
         mask : numpy array of bool
             Boolean gate mask used to gate data such that
             `gated_data = data[mask]`.
+
     Raises
     ------
     ValueError
         If the number of events to discard is greater than the total
         number of events in `data`.
+
     """
     
     if data.shape[0] < (num_start + num_end):
@@ -87,8 +96,10 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
 
 def high_low(data, channels=None, high=None, low=None, full_output=False):
     """Gate out high and low values across all specified channels.
+
     Gate out events in `data` with values in the specified channels which
     are larger than or equal to `high` or less than or equal to `low`.
+
     Parameters
     ----------
     data : FCSData or numpy array
@@ -103,6 +114,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         gate).
     full_output : bool
         Flag specifying to return `namedtuple` with additional outputs.
+
     Returns
     -------
     gated_data : FCSData or numpy array, if full_output==False
@@ -114,6 +126,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         mask : numpy array of bool
             Boolean gate mask used to gate data such that
             `gated_data = data[mask]`.
+
     """
     
     # Extract channels in which to gate
@@ -152,14 +165,17 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
 def ellipse(data, channels,
             center, a, b, theta=0,
             log=False, full_output=False):
-
     """Gate that preserves events inside an ellipse-shaped region.
+
     Events are kept if they satisfy the following relationship:
+
         (x/a)**2 + (y/b)**2 <= 1
+
     where `x` and `y` are the coordinates of the event list, after
     substracting `center` and rotating by -`theta`. This is mathematically
     equivalent to maintaining the events inside an ellipse with major
     axis `a`, minor axis `b`, center at `center`, and tilted by `theta`.
+
     Parameters
     ----------
     data : FCSData or numpy array
@@ -174,6 +190,7 @@ def ellipse(data, channels,
         `data` before gating.
     full_output : bool
         Flag specifying to return `namedtuple` with additional outputs.
+
     Returns
     -------
     gated_data : FCSData or numpy array, if full_output==False
@@ -188,10 +205,12 @@ def ellipse(data, channels,
         contour : list of 2D numpy arrays
             List of 2D numpy array(s) of x-y coordinates tracing out
             line(s) which represent the gate (useful for plotting).
+
     Raises
     ------
     ValueError
         If more or less than 2 channels are specified.
+
     """
 
     # Extract channels in which to gate
@@ -235,8 +254,10 @@ def density2d(data, channels=[0,1],
               bins=None, gate_fraction=0.65, sigma=10.0,
               full_output=False):
     """Gate that preserves events in the region with highest density.
+
     Gate out all events in `data` but those near regions of highest
     density for the two specified channels.
+
     Parameters
     ----------
     data : FCSData or numpy array
@@ -256,6 +277,7 @@ def density2d(data, channels=[0,1],
         into a density.
     full_output : bool
         Flag specifying to return `namedtuple` with additional outputs.
+
     Returns
     -------
     gated_data : FCSData or numpy array, if full_output==False
@@ -270,6 +292,7 @@ def density2d(data, channels=[0,1],
         contour : list of 2D numpy arrays
             List of 2D numpy array(s) of x-y coordinates tracing out
             line(s) which represent the gate (useful for plotting).
+
     Raises
     ------
     ValueError
@@ -279,6 +302,7 @@ def density2d(data, channels=[0,1],
     Exception
         If an unrecognized matplotlib Path code is encountered when
         attempting to generate contours.
+
     Notes
     -----
     The algorithm for determining density works as follows:
@@ -288,6 +312,7 @@ def density2d(data, channels=[0,1],
            function (PMF).
     `gate_fraction` is then used in conjunction with the PMF to filter out
     all but the densest fraction of events.
+
     """
 
     # Extract channels in which to gate
