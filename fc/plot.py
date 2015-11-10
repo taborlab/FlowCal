@@ -2,10 +2,6 @@
 Functions for visualizing flow cytometry data.
 """
 
-# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-#         John T. Sexton (john.t.sexton@rice.edu)
-# Date:   10/30/2015
-
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib

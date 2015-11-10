@@ -2,10 +2,6 @@
 Wrapper classes and utiliy functions for interpreting FCS files.
 """
 
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date:    10/29/2015
-
 import os
 import copy
 import collections

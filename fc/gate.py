@@ -12,10 +12,6 @@ contour is an optional 2D numpy array of x-y coordinates tracing out
 line(s) which represent the gate (useful for plotting).
 """
 
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date:    10/30/2015
-
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib._cntr         # matplotlib contour, implemented in C
