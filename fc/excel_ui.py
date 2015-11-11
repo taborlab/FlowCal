@@ -1,6 +1,7 @@
 """Module containing the Microsoft Excel User Interface.
 
 Authors: Sebastian M. Castillo-Hair (smc9@rice.edu)
+         Brian P Landry (brian.landry@rice.edu)
 
 Last Modified: 10/30/2015
 
@@ -662,6 +663,58 @@ def add_stats(samples_table, samples):
                 row[channel + ' IQR'] = ''
                 row[channel + ' RCV'] = ''
 
+def generate_histograms_lists(samples_table, samples):
+    """Generates a list of the histograms for each processed channel
+    
+    Histogram information is generated with the following specificiations
+    -  The first row contains the headers ID and Channel in cells 1 and 2
+    -  The following rows contain the following in order
+    1. The sample ID
+    2. The channel
+    3. The type of data in the row: Bins or Counts
+    4. A list of all of the bin or count values associated with the row
+    
+
+    Parameters
+    ----------
+    samples_table : dict or OrderedDict
+        Table specifying samples to analyze
+    samples : list
+        FCSData objects from which to calculate histograms. ``samples[i]``
+        should correspond to ``samples_table.values()[i]``
+    
+    Returns
+    -------
+    rows: list-of-lists
+        A list of lists where the top levels represents individual rows and
+        the second level represents cell values in that row
+    """
+    # List of channels that require stats histograms
+    headers = samples_table.values()[0].keys()
+    r = re.compile(r'^(\S)*(\s)*Units$')
+    stats_headers = [h for h in headers if r.match(h)]
+    stats_channels = [s[:-5].strip() for s in stats_headers]
+    
+    rows = []
+    rows.append(['ID','Channel'])
+
+    for sample_id, sample_values, sample\
+            in zip(samples_table.keys(), samples_table.values(), samples):
+        for header, channel in zip(stats_headers, stats_channels):
+            if sample_values[header]:
+                info = sample[:,channel].channel_info[0]
+                
+                bins_row = [sample_id, channel, 'Bins']
+                bins_row.extend(info['bin_vals'])
+                rows.append(bins_row)
+                
+                val_row = [sample_id, channel, 'Counts']
+                counts, bins = np.histogram(sample[:,channel], bins = info['bin_edges'])
+                val_row.extend(counts)
+                rows.append(val_row)
+                
+    return rows
+                
 def show_open_file_dialog(filetypes):
     """Show an open file dialog and return the path of the file selected.
 
@@ -747,17 +800,21 @@ def run(verbose=True, plot=True):
 
     # Add stats to samples table
     add_stats(samples_table, samples)
-
+    
+    # Generate Histograms
+    histograms = generate_histograms_lists(samples_table, samples)
+    
     # Generate output workbook object
     output_wb = collections.OrderedDict()
     output_wb['Instruments'] = table_to_list(instruments_table)
     output_wb['Beads'] = table_to_list(beads_table)
     output_wb['Samples'] = table_to_list(samples_table)
+    output_wb['Histograms'] = histograms
 
     # Write output excel file
     output_filename = "{}_output.xlsx".format(input_filename_no_ext)
     output_path = os.path.join(input_dir, output_filename)
     write_workbook(output_path, output_wb)
-
+    
 if __name__ == '__main__':
     run(verbose = True, plot = True)
