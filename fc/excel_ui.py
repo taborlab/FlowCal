@@ -1,13 +1,5 @@
 """Module containing the Microsoft Excel User Interface.
 
-<<<<<<< HEAD
-Authors: Sebastian M. Castillo-Hair (smc9@rice.edu)
-         Brian P Landry (brian.landry@rice.edu)
-
-Last Modified: 10/30/2015
-
-=======
->>>>>>> excel-ui
 """
 
 import re
@@ -699,7 +691,7 @@ def generate_histograms_lists(samples_table, samples):
     r = re.compile(r'^(\S)*(\s)*Units$')
     stats_headers = [h for h in headers if r.match(h)]
     stats_channels = [s[:-5].strip() for s in stats_headers]
-    
+
     rows = []
     rows.append(['ID','Channel'])
 
@@ -708,18 +700,18 @@ def generate_histograms_lists(samples_table, samples):
         for header, channel in zip(stats_headers, stats_channels):
             if sample_values[header]:
                 info = sample[:,channel].channel_info[0]
-                
+
                 bins_row = [sample_id, channel, 'Bins']
                 bins_row.extend(info['bin_vals'])
                 rows.append(bins_row)
-                
+
                 val_row = [sample_id, channel, 'Counts']
                 counts, bins = np.histogram(sample[:,channel], bins = info['bin_edges'])
                 val_row.extend(counts)
                 rows.append(val_row)
-                
+
     return rows
-                
+
 def show_open_file_dialog(filetypes):
     """Show an open file dialog and return the path of the file selected.
 
@@ -805,10 +797,10 @@ def run(verbose=True, plot=True):
 
     # Add stats to samples table
     add_stats(samples_table, samples)
-    
-    # Generate Histograms
+
+    # Generate histograms
     histograms = generate_histograms_lists(samples_table, samples)
-    
+
     # Generate output workbook object
     output_wb = collections.OrderedDict()
     output_wb['Instruments'] = table_to_list(instruments_table)
@@ -820,6 +812,6 @@ def run(verbose=True, plot=True):
     output_filename = "{}_output.xlsx".format(input_filename_no_ext)
     output_path = os.path.join(input_dir, output_filename)
     write_workbook(output_path, output_wb)
-    
+
 if __name__ == '__main__':
     run(verbose = True, plot = True)
