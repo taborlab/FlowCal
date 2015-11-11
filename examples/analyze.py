@@ -54,9 +54,9 @@ if __name__ == "__main__":
     beads_data = fc.gate.high_low(beads_data, sc_channels)
     # Density gate
     print("\nRunning density gate on beads data...")
-    gated_beads_data, gate_contour = fc.gate.density2d(data = beads_data,
-                                                    channels = sc_channels,
-                                                    gate_fraction = 0.3)
+    gated_beads_data, __, gate_contour = fc.gate.density2d(
+        data=beads_data, channels=sc_channels, gate_fraction=0.3,
+        full_output=True)
     # Plot
     plt.figure(figsize = (6,4))
     fc.plot.density_and_hist(beads_data, gated_beads_data, 
@@ -107,9 +107,9 @@ if __name__ == "__main__":
     data_gated_contour = []
     for di in data_transf:
         print("{}...".format(str(di)))
-        di_gated, gate_contour = fc.gate.density2d(data = di,
-                                            channels = sc_channels,
-                                            gate_fraction = 0.2)
+        di_gated, __, gate_contour = fc.gate.density2d(
+            data=di, channels=sc_channels, gate_fraction=0.2,
+            full_output=True)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 

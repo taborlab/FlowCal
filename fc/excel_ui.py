@@ -1,10 +1,13 @@
 """Module containing the Microsoft Excel User Interface.
 
+<<<<<<< HEAD
 Authors: Sebastian M. Castillo-Hair (smc9@rice.edu)
          Brian P Landry (brian.landry@rice.edu)
 
 Last Modified: 10/30/2015
 
+=======
+>>>>>>> excel-ui
 """
 
 import re
@@ -362,10 +365,11 @@ def parse_beads_table(beads_table,
         if verbose:
             print "Running density gate (fraction = {:.2f})...".format(
                 beads_row['Gate Fraction'])
-        beads_sample_gated, gate_contour = fc.gate.density2d(
+        beads_sample_gated, __, gate_contour = fc.gate.density2d(
             data=beads_sample,
             channels=sc_channels,
-            gate_fraction=beads_row['Gate Fraction'])
+            gate_fraction=beads_row['Gate Fraction'],
+            full_output=True)
 
         # Plot forward/side scatter density plot and fluorescence histograms
         if plot:
@@ -532,15 +536,15 @@ def parse_samples_table(samples_table,
             if units == 'Channel':
                 units_long = "Channel Number"
             elif units == 'RFI':
-                units_long = "Relative Fluorescence Intensity (RFI)"
+                units_long = "Relative Fluorescence Intensity, RFI"
                 sample = fc.transform.exponentiate(sample, fl_channel)
             elif units == 'MEF':
-                units_long = "Molecules of Equivalent Fluorophore (MEF)"
+                units_long = "Molecules of Equivalent Fluorophore, MEF"
                 to_mef_sample =  to_mef[sample_row['Beads ID']]
                 sample = to_mef_sample(sample, fl_channel)
             else:
-                raise ValueError("Units {} not recognized for sample {}.".format(
-                    units, sample_id))
+                raise ValueError("Units {} not recognized for sample {}.".
+                    format(units, sample_id))
 
             # Register that reporting in this channel must be done
             report_channels.append(fl_channel)
@@ -557,10 +561,11 @@ def parse_samples_table(samples_table,
         # # Remove saturating samples in channels to report
         sample_gated = fc.gate.high_low(sample_gated, report_channels)
         # Density gating
-        sample_gated, gate_contour = fc.gate.density2d(
+        sample_gated, __, gate_contour = fc.gate.density2d(
             data=sample_gated,
             channels=sc_channels,
-            gate_fraction=sample_row['Gate Fraction'])
+            gate_fraction=sample_row['Gate Fraction'],
+            full_output=True)
 
         # Accumulate
         samples.append(sample_gated)
@@ -575,10 +580,10 @@ def parse_samples_table(samples_table,
             density_params['log'] = True
             # Define histogram plot parameters
             hist_params = []
-            for ru in report_units:
+            for rc, ru in zip(report_channels, report_units):
                 param = {}
                 param['div'] = 4
-                param['xlabel'] = ru
+                param['xlabel'] = '{} ({})'.format(rc, ru)
                 param['log'] = ru != 'Channel Number'
                 hist_params.append(param)
                 
