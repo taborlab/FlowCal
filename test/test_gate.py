@@ -686,6 +686,81 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1], dtype=bool)
             )
 
+    def test_slope_3_gated_data_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=23.0/30, sigma=0.0),
+            np.array([
+                [2,2],
+                [2,3],
+                [2,4],
+                [3,2],
+                [3,3],
+                [3,4],
+                [4,2],
+                [4,3],
+                [4,4],
+                [2,2],
+                [2,3],
+                [2,4],
+                [3,2],
+                [3,3],
+                [3,4],
+                [4,2],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_3_gated_data_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=23.0/30, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [2,2],
+                [2,3],
+                [2,4],
+                [3,2],
+                [3,3],
+                [3,4],
+                [4,2],
+                [4,3],
+                [4,4],
+                [2,2],
+                [2,3],
+                [2,4],
+                [3,2],
+                [3,3],
+                [3,4],
+                [4,2],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_slope_3_mask(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=23.0/30, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,1,1,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,
+                1,1,1,1,1], dtype=bool)
+            )
+
     # Confirm everything gets through with 1.0 gate_fraction
 
     def test_gate_fraction_1_gated_data_1(self):
