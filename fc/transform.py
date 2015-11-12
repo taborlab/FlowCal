@@ -1,58 +1,69 @@
-#!/usr/bin/python
-#
-# transform.py - Module containing flow cytometry transformations.
-#
-# All transformations should be of the following form:
-#
-#     data_t = transform(data, channels, params):
-#
-# where 'data' and 'data_t' are NxD FCSData object or numpy arrays, representing
-# N events with D channels, 'channels' indicate the channels in which to apply
-# the transformation, and params are transformation-specific parameters.
-# Each transformation function can apply its own restrictions or default on 
-# 'channels'.
-# If data is an FCSData object, transform should rescale 
-# data.channel_info['range'] if necessary.
-# 
-#
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 7/7/2015
-#
-# Requires:
-#   * numpy
+"""
+Functions for transforming flow cytometry data
+
+All transformations should be of the following form:
+
+    data_t = transform(data, channels, params):
+
+where `data` and `data_t` are NxD FCSData objects or numpy arrays,
+representing N events with D channels, `channels` indicate the channels in
+which to apply the transformation, and `params` are transformation-specific
+parameters. Each transformation function can apply its own restrictions or
+default on `channels`.
+
+If `data` is an FCSData object, `transform` should rescale
+``data.channel_info['range']`` if necessary.
+
+"""
 
 import numpy as np
 
 def transform(data, channels, transform_fxn, def_channels = None):
-    '''Generic transformation function, to be used by other functions.
+    """Generic transformation function, automatically takes care of range
+    and bins information.
 
-    This function performs basic checks on channels and data. Then it applies
-    transform_fxn to the specified channels. Finally, it rescales range in 
-    data.channel_info if necessary.
+    This function performs basic checks on `channels` and `data`. It then
+    applies `transform_fxn` to the specified channels. Finally, it rescales
+    range and bins in ``data.channel_info`` if necessary.
 
-    data            - NxD FCSData object or numpy array
-    channels        - channels in which to perform the transformation. If 
-                        channels is None, use def_channels.
-    def_channels    - default set of channels in which to perform the 
-                        transformations. If None, use all channels.
-    transform_fxn   - Function that performs the actual transformation.
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int, str, list of int, list of str, optional
+        Channels on which to perform the transformation. If `channels` is
+        None, use def_channels.
+    transform_fxn : functions
+        Function that performs the actual transformation.
+    def_channels : int, str, list of int, list of str, optional
+        Default set of channels in which to perform the transformation.
+        If `def_channels` is None, use all channels.
 
-    returns         - NxD FCSData object or numpy array.
-    '''
+    Returns
+    -------
+    data_t : FCSData or numpy array
+        NxD transformed flow cytometry data.
+
+    """
+
     # Copy data array
     data_t = data.copy().astype(np.float64)
+
     # Default
     if channels is None:
         if def_channels is None:
             channels = range(data_t.shape[1])
         else:
             channels = def_channels
+
     # Convert channels to iterable
     if not hasattr(channels, '__iter__'):
         channels = [channels]
+
     # Apply transformation
     data_t[:,channels] = transform_fxn(data_t[:,channels])
+
     # Apply transformation to range, bin_values, and bin_edges
     if hasattr(data_t, 'channel_info'):
         for channel in channels:
@@ -76,17 +87,31 @@ def transform(data, channels, transform_fxn, def_channels = None):
 
 
 def exponentiate(data, channels = None):
-    '''Exponentiate data using the following transformation:
+    """Exponentiate flow cytometry data.
+
+    This function applies the following transformation:
+
         y = 10^(x/256)
-    This transformation spaces out 10-bit data across 4 logs from 1 to 10,000.
-    This rescales the fluorecence units to those observed in most flow 
-    cytometry aquisition software, if log scale has been used.
 
-    data     - NxD FCSData object or numpy array
-    channels - channels in which to perform the transformation. If channels is
-                None, perform transformation in all channels.
+    This spaces out 10-bit data across 4 logs from 1 to 1e4, which rescales
+    the fluorecence units to those observed in most flow cytometry
+    aquisition software, if a log amplifier has been used.
 
-    returns  - NxD FCSData object or numpy array. '''
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int, str, list of int, list of str, optional
+        Channels on which to perform the transformation. If `channels` is
+        None, perform transformation in all channels.
+
+    Returns
+    -------
+    FCSData or numpy array
+        NxD transformed flow cytometry data.
+
+    """
 
     # Transform and return
     def transform_fxn(x): return 10**(x/256.0)
@@ -94,27 +119,49 @@ def exponentiate(data, channels = None):
 
 
 def to_mef(data, channels, sc_list, sc_channels = None):
-    '''Transform data to MEF units using standard curves obtained from 
+    """Transform data to MEF units using standard curves obtained from 
     calibration beads.
 
-    This function allows for the specification of the channels in which the
-    MEF transformation should be applied. The function automatically checks 
-    whether a standard curve is available for the specified channel, and throws
-    and error otherwise.
+    This function accepts a list of standard curves (`sc_list`) and a list
+    of channels to which those standard curves should be applied
+    (`sc_channels`). `to_mef` automatically checks whether a standard curve
+    is available for each channel specified in `channels`, and throws an
+    error otherwise.
 
-    It is recommended that after calculating the standard curves, this function
-    be reduced using functools.partial to the following signature:
-        to_mef(data, channels)
+    This function is intended to be reduced to the following signature:
 
-    Arguments:
-    data        - NxD FCSData object or numpy array
-    channels    - Channels in which to perform the transformation. If channels 
-                    is None, use all channels in sc_channels
-    sc_list     - List of functions implementing the standard curves for each
-                    of the channels in sc_channels.
-    sc_channels - List of channels in which the standard curves are available. 
-                    If None, use all channels in data.
-    '''
+        to_mef_reduced(data, channels)
+
+    by using ``functools.partial`` once a list of standard curves and their
+    respective channels is available.
+
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int, str, list of int, list of str
+        Channels on which to perform the transformation. If `channels` is
+        None, perform transformation in all channels specified on
+        `sc_channels`.
+    sc_list : list of functions
+        Functions implementing the standard curves for each channel in
+        `sc_channels`.
+    sc_channels : list of int or list of str, optional
+        List of channels corresponding to each function in `sc_list`. If
+        None, use all channels in `data`.
+
+    Returns
+    -------
+    FCSData or numpy array
+        NxD transformed flow cytometry data.
+
+    Raises
+    ------
+    ValueError
+        If any channel specified in `channels` is not in `sc_channels`.
+
+    """
 
     # Default sc_channels
     if sc_channels is None:
