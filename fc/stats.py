@@ -1,5 +1,6 @@
 """
 Functions to calculate statistics from the events in a FCSData object.
+
 """
 
 import numpy as np

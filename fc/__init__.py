@@ -1,5 +1,6 @@
 """
 `FlowCal`: Calibration and analysis of flow cytometry data.
+
 """
 
 # Versions should comply with PEP440.  For a discussion on single-sourcing
