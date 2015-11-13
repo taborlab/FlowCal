@@ -229,9 +229,27 @@ def density2d(data, channels=[0,1],
     # Make 2D histogram and get bins
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
-    # Get lists of indices per bin
+    # Map each data point to its histogram bin.
+    #
+    # Note that the index returned by np.digitize is such that
+    # bins[i-1] <= x < bins[i], whereas indexing the histogram will result in
+    # the following: hist[i,j] = bin corresponding to
+    # xedges[i] <= x < xedges[i+1] and yedges[i] <= y < yedges[i+1].
+    # Therefore, we need to subtract 1 from the np.digitize result to be able
+    # to index into the appropriate bin in the histogram.
     ix = np.digitize(data_ch[:,0], bins=xe) - 1
     iy = np.digitize(data_ch[:,1], bins=ye) - 1
+
+    # In the current version of numpy, there exists a disparity in how
+    # np.histogram and np.digitize treat the rightmost bin edge (np.digitize
+    # is not the strict inverse of np.histogram). Specifically, np.histogram
+    # treats the rightmost bin interval as fully closed (rightmost bin edge is
+    # included in rightmost bin), whereas np.digitize treats all bins as
+    # half-open (you can specify which side is closed and which side is open;
+    # `right` parameter). The expected behavior for this gating function is to
+    # mimic np.histogram behavior, so we must reconcile this disparity.
+    ix[data_ch[:,0] == xe[-1]] = len(xe)-2
+    iy[data_ch[:,1] == ye[-1]] = len(ye)-2
 
     # Create a 2D array of lists corresponding to the 2D histogram to
     # accumulate events associated with each bin.
