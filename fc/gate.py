@@ -226,9 +226,6 @@ def density2d(data, channels=[0,1],
                             data_ch.channel_info[1]['bin_edges'],
                             ])
 
-    # Determine number of points to keep
-    n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
-
     # Make 2D histogram and get bins
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
@@ -236,11 +233,28 @@ def density2d(data, channels=[0,1],
     ix = np.digitize(data_ch[:,0], bins=xe) - 1
     iy = np.digitize(data_ch[:,1], bins=ye) - 1
 
+    # Create a 2D array of lists corresponding to the 2D histogram to
+    # accumulate events associated with each bin.
     filler = np.frompyfunc(lambda x: list(), 1, 1)
     Hi = np.empty_like(H, dtype=np.object)
     filler(Hi, Hi)
+
+    x_outliers = (-1, len(xe)-1)    # Ignore (gate out) points which exist
+    y_outliers = (-1, len(ye)-1)    # outside specified bins.
+                                    # `np.digitize()-1` will assign points
+                                    # less than `bins` to bin "-1" and points
+                                    # greater than `bins` to len(bins)-1.
+
+    N = 0   # Keep track of total number of events after implicit gating
+
     for i, (xi, yi) in enumerate(zip(ix, iy)):
-        Hi[xi, yi].append(i)
+        if (xi not in x_outliers and yi not in y_outliers):
+            Hi[xi, yi].append(i)
+            N = N+1
+
+    # Determine number of points to keep. Only consider points which have not
+    # been thrown out as outliers.
+    n = int(np.ceil(gate_fraction*float(N)))
 
     # Blur 2D histogram
     sH = scipy.ndimage.filters.gaussian_filter(
