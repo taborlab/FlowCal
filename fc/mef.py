@@ -1,18 +1,8 @@
-#!/usr/bin/python
-#
-# transform.py - Module containing functions related to calibration beads
-#                   analysis and standard curve determination.
-#
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
-#
-# Requires:
-#   * numpy
-#   * scipy
-#   * scikit-learn
-#   * fc.plot
-#   * fc.transform
+"""
+Functions for analysis of calibration beads and generation of standard
+curves.
+
+"""
 
 import os
 import functools
@@ -29,7 +19,7 @@ import fc.plot
 import fc.transform
 
 def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
-    '''
+    """
     Find clusters in the data array using the DBSCAN method from the 
     scikit-learn library.
 
@@ -41,7 +31,7 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     n_clusters_exp - Number of expected clusters
 
     returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    """
     # Default value of min_samples
     if min_samples is None:
         min_samples = data.shape[0]/200.
@@ -93,14 +83,14 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     return labels
 
 def clustering_distance(data, n_clusters = 8):
-    '''
+    """
     Find clusters in the data array based on distance to the origin.
 
     data        - NxD numpy array.
     n_clusters  - Number of expected clusters
 
     returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    """
     # Number of elements per cluster
     fractions = np.ones(n_clusters)*1./n_clusters
 
@@ -126,7 +116,7 @@ def clustering_distance(data, n_clusters = 8):
 
 def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub', 
     tol = 1e-7, min_covar = 1e-2):
-    '''
+    """
     Find clusters in the data array using the GMM method from the 
     scikit-learn library.
 
@@ -138,7 +128,7 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     min_covar       - Minimum covariance for the GMM method. Check 
                         scikit-learn documentation for more info.
     returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    """
 
 
     # Initialization method
@@ -219,7 +209,7 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     return labels
 
 def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
-    '''
+    """
     Find histogram peaks using the smoothed mode method.
 
     The algorithm then proceeds as follows:
@@ -238,7 +228,7 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     returns     - The value of the identified peak.
                 - (max_val - min_val + 1) numpy array with a smoothed 
                   histogram for each cluster.
-    '''
+    """
 
     # Calculate bin edges and centers
     bin_edges = np.arange(min_val, max_val + 2) - 0.5
@@ -263,14 +253,14 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     return peak, hist_smooth
 
 def find_peaks_median(data):
-    '''
+    """
     Find histogram peaks as the median.
 
     data        - Nx1 numpy array with the 1D data from where peaks should be 
                   identified. 
 
     returns     - The median of data.
-    '''
+    """
 
     peak = np.median(data)
 
@@ -283,7 +273,7 @@ def select_peaks_proximity(peaks_ch,
                            peaks_ch_std_mult_r = 2.5,
                            peaks_ch_min = 0,
                            peaks_ch_max = 1023):
-    '''Select peaks for fitting based on proximity to the minimum and maximum 
+    """Select peaks for fitting based on proximity to the minimum and maximum 
     values.
 
     This function discards some peaks on channel space from peaks_ch if they're
@@ -299,7 +289,7 @@ def select_peaks_proximity(peaks_ch,
     peaks_ch_std_mult_r - Tolerance for peaks at the right, in std. devs.
     peaks_ch_min        - Minimum tolerable value in channel space
     peaks_ch_max        - Maximum tolerable value in channel space
-    '''
+    """
 
     # Minimum peak standard deviation will be 1.0
     min_std = 1.0
@@ -350,7 +340,7 @@ def select_peaks_proximity(peaks_ch,
     return sel_peaks_ch, sel_peaks_mef
 
 def fit_standard_curve(peaks_ch, peaks_mef):
-    '''Fit a model mapping calibration bead fluroescence in channel space units 
+    """Fit a model mapping calibration bead fluroescence in channel space units 
     to their known MEF values.
 
     We first fit a beads fluroescence model using the peaks_ch and peaks_mef 
@@ -388,7 +378,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
                 considering the autofluorescence of the beads.
     sc_params  - array with fitted parameters of the beads model: 
                 [m, b, fl_mef_auto].
-    '''
+    """
 
     # Check that the input data has consistent dimensions
     assert len(peaks_ch) == len(peaks_mef), "peaks_ch and  \
@@ -441,7 +431,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     select_peaks_method = 'proximity', select_peaks_params = {},
     verbose = False, plot = False, plot_dir = None, plot_filename = None,
     full = False):
-    '''Generate a function that transforms channel data into MEF data.
+    """Generate a function that transforms channel data into MEF data.
 
     This is performed using flow cytometry beads data, contained in the 
     data_beads argument. The steps involved in the MEF standard curve 
@@ -506,7 +496,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     fitting_res     - If full == True, this is a dictionary that contains the 
                         results of the model fitting step.
 
-    '''
+    """
     if verbose:
         prev_precision = np.get_printoptions()['precision']
         np.set_printoptions(precision=2)
