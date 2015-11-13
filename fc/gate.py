@@ -268,9 +268,12 @@ def density2d(data, channels=[0,1],
     bins : int or array_like or [int, int] or [array, array]
         `bins` argument passed to `np.histogram2d`. If `None`, extracted
         from `FCSData` if possible. `bins` parameter supercedes `FCSData`
-        attribute.
+        attribute. Values outside of `bins` range are gated out.
     gate_fraction : float
-        Fraction of events to retain after gating.
+        Fraction dictating minimum number of events (rounded up) to
+        retain after gating. May retain more events based on number of
+        events per bin. Fraction is applied after any points which exist
+        outside of specified `bins` are implicitly gated out.
     sigma : scalar or sequence of scalars
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
