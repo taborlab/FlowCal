@@ -1,5 +1,5 @@
 """
-Wrapper classes and utiliy functions for interpreting FCS files.
+Classes and utiliy functions for interpreting FCS files.
 
 """
 
@@ -10,9 +10,21 @@ import warnings
 import numpy as np
 
 class FCSData(np.ndarray):
-    '''Class describing an FCS Data file.
+    """Class describing an FCS Data file.
 
-    The following versions are supported:
+    An `FCSData` object is an NxD numpy array representing N cytometry
+    events with D dimensions extracted from the DATA segment of an FCS
+    file. The TEXT segment information is included as a dictionary in one
+    of the class attributes, `text`. ANALYSIS information is parsed
+    similarly.
+
+    Two additional attributes are implemented: `channel_info` stores
+    information related to each channels, including name, gain,
+    precalculated bins, etc. `metadata` keeps user-defined,
+    channel-independent, sample-specific information, separate from `text`
+    and `analysis`.
+
+    The following versions of the FCS standard are supported:
         - FCS 2.0
         - FCS 3.0
         - FCS 3.1
@@ -21,76 +33,85 @@ class FCSData(np.ndarray):
     We assume that the TEXT segment is such that:
         - There is only one data set in the file.
         - $MODE = 'L' (list mode, histogram mode not supported).
-        - $DATATYPE = 'I' (unsigned integer), 'F' (32-bit floating point), or
-            'D' (64-bit floating point). 'A' (ASCII) is not supported.
+        - $DATATYPE = 'I' (unsigned integer), 'F' (32-bit floating point),
+            or 'D' (64-bit floating point). 'A' (ASCII) is not supported.
         - If $DATATYPE = 'I', $PnB % 8 = 0 for all channels.
         - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian)
         - $GATE = 0
-
-    The object is an NxD numpy array representing N cytometry events with D
-    dimensions extracted from the FCS DATA segment of an FCS file. The TEXT
-    segment information is included in attributes. ANALYSIS information is
-    parsed as well.
-
-    Two additional attributes are implemented: channel_info stores information
-    related to each channels, including name, gain, precalculated bins, etc.
-    metadata keeps channel-independent, sample-specific information,
-    separate from text and analysis.
     
-    Class Attributes:
-        * infile    - string or file-like object
-        * text      - dictionary of KEY-VALUE pairs extracted from FCS TEXT
-                        section
-        * analysis  - dictionary of KEY-VALUE pairs extracted from FCS TEXT
-                        section
-        * channel_info - list of dictionaries describing each channels. Keys:
-            * 'label'
-            * 'number'
-            * 'pmt_voltage' (i.e. gain)
-            * 'amplifier' (values = 'lin' or 'log')
-            * 'range': [min, max, steps]
-            * 'bin_vals': numpy array with bin values
-            * 'bin_edges': numpy array with bin edges
-        * metadata  - dictionary with additional channel-independent, 
-                      sample-specific information.
+    Attributes
+    ----------
+    infile : str or file-like object
+        The path of the associated FCS file.
+    text : dict
+        Keyword-value pairs from the TEXT section of the FCS file.
+    analysis : dict
+        Keyword-value pairs from the ANALYSIS section of the FCS file.
+    channel_info : list
+        List of dictionaries, each one containing information about each
+        channel. The keys of each one are:
+        - label :  Name of the channel.
+        - number : Channel index.
+        - pmt_voltage : Voltage of the PMT detector.
+        - amplifier : amplifier type, 'lin' or 'log'.
+        - bin_vals : numpy array with bin values.
+        - bin_vals : numpy array with bin edges.
+    metadata : dict
+        Additional channel-independent, sample-specific information.
+    channels
+    time_step
+    acquisition_time
 
-    References:
+    References
+    ----------
+    .. [1] P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+       "Data file standard for flow cytometry. Data File Standards
+       Committee of the Society for Analytical Cytology," Cytometry vol
+       11, pp 323-332, 1990, PMID 2340769.
+
+    .. [2] L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+       J.C. Wood, R.F. Murphy, "Proposed new data file standard for flow
+       cytometry, version FCS 3.0," Cytometry vol 28, pp 118-122, 1997,
+       PMID 9181300.
+
+    .. [3] J. Spidlen, et al, "Data File Standard for Flow Cytometry,
+       version FCS 3.1," Cytometry A vol 77A, pp 97-100, 2009, PMID
+       19937951.
     
-    FCS2.0 Standard:
-    [Dean, PN; Bagwell, CB; Lindmo, T; Murphy, RF; Salzman, GC (1990).
-    "Data file standard for flow cytometry. Data File Standards Committee
-    of the Society for Analytical Cytology.". Cytometry 11: 323-332.
-    PMID 2340769]
+    .. [4] R. Hicks, "BD$WORD file header fields,"
+       https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
 
-    FCS3.0 Standard:
-    [Seamer LC, Bagwell CB, Barden L, Redelman D, Salzman GC, Wood JC,
-    Murphy RF. "Proposed new data file standard for flow cytometry, version
-    FCS 3.0.". Cytometry. 1997 Jun 1;28(2):118-22. PMID 9181300]
-
-    FCS3.1 Standard:
-    [Spidlen J et al. "Data File Standard for Flow Cytometry, version
-    FCS 3.1.". Cytometry A. 2010 Jan;77(1):97-100. PMID 19937951]
-    
-    Description of special BS$WORD TEXT fields:
-    [https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html]
-    '''
+    """
 
     @staticmethod
     def _read_fcs_text_segment(f, begin, end, delim = None):
-        '''
-        Parse region of specified file and interpret as TEXT segment.
+        """Parse region of specified file and interpret as TEXT segment.
 
-        Since the ANALYSIS and supplemental TEXT segments are encoded in the
-        same way, this function can also be used to parse them.
+        Since the ANALYSIS and supplemental TEXT segments are encoded in
+        the same way, this function can also be used to parse the ANALYSIS
+        section.
 
-        f       - file-like object
-        begin   - offset (in bytes) to first byte of TEXT segment
-        end     - offset (in bytes) to last byte of TEXT segment
-        delim   - 1-byte delimiter character (optional). If None, will extract
-                  delimiter as first byte of TEXT segment. See FCS standards.
+        Parameters
+        ----------
+        f : file-like object
+            FCS file.
+        begin : int
+            Offset (in bytes) to first byte of TEXT segment.
+        end : int
+            Offset (in bytes) to last byte of TEXT segment.
+        delim : str, optional
+            Delimiter character, placed at the start and the end of a
+            keyword value. If None, will extract delimiter as first byte
+            of TEXT segment.
 
-        returns - dictionary of KEY-VALUE pairs, string containing delimiter
-        '''
+        Returns
+        -------
+        text : dict
+            Keyword-value pairs contained in the specified TEXT section.
+        delim : str
+            Delimiter character.
+
+        """
         # Read delimiter if necessary
         if delim is None:
             f.seek(begin)
@@ -135,21 +156,30 @@ class FCSData(np.ndarray):
 
     @staticmethod
     def load_from_file(infile):
-        '''
-        Load data, text, and channel_info from FCS file.
+        """Load data, text, and channel_info from a specified FCS file.
 
-        infile - String or file-like object. If string, it contains the 
-                    name of the file to load data from. If file-like 
-                    object, it refers to the file itself.
+        Parameters
+        ----------
+        infile : str or file-like object
+            If string, it should contain the path of the FCS file to load
+            data from. If file-like object, it should refer to the FCS file
+            itself.
 
-        returns:
+        Returns
+        -------
+        data : array
+            NxD array containing information from the DATA section of the
+            FCS file.
+        text : dict
+            Keyword-value pairs contained in the TEXT section of the FCS
+            file.
+        channel_info : list
+           - List of dictionaries, each one containing information about
+           each channel.
 
-        data            - numpy array with data from the FCS file
-        text            - dictionary of KEY-VALUE pairs extracted from FCS TEXT
-                            section.
-        channel_info    - list of dictionaries describing each channels.
-        '''
+        """
 
+        # Open file if necessary
         if isinstance(infile, basestring):
             f = open(infile, 'rb')
         else:
@@ -453,13 +483,26 @@ class FCSData(np.ndarray):
         return (data, text, analysis, channel_info)
 
     def __new__(cls, infile, metadata = {}):
-        '''
-        Class constructor. 
+        """Class constructor.
 
-        Special care needs to be taken when inheriting from a numpy array. 
-        Details can be found here: 
+        Parameters
+        ----------
+        infile : str or file-like object
+            If string, it should contain the path of the FCS file to load
+            data from. If file-like object, it should refer to the FCS file
+            itself.
+        metadata : str
+            Additional channel-independent, sample-specific information, to
+            be copied without modification to the `metadata` attribute.
+
+        Notes
+        -----
+        Since this class inherits from a numpy array, we use the function
+        `__new__` and not `__init__`. `cls.view` needs to be called iniside
+        the `__new__` function. For more details, consult
         http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
-        '''
+
+        """
 
         # Load all data from fcs file
         data, text, analysis, channel_info = cls.load_from_file(infile)
@@ -478,7 +521,8 @@ class FCSData(np.ndarray):
         return obj
 
     def __array_finalize__(self, obj):
-        '''Method called after all methods of construction of the class.'''
+        """Method called after all methods of construction of the class."""
+
         # If called from explicit constructor, do nothing.
         if obj is None: return
 
@@ -494,34 +538,40 @@ class FCSData(np.ndarray):
             self.metadata = copy.deepcopy(obj.metadata)
 
     def __array_wrap__(self, out_arr, context = None):
-        '''Method called after numpy ufuncs.'''
+        """Method called after numpy ufuncs."""
         if out_arr.ndim == 0:
             return None
         else:
             return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __str__(self):
-        '''Return name of fcs file.'''
+        """Return name of FCS file."""
         return os.path.basename(str(self.infile)) 
 
     @property
     def channels(self):
-        ''' Return a list of the channel names
-        '''
+        """List of channel names."""
         return [i['label'] for i in self.channel_info]
 
     @property
     def time_step(self):
-        ''' Return the time step of the time channel.
+        """Time step of the time channel.
 
-            The time step is such that self[:,'Time']*self.time_step is in
-            seconds.
+        The time step is such that ``self[:,'Time']*time_step`` is in
+        seconds.
 
-            FCS Standard files store the timestep in the $TIMESTEP keyword.
+        FCS Standard files store the time step in the $TIMESTEP keyword.
+        In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
+        the time step in milliseconds.
 
-            In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
-            the time step in milliseconds.
-        '''
+        Raises
+        ------
+        IOError
+            If the $TIMESTEP and the $TIMETICKS keywords are both not
+            available.
+
+        """
+
         if 'TIMETICKS' in self.text:
             return float(self.text['TIMETICKS'])/1000.
         elif '$TIMESTEP' in self.text:
@@ -531,12 +581,19 @@ class FCSData(np.ndarray):
 
     @property
     def acquisition_time(self):
-        ''' Return the acquisition time for this sample, in seconds.
+        """Acquisition time, in seconds.
 
-        The acquisition time is calculated using the 'time' channel by default
-        (case independent). If the 'time' channel is not available, the ETIM
-        and BTIM keyword parameters will be used, if available.
-        '''
+        The acquisition time is calculated using the 'time' channel by
+        default (case independent). If the 'time' channel is not available,
+        the ETIM and BTIM keyword parameters will be used, if available.
+
+        Raises
+        ------
+        IOError
+            If the 'time' channel and the ETIM and BTIM keywords are not
+            available.
+
+        """
         # Get time channels indices
         channel_i = [i for i, chi in enumerate(self.channels)\
                                                     if chi.lower() == 'time']
@@ -569,14 +626,19 @@ class FCSData(np.ndarray):
             raise IOError("Time information not available.")
 
     def name_to_index(self, channels):
-        '''Return the channel indexes for the named channels
+        """Return the channel indices for the specified channel names.
 
-        channels - String or list of strings indicating the name(s) of the 
-                    channel(s) of interest.
+        Parameters
+        ----------
+        channels : str or list of str
+            Name(s) of the channel(s) of interest.
 
-        returns:
-                - a number with the index(ces) of the channels of interest.
-        '''
+        Returns
+        -------
+        int or list of int
+            Numerical index(ces) of the specified channels.
+
+        """
 
         if isinstance(channels, basestring):
             # channels is a string containing a channel name
@@ -602,12 +664,16 @@ class FCSData(np.ndarray):
                 of strings.")
 
     def __getitem__(self, key):
-        '''Overriden __getitem__ function.
+        """Overriden __getitem__ function.
 
-        This function achieves two things: It allows for channel indexing by
-        channel name, and it takes care of properly slicing the channel_info 
-        array.
-        '''
+        If the second value of the provided `key` is a string corresponding
+        to a valid channel name, this function converts it to a number and
+        passes it to ndarray's `__getitem__`. This allows for indexing by
+        channel name. In addition, this function takes care of properly
+        slicing the `channel_info` attribute.
+
+        """
+
         # If key is a tuple with no None, decompose and interpret key[1] as 
         # the channel. If it contains Nones, pass directly to 
         # ndarray.__getitem__() and convert to np.ndarray. Otherwise, pass
@@ -663,10 +729,15 @@ class FCSData(np.ndarray):
         return new_arr
 
     def __setitem__(self, key, item):
-        '''Overriden __setitem__ function.
+        """Overriden __setitem__ function.
 
-        This function allows for channel indexing by channel name.
-        '''
+        If the second value of the provided `key` is a string corresponding
+        to a valid channel name, this function converts it to a number and
+        passes it to ndarray's `__setitem__`. This allows for indexing by
+        channel name when writing to a FCSData object.
+
+        """
+
         # If key is a tuple with no Nones, decompose and interpret key[1] as 
         # the channel. If it contains Nones, pass directly to 
         # ndarray.__setitem__().
