@@ -661,14 +661,14 @@ def add_stats(samples_table, samples):
                 row[channel + ' RCV'] = ''
 
 def generate_histograms_lists(samples_table, samples):
-    """Generates a list of the histograms for each processed channel
+    """Generates a list of the histograms for each processed channel.
     
-    Histogram information is generated with the following specificiations
-    -  The first row contains the headers ID and Channel in cells 1 and 2
-    -  The following rows contain the following in order
-    1. The sample ID
-    2. The channel
-    3. The type of data in the row: Bins or Counts
+    Histogram information is generated with the following specifications:
+    -  The first row contains the headers 'ID' and 'Channel' in cells 1 and 2
+    -  The following rows contain the following in order:
+    1. sample_id
+    2. channel
+    3. The type of data in the row: 'Bins' or 'Counts'
     4. A list of all of the bin or count values associated with the row
     
 
@@ -685,20 +685,21 @@ def generate_histograms_lists(samples_table, samples):
     rows: list-of-lists
         A list of lists where the top levels represents individual rows and
         the second level represents cell values in that row
+
     """
     # List of channels that require stats histograms
     headers = samples_table.values()[0].keys()
     r = re.compile(r'^(\S)*(\s)*Units$')
-    stats_headers = [h for h in headers if r.match(h)]
-    stats_channels = [s[:-5].strip() for s in stats_headers]
+    hist_headers = [h for h in headers if r.match(h)]
+    hist_channels = [s[:-5].strip() for s in hist_headers]
 
     rows = []
     rows.append(['ID','Channel'])
 
-    for sample_id, sample_values, sample\
+    for sample_id, sample_row, sample \
             in zip(samples_table.keys(), samples_table.values(), samples):
-        for header, channel in zip(stats_headers, stats_channels):
-            if sample_values[header]:
+        for header, channel in zip(hist_headers, hist_channels):
+            if sample_row[header]:
                 info = sample[:,channel].channel_info[0]
 
                 bins_row = [sample_id, channel, 'Bins']
@@ -706,7 +707,8 @@ def generate_histograms_lists(samples_table, samples):
                 rows.append(bins_row)
 
                 val_row = [sample_id, channel, 'Counts']
-                counts, bins = np.histogram(sample[:,channel], bins = info['bin_edges'])
+                counts, bins = np.histogram(sample[:,channel], \
+                    bins=info['bin_edges'])
                 val_row.extend(counts)
                 rows.append(val_row)
 
