@@ -268,8 +268,12 @@ def density2d(data, channels=[0,1],
     # Get indices of events to keep
     vHi = Hi.ravel()
     mask = vHi[sidx[:(Nidx+1)]]
-    mask = np.array([item for sublist in mask for item in sublist])
+    mask = np.array([item for sublist in mask for item in sublist]) # flatten
     mask = np.sort(mask)
+
+    # Convert list of indices to boolean mask array
+    mask = np.array([idx in mask for idx in range(data.shape[0])])
+
     gated_data = data[mask]
 
     if full_output:
