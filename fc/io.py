@@ -679,7 +679,9 @@ class FCSData(np.ndarray):
 
     def __getitem__(self, key):
         """
-        Extended __getitem__ function.
+        Get an element or elements of the array.
+
+        This function extends ``ndarray.__getitem__``.
 
         If the second value of the provided `key` is a string corresponding
         to a valid channel name, this function converts it to a number and
@@ -744,7 +746,9 @@ class FCSData(np.ndarray):
 
     def __setitem__(self, key, item):
         """
-        Extended __setitem__ function.
+        Set an element or elements of the array.
+
+        This function extends ``ndarray.__setitem__``.
 
         If the second value of the provided `key` is a string corresponding
         to a valid channel name, this function converts it to a number and
