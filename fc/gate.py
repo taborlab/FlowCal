@@ -43,7 +43,8 @@ Density2dGateOutput = collections.namedtuple(
 ###
 
 def start_end(data, num_start = 250, num_end = 100, full_output=False):
-    """Gate out first and last events.
+    """
+    Gate out first and last events.
 
     Gate out first and last events from `data`. This is a naive
     implementation which simply removes a set number of events from the
@@ -79,7 +80,6 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
         number of events in `data`.
 
     """
-    
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
             ' number of events.')
@@ -95,7 +95,8 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
         return gated_data
 
 def high_low(data, channels=None, high=None, low=None, full_output=False):
-    """Gate out high and low values across all specified channels.
+    """
+    Gate out high and low values across all specified channels.
 
     Gate out events in `data` with values in the specified channels which
     are larger than or equal to `high` or less than or equal to `low`.
@@ -128,7 +129,6 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
             `gated_data = data[mask]`.
 
     """
-    
     # Extract channels in which to gate
     if channels is None:
         data_ch = data
@@ -165,7 +165,8 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
 def ellipse(data, channels,
             center, a, b, theta=0,
             log=False, full_output=False):
-    """Gate that preserves events inside an ellipse-shaped region.
+    """
+    Gate that preserves events inside an ellipse-shaped region.
 
     Events are kept if they satisfy the following relationship:
 
@@ -212,7 +213,6 @@ def ellipse(data, channels,
         If more or less than 2 channels are specified.
 
     """
-
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
     data_ch = data[:,channels].view(np.ndarray)
@@ -253,7 +253,8 @@ def ellipse(data, channels,
 def density2d(data, channels=[0,1],
               bins=None, gate_fraction=0.65, sigma=10.0,
               full_output=False):
-    """Gate that preserves events in the region with highest density.
+    """
+    Gate that preserves events in the region with highest density.
 
     Gate out all events in `data` but those near regions of highest
     density for the two specified channels.
@@ -314,7 +315,6 @@ def density2d(data, channels=[0,1],
     all but the densest fraction of events.
 
     """
-
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
     data_ch = data[:,channels]
