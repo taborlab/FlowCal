@@ -1,11 +1,5 @@
-"""Unit tests for the excel_ui module.
-
-Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-
-Last Modified: 10/26/2015
-
-Requires:
-    - fc.excel_ui
+"""
+Unit tests for the excel_ui module.
 
 """
 
@@ -17,7 +11,8 @@ import numpy as np
 import fc
 
 class TestReadWorkbook(unittest.TestCase):
-    """Class to test excel_ui.read_workbook()
+    """
+    Class to test excel_ui.read_workbook()
 
     """
     def setUp(self):
@@ -235,7 +230,8 @@ class TestReadWorkbook(unittest.TestCase):
         self.content_expected['Samples'] = sheet_contents
 
     def test_read_workbook(self):
-        """Test for proper reading of an Excel workbook.
+        """
+        Test for proper reading of an Excel workbook.
 
         """
         # Load contents from the workbook
@@ -244,7 +240,8 @@ class TestReadWorkbook(unittest.TestCase):
         self.assertEqual(self.content_expected, content)
 
 class TestWriteWorkbook(unittest.TestCase):
-    """Class to test excel_ui.write_workbook()
+    """
+    Class to test excel_ui.write_workbook()
 
     """
     def setUp(self):
@@ -268,7 +265,8 @@ class TestWriteWorkbook(unittest.TestCase):
             os.remove(self.filename)
 
     def test_write_workbook(self):
-        """Test for proper writing of an Excel workbook.
+        """
+        Test for proper writing of an Excel workbook.
 
         """
         # Write excel workbook
@@ -278,7 +276,8 @@ class TestWriteWorkbook(unittest.TestCase):
         self.assertEqual(self.content, read_content)
 
     def test_write_workbook_content_is_not_dict_error(self):
-        """Test that using a list as the content raises a TypeError.
+        """
+        Test that using a list as the content raises a TypeError.
 
         """
         # 
@@ -288,8 +287,8 @@ class TestWriteWorkbook(unittest.TestCase):
                           ['Item 1', 'Item 2'])
 
     def test_write_workbook_content_is_empty_error(self):
-        """Test that using an empty OrderedDict as the content raises a
-        ValueError.
+        """
+        Test that using an empty OrderedDict raises a ValueError.
 
         """
         # 
@@ -299,7 +298,8 @@ class TestWriteWorkbook(unittest.TestCase):
                           collections.OrderedDict())
 
     def test_write_workbook_filename_error(self):
-        """Test that writing to a bad file name raises an IOError.
+        """
+        Test that writing to a bad file name raises an IOError.
 
         """
         # 
@@ -309,11 +309,13 @@ class TestWriteWorkbook(unittest.TestCase):
                           self.content)
 
 class TestTableConversion(unittest.TestCase):
-    """Class to test excel_ui.list_to_table() and excel_ui.table_to_list()
+    """
+    Class to test excel_ui.list_to_table() and excel_ui.table_to_list()
 
     """
     def test_list_to_table(self):
-        """Test that excel_ui.list_to_table produces the correct output.
+        """
+        Test that excel_ui.list_to_table produces the correct output.
 
         """
         # Input data
@@ -370,7 +372,8 @@ class TestTableConversion(unittest.TestCase):
 
 
     def test_list_to_table_ignore_empty_id(self):
-        """Test that excel_ui.list_to_table produces the correct output when
+        """
+        Test that excel_ui.list_to_table produces the correct output when
         the input has a row that should with an empty `header_id` field.
 
         """
@@ -434,7 +437,8 @@ class TestTableConversion(unittest.TestCase):
         self.assertEqual(table, expected_output)
 
     def test_list_to_table_no_id_error(self):
-        """Test that excel_ui.list_to_table produces a ValueError when
+        """
+        Test that excel_ui.list_to_table produces a ValueError when
         `id_header` it not in the table's header.
 
         """
@@ -470,7 +474,8 @@ class TestTableConversion(unittest.TestCase):
                           id_header)
 
     def test_list_to_table_repeated_id_error(self):
-        """Test that excel_ui.list_to_table produces a ValueError when
+        """
+        Test that excel_ui.list_to_table produces a ValueError when
         the value of the `id_header` column is repeated in two rows.
 
         """
@@ -506,7 +511,8 @@ class TestTableConversion(unittest.TestCase):
                           id_header)
 
     def test_list_to_table_variable_row_length_error(self):
-        """Test that excel_ui.list_to_table produces a ValueError when
+        """
+        Test that excel_ui.list_to_table produces a ValueError when
         the input table has different list lengths.
 
         """
@@ -543,7 +549,8 @@ class TestTableConversion(unittest.TestCase):
                           id_header)
 
     def test_table_to_list(self):
-        """Test that excel_ui.table_to_list produces the correct output.
+        """
+        Test that excel_ui.table_to_list produces the correct output.
 
         """
         # Input data
@@ -598,7 +605,8 @@ class TestTableConversion(unittest.TestCase):
         self.assertEqual(table, expected_output)
 
     def test_table_to_list_different_header_error(self):
-        """Test that excel_ui.table_to_list produces the correct output.
+        """
+        Test that excel_ui.table_to_list produces the correct output.
 
         """
         # Input data
@@ -628,13 +636,14 @@ class TestTableConversion(unittest.TestCase):
                           input_table)
 
 class TestLoadFCSFromTable(unittest.TestCase):
-    """Class to test excel_ui.load_fcs_from_table()
+    """
+    Class to test excel_ui.load_fcs_from_table()
 
     """
 
     def test_load_fcs_from_table(self):
-        """Test that excel_ui.load_fcs_from_table produces the correct
-        output.
+        """
+        Test that excel_ui.load_fcs_from_table produces the correct output.
 
         """
 
