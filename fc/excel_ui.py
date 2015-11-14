@@ -83,10 +83,10 @@ def write_workbook(workbook_name, content):
     # Check that `content` is a dictionary or OrderedDict
     if type(content) is not dict \
             and type(content) is not collections.OrderedDict:
-        raise TypeError("Incorrect content type")
+        raise TypeError("incorrect content type")
     # Check that `content` is not empty
     if len(content) <= 0:
-        raise ValueError("Worksheet content should have at least one sheet")
+        raise ValueError("worksheet content should have at least one sheet")
 
     # Create workbook
     wb = openpyxl.Workbook()
@@ -107,7 +107,7 @@ def write_workbook(workbook_name, content):
     try:
         wb.save(workbook_name)
     except IOError as e:
-        e.message = "Error writing to {}".format(workbook_name)
+        e.message = "error writing to {}".format(workbook_name)
         raise
 
 def list_to_table(table_list, id_header='ID'):
@@ -150,7 +150,7 @@ def list_to_table(table_list, id_header='ID'):
     n_headers = len(table_list[0])
     for r in range(1, len(table_list)):
         if len(table_list[r]) != n_headers:
-            raise ValueError("All lists inside table_list should \
+            raise ValueError("all lists inside table_list should \
                 have the same length")
 
     # Extract headers
@@ -175,7 +175,7 @@ def list_to_table(table_list, id_header='ID'):
             continue
         # Raise error if id already exists in table
         if row_dict[id_header] in table:
-            raise ValueError("Duplicated values for column {} found".
+            raise ValueError("duplicated values for column {} found".
                 format(id_header))
         # Add row to table
         table[row_dict[id_header]] = row_dict
@@ -215,7 +215,7 @@ def table_to_list(table):
     # Check that all rows have the same keys
     for k, row in table.items():
         if row.keys() != headers:
-            raise ValueError("All rows should have the same keys")
+            raise ValueError("all rows should have the same keys")
 
     # Initialize output
     table_list = [headers]
@@ -539,7 +539,7 @@ def parse_samples_table(samples_table,
                 to_mef_sample =  to_mef[sample_row['Beads ID']]
                 sample = to_mef_sample(sample, fl_channel)
             else:
-                raise ValueError("Units {} not recognized for sample {}.".
+                raise ValueError("units {} not recognized for sample {}".
                     format(units, sample_id))
 
             # Register that reporting in this channel must be done
