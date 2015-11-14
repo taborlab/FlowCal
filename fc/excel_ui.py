@@ -1,4 +1,5 @@
-"""Module containing the Microsoft Excel User Interface.
+"""
+`FlowCal`'s' Microsoft Excel User Interface.
 
 """
 
@@ -21,7 +22,8 @@ from matplotlib import pyplot as plt
 import fc
 
 def read_workbook(workbook_name):
-    """Open an Excel workbook and return the content of all worksheets.
+    """
+    Open an Excel workbook and return the content of all worksheets.
 
     Parameters
     ----------
@@ -52,7 +54,8 @@ def read_workbook(workbook_name):
     return content
 
 def write_workbook(workbook_name, content):
-    """Write an Excel workbook with the specified content.
+    """
+    Write an Excel workbook with the specified content.
 
     If the specified workbook already exists, this function overwrites
     cells but not worksheets.
@@ -108,8 +111,8 @@ def write_workbook(workbook_name, content):
         raise
 
 def list_to_table(table_list, id_header='ID'):
-    """Read a table as a list of lists and return it as a OrderedDict of
-    OrderedDicts.
+    """
+    Convert a table from list-of-lists to OrderedDict-of-OrderedDicts.
 
     This function accepts a table in a list-of-lists format. All lists
     should be the same length. The first list contains the table headers.
@@ -180,7 +183,8 @@ def list_to_table(table_list, id_header='ID'):
     return table
 
 def table_to_list(table):
-    """Read a table as an dict of dicts and return it as a list of lists.
+    """
+    Convert a table from dict-of-dicts to list-of-lists.
 
     This function accepts a table in a dict of dicts format. Each one of
     the inner dicts is interpreted as as row, in which the keys are the
@@ -223,7 +227,8 @@ def table_to_list(table):
     return table_list
 
 def load_fcs_from_table(table, filename_key):
-    """Load FCS files from a table, and add table information as metadata.
+    """
+    Load FCS files from a table and add table information as metadata.
 
     This function accepts a table formatted as an OrderedDict of
     OrderedDicts, the same format as the output of the ``list_to_table``
@@ -253,9 +258,8 @@ def parse_beads_table(beads_table,
                       verbose=False,
                       plot=False,
                       plot_dir=""):
-    """Load FCS files corresponding to beads, process them, and generate
-    standard curves for each, according to table structures specifying
-    instruments and beads samples.
+    """
+    Load and process FCS files corresponding to beads.
 
     TODO: Describe format of table.
 
@@ -425,8 +429,8 @@ def parse_samples_table(samples_table,
                         verbose=False,
                         plot=False,
                         plot_dir=""):
-    """Load FCS files and process them according to table structures
-    specifying instruments and samples.
+    """
+    Load and process FCS files corresponding to samples.
 
     The function processes each entry in `samples_table`, and does the
     following:
@@ -596,7 +600,8 @@ def parse_samples_table(samples_table,
     return samples
 
 def add_stats(samples_table, samples):
-    """Add stats fields to samples table.
+    """
+    Add stats fields to samples table.
 
     The following numbers are added to each row:
     - Number of Events
@@ -661,10 +666,12 @@ def add_stats(samples_table, samples):
                 row[channel + ' RCV'] = ''
 
 def generate_histograms_lists(samples_table, samples):
-    """Generates a list of the histograms for each processed channel.
+    """
+    Generate a list of the histograms for each specified channel.
     
     Histogram information is generated with the following specifications:
-    -  The first row contains the headers 'ID' and 'Channel' in cells 1 and 2
+    -  The first row contains the headers 'ID' and 'Channel' in cells 1
+       and 2
     -  The following rows contain the following in order:
     1. sample_id
     2. channel
@@ -715,7 +722,8 @@ def generate_histograms_lists(samples_table, samples):
     return rows
 
 def show_open_file_dialog(filetypes):
-    """Show an open file dialog and return the path of the file selected.
+    """
+    Show an open file dialog and return the path of the file selected.
 
     Parameters
     ----------
@@ -748,7 +756,8 @@ def show_open_file_dialog(filetypes):
     return filename
 
 def run(verbose=True, plot=True):
-    """Run the MS Excel User Interface.
+    """
+    Run the MS Excel User Interface.
 
     This function shows a dialog to open an input Excel workbook, loads FCS
     files and processes them as specified in the spreadsheet, and
