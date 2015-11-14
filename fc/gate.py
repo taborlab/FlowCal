@@ -306,13 +306,25 @@ def density2d(data, channels=[0,1],
 
     Notes
     -----
-    The algorithm for determining density works as follows:
-        1) Obtain a 2D histogram of `data` in the specified channels.
-        2) Smooth 2D histogram using a 2D Gaussian filter.
-        3) Normalize smoothed histogram to obtain valid probability mass
+    The algorithm for gating based on density works as follows:
+        1) Calculate 2D histogram of `data` in the specified channels.
+        2) Map each event from `data` to its histogram bin (implicitly
+           gating out any events which exist outside specified `bins`).
+        3) Use `gate_fraction` to determine number of points to retain
+           (rounded up). Only points which are not implicitly gated out
+           are considered.
+        4) Smooth 2D histogram using a 2D Gaussian filter.
+        5) Normalize smoothed histogram to obtain valid probability mass
            function (PMF).
-    `gate_fraction` is then used in conjunction with the PMF to filter out
-    all but the densest fraction of events.
+        6) Sort bins by probability.
+        7) Accumulate events (starting with events belonging to bin with
+           highest probability ("densest") and proceeding to events
+           belonging to bins with lowest probability) until at least the
+           desired number of points is acheived. While the algorithm
+           attempts to get as close to `gate_fraction` fraction of events
+           as possible, more events may be retained based on how many
+           events fall into each histogram bin (since entire bins are
+           retained at a time, not individual events).
 
     """
     # Extract channels in which to gate
