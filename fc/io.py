@@ -10,7 +10,8 @@ import warnings
 import numpy as np
 
 class FCSData(np.ndarray):
-    """Class describing an FCS Data file.
+    """
+    Object containing events from a flow cytometry sample.
 
     An `FCSData` object is an NxD numpy array representing N cytometry
     events with D dimensions extracted from the DATA segment of an FCS
@@ -85,7 +86,8 @@ class FCSData(np.ndarray):
 
     @staticmethod
     def _read_fcs_text_segment(f, begin, end, delim = None):
-        """Parse region of specified file and interpret as TEXT segment.
+        """
+        Parse region of specified file and interpret as TEXT segment.
 
         Since the ANALYSIS and supplemental TEXT segments are encoded in
         the same way, this function can also be used to parse the ANALYSIS
@@ -156,7 +158,8 @@ class FCSData(np.ndarray):
 
     @staticmethod
     def load_from_file(infile):
-        """Load data, text, and channel_info from a specified FCS file.
+        """
+        Load data, text, and channel_info from a specified FCS file.
 
         Parameters
         ----------
@@ -178,7 +181,6 @@ class FCSData(np.ndarray):
            each channel.
 
         """
-
         # Open file if necessary
         if isinstance(infile, basestring):
             f = open(infile, 'rb')
@@ -483,7 +485,8 @@ class FCSData(np.ndarray):
         return (data, text, analysis, channel_info)
 
     def __new__(cls, infile, metadata = {}):
-        """Class constructor.
+        """
+        Class constructor.
 
         Parameters
         ----------
@@ -503,7 +506,6 @@ class FCSData(np.ndarray):
         http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 
         """
-
         # Load all data from fcs file
         data, text, analysis, channel_info = cls.load_from_file(infile)
 
@@ -521,8 +523,10 @@ class FCSData(np.ndarray):
         return obj
 
     def __array_finalize__(self, obj):
-        """Method called after all methods of construction of the class."""
+        """
+        Method called after all methods of construction of the class.
 
+        """
         # If called from explicit constructor, do nothing.
         if obj is None: return
 
@@ -538,24 +542,34 @@ class FCSData(np.ndarray):
             self.metadata = copy.deepcopy(obj.metadata)
 
     def __array_wrap__(self, out_arr, context = None):
-        """Method called after numpy ufuncs."""
+        """
+        Method called after numpy ufuncs.
+
+        """
         if out_arr.ndim == 0:
             return None
         else:
             return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __str__(self):
-        """Return name of FCS file."""
+        """
+        Return name of FCS file.
+
+        """
         return os.path.basename(str(self.infile)) 
 
     @property
     def channels(self):
-        """List of channel names."""
+        """
+        List of channel names.
+
+        """
         return [i['label'] for i in self.channel_info]
 
     @property
     def time_step(self):
-        """Time step of the time channel.
+        """
+        Time step of the time channel.
 
         The time step is such that ``self[:,'Time']*time_step`` is in
         seconds.
@@ -571,7 +585,6 @@ class FCSData(np.ndarray):
             available.
 
         """
-
         if 'TIMETICKS' in self.text:
             return float(self.text['TIMETICKS'])/1000.
         elif '$TIMESTEP' in self.text:
@@ -581,7 +594,8 @@ class FCSData(np.ndarray):
 
     @property
     def acquisition_time(self):
-        """Acquisition time, in seconds.
+        """
+        Acquisition time, in seconds.
 
         The acquisition time is calculated using the 'time' channel by
         default (case independent). If the 'time' channel is not available,
@@ -626,7 +640,8 @@ class FCSData(np.ndarray):
             raise IOError("Time information not available.")
 
     def name_to_index(self, channels):
-        """Return the channel indices for the specified channel names.
+        """
+        Return the channel indices for the specified channel names.
 
         Parameters
         ----------
@@ -639,7 +654,6 @@ class FCSData(np.ndarray):
             Numerical index(ces) of the specified channels.
 
         """
-
         if isinstance(channels, basestring):
             # channels is a string containing a channel name
             if channels in self.channels:
@@ -664,7 +678,8 @@ class FCSData(np.ndarray):
                 of strings.")
 
     def __getitem__(self, key):
-        """Overriden __getitem__ function.
+        """
+        Extended __getitem__ function.
 
         If the second value of the provided `key` is a string corresponding
         to a valid channel name, this function converts it to a number and
@@ -673,7 +688,6 @@ class FCSData(np.ndarray):
         slicing the `channel_info` attribute.
 
         """
-
         # If key is a tuple with no None, decompose and interpret key[1] as 
         # the channel. If it contains Nones, pass directly to 
         # ndarray.__getitem__() and convert to np.ndarray. Otherwise, pass
@@ -729,7 +743,8 @@ class FCSData(np.ndarray):
         return new_arr
 
     def __setitem__(self, key, item):
-        """Overriden __setitem__ function.
+        """
+        Extended __setitem__ function.
 
         If the second value of the provided `key` is a string corresponding
         to a valid channel name, this function converts it to a number and
@@ -737,7 +752,6 @@ class FCSData(np.ndarray):
         channel name when writing to a FCSData object.
 
         """
-
         # If key is a tuple with no Nones, decompose and interpret key[1] as 
         # the channel. If it contains Nones, pass directly to 
         # ndarray.__setitem__().
