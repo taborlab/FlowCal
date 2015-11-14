@@ -7,8 +7,8 @@ import numpy as np
 import scipy.stats
 
 def mean(data, channel):
-    """Calculate the mean of the events on a specified channel of a
-    FCSData object.
+    """
+    Calculate the mean from a specified channel of an FCSData object.
 
     Parameters
     ----------
@@ -30,8 +30,8 @@ def mean(data, channel):
     return np.mean(data[:,channel])
 
 def gmean(data, channel):
-    """Calculate the geometric mean of the events on a specified channel
-    of a FCSData object.
+    """
+    Calculate the geometric mean from a channel of an FCSData object.
 
     Parameters
     ----------
@@ -54,8 +54,8 @@ def gmean(data, channel):
     return scipy.stats.gmean(data[:,channel])
 
 def median(data, channel):
-    """Calculate the median of the events on a specified channel of a
-    FCSData object.
+    """
+    Calculate the median from a specified channel of an FCSData object.
 
     Parameters
     ----------
@@ -77,8 +77,8 @@ def median(data, channel):
     return np.median(data[:,channel])
 
 def mode(data, channel):
-    """Calculate the mode of the events on a specified channel of a
-    FCSData object.
+    """
+    Calculate the mode from a specified channel of an FCSData object.
 
     Parameters
     ----------
@@ -100,8 +100,8 @@ def mode(data, channel):
     return np.argmax(np.bincount(data[:,channel].astype('int32')))
 
 def std(data, channel):
-    """Calculate the standard deviation of the events on a specified
-    channel of a FCSData object.
+    """
+    Calculate the standard deviation from a channel of an FCSData object.
 
     Parameters
     ----------
@@ -124,8 +124,8 @@ def std(data, channel):
     return np.std(data[:,channel])
 
 def CV(data, channel):
-    """Calculate the Coefficient of Variation of the events on a specified
-    channel of a FCSData object.
+    """
+    Calculate the Coeff. of Variation from a channel of an FCSData object.
 
     Parameters
     ----------
@@ -148,8 +148,8 @@ def CV(data, channel):
     return np.std(data[:,channel])/np.mean(data[:,channel])
 
 def iqr(data, channel):
-    """Calculate the Interquartile Range of the events on a specified
-    channel of a FCSData object.
+    """
+    Calculate the Interquartile Range from a channel of an FCSData object.
 
     Parameters
     ----------
@@ -173,8 +173,8 @@ def iqr(data, channel):
     return q75 - q25
 
 def RCV(data, channel):
-    """Calculate the Robust Coefficient of Variation of the events on a
-    specified channel of a FCSData object.
+    """
+    Calculate the RCV from a specified channel of an FCSData object.
 
     Parameters
     ----------
