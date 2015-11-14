@@ -246,7 +246,7 @@ def load_fcs_from_table(table, filename_key):
         FCSData objects corresponding to the loaded FCS files.
 
     """
-    return [fc.io.FCSData(row[filename_key], metadata = row)
+    return [fc.io.FCSData(row[filename_key], metadata=row)
             for row_id, row in table.items()]
 
 def parse_beads_table(beads_table,
@@ -342,7 +342,7 @@ def parse_beads_table(beads_table,
         # Beads Data
         ###
         filename = os.path.join(base_dir, beads_row['File Path'])
-        beads_sample = fc.io.FCSData(filename, beads_row)
+        beads_sample = fc.io.FCSData(filename, metadata=beads_row)
         if verbose:
             print("{} loaded ({} events).".format(beads_id,
                                                   beads_sample.shape[0]))
