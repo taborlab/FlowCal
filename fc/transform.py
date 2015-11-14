@@ -19,12 +19,14 @@ If `data` is an FCSData object, `transform` should rescale
 import numpy as np
 
 def transform(data, channels, transform_fxn, def_channels = None):
-    """Generic transformation function, automatically takes care of range
-    and bins information.
+    """
+    Apply some transformation function to flow cytometry data.
 
-    This function performs basic checks on `channels` and `data`. It then
-    applies `transform_fxn` to the specified channels. Finally, it rescales
-    range and bins in ``data.channel_info`` if necessary.
+    This function is a template transformation function, intended to be
+    used by other specific transformation functions. It performs basic
+    checks on `channels` and `data`. It then applies `transform_fxn` to the
+    specified channels. Finally, it rescales `range` and `bins` in
+    ``data.channel_info`` if necessary.
 
     Parameters
     ----------
@@ -46,7 +48,6 @@ def transform(data, channels, transform_fxn, def_channels = None):
         NxD transformed flow cytometry data.
 
     """
-
     # Copy data array
     data_t = data.copy().astype(np.float64)
 
@@ -87,7 +88,8 @@ def transform(data, channels, transform_fxn, def_channels = None):
 
 
 def exponentiate(data, channels = None):
-    """Exponentiate flow cytometry data.
+    """
+    Exponentiate flow cytometry data.
 
     This function applies the following transformation:
 
@@ -112,15 +114,14 @@ def exponentiate(data, channels = None):
         NxD transformed flow cytometry data.
 
     """
-
     # Transform and return
     def transform_fxn(x): return 10**(x/256.0)
     return transform(data, channels, transform_fxn)
 
 
 def to_mef(data, channels, sc_list, sc_channels = None):
-    """Transform data to MEF units using standard curves obtained from 
-    calibration beads.
+    """
+    Transform flow cytometry data using a standard curve function.
 
     This function accepts a list of standard curves (`sc_list`) and a list
     of channels to which those standard curves should be applied
@@ -162,7 +163,6 @@ def to_mef(data, channels, sc_list, sc_channels = None):
         If any channel specified in `channels` is not in `sc_channels`.
 
     """
-
     # Default sc_channels
     if sc_channels is None:
         if data.ndim == 1:
