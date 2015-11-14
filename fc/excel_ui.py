@@ -3,23 +3,26 @@
 
 """
 
-import re
+import collections
 import os
 import os.path
-import collections
-import xlrd
-import openpyxl
-
 import platform
+import re
 import subprocess
-
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
-import numpy as np
 from matplotlib import pyplot as plt
+import numpy as np
+import openpyxl
+import xlrd
 
-import fc
+import fc.io
+import fc.plot
+import fc.gate
+import fc.transform
+import fc.stats
+import fc.mef
 
 def read_workbook(workbook_name):
     """
