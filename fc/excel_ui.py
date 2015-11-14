@@ -325,7 +325,9 @@ def parse_beads_table(beads_table,
     # Iterate through table
     for beads_id, beads_row in beads_table.items():
 
-        ### INSTRUMENT DATA ###
+        ###
+        # Instrument Data
+        ###
         # Get the appropriate row in the instrument table
         instruments_row = instruments_table[beads_row['Instrument ID']]
         # Scatter channels: Foward Scatter, Side Scatter
@@ -336,7 +338,9 @@ def parse_beads_table(beads_table,
         fl_channels = instruments_row['Fluorescence Channels'].split(',')
         fl_channels = [s.strip() for s in fl_channels]
 
-        ### BEADS DATA ###
+        ###
+        # Beads Data
+        ###
         filename = os.path.join(base_dir, beads_row['File Path'])
         beads_sample = fc.io.FCSData(filename, beads_row)
         if verbose:
@@ -346,7 +350,9 @@ def parse_beads_table(beads_table,
         cluster_channels = beads_row['Clustering Channels'].split(',')
         cluster_channels = [cc.strip() for cc in cluster_channels]
 
-        ### GATE ###
+        ###
+        # Gating
+        ###
         # Remove first and last samples
         beads_sample = fc.gate.start_end(beads_sample,
                                          num_start=250,
@@ -491,7 +497,9 @@ def parse_samples_table(samples_table,
     samples = []
     for sample_id, sample_row in samples_table.items():
 
-        ### INSTRUMENT DATA ###
+        ###
+        # Instrument Data
+        ###
         # Get the appropriate row in the instrument table
         instruments_row = instruments_table[sample_row['Instrument ID']]
         # Scatter channels: Foward Scatter, Side Scatter
@@ -502,14 +510,18 @@ def parse_samples_table(samples_table,
         fl_channels = instruments_row['Fluorescence Channels'].split(',')
         fl_channels = [s.strip() for s in fl_channels]
 
-        ### SAMPLE DATA ###
+        ###
+        # Sample Data
+        ###
         filename = os.path.join(base_dir, sample_row['File Path'])
         sample = fc.io.FCSData(filename, sample_row)
         if verbose:
             print("{} loaded ({} events).".format(sample_id,
                                                   sample.shape[0]))
 
-        ### TRANSFORM ###
+        ###
+        # Transform
+        ###
         if verbose:
             print("Performing data transformation...")
         # Transform FSC/SSC to relative units
@@ -544,7 +556,9 @@ def parse_samples_table(samples_table,
             report_units.append(units_long)
 
 
-        ### GATE ###
+        ###
+        # Gate
+        ###
         if verbose:
             print("Performing gating...")
         # Remove first and last samples
