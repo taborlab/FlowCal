@@ -47,8 +47,8 @@ def read_workbook(workbook_name):
     # Iterate thorugh sheets
     for ws in wb.sheets():
         # Get worksheet contents
-        ws_contents = [[cell.value for cell in ws.row(ir)] \
-                            for ir in range(ws.nrows)]
+        ws_contents = [[cell.value for cell in ws.row(ir)]
+                        for ir in range(ws.nrows)]
         content[ws.name] = ws_contents
 
     return content
@@ -81,8 +81,8 @@ def write_workbook(workbook_name, content):
     
     """
     # Check that `content` is a dictionary or OrderedDict
-    if type(content) is not dict \
-            and type(content) is not collections.OrderedDict:
+    if (type(content) is not dict
+            and type(content) is not collections.OrderedDict):
         raise TypeError("incorrect content type")
     # Check that `content` is not empty
     if len(content) <= 0:
@@ -249,8 +249,8 @@ def load_fcs_from_table(table, filename_key):
         FCSData objects corresponding to the loaded FCS files.
 
     """
-    return [fc.io.FCSData(row[filename_key], metadata = row) \
-                for row_id, row in table.items()]
+    return [fc.io.FCSData(row[filename_key], metadata = row)
+            for row_id, row in table.items()]
 
 def parse_beads_table(beads_table,
                       instruments_table,
@@ -398,8 +398,8 @@ def parse_beads_table(beads_table,
                 mef_channels.append(fl_channel)
                 # Parse list of values
                 mef = beads_row[fl_channel + ' MEF Values'].split(',')
-                mef = [int(e) if e.strip().isdigit() else np.nan \
-                    for e in mef]
+                mef = [int(e) if e.strip().isdigit() else np.nan
+                       for e in mef]
                 mef_values.append(mef)
         mef_values = np.array(mef_values)
 
@@ -523,8 +523,8 @@ def parse_samples_table(samples_table,
         report_units = []
         for fl_channel in fl_channels:
             # Check whether there is a column with units for fl_channel
-            if "{} Units".format(fl_channel) not in sample_row \
-                    or sample_row['{} Units'.format(fl_channel)] == '':
+            if ("{} Units".format(fl_channel) not in sample_row
+                    or sample_row['{} Units'.format(fl_channel)] == ''):
                 continue
 
             # Decide what transformation to perform
@@ -714,8 +714,8 @@ def generate_histograms_lists(samples_table, samples):
                 rows.append(bins_row)
 
                 val_row = [sample_id, channel, 'Counts']
-                counts, bins = np.histogram(sample[:,channel], \
-                    bins=info['bin_edges'])
+                counts, bins = np.histogram(sample[:,channel],
+                                            bins=info['bin_edges'])
                 val_row.extend(counts)
                 rows.append(val_row)
 
