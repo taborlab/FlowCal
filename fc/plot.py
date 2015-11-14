@@ -47,8 +47,8 @@ def hist1d(data_list,
            histtype = 'stepfilled',
            savefig = None,
            **kwargs):
-    """Plot a 1D histogram from a specified channel of a single FCSData
-    object or a list of FCSData objects.
+    """
+    Plot a 1D histogram from one channel of some FCSData objects.
 
     `hist1d` calls matplotlib's ``hist`` function for each object in
     `data_list`. `hist_type`, the type of histogram to draw, is directly
@@ -127,7 +127,6 @@ def hist1d(data_list,
         specified as a list, with an element for each data object.
 
     """
-
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
@@ -222,8 +221,8 @@ def density2d(data,
             title = None,
             savefig = None,
             **kwargs):
-    """Plot a 2D density plot from the events in two specified channels of
-    a FCSData object.
+    """
+    Plot a 2D density plot from two specified channels of a FCSData object.
 
     `density2d` has two plotting modes, which are selected using the `mode`
     argument. With ``mode=='mesh'``, this function plots the data as a true
@@ -299,7 +298,6 @@ def density2d(data,
         ``plt.pcolormesh`` if ``mode==mesh``.
 
     """
-
     # Extract channels to plot
     assert len(channels) == 2, 'Two channels need to be specified.'
     data_plot = data[:, channels]
@@ -410,8 +408,8 @@ def scatter2d(data_list,
                 channels = [0,1],
                 savefig = None,
                 **kwargs):
-    """Plot a 2D scatter plot from the events in two specified channels of
-    a list of FCSData objects.
+    """
+    Plot a 2D scatter plot from two channels of a list of FCSData objects.
 
     `scatter2d` calls matplotlib's ``scatter`` function for each object in
     data_list. Additional keyword arguments provided to `scatter2d` are
@@ -449,7 +447,6 @@ def scatter2d(data_list,
         object.
 
     """
-
     # Check appropriate number of channels
     assert len(channels) == 2, 'Two channels need to be specified.'
 
@@ -496,8 +493,8 @@ def scatter3d(data_list,
                 channels = [0,1,2],
                 savefig = None,
                 **kwargs):
-    """Plot a 3D scatter plot and projected 2D scatter plots from the
-    events in three specified channels of a list of FCSData objects.
+    """
+    Plot a 3D scatter plot and projections from a list of FCSData objects.
 
     `scatter3d` creates a 3D scatter plot and three 2D projected scatter
     plots in four different axes for each FCSData object in `data_list`,
@@ -536,7 +533,6 @@ def scatter3d(data_list,
         object.
 
     """
-
     # Check appropriate number of channels
     assert len(channels) == 3, 'Three channels need to be specified.'
 
@@ -626,8 +622,8 @@ def mef_std_crv(peaks_ch,
                 ylabel = None,
                 savefig = None,
                 **kwargs):
-    """Plot the fluorescence of calibration beads subpopulations, their
-    fitted fluroescence model, and the resulting standard curve.
+    """
+    Plot a standard curve with fluorescence of calibration beads.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -666,7 +662,6 @@ def mef_std_crv(peaks_ch,
         Label to use on the y axis.
 
     """
-
     # Generate x data
     xdata = np.linspace(xlim[0],xlim[1],200)
 
@@ -709,7 +704,8 @@ def bar(data,
         ylabel = None,
         savefig = None,
         **kwargs):
-    """Draw a barplot.
+    """
+    Draw a barplot.
 
     Individual bars can be grouped by specifying a number greater than one
     in `n_in_group`. Each group of `n_in_group` bars will share the same
@@ -766,7 +762,6 @@ def bar(data,
         Label to use on the y axis.
 
     """
-
     # Default colors
     if colors is None:
         colors = matplotlib.rcParams['axes.color_cycle']
@@ -853,7 +848,8 @@ def density_and_hist(data,
                     figsize = None,
                     savefig = None,
                     ):
-    """Make a combined density/histogram plot of a FCSData object.
+    """
+    Make a combined density/histogram plot of a FCSData object.
 
     This function calls `hist1d` and `density2d` to plot a density diagram
     and a number of histograms in different subplots of the same plot using
@@ -913,7 +909,6 @@ def density_and_hist(data,
         If both `density_channels` and `hist_channels` are None.
 
     """
-
     # Check number of plots
     if density_channels is None and hist_channels is None:
         raise ValueError("density_channels and hist_channels cannot be both \
@@ -991,7 +986,8 @@ def hist_and_bar(data_list,
                 figsize = None,
                 savefig = None,
                 ):
-    """Make a combined histogram/bar plot of one channel of a set of
+    """
+    Make a combined histogram/bar plot of one channel of a set of
     FCSData objects.
 
     This function calls `hist1d` and `bar` to plot a histogram and a bar
@@ -1037,7 +1033,6 @@ def hist_and_bar(data_list,
         subplots.
 
     """
-
     # Copy hist_params and bar_params, due to possible modifications
     hist_params = hist_params.copy()
     bar_params = bar_params.copy()
