@@ -58,14 +58,14 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
     num_start, num_end : int
         Number of events to gate out from beginning and end of `data`.
     full_output : bool
-        Flag specifying to return `namedtuple` with additional outputs.
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
     -------
-    gated_data : FCSData or numpy array, if full_output==False
+    gated_data : FCSData or numpy array, if ``full_output==False``
         Gated flow cytometry data of the same format as `data`.
-    namedtuple, if full_output==True
-        `namedtuple` containing the following fields in this order:
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
         gated_data : FCSData or numpy array
             Gated flow cytometry data of the same format as `data`.
         mask : numpy array of bool
@@ -113,14 +113,14 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         -np.Inf, respectively, which allows all finite data through the
         gate).
     full_output : bool
-        Flag specifying to return `namedtuple` with additional outputs.
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
     -------
-    gated_data : FCSData or numpy array, if full_output==False
+    gated_data : FCSData or numpy array, if ``full_output==False``
         Gated flow cytometry data of the same format as `data`.
-    namedtuple, if full_output==True
-        `namedtuple` containing the following fields in this order:
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
         gated_data : FCSData or numpy array
             Gated flow cytometry data of the same format as `data`.
         mask : numpy array of bool
@@ -189,14 +189,14 @@ def ellipse(data, channels,
         Flag specifying that log10 transformation should be applied to
         `data` before gating.
     full_output : bool
-        Flag specifying to return `namedtuple` with additional outputs.
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
     -------
-    gated_data : FCSData or numpy array, if full_output==False
+    gated_data : FCSData or numpy array, if ``full_output==False``
         Gated flow cytometry data of the same format as `data`.
-    namedtuple, if full_output==True
-        `namedtuple` containing the following fields in this order:
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
         gated_data : FCSData or numpy array
             Gated flow cytometry data of the same format as `data`.
         mask : numpy array of bool
@@ -276,14 +276,14 @@ def density2d(data, channels=[0,1],
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
         into a density.
     full_output : bool
-        Flag specifying to return `namedtuple` with additional outputs.
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
     -------
-    gated_data : FCSData or numpy array, if full_output==False
+    gated_data : FCSData or numpy array, if ``full_output==False``
         Gated flow cytometry data of the same format as `data`.
-    namedtuple, if full_output==True
-        `namedtuple` containing the following fields in this order:
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
         gated_data : FCSData or numpy array
             Gated flow cytometry data of the same format as `data`.
         mask : numpy array of bool
