@@ -262,7 +262,7 @@ def parse_beads_table(beads_table,
 
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
-    - Load the FCS file specified in the filed "File Path".
+    - Load the FCS file specified in the field "File Path".
     - Transform the forward scatter/side scatter channels if needed.
     - Remove the 250 first and 100 last events.
     - Remove saturated events in the forward scatter and side scatter
@@ -312,7 +312,7 @@ def parse_beads_table(beads_table,
         return
 
     if verbose:
-        print "\nProcessing beads ({} entries)...".format(len(beads_table))
+        print("\nProcessing beads ({} entries)...".format(len(beads_table)))
 
     # Check that plotting directory exist, create otherwise
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
@@ -340,8 +340,8 @@ def parse_beads_table(beads_table,
         filename = os.path.join(base_dir, beads_row['File Path'])
         beads_sample = fc.io.FCSData(filename, beads_row)
         if verbose:
-            print "{} loaded ({} events).".format(beads_id,
-                                                  beads_sample.shape[0])
+            print("{} loaded ({} events).".format(beads_id,
+                                                  beads_sample.shape[0]))
         # Parse clustering channels data
         cluster_channels = beads_row['Clustering Channels'].split(',')
         cluster_channels = [cc.strip() for cc in cluster_channels]
@@ -356,8 +356,8 @@ def parse_beads_table(beads_table,
                                         channels=sc_channels)
         # Density gating
         if verbose:
-            print "Running density gate (fraction = {:.2f})...".format(
-                beads_row['Gate Fraction'])
+            print("Running density gate (fraction = {:.2f})...".format(
+                beads_row['Gate Fraction']))
         beads_sample_gated, __, gate_contour = fc.gate.density2d(
             data=beads_sample,
             channels=sc_channels,
@@ -403,7 +403,7 @@ def parse_beads_table(beads_table,
         # Obtain standard curve transformation
         if mef_channels:
             if verbose:
-                print "\nCalculating standard curve..."
+                print("\nCalculating standard curve...")
             to_mef[beads_id] = fc.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values, 
@@ -481,7 +481,7 @@ def parse_samples_table(samples_table,
         return
 
     if verbose:
-        print "\nProcessing samples ({} entries)...".format(len(samples_table))
+        print("\nProcessing samples ({} entries)...".format(len(samples_table)))
 
     # Check that plotting directory exist, create otherwise
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
@@ -506,12 +506,12 @@ def parse_samples_table(samples_table,
         filename = os.path.join(base_dir, sample_row['File Path'])
         sample = fc.io.FCSData(filename, sample_row)
         if verbose:
-            print "{} loaded ({} events).".format(sample_id,
-                                                  sample.shape[0])
+            print("{} loaded ({} events).".format(sample_id,
+                                                  sample.shape[0]))
 
         ### TRANSFORM ###
         if verbose:
-            print "Performing data transformation..."
+            print("Performing data transformation...")
         # Transform FSC/SSC to relative units
         sample = fc.transform.exponentiate(sample, sc_channels)
 
@@ -546,7 +546,7 @@ def parse_samples_table(samples_table,
 
         ### GATE ###
         if verbose:
-            print "Performing gating..."
+            print("Performing gating...")
         # Remove first and last samples
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
         # Remove saturating samples in forward/side scatter
@@ -566,7 +566,7 @@ def parse_samples_table(samples_table,
         # Plot forward/side scatter density plot and fluorescence histograms
         if plot:
             if verbose:
-                print "Plotting density plot and histogram..."
+                print("Plotting density plot and histogram...")
             # Define density plot parameters
             density_params = {}
             density_params['mode'] = 'scatter'
