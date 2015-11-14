@@ -60,9 +60,6 @@ def write_workbook(workbook_name, content):
     """
     Write an Excel workbook with the specified content.
 
-    If the specified workbook already exists, this function overwrites
-    cells but not worksheets.
-
     Parameters
     ----------
     workbook_name : str
@@ -78,9 +75,6 @@ def write_workbook(workbook_name, content):
     ------
     ValueError
         If the length of `content` is zero.
-    IOError
-        If access to the output file is denied (e.g. file is open in
-        another program).
     
     """
     # Check that `content` is a dictionary or OrderedDict
@@ -102,9 +96,9 @@ def write_workbook(workbook_name, content):
         ws = wb.create_sheet()
         ws.title = sheet_name
         # Write content to worksheet
-        for r, row in enumerate(sheet_content):
-            for c, value in enumerate(row):
-                ws.cell(row=r + 1, column = c + 1).value = value
+        for row_idx, row in enumerate(sheet_content):
+            for col_idx, value in enumerate(row):
+                ws.cell(row=row_idx+1, column=col_idx+1).value = value
 
     # Try to save document
     try:
