@@ -310,7 +310,7 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     peak : float
         Mode of `data`.
     hist_smooth : array
-        (max_val - min_val + 1)-long array containing the smoothed
+        ``(max_val - min_val + 1)``-long array containing the smoothed
         histogram.
 
     """
@@ -378,16 +378,12 @@ def select_peaks_proximity(peaks_ch,
         Sorted fluorescence values of bead populations in channel units.
     peaks_mef : array
         Sorted fluorescence values of bead populations in MEF units.
-    peaks_ch_std_mult_l : float, optional
-        Number of standard deviations from `peaks_ch_min` that a value in
-        `peaks_ch` has to be closer than to be discarded.
-    peaks_ch_std_mult_r : float, optional
-        Number of standard deviations from `peaks_ch_max` that a value in
-        `peaks_ch` has to be closer than to be discarded.
-    peaks_ch_min : int, optional
-        Minimum tolerable fluorescence value in channel units.
-    peaks_ch_max : int, optional
-        Maximum tolerable fluorescence value in channel units.
+    peaks_ch_std_mult_l, peaks_ch_std_mult_r : float, optional
+        Number of standard deviations from `peaks_ch_min` and
+        `peaks_ch_max`, respectively, that a value in `peaks_ch` has to be
+        closer than to be discarded.
+    peaks_ch_min, peaks_ch_max : int, optional
+        Minimum and maximum tolerable fluorescence value in channel units.
 
     """
     # Minimum peak standard deviation will be 1.0

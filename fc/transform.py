@@ -36,7 +36,7 @@ def transform(data, channels, transform_fxn, def_channels = None):
     channels : int, str, list of int, list of str, optional
         Channels on which to perform the transformation. If `channels` is
         None, use def_channels.
-    transform_fxn : functions
+    transform_fxn : function
         Function that performs the actual transformation.
     def_channels : int, str, list of int, list of str, optional
         Default set of channels in which to perform the transformation.
