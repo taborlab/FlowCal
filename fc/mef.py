@@ -1,6 +1,5 @@
 """
-Functions for analysis of calibration beads and generation of standard
-curves.
+Functions for transforming flow cytometer data to MEF units.
 
 """
 
@@ -19,7 +18,8 @@ import fc.plot
 import fc.transform
 
 def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
-    """Find clusters in an array using the DBSCAN method.
+    """
+    Find clusters in an array using the DBSCAN method.
 
     The DBSCAN method views clusters as areas of high density of samples,
     separated by areas of low density. This algorithm works by defining
@@ -118,7 +118,8 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     return labels
 
 def clustering_distance(data, n_clusters = 8):
-    """Find clusters in the data array based on distance to the origin.
+    """
+    Find clusters in the data array based on distance to the origin.
 
     This function sorts all the samples in `data` based on their Euclidean
     distance to the origin. Then, the ``n/n_clusters`` samples closest to
@@ -139,7 +140,6 @@ def clustering_distance(data, n_clusters = 8):
         ``data[i]`` to cluster ``labels[i]``.
 
     """
-
     # Number of elements per cluster
     fractions = np.ones(n_clusters)*1./n_clusters
 
@@ -165,7 +165,8 @@ def clustering_distance(data, n_clusters = 8):
 
 def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub', 
     tol = 1e-7, min_covar = 1e-2):
-    """Find clusters in an array using Gaussian Mixture Models (GMM).
+    """
+    Find clusters in an array using Gaussian Mixture Models (GMM).
 
     GMM finds clusters by fitting a linear combination of `n_clusters`
     Gaussian probability density functions (pdf) to `data`, by likelihood
@@ -208,7 +209,6 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
         ``data[i]`` to cluster ``labels[i]``.
 
     """
-
     # Initialization method
     if initialization == 'distance':
         # Perform distance-based clustering
@@ -287,8 +287,8 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     return labels
 
 def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
-    """Find the mode of a dataset, by finding the peak of a smoothed
-    histogram.
+    """
+    Find the mode of a dataset by finding the peak of a smoothed histogram.
 
     This function finds the mode of a dataset by calculating the histogram,
     using a 1D Gaussian filter to smooth out the histogram, and identifying
@@ -314,7 +314,6 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
         histogram.
 
     """
-
     # Calculate bin edges and centers
     bin_edges = np.arange(min_val, max_val + 2) - 0.5
     bin_edges[0] = -np.inf
@@ -338,7 +337,8 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     return peak, hist_smooth
 
 def find_peaks_median(data):
-    """Find the median of a data array.
+    """
+    Find the median of a data array.
 
     Parameters
     ----------
@@ -351,9 +351,7 @@ def find_peaks_median(data):
         Median of `data`.
 
     """
-
     peak = np.median(data)
-
     return peak
 
 def select_peaks_proximity(peaks_ch,
@@ -363,9 +361,8 @@ def select_peaks_proximity(peaks_ch,
                            peaks_ch_std_mult_r = 2.5,
                            peaks_ch_min = 0,
                            peaks_ch_max = 1023):
-    """Select values from arrays representing bead subpopulations in
-    channel and MEF units, based on proximity to a minimum and maximum
-    value.
+    """
+    Select bead subpopulations based on proximity to a minimum and maximum.
 
     This function discards some values from `peaks_ch` if they're closer
     than `peaks_ch_std_mult_l` standard deviations to `peaks_ch_min`, or
@@ -393,7 +390,6 @@ def select_peaks_proximity(peaks_ch,
         Maximum tolerable fluorescence value in channel units.
 
     """
-
     # Minimum peak standard deviation will be 1.0
     min_std = 1.0
     peaks_ch_std = peaks_ch_std.copy()
@@ -443,7 +439,8 @@ def select_peaks_proximity(peaks_ch,
     return sel_peaks_ch, sel_peaks_mef
 
 def fit_standard_curve(peaks_ch, peaks_mef):
-    """Get a standard curve from fluorescence values of calibration beads.
+    """
+    Get a standard curve from fluorescence values of calibration beads.
 
     This function fits a calibration bead fluorescence model using
     `peaks_ch`, the fluorescence of the bead subpopulations in channel
@@ -499,7 +496,6 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     brighter peaks.
 
     """
-
     # Check that the input data has consistent dimensions
     assert len(peaks_ch) == len(peaks_mef), "peaks_ch and  \
         peaks_mef have different lengths"
@@ -551,8 +547,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     select_peaks_method = 'proximity', select_peaks_params = {},
     verbose = False, plot = False, plot_dir = None, plot_filename = None,
     full = False):
-    """Generate a transformation function to convert flow cytometry data
-    from channel units to MEF units.
+    """
+    Generate a transformation function to convert channel units to MEF.
 
     The transformation functon is calculated from flow cytometry beads
     data, provided in the `data_beads` argument. The steps involved in the
