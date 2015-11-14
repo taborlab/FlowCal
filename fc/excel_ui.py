@@ -353,11 +353,13 @@ def parse_beads_table(beads_table,
         ###
         # Gating
         ###
-        # Remove first and last samples
+        # Remove first and last events
         beads_sample = fc.gate.start_end(beads_sample,
                                          num_start=250,
                                          num_end=100)
-        # Remove saturating samples in forward/side scatter
+        # Remove saturating events in forward/side scatter
+        # The value of a saturating event is taken automatically from
+        # `beads_sample.channel_info`.
         beads_sample = fc.gate.high_low(beads_sample,
                                         channels=sc_channels)
         # Density gating
@@ -561,11 +563,13 @@ def parse_samples_table(samples_table,
         ###
         if verbose:
             print("Performing gating...")
-        # Remove first and last samples
+        # Remove first and last events
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
-        # Remove saturating samples in forward/side scatter
+        # Remove saturating events in forward/side scatter
+        # The value of a saturating event is taken automatically from
+        # `sample_gated.channel_info`.
         sample_gated = fc.gate.high_low(sample_gated, sc_channels)
-        # # Remove saturating samples in channels to report
+        # Remove saturating events in channels to report
         sample_gated = fc.gate.high_low(sample_gated, report_channels)
         # Density gating
         sample_gated, __, gate_contour = fc.gate.density2d(
