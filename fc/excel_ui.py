@@ -147,8 +147,8 @@ def list_to_table(table_list, id_header='ID'):
     n_headers = len(table_list[0])
     for r in range(1, len(table_list)):
         if len(table_list[r]) != n_headers:
-            raise ValueError("all lists inside table_list should \
-                have the same length")
+            raise ValueError("all lists inside table_list should "
+                "have the same length")
 
     # Extract headers
     headers = table_list[0]
