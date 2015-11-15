@@ -249,7 +249,7 @@ def load_fcs_from_table(table, filename_key):
     return [fc.io.FCSData(row[filename_key], metadata=row)
             for row_id, row in table.items()]
 
-def parse_beads_table(beads_table,
+def process_beads_table(beads_table,
                       instruments_table,
                       base_dir="",
                       verbose=False,
@@ -427,7 +427,7 @@ def parse_beads_table(beads_table,
 
     return beads_samples, to_mef
 
-def parse_samples_table(samples_table,
+def process_samples_table(samples_table,
                         instruments_table,
                         to_mef=None,
                         base_dir="",
@@ -802,7 +802,7 @@ def run(verbose=True, plot=True):
     samples_table = list_to_table(wb_content['Samples'])
 
     # Process beads samples
-    beads_samples, to_mef = parse_beads_table(
+    beads_samples, to_mef = process_beads_table(
         beads_table,
         instruments_table,
         base_dir=input_dir,
@@ -811,7 +811,7 @@ def run(verbose=True, plot=True):
         plot_dir='plot_beads')
 
     # Process samples
-    samples = parse_samples_table(
+    samples = process_samples_table(
         samples_table,
         instruments_table,
         to_mef=to_mef,
