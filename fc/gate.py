@@ -1,18 +1,19 @@
 """
 Functions for gating flow cytometry data.
 
-All gate functions should be of the following form:
+All gate functions are of the following form:
 
     gated_data = gate(data, channels, parameters)
     (gated_data, mask, contour, ...) = gate(data, channels, parameters,
                                             full_output=True)
 
-where data is a NxD numpy array describing N cytometry events observing D
-data dimensions, channels specifies the channels in which to perform
-gating, and parameters are gate-specific parameters. gated_data is the
-gated result, mask is a bool array specifying the gate mask, and contour
-is an optional list of 2D numpy arrays of x-y coordinates tracing out
-lines which represent the gate (useful for plotting).
+where `data` is a NxD FCSData object or numpy array describing N cytometry
+events observing D data dimensions, `channels` specifies the channels in
+which to perform gating, and `parameters` are gate-specific parameters.
+`gated_data` is the gated result, as an FCSData object or numpy array,
+`mask` is a bool array specifying the gate mask, and `contour` is an
+optional list of 2D numpy arrays containing the x-y coordinates of the
+contour surrounding the gated region (useful for plotting).
 
 """
 
