@@ -302,7 +302,7 @@ def process_beads_table(beads_table,
     beads_samples : list of FCSData objects
         A list of processed, gated, and transformed samples, as specified
         in `beads_table`, in the order of ``beads_table.keys()``.
-    to_mef : OrderedDict
+    mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
         ``beads_table.keys()``.
 
@@ -320,7 +320,7 @@ def process_beads_table(beads_table,
 
     # Initialize output variables
     beads_samples = []
-    to_mef = collections.OrderedDict()
+    mef_transform_fxns = collections.OrderedDict()
 
     # Iterate through table
     for beads_id, beads_row in beads_table.items():
@@ -412,7 +412,7 @@ def process_beads_table(beads_table,
         if mef_channels:
             if verbose:
                 print("\nCalculating standard curve...")
-            to_mef[beads_id] = fc.mef.get_transform_fxn(
+            mef_transform_fxns[beads_id] = fc.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values, 
                 cluster_method='gmm', 
@@ -425,11 +425,11 @@ def process_beads_table(beads_table,
                 plot_filename=beads_id,
                 plot_dir=os.path.join(base_dir, plot_dir))
 
-    return beads_samples, to_mef
+    return beads_samples, mef_transform_fxns
 
 def process_samples_table(samples_table,
                         instruments_table,
-                        to_mef=None,
+                        mef_transform_fxns=None,
                         base_dir="",
                         verbose=False,
                         plot=False,
@@ -459,10 +459,10 @@ def process_samples_table(samples_table,
         Table specifying samples to be processed.
     instruments_table : OrderedDict or dict
         Table specifying instruments.
-    to_mef : dict or OrderedDict, optional
+    mef_transform_fxns : dict or OrderedDict, optional
         Dictionary containing MEF transformation functions. If any entry
         in `samples_table` requires transformation to MEF, a key: value
-        pair must exist in to_mef, with the key being equal to the
+        pair must exist in mef_transform_fxns, with the key being equal to the
         contents of field "Beads ID".
     base_dir : str, optional
         Directory from where all the other paths are specified from.
@@ -547,8 +547,8 @@ def process_samples_table(samples_table,
                 sample = fc.transform.exponentiate(sample, fl_channel)
             elif units == 'MEF':
                 units_label = "Molecules of Equivalent Fluorophore, MEF"
-                to_mef_sample = to_mef[sample_row['Beads ID']]
-                sample = to_mef_sample(sample, fl_channel)
+                sample = mef_transform_fxns[sample_row['Beads ID']](sample,
+                                                                    fl_channel)
             else:
                 raise ValueError("units {} not recognized for sample {}".
                     format(units, sample_id))
@@ -802,7 +802,7 @@ def run(verbose=True, plot=True):
     samples_table = list_to_table(wb_content['Samples'])
 
     # Process beads samples
-    beads_samples, to_mef = process_beads_table(
+    beads_samples, mef_transform_fxns = process_beads_table(
         beads_table,
         instruments_table,
         base_dir=input_dir,
@@ -814,7 +814,7 @@ def run(verbose=True, plot=True):
     samples = process_samples_table(
         samples_table,
         instruments_table,
-        to_mef=to_mef,
+        mef_transform_fxns=mef_transform_fxns,
         base_dir=input_dir,
         verbose=verbose,
         plot=plot,
