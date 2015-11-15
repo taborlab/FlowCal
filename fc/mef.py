@@ -385,6 +385,13 @@ def select_peaks_proximity(peaks_ch,
     peaks_ch_min, peaks_ch_max : int, optional
         Minimum and maximum tolerable fluorescence value in channel units.
 
+    Returns
+    -------
+    sel_peaks_ch : array
+        Selected fluorescence values of bead populations in channel units.
+    sel_peaks_mef : array
+        Selected fluorescence values of bead populations in MEF units.
+
     """
     # Minimum peak standard deviation will be 1.0
     min_std = 1.0
