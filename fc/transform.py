@@ -1,7 +1,7 @@
 """
 Functions for transforming flow cytometry data
 
-All transformations should be of the following form:
+All transformations are of the following form:
 
     data_t = transform(data, channels, params):
 
