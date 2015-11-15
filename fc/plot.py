@@ -700,13 +700,6 @@ def bar(data,
     """
     Draw a barplot.
 
-    Individual bars can be grouped by specifying a number greater than one
-    in `n_in_group`. Each group of `n_in_group` bars will share the same
-    label and will be plotted next to each other. Within a group, each bar
-    can be differentiated by using the parameters `colors` and
-    `labels_in_group`, which should be of length `n_in_group`. If
-    `labels_in_group` is specified, a legend is drawn using these labels.
-
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
     is not specified, the plot is maintained in the current axis when the
@@ -724,11 +717,15 @@ def bar(data,
     labels : list of str
         Labels for each bar or bar group, to be displayed on the x axis.
     n_in_group : int, optional
-        Number of bars per group.
+        Number of bars per group. Each group of `n_in_group` bars will
+        share the same label and will be plotted next to each other.
     labels_in_group : list of str, optional
         Labels for bars within a group, to be used in the legend.
+        `labels_in_group` should be of length `n_in_group`. If
+        `labels_in_group` is not specified, a legend will not be plotted.
     colors : list, optional
-        Colors to be used for each bar within a group.
+        Colors to be used for each bar within a group. `colors` should be
+        of length `n_in_group`.
     val_labels : bool, optional
         Flag indicating whether to include labels above each bar with its
         numerical value.
