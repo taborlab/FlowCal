@@ -141,6 +141,11 @@ def CV(data, channel):
         The Coefficient of Variation of the events in the specified channel
         of `data`.
 
+    Notes
+    -----
+    The Coefficient of Variation (CV) of a dataset is defined as the
+    standard deviation divided by the mean of such dataset.
+
     """
     if hasattr(channel, '__iter__'):
         raise ValueError("Channel should be a scalar.")
@@ -164,6 +169,11 @@ def iqr(data, channel):
     int or float
         The Interquartile Range of the events in the specified channel of
         `data`.
+
+    Notes
+    -----
+    The Interquartile Range (IQR) of a dataset is defined as the interval
+    between the 25% and the 75% percentiles of such dataset.
 
     """
     if hasattr(channel, '__iter__'):
@@ -189,6 +199,11 @@ def RCV(data, channel):
     float
         The Robust Coefficient of Variation of the events in the specified
         channel of `data`.
+
+    Notes
+    -----
+    The Robust Coefficient of Variation (RCV) of a dataset is defined as
+    the Interquartile Range (IQR) divided by the median of such dataset.
 
     """
     if hasattr(channel, '__iter__'):
