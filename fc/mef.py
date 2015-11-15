@@ -599,14 +599,41 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             Transformation function to convert flow cytometry data from
             channel units to MEF.
         clustering_res : dict
-            Results of the clustering step.
+            Results of the clustering step, containing the following
+            fields:
+            labels : array
+                Labels for each element in `data_beads`.
         peak_find_res : dict
-            Results of the calculation of fluorescence of each
-            subpopulation.
+            Results of the calculation of bead subpopulations'
+            fluorescence, containing the following fields:
+            peaks_ch : list
+                The representative fluorescence of each subpopulation, for
+                each channel in `mef_channels`.
+            peaks_hists : list
+                Only included if ``find_peaks_method=='smoothed_mode'. The
+                smoothed histogram of each subpopulation, for each channel
+                in `mef_channels`.
         peak_sel_res : dict
-            Results of the subpopulation selection step.
+            Results of the subpopulation selection step, containing the
+            following fields:
+            sel_peaks_ch : list
+                The fluorescence values of each selected subpopulation in
+                channel units, for each channel in `mef_channels`.
+            sel_peaks_mef : list
+                The fluorescence values of each selected subpopulation in
+                MEF units, for each channel in `mef_channels`.
         fitting_res : dict
-            Results of the model fitting step.
+            Results of the model fitting step, containing the following
+            fields:
+            sc : list
+                Functions encoding the standard curves, for each channel in
+                `mef_channels`.
+            sc_beads : list
+                Functions encoding the fluorescence model of the
+                calibration beads, for each channel in `mef_channels`.
+            sc_params : list
+                Fitted parameters of the bead fluorescence model: ``[m, b,
+                fl_mef_auto]``, for each channel in `mef_chanels`.
 
     Other parameters
     ----------------
