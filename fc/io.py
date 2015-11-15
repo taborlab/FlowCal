@@ -25,29 +25,30 @@ class FCSData(np.ndarray):
     channel-independent, sample-specific information, separate from `text`
     and `analysis`.
 
-    The following versions of the FCS standard are supported:
-        - FCS 2.0
-        - FCS 3.0
-        - FCS 3.1
+    `FCSData` can read standard FCS files with versions 2.0, 3.0, and 3.1.
+    Some non-standard FCS files, which store information used by `FCSData`
+    in vendor-specific keywords, are also supported. Currently,
+    `FCSData` can read non-standard FCS files from the following
+    acquisition software/instrument combinations:
         - FCS 2.0 from CellQuestPro 5.1.1/BD FACScan Flow Cytometer
 
-    We assume that the TEXT segment is such that:
-        - There is only one data set in the file.
-        - $MODE = 'L' (list mode, histogram mode not supported).
+    The FCS file must be of the following form:
+        - Only one data set present.
+        - $MODE = 'L' (list mode; histogram mode not supported).
         - $DATATYPE = 'I' (unsigned integer), 'F' (32-bit floating point),
             or 'D' (64-bit floating point). 'A' (ASCII) is not supported.
-        - If $DATATYPE = 'I', $PnB % 8 = 0 for all channels.
-        - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian)
-        - $GATE = 0
+        - If $DATATYPE = 'I', $PnB % 8 = 0 (byte-aligned) for all channels.
+        - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian).
+        - $GATE not present in TEXT, or $GATE = 0.
     
     Attributes
     ----------
     infile : str or file-like object
-        The path of the associated FCS file.
+        Reference to the associated FCS file.
     text : dict
-        Keyword-value pairs from the TEXT section of the FCS file.
+        Keyword-value pairs from the TEXT segment of the FCS file.
     analysis : dict
-        Keyword-value pairs from the ANALYSIS section of the FCS file.
+        Keyword-value pairs from the ANALYSIS segment of the FCS file.
     channel_info : list
         List of dictionaries, each one containing information about each
         channel. The keys of each one are:
@@ -91,7 +92,7 @@ class FCSData(np.ndarray):
 
         Since the ANALYSIS and supplemental TEXT segments are encoded in
         the same way, this function can also be used to parse the ANALYSIS
-        section.
+        segment.
 
         Parameters
         ----------
@@ -109,7 +110,7 @@ class FCSData(np.ndarray):
         Returns
         -------
         text : dict
-            Keyword-value pairs contained in the specified TEXT section.
+            Keyword-value pairs contained in the specified TEXT segment.
         delim : str
             Delimiter character.
 
@@ -121,7 +122,7 @@ class FCSData(np.ndarray):
         
         # Offsets point to the byte BEFORE the indicated boundary. This way,
         # you can seek to the offset and then read 1 byte to read the indicated
-        # boundary. This means the length of the TEXT section is
+        # boundary. This means the length of the TEXT segment is
         # ((end+1) - begin).
         f.seek(begin)
         text_raw = f.read((end + 1) - begin)
@@ -129,7 +130,7 @@ class FCSData(np.ndarray):
         text_list = text_raw.split(delim)
 
         # The first and last list items should be empty because the TEXT
-        # section starts and ends with the delimiter
+        # segment starts and ends with the delimiter
         if text_list[0] != '' or text_list[-1] != '':
             raise ImportError('Segment should start and end with delimiter.')
         else:
@@ -171,14 +172,29 @@ class FCSData(np.ndarray):
         Returns
         -------
         data : array
-            NxD array containing information from the DATA section of the
+            NxD array containing information from the DATA segment of the
             FCS file.
         text : dict
-            Keyword-value pairs contained in the TEXT section of the FCS
+            Keyword-value pairs contained in the TEXT segment of the FCS
             file.
         channel_info : list
            - List of dictionaries, each one containing information about
            each channel.
+
+        Raises
+        ------
+        TypeError
+            If the file in `infile` does not correspond to a valid FCS file
+            with a version supported by `fc`.
+        NotImplementedError
+            If the file in `infile` does not satisfy the following:
+            - Information is stored in list mode ($MODE = 'L')
+            - Data type ($DATATYPE) is integer ('I'), floating-point
+              ('F') or double ('D').
+            - If data type is integer, data is byte-aligned ($PnB % 8 = 0)
+            - Byte-ordering is big endian or little endian.
+            - No gate parameters are stored ($GATE not present in TEXT,
+              or $GATE = 0)
 
         """
         # Open file if necessary
