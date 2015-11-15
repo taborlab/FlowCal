@@ -21,6 +21,29 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     """
     Find clusters in an array using the DBSCAN method.
 
+    Parameters
+    ----------
+    data : array_like
+        NxD array to cluster.
+    eps : float, optional
+        Maximum distance between core samples.
+    min_samples : int, optional
+        Minimum number of neighbors for a sample to be considered core
+        sample. If not specified, it defaults to the number of events in
+        `data`, divided by 200. Passed directly to ``scikit-learn``'s
+        DBSCAN.
+    n_clusters_exp : int, optional
+        Expected number of clusters. Passed directly to ``scikit-learn``'s
+        DBSCAN.
+
+    Returns
+    -------
+    labels : array
+        Nx1 array with labels for each element in `data`, assigning
+        ``data[i]`` to cluster ``labels[i]``.
+
+    Notes
+    -----
     The DBSCAN method views clusters as areas of high density of samples,
     separated by areas of low density. This algorithm works by defining
     'core samples' as samples that have `min_samples` neighbors separated
@@ -28,9 +51,7 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     sample, find all its neighbors that are core samples, find the
     neighbors of these core samples that are also core samples, and so on.
     The cluster is then defined as this set of core samples, plus their
-    neighbors that are not core samples. `clustering_dbscan` internally
-    uses `DBSCAN` from the ``scikit-learn`` library. For more information,
-    consult their documentation.
+    neighbors that are not core samples.
 
     DBSCAN normally finds the number of clusters automatically. However,
     `clustering_dbscan` makes some post-processing that we have found
@@ -45,26 +66,8 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     relatively high distance between events. Therefore, we consider it a
     distinct cluster.
 
-    Parameters
-    ----------
-    data : array_like
-        NxD array to cluster.
-    eps : float, optional
-        Maximum distance between core samples.
-    min_samples : int, optional
-        Minimum number of neighbors for a sample to be considered core
-        sample. If not specified, it defaults to the number of events in
-        `data`, divided by 200. Passed directly to ``scikit-learn``'s
-        DBSCAN.
-    n_clusters_exp : int, optional
-        Expected number of clusters. Passed directly to ``scikit-learn``'s
-        GMM.
-
-    Returns
-    -------
-    labels : array
-        Nx1 array with labels for each element in `data`, assigning
-        ``data[i]`` to cluster ``labels[i]``.
+    `clustering_dbscan` internally uses `DBSCAN` from the ``scikit-learn``
+    library. For more information, consult their documentation.
 
     """
     # Default value of min_samples
@@ -168,12 +171,6 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
 
-    GMM finds clusters by fitting a linear combination of `n_clusters`
-    Gaussian probability density functions (pdf) to `data`, by likelihood
-    maximization. `clustering_gmm` internally uses `GMM` from the
-    ``scikit-learn`` library. For more information, consult their
-    documentation.
-
     The likelihood maximization method used requires an initial parameter
     choice for the Gaussian pdfs, and the results can be fairly sensitive
     to it. `clustering_gmm` can perform two types of initialization, which
@@ -182,11 +179,11 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     origin, similarly to what is done in `clustering_distance`. Then, the
     function calculates the Gaussian Mixture parameters, assuming that this
     clustering is correct. These parameters are used as the initial
-    conditions. The other initialization procedure also starts by
+    conditions. The second initialization procedure also starts by
     clustering based on distance to the origin. Then, for each cluster,
     the 50% datapoints farther away from the mean are discarded, and the
-    rest are used to calculate the initial parameters. The function
-    parameter `initialization` selects any of these two procedures.
+    rest are used to calculate the initial parameters. The parameter
+    `initialization` selects any of these two procedures.
 
     Parameters
     ----------
@@ -207,6 +204,15 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     labels : array
         Nx1 array with labels for each element in `data`, assigning
         ``data[i]`` to cluster ``labels[i]``.
+
+    Notes
+    -----
+    GMM finds clusters by fitting a linear combination of `n_clusters`
+    Gaussian probability density functions (pdf) to `data`, by likelihood
+    maximization.
+
+    `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
+    library. For more information, consult their documentation.
 
     """
     # Initialization method
@@ -542,22 +548,15 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     verbose = False, plot = False, plot_dir = None, plot_filename = None,
     full = False):
     """
-    Generate a transformation function to convert channel units to MEF.
+    Get a transformation function to convert flow cytometry data to MEF.
 
-    The transformation functon is calculated from flow cytometry beads
-    data, provided in the `data_beads` argument. The steps involved in the
-    generation of this transformation function are:
-    1. The individual subpopulations of beads are first identified using a
-       clustering method of choice.
-    2. The fluorescence of each subpopulation is calculated for each
-       cluster, for each channel in `mef_channels`.
-    3. Some subpopulations are then discarded if they are close to either
-       the minimum or the maximum channel value. In addition, if the MEF
-       value of some subpopulation is unknown (represented as a ``NaN`` in
-       `peaks_mef`), the whole subpopulation is also discarded.
-    4. The measured fluorescence of each subpopulation is compared with
-       the known MEF values in `peaks_mef`, and a standard curve function
-       is generated using the appropriate MEF model.
+    This function uses flow cytometry data taken from calibration beads,
+    and the know fluorescence values of the beads subpopulations in MEF
+    units, to generate a transformation function that can be used to
+    transform other flow cytometry samples to Molecules of Equivalent
+    Fluorophore (MEF). This transformation function has the same basic
+    signature as the general transformation function specified in
+    ``fc.transform``.
 
     Parameters
     ----------
@@ -651,6 +650,30 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         Method to use for peak selection.
     select_peaks_params : dict, optional
         Parameters to pass to the peak selection method.
+
+    Notes
+    -----
+    The steps involved in generating the MEF transformation function are:
+
+    1. The individual subpopulations of beads are first identified using a
+       clustering method of choice.
+    2. The fluorescence of each subpopulation is calculated for each
+       cluster, for each channel in `mef_channels`.
+    3. Some subpopulations are then discarded if they are close to either
+       the minimum or the maximum channel value. In addition, if the MEF
+       value of some subpopulation is unknown (represented as a ``NaN`` in
+       `peaks_mef`), the whole subpopulation is also discarded.
+    4. The measured fluorescence of each subpopulation is compared with
+       the known MEF values in `peaks_mef`, and a standard curve function
+       is generated using the appropriate MEF model.
+
+    At the end, a transformation function is generated using the calculated
+    standard curves, `mef_channels`, and ``fc.transform.to_mef()``.
+
+    Note that applying the resulting transformation function to other
+    flow cytometry samples only yields correct results if they have been
+    taken at the same settings as the calibration beads, for all channels
+    in `mef_channels`.
 
     """
     if verbose:
