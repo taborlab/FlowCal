@@ -108,12 +108,11 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
     channels : int, str, list of int, list of str
-        Channels on which to perform gating (the default is to include
-        all channels).
+        Channels on which to perform gating. If None, use all channels.
     high, low : int, float
-        High and low threshold values (the defaults are np.Inf and
-        -np.Inf, respectively, which allows all finite data through the
-        gate).
+        High and low threshold values. If None, `high` and `low` will be
+        taken from ``data.channel_info`` if available, otherwise
+        ``np.Inf`` and ``-np.Inf`` will be used.
     full_output : bool
         Flag specifying to return ``namedtuple`` with additional outputs.
 
