@@ -516,7 +516,7 @@ def parse_samples_table(samples_table,
         # Sample Data
         ###
         filename = os.path.join(base_dir, sample_row['File Path'])
-        sample = fc.io.FCSData(filename, sample_row)
+        sample = fc.io.FCSData(filename, metadata=sample_row)
         if verbose:
             print("{} loaded ({} events).".format(sample_id,
                                                   sample.shape[0]))
@@ -541,13 +541,13 @@ def parse_samples_table(samples_table,
             # Decide what transformation to perform
             units = sample_row['{} Units'.format(fl_channel)].strip()
             if units == 'Channel':
-                units_long = "Channel Number"
+                units_label = "Channel Number"
             elif units == 'RFI':
-                units_long = "Relative Fluorescence Intensity, RFI"
+                units_label = "Relative Fluorescence Intensity, RFI"
                 sample = fc.transform.exponentiate(sample, fl_channel)
             elif units == 'MEF':
-                units_long = "Molecules of Equivalent Fluorophore, MEF"
-                to_mef_sample =  to_mef[sample_row['Beads ID']]
+                units_label = "Molecules of Equivalent Fluorophore, MEF"
+                to_mef_sample = to_mef[sample_row['Beads ID']]
                 sample = to_mef_sample(sample, fl_channel)
             else:
                 raise ValueError("units {} not recognized for sample {}".
@@ -555,8 +555,7 @@ def parse_samples_table(samples_table,
 
             # Register that reporting in this channel must be done
             report_channels.append(fl_channel)
-            report_units.append(units_long)
-
+            report_units.append(units_label)
 
         ###
         # Gate
