@@ -48,27 +48,7 @@ def hist1d(data_list,
            savefig = None,
            **kwargs):
     """
-    Plot a 1D histogram from one channel of some FCSData objects.
-
-    `hist1d` calls matplotlib's ``hist`` function for each object in
-    `data_list`. `hist_type`, the type of histogram to draw, is directly
-    passed to ``plt.hist`. Additional keyword arguments provided to
-    `hist1d` are passed directly to ``plt.hist``. If ``data_list`` is a
-    list, and keyword arguments ``edgecolor``, ``facecolor``,
-    ``linestyle``, or ``label`` are specified, they should be lists with
-    the same length as `data_list`. This allows each data object to be
-    plotted with its respective style and label.
-
-    If the histogram bins are not specified, they are automatically
-    extracted from each FCSData object, if available. The resolution of the
-    default bins can be downscaled by specifying a `div` greater than one.
-    This function fails if 'bins' is not specified and no default bins can
-    be extracted from the FCSData objects.
-
-    If ``histtype=='stepfilled'`` and no ``facecolor`` is specified in
-    `kwargs`, default facecolors are taken from the default colormap. If
-    ``histtype=='step'`` and no ``edgecolor`` is specified in `kwargs`,
-    default edgecolors are taken from the default colormap.
+    Plot a 1D histogram from one channel of a list of FCSData objects.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -85,15 +65,18 @@ def hist1d(data_list,
     data_list : FCSData object, or list of FCSData objects
         Flow cytometry data to plot.
     channel : int or str
-        Channel form where to take the events to plot.
+        Channel from where to take the events to plot.
     log : bool, optional
         Flag specifying whether the x axis should be in log scale.
     div : int or float, optional
-        Downscaling factor for the default number of bins. Ignored if
-        `bins` is specified.
+        Downscaling factor for the default number of bins. If `bins` is not
+        specified, the default set of bins extracted from an element in
+        `data_list` contains ``n`` bins, and ``div != 1``, `hist1d` will
+        actually use ``n/div`` bins that cover the same range as the
+        default bins. `div` is ignored if `bins` is specified.
     bins : array_like, optional
         bins argument to pass to plt.hist. If not specified, bins are
-        extracted from the objects in `data_list`.
+        extracted from the FCSData objects in `data_list`.
     legend : bool, optional
         Flag specifying whether to include a legend. If `legend` is True,
         the legend labels will be taken from ``kwargs['label']``.
@@ -124,7 +107,19 @@ def hist1d(data_list,
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``hist``.
         ``facecolor``, ``edgecolor``, ``linestyle``, and ``label`` can be
-        specified as a list, with an element for each data object.
+        specified as a list, with an element for each object in
+        `data_list`. If ``histtype=='stepfilled'`` and no ``facecolor`` is
+        specified, default values for ``facecolor`` are taken from the
+        default colormap. If ``histtype=='step'`` and no ``edgecolor``
+        is specified in `kwargs`, default values for ``edgecolor`` are
+        taken from the default colormap.
+
+    Notes
+    -----
+    `hist1d` calls matplotlib's ``hist`` function for each object in
+    `data_list`. `hist_type`, the type of histogram to draw, is directly
+    passed to ``plt.hist``. Additional keyword arguments provided to
+    `hist1d` are passed directly to ``plt.hist``.
 
     """
     # Convert to list if necessary
@@ -238,12 +233,6 @@ def density2d(data,
     ``smooth=True``. The width of the kernel is, in this case, given by
     `sigma`.
 
-    If the histogram bins are not specified, they are automatically
-    extracted from `data`, if available. The resolution of the default bins
-    can be downscaled by specifying a `div` greater than one. This function
-    fails if 'bins' is not specified and no default bins can be extracted
-    from `data`.
-
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
     is not specified, the plot is maintained in the current axis when the
@@ -263,8 +252,11 @@ def density2d(data,
     log : bool, optional
         Flag specifying whether the axes should be in log scale.
     div : int or float, optional
-        Downscaling factor for the default number of bins. Ignored if
-        `bins` is specified.
+        Downscaling factor for the default number of bins. If `bins` is not
+        specified, the default set of bins extracted from `data` contains
+        ``n*m`` bins, and ``div != 1``, `density2d` will actually use
+        ``n/div * m/div`` bins that cover the same range as the default
+        bins. `div` is ignored if `bins` is specified.
     bins : array_like, optional
         bins argument to pass to plt.hist. If not specified, bins are
         extracted from `data`.
@@ -411,15 +403,8 @@ def scatter2d(data_list,
     """
     Plot a 2D scatter plot from two channels of a list of FCSData objects.
 
-    `scatter2d` calls matplotlib's ``scatter`` function for each object in
-    data_list. Additional keyword arguments provided to `scatter2d` are
-    passed directly to ``plt.scatter``. If `data_list` is a list, and the
-    keyword argument 'color' is provided, it should be a list with the
-    same length as `data_list`. This allows each element from `data_list`
-    to be plotted with a different color. If the keyword argument 'color'
-    is not provided, the default colors are taken from the default
-    colormap. The name of the specified channels and the detector gain
-    are used for the axes labels.
+    The name of the specified channels and the detector gain are used for
+    the axes labels.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -444,7 +429,15 @@ def scatter2d(data_list,
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
         `color` can be specified as a list, with an element for each data
-        object.
+        object. If the keyword argument `color` is not provided, elements
+        from `data_list` are plotted with colors taken from the default
+        colormap.
+
+    Notes
+    -----
+    `scatter2d` calls matplotlib's ``scatter`` function for each object in
+    data_list. Additional keyword arguments provided to `scatter2d` are
+    passed directly to ``plt.scatter``.
 
     """
     # Check appropriate number of channels
@@ -498,16 +491,8 @@ def scatter3d(data_list,
 
     `scatter3d` creates a 3D scatter plot and three 2D projected scatter
     plots in four different axes for each FCSData object in `data_list`,
-    in the same figure. These plots use matplotlib's ``scatter``
-    function, with the 3D scatter plot using a 3D projection. Additional
-    keyword arguments provided to `scatter3d` are passed directly to
-    ``scatter``. If `data_list` is a list, and the keyword argument
-    'color' is provided, it should be a list with the same length as
-    `data_list`. This allows each element from `data_list` to be plotted
-    with a different color. If the keyword argument 'color' is not
-    provided, the default colors are taken from the default colormap.
-    The name of the specified channels and the detector gain are used for
-    the axes labels.
+    in the same figure. The name of the specified channels and the detector
+    gain are used for the axes labels.
 
     This function does not create a new figure, so it can be called
     directly to plot in a previously created figure if desired. However,
@@ -530,7 +515,15 @@ def scatter3d(data_list,
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
         `color` can be specified as a list, with an element for each data
-        object.
+        object. If the keyword argument `color` is not provided, elements
+        from `data_list` are plotted with colors taken from the default
+        colormap.
+
+    Notes
+    -----
+    `scatter3d` uses matplotlib's ``scatter``, with the 3D scatter plot
+    using a 3D projection. Additional keyword arguments provided to
+    `scatter3d` are passed directly to ``scatter``.
 
     """
     # Check appropriate number of channels
@@ -987,7 +980,7 @@ def hist_and_bar(data_list,
                 savefig = None,
                 ):
     """
-    Make a combined histogram/bar plot of one channel of a set of
+    Make a combined histogram/bar plot for one channel from a list of
     FCSData objects.
 
     This function calls `hist1d` and `bar` to plot a histogram and a bar
