@@ -667,9 +667,9 @@ class TestLoadFCSFromTable(unittest.TestCase):
         # Expected output
         fcs_files_expected = []
         fcs_files_expected.append(fc.io.FCSData("test/Data001.fcs",
-                                                metadata = table["S001"]))
+                                                metadata=table["S001"]))
         fcs_files_expected.append(fc.io.FCSData("test/Data003.fcs",
-                                                metadata = table["S002"]))
+                                                metadata=table["S002"]))
 
         # Load files from table
         fcs_files = fc.excel_ui.load_fcs_from_table(table, filename_key)
