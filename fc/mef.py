@@ -443,14 +443,7 @@ def select_peaks_proximity(peaks_ch,
 
 def fit_standard_curve(peaks_ch, peaks_mef):
     """
-    Get a standard curve from fluorescence values of calibration beads.
-
-    This function fits a calibration bead fluorescence model using
-    `peaks_ch`, the fluorescence of the bead subpopulations in channel
-    units, and `peaks_mef`, the fluorescence in MEF units. The function
-    then returns a standard curve function that can be used to transform
-    fluorescence measurements from channel units to MEF values. It also
-    returns the bead fluorescence model, and the fitted model parameters.
+    Fit a standard curve to known fluorescence values of calibration beads.
 
     Parameters
     ----------
@@ -479,22 +472,20 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         m*fl_ch_i + b = log(fl_mef_auto + fl_mef_i)
 
     where fl_ch_i is the fluorescence of subpopulation i in channel units,
-    and fl_mef_i is the fluorescence in MEF units. The model includes 3
-    parameters: m (slope), b (intercept), and fl_mef_auto (bead
+    and fl_mef_i is the corresponding fluorescence in MEF units. The model
+    includes 3 parameters: m (slope), b (intercept), and fl_mef_auto (bead
     autofluorescence). After fitting the bead fluorescence model, this
     function returns a standard curve function mapping fluorescence in
     channel units to MEF units, as follows:
 
         fl_mef = exp(m*fl_ch + b)
 
-    Note that this is identical to the bead fluorescence model after
-    solving for fl_mef_i, except that we are setting fl_mef_auto to zero.
-    This is made so that the standard curve function returns absolute
-    fluorescence values.
+    The standard curve doesn't include autofluroescence, therefore it
+    returns absolute fluorescence values.
 
     The bead fluorescence model is fit in a log-MEF space using nonlinear
     least squares regression (as opposed to fitting an exponential model in
-    y space). Fitting in the log-MEF space weights the residuals more
+    MEF space). Fitting in the log-MEF space weights the residuals more
     evenly, whereas fitting an exponential would vastly overvalue the
     brighter peaks.
 
