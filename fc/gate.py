@@ -47,11 +47,6 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
     """
     Gate out first and last events.
 
-    Gate out first and last events from `data`. This is a naive
-    implementation which simply removes a set number of events from the
-    beginning and end of `data` (as opposed to taking into account any
-    optionally specified time information).
-
     Parameters
     ----------
     data : FCSData or numpy array
