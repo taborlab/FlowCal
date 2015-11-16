@@ -15,6 +15,7 @@ from tkFileDialog import askopenfilename
 from matplotlib import pyplot as plt
 import numpy as np
 import openpyxl
+import pandas as pd
 import xlrd
 
 import fc.io
@@ -308,7 +309,7 @@ def process_beads_table(beads_table,
 
     """
     # Do nothing if beads table is empty
-    if not beads_table:
+    if beads_table.empty:
         return
 
     if verbose:
@@ -323,13 +324,13 @@ def process_beads_table(beads_table,
     mef_transform_fxns = collections.OrderedDict()
 
     # Iterate through table
-    for beads_id, beads_row in beads_table.items():
+    for beads_id, beads_row in beads_table.iterrows():
 
         ###
         # Instrument Data
         ###
         # Get the appropriate row in the instrument table
-        instruments_row = instruments_table[beads_row['Instrument ID']]
+        instruments_row = instruments_table.loc[beads_row['Instrument ID']]
         # Scatter channels: Foward Scatter, Side Scatter
         sc_channels = [instruments_row['Forward Scatter Channel'],
                        instruments_row['Side Scatter Channel'],
@@ -485,7 +486,7 @@ def process_samples_table(samples_table,
 
     """
     # Do nothing if samples table is empty
-    if not samples_table:
+    if samples_table.empty:
         return
 
     if verbose:
@@ -497,13 +498,13 @@ def process_samples_table(samples_table,
 
     # Load sample files
     samples = []
-    for sample_id, sample_row in samples_table.items():
+    for sample_id, sample_row in samples_table.iterrows():
 
         ###
         # Instrument Data
         ###
         # Get the appropriate row in the instrument table
-        instruments_row = instruments_table[sample_row['Instrument ID']]
+        instruments_row = instruments_table.loc[sample_row['Instrument ID']]
         # Scatter channels: Foward Scatter, Side Scatter
         sc_channels = [instruments_row['Forward Scatter Channel'],
                        instruments_row['Side Scatter Channel'],
@@ -535,7 +536,8 @@ def process_samples_table(samples_table,
         for fl_channel in fl_channels:
             # Check whether there is a column with units for fl_channel
             if ("{} Units".format(fl_channel) not in sample_row
-                    or sample_row['{} Units'.format(fl_channel)] == ''):
+                    or sample_row['{} Units'.format(fl_channel)] == ''
+                    or pd.isnull(sample_row['{} Units'.format(fl_channel)])):
                 continue
 
             # Decide what transformation to perform
@@ -643,41 +645,59 @@ def add_stats(samples_table, samples):
 
     """
     # Add per-row stats
-    for row, sample in zip(samples_table.values(), samples):
-        row['Number of Events'] = sample.shape[0]
-        row['Acquisition Time (s)'] = sample.acquisition_time
+    samples_table['Number of Events'] = [sample.shape[0] for sample in samples]
+    samples_table['Acquisition Time (s)'] = [sample.acquisition_time
+                                                for sample in samples]
 
     # List of channels that require stats columns
-    headers = samples_table.values()[0].keys()
+    headers = list(samples_table.columns)
     r = re.compile(r'^(\S)*(\s)*Units$')
     stats_headers = [h for h in headers if r.match(h)]
     stats_channels = [s[:-5].strip() for s in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
-        for row, sample in zip(samples_table.values(), samples):
+        # Add empty columns to table
+        samples_table[channel + ' Gain'] = np.nan
+        samples_table[channel + ' Mean'] = np.nan
+        samples_table[channel + ' Geom. Mean'] = np.nan
+        samples_table[channel + ' Median'] = np.nan
+        samples_table[channel + ' Mode'] = np.nan
+        samples_table[channel + ' Std'] = np.nan
+        samples_table[channel + ' CV'] = np.nan
+        samples_table[channel + ' IQR'] = np.nan
+        samples_table[channel + ' RCV'] = np.nan
+        for row_id, sample in zip(samples_table.index, samples):
             # If units are specified, calculate stats. If not, leave empty.
-            if row[header]:
-                row[channel + ' Gain'] = \
-                            sample[:, channel].channel_info[0]['pmt_voltage']
-                row[channel + ' Mean'] = fc.stats.mean(sample, channel)
-                row[channel + ' Geom. Mean'] = fc.stats.gmean(sample, channel)
-                row[channel + ' Median'] = fc.stats.median(sample, channel)
-                row[channel + ' Mode'] = fc.stats.mode(sample, channel)
-                row[channel + ' Std'] = fc.stats.std(sample, channel)
-                row[channel + ' CV'] = fc.stats.CV(sample, channel)
-                row[channel + ' IQR'] = fc.stats.iqr(sample, channel)
-                row[channel + ' RCV'] = fc.stats.RCV(sample, channel)
-            else:
-                row[channel + ' Gain'] = ''
-                row[channel + ' Mean'] = ''
-                row[channel + ' Geom. Mean'] = ''
-                row[channel + ' Median'] = ''
-                row[channel + ' Mode'] = ''
-                row[channel + ' Std'] = ''
-                row[channel + ' CV'] = ''
-                row[channel + ' IQR'] = ''
-                row[channel + ' RCV'] = ''
+            if pd.notnull(samples_table[header][row_id]):
+                samples_table.set_value(row_id,
+                                        channel + ' Gain',
+                                        sample[:, channel].
+                                        channel_info[0]['pmt_voltage'])
+                samples_table.set_value(row_id,
+                                        channel + ' Mean',
+                                        fc.stats.mean(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' Geom. Mean',
+                                        fc.stats.gmean(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' Median',
+                                        fc.stats.median(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' Mode',
+                                        fc.stats.mode(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' Std',
+                                        fc.stats.std(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' CV',
+                                        fc.stats.CV(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' IQR',
+                                        fc.stats.iqr(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' RCV',
+                                        fc.stats.RCV(sample, channel))
 
 def generate_histograms_lists(samples_table, samples):
     """
@@ -795,11 +815,17 @@ def run(verbose=True, plot=True):
     input_dir, input_filename = os.path.split(input_path)
     input_filename_no_ext, __ = os.path.splitext(input_filename)
 
-    # Read workbook and extract relevant tables
-    wb_content = read_workbook(input_path)
-    instruments_table = list_to_table(wb_content['Instruments'])
-    beads_table = list_to_table(wb_content['Beads'])
-    samples_table = list_to_table(wb_content['Samples'])
+    # Read relevant tables from workbook
+    # Note that the following doesn't check for unique IDs or empty IDs.
+    instruments_table = pd.read_excel(input_path,
+                                      sheetname='Instruments',
+                                      index_col='ID')
+    beads_table = pd.read_excel(input_path,
+                                sheetname='Beads',
+                                index_col='ID')
+    samples_table = pd.read_excel(input_path,
+                                  sheetname='Samples',
+                                  index_col='ID')
 
     # Process beads samples
     beads_samples, mef_transform_fxns = process_beads_table(
@@ -823,20 +849,23 @@ def run(verbose=True, plot=True):
     # Add stats to samples table
     add_stats(samples_table, samples)
 
-    # Generate histograms
-    histograms = generate_histograms_lists(samples_table, samples)
+    # # Generate histograms
+    # histograms = generate_histograms_lists(samples_table, samples)
 
-    # Generate output workbook object
-    output_wb = collections.OrderedDict()
-    output_wb['Instruments'] = table_to_list(instruments_table)
-    output_wb['Beads'] = table_to_list(beads_table)
-    output_wb['Samples'] = table_to_list(samples_table)
-    output_wb['Histograms'] = histograms
-
-    # Write output excel file
+    # Generate output writer object
     output_filename = "{}_output.xlsx".format(input_filename_no_ext)
     output_path = os.path.join(input_dir, output_filename)
-    write_workbook(output_path, output_wb)
+    output_writer = pd.ExcelWriter(output_path)
+
+    # Write tables
+    # Note that the following does not take care of formatting.
+    instruments_table.to_excel(output_writer, 'Instruments')
+    beads_table.to_excel(output_writer, 'Beads')
+    samples_table.to_excel(output_writer, 'Samples')
+    # output_wb['Histograms'] = histograms
+
+    # Write output excel file
+    output_writer.save()
 
 if __name__ == '__main__':
     run(verbose=True, plot=True)
