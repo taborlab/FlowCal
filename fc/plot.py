@@ -219,12 +219,12 @@ def density2d(data,
     """
     Plot a 2D density plot from two specified channels of a FCSData object.
 
-    `density2d` has two plotting modes, which are selected using the `mode`
+    `density2d` has two plotting modes which are selected using the `mode`
     argument. With ``mode=='mesh'``, this function plots the data as a true
-    2D histogram, in which a plane is divided in bins and the color of each
-    bin is directly related to the number of elements therein. With
-    ``mode=='scatter'``, this function calculates a 2D-histogram, but plots
-    a 2D-scatter plot in which each dot corresponds to a bin, which is
+    2D histogram, in which a plane is divided into bins and the color of
+    each bin is directly related to the number of elements therein. With
+    ``mode=='scatter'``, this function also calculates a 2D histogram,
+    but it plots a 2D scatter plot in which each dot corresponds to a bin,
     colored according to the number elements therein. The most important
     difference is that the ``scatter`` mode does not color regions
     corresponding to empty bins. This allows for easy identification of
