@@ -48,7 +48,7 @@ def hist1d(data_list,
            savefig = None,
            **kwargs):
     """
-    Plot a 1D histogram from one channel of a list of FCSData objects.
+    Plot one 1D histogram from one or more FCSData objects.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -401,7 +401,7 @@ def scatter2d(data_list,
                 savefig = None,
                 **kwargs):
     """
-    Plot a 2D scatter plot from two channels of a list of FCSData objects.
+    Plot one 2D scatter plot from one or more FCSData objects.
 
     The name of the specified channels and the detector gain are used for
     the axes labels.
@@ -487,7 +487,7 @@ def scatter3d(data_list,
                 savefig = None,
                 **kwargs):
     """
-    Plot a 3D scatter plot and projections from a list of FCSData objects.
+    Plot one 3D scatter plot from one or more FCSData objects.
 
     `scatter3d` creates a 3D scatter plot and three 2D projected scatter
     plots in four different axes for each FCSData object in `data_list`,
