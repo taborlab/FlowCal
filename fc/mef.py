@@ -550,14 +550,6 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     """
     Get a transformation function to convert flow cytometry data to MEF.
 
-    This function uses flow cytometry data taken from calibration beads,
-    and the know fluorescence values of the beads subpopulations in MEF
-    units, to generate a transformation function that can be used to
-    transform other flow cytometry samples to Molecules of Equivalent
-    Fluorophore (MEF). This transformation function has the same basic
-    signature as the general transformation function specified in
-    ``fc.transform``.
-
     Parameters
     ----------
     data_beads : FCSData object
@@ -591,12 +583,15 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     -------
     transform_fxn : function, if ``full==False``
         Transformation function to convert flow cytometry data from channel
-        units to MEF.
+        units to MEF. This function has the same basic signature as the
+        general transformation function specified in ``fc.transform``.
     namedtuple, if ``full==True``
         ``namedtuple``, containing the following fields in this order:
-        transform_fxn : function, if ``full==False``
+        transform_fxn : function
             Transformation function to convert flow cytometry data from
-            channel units to MEF.
+            channel units to MEF. This function has the same basic
+            signature as the general transformation function specified in
+            ``fc.transform``.
         clustering_res : dict
             Results of the clustering step, containing the following
             fields:
