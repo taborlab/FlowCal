@@ -25,6 +25,48 @@ import fc.transform
 import fc.stats
 import fc.mef
 
+def read_table(filename, sheetname, index_col=None):
+    """
+    Return the contents of an Excel table as a pandas DataFrame.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the Excel file to read.
+    worksheet_name : str
+        Name of the sheet inside the Excel file to read.
+    index_col : str, optional
+        Column name or index to be used as row labels of the DataFrame. If
+        None, rows will not get custom labels.
+
+    Returns
+    -------
+    table : DataFrame
+        A DataFrame containing the data in the specified Excel table. If
+        `index_col` is not None, rows in which their `index_col` field
+        is empty will not be present in `table`.
+
+    Raises
+    ------
+    ValueError
+        If `index_col` is specified and two rows contain the same
+        `index_col` field.
+
+    """
+    # Load excel table using pandas
+    table = pd.read_excel(filename,
+                          sheetname=sheetname,
+                          index_col=index_col)
+    # Eliminate rows whose index are null
+    if index_col is not None:
+        table = table[pd.notnull(table.index)]
+    # Check for duplicated rows
+    if table.index.has_duplicates:
+        raise ValueError("sheet {} on file {} contains duplicated values "
+                         "for column {}".format(sheetname, filename, index_col))
+
+    return table
+
 def read_workbook(workbook_name):
     """
     Open an Excel workbook and return the content of all worksheets.
