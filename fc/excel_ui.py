@@ -858,16 +858,15 @@ def run(verbose=True, plot=True):
     input_filename_no_ext, __ = os.path.splitext(input_filename)
 
     # Read relevant tables from workbook
-    # Note that the following doesn't check for unique IDs or empty IDs.
-    instruments_table = pd.read_excel(input_path,
-                                      sheetname='Instruments',
-                                      index_col='ID')
-    beads_table = pd.read_excel(input_path,
-                                sheetname='Beads',
-                                index_col='ID')
-    samples_table = pd.read_excel(input_path,
-                                  sheetname='Samples',
-                                  index_col='ID')
+    instruments_table = read_table(input_path,
+                                   sheetname='Instruments',
+                                   index_col='ID')
+    beads_table = read_table(input_path,
+                             sheetname='Beads',
+                             index_col='ID')
+    samples_table = read_table(input_path,
+                               sheetname='Samples',
+                               index_col='ID')
 
     # Process beads samples
     beads_samples, mef_transform_fxns = process_beads_table(
