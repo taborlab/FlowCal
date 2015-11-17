@@ -472,28 +472,30 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
     Notes
     -----
-    We have determined from first principles that the appropriate model for
-    bead fluorescence is as follows:
+    The following model is used to describe bead fluorescence:
 
-        m*fl_ch_i + b = log(fl_mef_auto + fl_mef_i)
+        m*fl_ch[i] + b = log(fl_mef_auto + fl_mef[i])
 
-    where fl_ch_i is the fluorescence of subpopulation i in channel units,
-    and fl_mef_i is the corresponding fluorescence in MEF units. The model
-    includes 3 parameters: m (slope), b (intercept), and fl_mef_auto (bead
-    autofluorescence). After fitting the bead fluorescence model, this
-    function returns a standard curve function mapping fluorescence in
-    channel units to MEF units, as follows:
-
-        fl_mef = exp(m*fl_ch + b)
-
-    The standard curve doesn't include autofluroescence, therefore it
-    returns absolute fluorescence values.
+    where fl_ch[i] is the fluorescence of bead subpopulation i in channel
+    units and fl_mef[i] is the corresponding fluorescence in MEF units. The
+    model includes 3 parameters: m (slope), b (intercept), and fl_mef_auto
+    (bead autofluorescence).
 
     The bead fluorescence model is fit in a log-MEF space using nonlinear
     least squares regression (as opposed to fitting an exponential model in
-    MEF space). Fitting in the log-MEF space weights the residuals more
-    evenly, whereas fitting an exponential would vastly overvalue the
-    brighter peaks.
+    MEF space). In our experience, fitting in the log-MEF space weights the
+    residuals more evenly, whereas fitting an exponential vastly overvalues
+    the brighter peaks.
+
+    A standard curve is constructed by solving for fl_mef. As cell samples
+    may not have the same autofluorescence as beads, the bead
+    autofluorescence term (fl_mef_auto) is omitted from the standard curve;
+    the user is expected to use an appropriate white cell sample to account
+    for cellular autofluorescence if necessary. The returned standard curve
+    mapping fluorescence in channel units to MEF units is thus of the
+    following form:
+
+        fl_mef = exp(m*fl_ch + b)
 
     """
     # Check that the input data has consistent dimensions
