@@ -1,28 +1,21 @@
-#!/usr/bin/python
-#
-# gate.py - Module containing flow cytometry gate functions.
-#
-# All gate functions should be of the following form:
-#
-#     gated_data = gate(data, channels, parameters)
-#     (gated_data, mask, contour, ...) = gate(data, channels, parameters,
-#                                             full_output=True)
-#
-# where data is a NxD numpy array describing N cytometry events observing D
-# data dimensions, channels specifies the channels in which to perform gating,
-# and parameters are gate-specific parameters. gated_data is the gated result,
-# mask is a Boolean array specifying the gate mask, and contour is an
-# optional 2D numpy array of x-y coordinates tracing out line(s) which
-# represent the gate (useful for plotting).
-#
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 10/27/2015
-#
-# Requires:
-#   * numpy
-#   * scipy
-#   * matplotlib
+"""
+Functions for gating flow cytometry data.
+
+All gate functions are of the following form:
+
+    gated_data = gate(data, channels, parameters)
+    (gated_data, mask, contour, ...) = gate(data, channels, parameters,
+                                            full_output=True)
+
+where `data` is a NxD FCSData object or numpy array describing N cytometry
+events observing D data dimensions, `channels` specifies the channels in
+which to perform gating, and `parameters` are gate-specific parameters.
+`gated_data` is the gated result, as an FCSData object or numpy array,
+`mask` is a bool array specifying the gate mask, and `contour` is an
+optional list of 2D numpy arrays containing the x-y coordinates of the
+contour surrounding the gated region (useful for plotting).
+
+"""
 
 import numpy as np
 import scipy.ndimage.filters
@@ -51,20 +44,41 @@ Density2dGateOutput = collections.namedtuple(
 ###
 
 def start_end(data, num_start = 250, num_end = 100, full_output=False):
-    '''Gate out num_start first and num_end last events collected.
+    """
+    Gate out first and last events.
 
-    data        - NxD FCSData object or numpy array
-    num_start   - number of points to discard from the beginning of data
-    num_end     - number of points to discard from the end of data
-    full_output - flag specifying to return namedtuple with additional outputs
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    num_start, num_end : int
+        Number of events to gate out from beginning and end of `data`.
+    full_output : bool
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
-    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
-                  (gated_data, mask)
-    '''
-    
+    Returns
+    -------
+    gated_data : FCSData or numpy array, if ``full_output==False``
+        Gated flow cytometry data of the same format as `data`.
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
+        gated_data : FCSData or numpy array
+            Gated flow cytometry data of the same format as `data`.
+        mask : numpy array of bool
+            Boolean gate mask used to gate data such that
+            `gated_data = data[mask]`.
+
+    Raises
+    ------
+    ValueError
+        If the number of events to discard is greater than the total
+        number of events in `data`.
+
+    """
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
-            ' number.')
+            ' number of events.')
     
     mask = np.ones(shape=data.shape[0],dtype=bool)
     mask[:num_start] = False
@@ -77,23 +91,39 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
         return gated_data
 
 def high_low(data, channels=None, high=None, low=None, full_output=False):
-    '''Gate out high and low values across all specified dimensions.
+    """
+    Gate out high and low values across all specified channels.
 
-    For every i, if any value of data[i,channels] is less or equal than low, 
-    or greater or equal than high, it will not be included in the final result.
+    Gate out events in `data` with values in the specified channels which
+    are larger than or equal to `high` or less than or equal to `low`.
 
-    data        - NxD FCSData object or numpy array
-    channels    - channels on which to perform gating
-    high        - high value to discard (default = np.Inf if unable to extract
-                  from input data)
-    low         - low value to discard (default = -np.Inf if unable to extract
-                  from input data)
-    full_output - flag specifying to return namedtuple with additional outputs
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int, str, list of int, list of str
+        Channels on which to perform gating. If None, use all channels.
+    high, low : int, float
+        High and low threshold values. If None, `high` and `low` will be
+        taken from ``data.channel_info`` if available, otherwise
+        ``np.Inf`` and ``-np.Inf`` will be used.
+    full_output : bool
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
-    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
-                  (gated_data, mask)
-    '''
-    
+    Returns
+    -------
+    gated_data : FCSData or numpy array, if ``full_output==False``
+        Gated flow cytometry data of the same format as `data`.
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
+        gated_data : FCSData or numpy array
+            Gated flow cytometry data of the same format as `data`.
+        mask : numpy array of bool
+            Boolean gate mask used to gate data such that
+            `gated_data = data[mask]`.
+
+    """
     # Extract channels in which to gate
     if channels is None:
         data_ch = data
@@ -130,27 +160,54 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
 def ellipse(data, channels,
             center, a, b, theta=0,
             log=False, full_output=False):
-    '''Gate that preserves events inside an ellipse-shaped region.
+    """
+    Gate that preserves events inside an ellipse-shaped region.
 
     Events are kept if they satisfy the following relationship:
+
         (x/a)**2 + (y/b)**2 <= 1
-    where x and y are the coordinates of the event list, after substracting
-    center and rotating by -theta. This is mathematically equivalent to
-    maintaining the events inside an ellipse with major axis a, minor axis b,
-    center at center, and tilted by theta.
 
-    data        - NxD FCSData object or numpy array
-    channels    - Channels on which to perform gating
-    center      - Coordinates of the center of the ellipse
-    a           - Major axis of the ellipse
-    b           - Minor axis of the ellipse
-    theta       - Angle of the ellipse
-    log         - If True, apply log10 to the event list before gating.
-    full_output - flag specifying to return namedtuple with additional outputs
+    where `x` and `y` are the coordinates of the event list, after
+    substracting `center` and rotating by -`theta`. This is mathematically
+    equivalent to maintaining the events inside an ellipse with major
+    axis `a`, minor axis `b`, center at `center`, and tilted by `theta`.
 
-    returns     - (Gated MxD FCSData object or numpy array) or namedtuple with
-                  (gated_data, mask, contour)
-    '''
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : list of int, list of str
+        Two channels on which to perform gating.
+    center, a, b, theta : float
+        Ellipse parameters. `a` is the major axis, `b` is the minor axis.
+    log : bool
+        Flag specifying that log10 transformation should be applied to
+        `data` before gating.
+    full_output : bool
+        Flag specifying to return ``namedtuple`` with additional outputs.
+
+    Returns
+    -------
+    gated_data : FCSData or numpy array, if ``full_output==False``
+        Gated flow cytometry data of the same format as `data`.
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
+        gated_data : FCSData or numpy array
+            Gated flow cytometry data of the same format as `data`.
+        mask : numpy array of bool
+            Boolean gate mask used to gate data such that
+            `gated_data = data[mask]`.
+        contour : list of 2D numpy arrays
+            List of 2D numpy array(s) of x-y coordinates tracing out
+            line(s) which represent the gate (useful for plotting).
+
+    Raises
+    ------
+    ValueError
+        If more or less than 2 channels are specified.
+
+    """
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
     data_ch = data[:,channels].view(np.ndarray)
@@ -191,25 +248,80 @@ def ellipse(data, channels,
 def density2d(data, channels=[0,1],
               bins=None, gate_fraction=0.65, sigma=10.0,
               full_output=False):
-    '''Gate that preserves the points in the region with highest density.
+    """
+    Gate that preserves events in the region with highest density.
 
-    First, obtain a 2D histogram and blur it using a 2D Gaussian filter. Then
-    normalize the resulting blurred histogram to make it a valid probability 
-    mass function. Finally, gate out all but the points in the densest region
-    (points with the largest probability).
+    Gate out all events in `data` but those near regions of highest
+    density for the two specified channels.
 
-    data            - NxD FCSData object or numpy array
-    channels        - channels on which to perform gating
-    bins            - bins argument to numpy.histogram2d. Autogenerate if None.
-    gate_fraction   - fraction of data points to keep
-    sigma           - standard deviation for Gaussian kernel
-    full_output     - flag specifying to return namedtuple with additional
-                      outputs
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : list of int, list of str
+        Two channels on which to perform gating.
+    bins : int or array_like or [int, int] or [array, array]
+        `bins` argument passed to `np.histogram2d`. If `None`, extracted
+        from `FCSData` if possible. `bins` parameter supercedes `FCSData`
+        attribute.
+    gate_fraction : float
+        Fraction of events to retain after gating.
+    sigma : scalar or sequence of scalars
+        Standard deviation for Gaussian kernel used by
+        `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
+        into a density.
+    full_output : bool
+        Flag specifying to return ``namedtuple`` with additional outputs.
 
-    returns         - (Gated MxD FCSData object or numpy array) or namedtuple
-                      with (gated_data, mask, contour)
-    '''
+    Returns
+    -------
+    gated_data : FCSData or numpy array, if ``full_output==False``
+        Gated flow cytometry data of the same format as `data`.
+    namedtuple, if ``full_output==True``
+        ``namedtuple`` containing the following fields in this order:
+        gated_data : FCSData or numpy array
+            Gated flow cytometry data of the same format as `data`.
+        mask : numpy array of bool
+            Boolean gate mask used to gate data such that
+            `gated_data = data[mask]`.
+        contour : list of 2D numpy arrays
+            List of 2D numpy array(s) of x-y coordinates tracing out
+            line(s) which represent the gate (useful for plotting).
 
+    Raises
+    ------
+    ValueError
+        If more or less than 2 channels are specified.
+    ValueError
+        If `data` has less than 2 dimensions or less than 2 events.
+    Exception
+        If an unrecognized matplotlib Path code is encountered when
+        attempting to generate contours.
+
+    Notes
+    -----
+    The algorithm for gating based on density works as follows:
+        1) Calculate 2D histogram of `data` in the specified channels.
+        2) Map each event from `data` to its histogram bin (implicitly
+           gating out any events which exist outside specified `bins`).
+        3) Use `gate_fraction` to determine number of points to retain
+           (rounded up). Only points which are not implicitly gated out
+           are considered.
+        4) Smooth 2D histogram using a 2D Gaussian filter.
+        5) Normalize smoothed histogram to obtain valid probability mass
+           function (PMF).
+        6) Sort bins by probability.
+        7) Accumulate events (starting with events belonging to bin with
+           highest probability ("densest") and proceeding to events
+           belonging to bins with lowest probability) until at least the
+           desired number of points is acheived. While the algorithm
+           attempts to get as close to `gate_fraction` fraction of events
+           as possible, more events may be retained based on how many
+           events fall into each histogram bin (since entire bins are
+           retained at a time, not individual events).
+
+    """
     # Extract channels in which to gate
     assert len(channels) == 2, '2 channels should be specified.'
     data_ch = data[:,channels]
