@@ -397,7 +397,9 @@ def density2d(data, channels=[0,1],
     if full_output:
         # Use matplotlib contour plotter (implemented in C) to generate contour(s)
         # at the probability associated with the last accepted point.
-        x,y = np.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
+        xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
+        yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
+        x,y = np.meshgrid(xc, yc, indexing='ij')
         mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
         tr = mpl_cntr.trace(vD[sidx[Nidx]])
 
