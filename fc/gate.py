@@ -341,6 +341,16 @@ def density2d(data, channels=[0,1],
     # Determine number of points to keep
     n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
 
+    # n = 0 edge case (e.g. if gate_fraction = 0.0); incorrectly handled below
+    if n == 0:
+        mask = np.zeros(shape=data_ch.shape[0], dtype=bool)
+        gated_data = data[mask]
+        if full_output:
+            return Density2dGateOutput(
+                gated_data=gated_data, mask=mask, contour=[])
+        else:
+            return gated_data
+
     # Make 2D histogram and get bins
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
