@@ -1,15 +1,7 @@
-#!/usr/bin/python
-#
-# plot.py - Module containing plotting functions for flow cytometry data sets.
-#
-# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-#         John T. Sexton (john.t.sexton@rice.edu)
-# Date: 10/19/2015
-#
-# Requires:
-#   * numpy
-#   * matplotlib
-#   * scipy
+"""
+Functions for visualizing flow cytometry data.
+
+"""
 
 import numpy as np
 import scipy.ndimage.filters
@@ -55,30 +47,81 @@ def hist1d(data_list,
            histtype = 'stepfilled',
            savefig = None,
            **kwargs):
+    """
+    Plot one 1D histogram from one or more FCSData objects.
 
-    '''Plot 1D histogram of a list of data objects
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, `ylim`,
+    `title`, and the legend-related parameters of this function are the
+    only way to modify the axis.
 
-    data_list  - a NxD FCSData object or numpy array, or a list of them.
-    channel    - channel to use on the data objects.
-    log        - whether the x axis should be in log units.
-    div        - number to divide the default number of bins. Ignored if bins 
-                argument is not None.
-    bins       - bins argument to plt.hist.
-    legend     - whether to include a legend.
-    legend_loc - location of the legend to include.
-    xlabel     - Label to use on the x axis
-    ylabel     - Label to use on the y axis
-    xlim       - Limits for the x axis
-    ylim       - Limits for the y axis
-    title      - Title for the plot
-    histtype   - histogram type
-    savefig    - if not None, it specifies the name of the file to save the 
-                figure to.
-    **kwargs   - passed directly to matploblib's hist. 'edgecolor', 
-                'facecolor', 'linestyle', and 'label' can be specified as a 
-                lists, with an element for each data object.
-    '''    
+    Parameters
+    ----------
+    data_list : FCSData object, or list of FCSData objects
+        Flow cytometry data to plot.
+    channel : int or str
+        Channel from where to take the events to plot.
+    log : bool, optional
+        Flag specifying whether the x axis should be in log scale.
+    div : int or float, optional
+        Downscaling factor for the default number of bins. If `bins` is not
+        specified, the default set of bins extracted from an element in
+        `data_list` contains ``n`` bins, and ``div != 1``, `hist1d` will
+        actually use ``n/div`` bins that cover the same range as the
+        default bins. `div` is ignored if `bins` is specified.
+    bins : array_like, optional
+        bins argument to pass to plt.hist. If not specified, bins are
+        extracted from the FCSData objects in `data_list`.
+    legend : bool, optional
+        Flag specifying whether to include a legend. If `legend` is True,
+        the legend labels will be taken from ``kwargs['label']``.
+    histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, str, optional
+        Histogram type. Directly passed to ``plt.hist``.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
 
+    Other parameters
+    ----------------
+    legend_loc : str, optional
+        Location of the legend.
+    xlabel : str, optional
+        Label to use on the x axis. If None, the channel name is used.
+    ylabel : str, optional
+        Label to use on the y axis. If None and ``kwargs['normed']==True``,
+        use 'Probability'. If None and ``kwargs['normed']==False``, use
+        'Counts'.
+    xlim : tuple, optional
+        Limits for the x axis. If not specified, use the lowest and highest
+        values of `bins`.
+    ylim : tuple, optional
+        Limits for the y axis.
+    title : str, optional
+        Plot title.
+        `edgecolor`, `facecolor`, `linestyle`, and `label` can be specified
+        as lists, with an element for each data object.
+    kwargs : dict, optional
+        Additional parameters passed directly to matploblib's ``hist``.
+        ``facecolor``, ``edgecolor``, ``linestyle``, and ``label`` can be
+        specified as a list, with an element for each object in
+        `data_list`. If ``histtype=='stepfilled'`` and no ``facecolor`` is
+        specified, default values for ``facecolor`` are taken from the
+        default colormap. If ``histtype=='step'`` and no ``edgecolor``
+        is specified in `kwargs`, default values for ``edgecolor`` are
+        taken from the default colormap.
+
+    Notes
+    -----
+    `hist1d` calls matplotlib's ``hist`` function for each object in
+    `data_list`. `hist_type`, the type of histogram to draw, is directly
+    passed to ``plt.hist``. Additional keyword arguments provided to
+    `hist1d` are passed directly to ``plt.hist``.
+
+    """
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
@@ -173,27 +216,80 @@ def density2d(data,
             title = None,
             savefig = None,
             **kwargs):
-    '''Plot 2D density plot
+    """
+    Plot a 2D density plot from two specified channels of a FCSData object.
 
-    data        - a NxD FCSData object.
-    channels    - channels to use in the density plot.
-    log         - whether the x axis should be in log units.
-    div         - number to divide the default number of bins. Ignored if bins 
-                   argument is not None.
-    bins        - bins to use for numpy.histogram2d.
-    smooth      - Whether to apply gaussian smoothing to the histogram
-    sigma       - Sigma parameter used for the gaussian smoothing.
-    mode        - Plotting mode. Can be 'mesh' or 'scatter'.
-    colorbar    - Plot colorbar
-    normed      - Plot normed histogram (pmf)
-    xlabel      - Label to use on the x axis
-    ylabel      - Label to use on the y axis
-    title       - Title for the plot.
-    savefig     - if not None, it specifies the name of the file to save the 
-                   figure to.
-    kwargs      - passed directly to matplotlib's scatter or pcolormesh.
-    '''
+    `density2d` has two plotting modes which are selected using the `mode`
+    argument. With ``mode=='mesh'``, this function plots the data as a true
+    2D histogram, in which a plane is divided into bins and the color of
+    each bin is directly related to the number of elements therein. With
+    ``mode=='scatter'``, this function also calculates a 2D histogram,
+    but it plots a 2D scatter plot in which each dot corresponds to a bin,
+    colored according to the number elements therein. The most important
+    difference is that the ``scatter`` mode does not color regions
+    corresponding to empty bins. This allows for easy identification of
+    regions with low number of events. For both modes, the calculated
+    histogram can be smoothed using a Gaussian kernel by specifying
+    ``smooth=True``. The width of the kernel is, in this case, given by
+    `sigma`.
 
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, `ylim`,
+    `title`, and the legend-related parameters of this function are the
+    only way to modify the axis.
+
+    Parameters
+    ----------
+    data : FCSData object
+        Flow cytometry data to plot.
+    channels : list of int, list of str
+        Two channels to use for the plot.
+    log : bool, optional
+        Flag specifying whether the axes should be in log scale.
+    div : int or float, optional
+        Downscaling factor for the default number of bins. If `bins` is not
+        specified, the default set of bins extracted from `data` contains
+        ``n*m`` bins, and ``div != 1``, `density2d` will actually use
+        ``n/div * m/div`` bins that cover the same range as the default
+        bins. `div` is ignored if `bins` is specified.
+    bins : array_like, optional
+        bins argument to pass to plt.hist. If not specified, bins are
+        extracted from `data`.
+    smooth : bool, optional
+        Flag indicating whether to apply gaussian smoothing to the
+        histogram.
+    mode : {'mesh', 'scatter'}, str, optional
+        Plotting mode. 'mesh' produces a true 2D-histogram, and 'scatter'
+        produces a histogram-colored scatterplot.
+    colorbar : bool, optional
+        Flag indicating whether to add a colorbar to the plot.
+    normed : bool, optional
+        Flag indicating whether to plot a normed histogram (probability
+        mass function instead of a counts-based histogram).
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    sigma : float, optional
+        The sigma parameter for the Gaussian kernel to use when smoothing.
+    xlabel : str, optional
+        Label to use on the x axis. If None, the channel name is used.
+    ylabel : str, optional
+        Label to use on the y axis. If None, the channel name is used.
+    title : str, optional
+        Plot title.
+    kwargs : dict, optional
+        Additional parameters passed directly to the underlying matplotlib
+        functions: ``plt.scatter`` if ``mode==scatter``, and
+        ``plt.pcolormesh`` if ``mode==mesh``.
+
+    """
     # Extract channels to plot
     assert len(channels) == 2, 'Two channels need to be specified.'
     data_plot = data[:, channels]
@@ -304,17 +400,46 @@ def scatter2d(data_list,
                 channels = [0,1],
                 savefig = None,
                 **kwargs):
+    """
+    Plot one 2D scatter plot from one or more FCSData objects.
 
-    '''Plot a 2D scatter plot of a list of data objects
+    The name of the specified channels and the detector gain are used for
+    the axes labels.
 
-    data_list  - a NxD FCSData object or numpy array, or a list of them.
-    channels   - channels to use on the data objects.
-    savefig    - if not None, it specifies the name of the file to save the 
-                figure to.
-    **kwargs   - passed directly to matploblib's plot functions. 'color' can be 
-                specified as a list, with an element for each data object.
-    '''    
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, the default values for ``xlabel`` and ``ylabel``
+    will be used.
 
+    Parameters
+    ----------
+    data_list : FCSData object, or list of FCSData objects
+        Flow cytometry data to plot.
+    channels : list of int, list of str
+        Two channels to use for the plot.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    kwargs : dict, optional
+        Additional parameters passed directly to matploblib's ``scatter``.
+        `color` can be specified as a list, with an element for each data
+        object. If the keyword argument `color` is not provided, elements
+        from `data_list` are plotted with colors taken from the default
+        colormap.
+
+    Notes
+    -----
+    `scatter2d` calls matplotlib's ``scatter`` function for each object in
+    data_list. Additional keyword arguments provided to `scatter2d` are
+    passed directly to ``plt.scatter``.
+
+    """
     # Check appropriate number of channels
     assert len(channels) == 2, 'Two channels need to be specified.'
 
@@ -361,17 +486,46 @@ def scatter3d(data_list,
                 channels = [0,1,2],
                 savefig = None,
                 **kwargs):
+    """
+    Plot one 3D scatter plot from one or more FCSData objects.
 
-    '''Plot a 3D scatter plot and projections of a list of data objects
+    `scatter3d` creates a 3D scatter plot and three 2D projected scatter
+    plots in four different axes for each FCSData object in `data_list`,
+    in the same figure. The name of the specified channels and the detector
+    gain are used for the axes labels.
 
-    data_list  - a NxD FCSData object or numpy array, or a list of them.
-    channels   - channels to use on the data objects.
-    savefig    - if not None, it specifies the name of the file to save the 
-                figure to.
-    **kwargs   - passed directly to matploblib's functions. 'color' can be 
-                specified as a list, with an element for each data object.
-    '''    
+    This function does not create a new figure, so it can be called
+    directly to plot in a previously created figure if desired. However,
+    it creates four axes using ``plt.subplot``. If `savefig` is not
+    specified, the plot is maintained in the current figure when the
+    function returns. If `savefig` is specified, the figure is closed
+    after being saved.
 
+    Parameters
+    ----------
+    data_list : FCSData object, or list of FCSData objects
+        Flow cytometry data to plot.
+    channels : list of int, list of str
+        Three channels to use for the plot.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    kwargs : dict, optional
+        Additional parameters passed directly to matploblib's ``scatter``.
+        `color` can be specified as a list, with an element for each data
+        object. If the keyword argument `color` is not provided, elements
+        from `data_list` are plotted with colors taken from the default
+        colormap.
+
+    Notes
+    -----
+    `scatter3d` uses matplotlib's ``scatter``, with the 3D scatter plot
+    using a 3D projection. Additional keyword arguments provided to
+    `scatter3d` are passed directly to ``scatter``.
+
+    """
     # Check appropriate number of channels
     assert len(channels) == 3, 'Three channels need to be specified.'
 
@@ -461,21 +615,46 @@ def mef_std_crv(peaks_ch,
                 ylabel = None,
                 savefig = None,
                 **kwargs):
-    '''Plot the standard curves of a beads model.
+    """
+    Plot a standard curve with fluorescence of calibration beads.
 
-    peaks_ch   - experimental values of peaks in channel space.
-    peaks_mef  - theoretical MEF values of peaks
-    sc_beads   - standard curve of the beads model.
-    sc_abs     - standard curve in absolute MEF units.
-    xlim       - limits on x axis
-    ylim       - limits on y axis
-    xlabel     - label for x axis
-    ylabel     - label for y axis
-    savefig    - if not None, it specifies the name of the file to save the 
-                figure to.
-    **kwargs   - passed directly to matploblib's plot.
-    '''    
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, and `ylim`
+    are the only way to modify the axis.
 
+    Parameters
+    ----------
+    peaks_ch : array_like
+        Fluorescence of the calibration beads' subpopulations, in channel
+        numbers.
+    peaks_mef : array_like
+        Fluorescence of the calibration beads' subpopulations, in MEF
+        units.
+    sc_beads : function
+        The calibration beads fluorescence model.
+    sc_abs : function
+        The standard curve (transformation functionfrom channel number to
+        MEF units).
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    xlim : tuple, optional
+        Limits for the x axis.
+    ylim : tuple, optional
+        Limits for the y axis.
+    xlabel : str, optional
+        Label to use on the x axis.
+    ylabel : str, optional
+        Label to use on the y axis.
+
+    """
     # Generate x data
     xdata = np.linspace(xlim[0],xlim[1],200)
 
@@ -518,33 +697,61 @@ def bar(data,
         ylabel = None,
         savefig = None,
         **kwargs):
-    ''' Draw a barplot.
+    """
+    Draw a barplot.
 
-    Individual bars can be grouped by specifying a number greater than one in
-    n_in_group. Each group of n_in_group bars will share the same label and 
-    will be plotted next to each other. Within a group, each bar can be 
-    differentiated by color and legend label.
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.ylabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, parameters `ylabel`, `ylim`, and the
+    legend-related parameters of this function are the only way to modify
+    the axis.
 
-    data                - list or numpy array with the values to plot.
-    labels              - labels for each bar or bar group.
-    data_error          - size of the error bar to plot for each datapoint.
-    n_in_group          - number of bars per group.
-    labels_in_group     - labels within a group, used for a legend.
-    legend_loc          - location of the legend.
-    legend_fontsize     - font size used for the legend.
-    colors              - list of colors of length == n_in_group.
-    bar_width           - bar width.
-    label_rotation      - angle to rotate the bar labels.
-    val_labels          - if True, include labels above each bar with its
-                            numberical value.
-    val_labels_fontsize - font size of the labels above each bar.
-    ylim                - limits on y axis
-    ylabel              - label for y axis
-    savefig             - if not None, it specifies the name of the file to 
-                           save the figure to.
-    **kwargs            - passed directly to matploblib's plot.
-    '''
+    Parameters
+    ----------
+    data : array_like
+        Values to plot.
+    labels : list of str
+        Labels for each bar or bar group, to be displayed on the x axis.
+    n_in_group : int, optional
+        Number of bars per group. Each group of `n_in_group` bars will
+        share the same label and will be plotted next to each other.
+    labels_in_group : list of str, optional
+        Labels for bars within a group, to be used in the legend.
+        `labels_in_group` should be of length `n_in_group`. If
+        `labels_in_group` is not specified, a legend will not be plotted.
+    colors : list, optional
+        Colors to be used for each bar within a group. `colors` should be
+        of length `n_in_group`.
+    val_labels : bool, optional
+        Flag indicating whether to include labels above each bar with its
+        numerical value.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
 
+    Other parameters
+    ----------------
+    data_error : array_like, optional
+        Size of the error bar to plot for each bar.
+    legend_loc : int or str, optional
+        Location of the legend. Check ``plt.legend`` for possible values.
+    legend_fontsize : int or float or str, optional
+        Font size used for the legend.
+    bar_width : float, optional
+        Bar width.
+    label_rotation : float, optional
+        Angle to rotate the x-axis labels.
+    val_labels_fontsize : int or float or str, optional
+        Font size of the labels with numberical values above each bar.
+    ylim : tuple, optional, optional
+        Limits for the y axis.
+    ylabel : str, optional
+        Label to use on the y axis.
+
+    """
     # Default colors
     if colors is None:
         colors = matplotlib.rcParams['axes.color_cycle']
@@ -631,37 +838,67 @@ def density_and_hist(data,
                     figsize = None,
                     savefig = None,
                     ):
-    '''Makes a combined density/histograms plot of a FCSData object.
+    """
+    Make a combined density/histogram plot of a FCSData object.
 
-    This function calls hist1d and density2d to plot a density diagram and a 
-    number of histograms in the same plot using one single function call. 
-    Setting density_channels to None will not produce a density diagram, 
-    and setting hist_channels to None will not produce any histograms. Setting
-    both to None will raise an error.
+    This function calls `hist1d` and `density2d` to plot a density diagram
+    and a number of histograms in different subplots of the same plot using
+    one single function call. Setting `density_channels` to None will not
+    produce a density diagram, and setting `hist_channels` to None will not
+    produce any histograms. Setting both to None will raise an error.
+    Additional parameters can be provided to `density2d` and `hist1d` by
+    using `density_params` and `hist_params`.
 
-    If gated_data is True, this function will plot the histograms corresponding
-    to gated_data on top of data's histograms, with some level of transparency
-    on data. 
+    If `gated_data` is provided, this function will plot the histograms
+    corresponding to `gated_data` on top of `data`'s histograms, with some
+    transparency on `data`. In addition, a legend will be added with the
+    labels 'Ungated' and 'Gated'. If `gate_contour` is provided and it
+    contains a valid list of 2D curves, these will be plotted on top of the
+    density plot.
 
-    Arguments:
-    data                - FCSData object
-    gated_data          - FCSData object
-    gate_contour        - List of Nx2 curves, representing a gate, to be 
-                            plotted in the density diagram.
-    density_channels    - 2-element iterable with the channels to use for the 
-                            density plot. Default: None (no density plot)
-    density_params      - Dictionary with the kwargs to pass to the density2d 
-                            function.
-    hist_channels       - channels to use in each one of the histograms.
-                            Default: None (no histograms)
-    hist_params         - Dictionary with the kwargs to pass to the hist1d 
-                            function.
-    figsize             - Figure size. If None, calculate a default based on 
-                            the number of subplots.
-    savefig             - if not None, it specifies the name of the file to 
-                            save the figure to.
-    '''
+    This function creates a new figure and a set of axes. If `savefig` is
+    not specified, the plot is maintained in the newly created figure when
+    the function returns. However, if `savefig` is specified, the figure
+    is closed after being saved.
 
+    Parameters
+    ----------
+    data : FCSData object
+        Flow cytometry data object to plot.
+    gated_data : FCSData object, optional
+        Flow cytometry data object. If `gated_data` is specified, the
+        histograms of `data` are plotted with an alpha value of 0.5, and
+        the histograms of `gated_data` are plotted on top of those with
+        an alpha value of 1.0.
+    gate_contour : list, optional
+        List of Nx2 curves, representing a gate contour to be plotted in
+        the density diagram.
+    density_channels : list
+        Two channels to use for the density plot. If `density_channels` is
+        None, do not plot a density plot.
+    density_params : dict, optional
+        Parameters to pass to `density2d`.
+    hist_channels : list
+        Channels to use for each histogram. If `hist_channels` is None,
+        do not plot histograms.
+    hist_params : list, optional
+        List of dictionaries with the parameters to pass to each call of
+        `hist1d`.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    figsize : tuple, optional
+        Figure size. If None, calculate a default based on the number of
+        subplots.
+
+    Raises
+    ------
+    ValueError
+        If both `density_channels` and `hist_channels` are None.
+
+    """
     # Check number of plots
     if density_channels is None and hist_channels is None:
         raise ValueError("density_channels and hist_channels cannot be both \
@@ -739,35 +976,53 @@ def hist_and_bar(data_list,
                 figsize = None,
                 savefig = None,
                 ):
-    '''Makes a combined histogram/bar plot of a set of FCSData objects.
+    """
+    Make a combined histogram/bar plot for one channel from a list of
+    FCSData objects.
 
-    This function calls hist1d and bar to plot a histogram and a bar plot of
-    several FCSData objects on a specified channel, using the same function
-    call. The number plotted in the bar plot is calculated from the events list
-    using the function specified in bar_stats_func.
+    This function calls `hist1d` and `bar` to plot a histogram and a bar
+    plot of several FCSData objects on a specified channel, using a single
+    function call. The number plotted in the bar plot is calculated from
+    the events list using the function specified in `bar_stats_func`.
+    Additional parameters can be provided to `hist1d` and `bar` by
+    using `hist_params` and `bar_params`.
 
-    Parameters can be passed directly to hist1d and bar using hist_params and
-    bar_params. n_in_group in bar_params is read by this function. If
-    n_in_group is greater than one, the histogram's default colors and
-    linestyles are modified in the following way: One color is used for a
-    group, and members of a group a differentiated by linestyle.
+    'n_in_group' in `bar_params` is read by `hist_and_bar`. If
+    `n_in_group` is greater than one, the histogram's default colors and
+    linestyles are modified in the following way: One color is used for all
+    data elements in a group, and members of a group are differentiated by
+    linestyle.
 
+    This function creates a new figure and a set of axes. If `savefig` is
+    not specified, the plot is maintained in the newly created figure when
+    the function returns. However, if `savefig` is specified, the figure
+    is closed after being saved.
 
-    Arguments:
-    data_list       - A list of FCSData objects.
-    channel         - Channel to use.
-    labels          - Labels to assign to each sample or group of samples.
-    bar_stats_func  - Function to use to obtain a single number to plot in the
-                        bar plot.
-    hist_params     - Dictionary with the kwargs to pass to the hist1d
-                        function.
-    bar_params      - Dictionary with the kwargs to pass to the bar function.
-    figsize         - Figure size. If None, calculate a default based on the
-                        number of subplots.
-    savefig         - if not None, it specifies the name of the file to save
-                        the figure to.
-    '''
+    Parameters
+    ----------
+    data_list : List of FCSData objects
+        Flow cytometry data to plot.
+    channel : int or str
+        Channel to use for the plot.
+    labels : list of str
+        Labels to assign to each sample or group of samples.
+    bar_stats_func : function
+        Function to use to obtain a single number for each element in
+        `data_list` to plot in the bar plot.
+    hist_params : dict, optional
+        Parameters to pass to `hist1d`.
+    bar_params : dict, optional
+        Parameters to pass to `bar`.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
 
+    Other parameters
+    ----------------
+    figsize : tuple, optional
+        Figure size. If None, calculate a default based on the number of
+        subplots.
+
+    """
     # Copy hist_params and bar_params, due to possible modifications
     hist_params = hist_params.copy()
     bar_params = bar_params.copy()
