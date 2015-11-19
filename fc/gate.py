@@ -305,8 +305,8 @@ def density2d(data, channels=[0,1],
         1) Calculate 2D histogram of `data` in the specified channels.
         2) Map each event from `data` to its histogram bin (implicitly
            gating out any events which exist outside specified `bins`).
-        3) Use `gate_fraction` to determine number of points to retain
-           (rounded up). Only points which are not implicitly gated out
+        3) Use `gate_fraction` to determine number of events to retain
+           (rounded up). Only events which are not implicitly gated out
            are considered.
         4) Smooth 2D histogram using a 2D Gaussian filter.
         5) Normalize smoothed histogram to obtain valid probability mass
@@ -315,7 +315,7 @@ def density2d(data, channels=[0,1],
         7) Accumulate events (starting with events belonging to bin with
            highest probability ("densest") and proceeding to events
            belonging to bins with lowest probability) until at least the
-           desired number of points is acheived. While the algorithm
+           desired number of events is achieved. While the algorithm
            attempts to get as close to `gate_fraction` fraction of events
            as possible, more events may be retained based on how many
            events fall into each histogram bin (since entire bins are
@@ -338,7 +338,7 @@ def density2d(data, channels=[0,1],
                             data_ch.channel_info[1]['bin_edges'],
                             ])
 
-    # Determine number of points to keep
+    # Determine number of events to keep
     n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
 
     # n = 0 edge case (e.g. if gate_fraction = 0.0); incorrectly handled below
@@ -364,7 +364,7 @@ def density2d(data, channels=[0,1],
     for i, (xi, yi) in enumerate(zip(ix, iy)):
         Hi[xi, yi].append(i)
 
-    # Blur 2D histogram
+    # Smooth 2D histogram
     sH = scipy.ndimage.filters.gaussian_filter(
         H,
         sigma=sigma,
@@ -373,17 +373,17 @@ def density2d(data, channels=[0,1],
         cval=0.0,
         truncate=6.0)
 
-    # Normalize filtered histogram to make it a valid probability mass function
+    # Normalize smoothed histogram to make it a valid probability mass function
     D = sH / np.sum(sH)
 
-    # Sort each (x,y) point by density
+    # Sort bins by density
     vD = D.ravel()
     vH = H.ravel()
     sidx = np.argsort(vD)[::-1]
     svH = vH[sidx]  # linearized counts array sorted by density
 
-    # Find minimum number of accepted (x,y) points needed to reach specified
-    # number of data points
+    # Find minimum number of accepted bins needed to reach specified number
+    # of events
     csvH = np.cumsum(svH)
     Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
@@ -403,7 +403,7 @@ def density2d(data, channels=[0,1],
 
     if full_output:
         # Use matplotlib contour plotter (implemented in C) to generate contour(s)
-        # at the probability associated with the last accepted point.
+        # at the probability associated with the last accepted bin.
         xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
         yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
         x,y = np.meshgrid(xc, yc, indexing='ij')
