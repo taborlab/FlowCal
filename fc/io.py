@@ -84,7 +84,9 @@ class FCSData(np.ndarray):
        https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
 
     """
-
+    ###
+    # Functions to load information from an FCS File.
+    ###
     @staticmethod
     def _read_fcs_text_segment(f, begin, end, delim = None):
         """
@@ -500,80 +502,9 @@ class FCSData(np.ndarray):
 
         return (data, text, analysis, channel_info)
 
-    def __new__(cls, infile, metadata = {}):
-        """
-        Class constructor.
-
-        Parameters
-        ----------
-        infile : str or file-like object
-            If string, it should contain the path of the FCS file to load
-            data from. If file-like object, it should refer to the FCS file
-            itself.
-        metadata : str
-            Additional channel-independent, sample-specific information, to
-            be copied without modification to the `metadata` attribute.
-
-        Notes
-        -----
-        Since this class inherits from a numpy array, we use the function
-        `__new__` and not `__init__`. `cls.view` needs to be called iniside
-        the `__new__` function. For more details, consult
-        http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
-
-        """
-        # Load all data from fcs file
-        data, text, analysis, channel_info = cls.load_from_file(infile)
-
-        # Call constructor of numpy array
-        obj = data.view(cls)
-
-        # Add attributes
-        obj.infile = infile
-        obj.text = text
-        obj.analysis = analysis
-        obj.channel_info = channel_info
-        obj.metadata = metadata
-
-        # Finally, we must return the newly created object:
-        return obj
-
-    def __array_finalize__(self, obj):
-        """
-        Method called after all methods of construction of the class.
-
-        """
-        # If called from explicit constructor, do nothing.
-        if obj is None: return
-
-        # Otherwise, copy attributes from "parent"
-        self.infile = getattr(obj, 'infile', None)
-        if hasattr(obj, 'text'):
-            self.text = copy.deepcopy(obj.text)
-        if hasattr(obj, 'analysis'):
-            self.analysis = copy.deepcopy(obj.analysis)
-        if hasattr(obj, 'channel_info'):
-            self.channel_info = copy.deepcopy(obj.channel_info)
-        if hasattr(obj, 'metadata'):
-            self.metadata = copy.deepcopy(obj.metadata)
-
-    def __array_wrap__(self, out_arr, context = None):
-        """
-        Method called after numpy ufuncs.
-
-        """
-        if out_arr.ndim == 0:
-            return None
-        else:
-            return np.ndarray.__array_wrap__(self, out_arr, context)
-
-    def __str__(self):
-        """
-        Return name of FCS file.
-
-        """
-        return os.path.basename(str(self.infile)) 
-
+    ###
+    # Properties
+    ###
     @property
     def channels(self):
         """
@@ -581,6 +512,44 @@ class FCSData(np.ndarray):
 
         """
         return [i['label'] for i in self.channel_info]
+
+    def name_to_index(self, channels):
+        """
+        Return the channel indices for the specified channel names.
+
+        Parameters
+        ----------
+        channels : str or list of str
+            Name(s) of the channel(s) of interest.
+
+        Returns
+        -------
+        int or list of int
+            Numerical index(ces) of the specified channels.
+
+        """
+        if isinstance(channels, basestring):
+            # channels is a string containing a channel name
+            if channels in self.channels:
+                return self.channels.index(channels)
+            else:
+                raise ValueError("{} is not a valid channel name."
+                    .format(channels))
+
+        elif isinstance(channels, list):
+            # channels is a list of strings
+            lst = []
+            for ci in channels:
+                if ci in self.channels:
+                    lst.append(self.channels.index(ci))
+                else:
+                    raise ValueError("{} is not a valid channel name."
+                        .format(ci))
+            return lst
+
+        else:
+            raise ValueError("Input argument should be a string or list \
+                of strings.")
 
     @property
     def time_step(self):
@@ -655,43 +624,78 @@ class FCSData(np.ndarray):
         else:
             raise IOError("Time information not available.")
 
-    def name_to_index(self, channels):
+    ###
+    # Functions overridden to maintain additional attributes.
+    ###
+    def __new__(cls, infile, metadata = {}):
         """
-        Return the channel indices for the specified channel names.
+        Class constructor.
 
         Parameters
         ----------
-        channels : str or list of str
-            Name(s) of the channel(s) of interest.
+        infile : str or file-like object
+            If string, it should contain the path of the FCS file to load
+            data from. If file-like object, it should refer to the FCS file
+            itself.
+        metadata : str
+            Additional channel-independent, sample-specific information, to
+            be copied without modification to the `metadata` attribute.
 
-        Returns
-        -------
-        int or list of int
-            Numerical index(ces) of the specified channels.
+        Notes
+        -----
+        Since this class inherits from a numpy array, we use the function
+        `__new__` and not `__init__`. `cls.view` needs to be called iniside
+        the `__new__` function. For more details, consult
+        http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 
         """
-        if isinstance(channels, basestring):
-            # channels is a string containing a channel name
-            if channels in self.channels:
-                return self.channels.index(channels)
-            else:
-                raise ValueError("{} is not a valid channel name."
-                    .format(channels))
+        # Load all data from fcs file
+        data, text, analysis, channel_info = cls.load_from_file(infile)
 
-        elif isinstance(channels, list):
-            # channels is a list of strings
-            lst = []
-            for ci in channels:
-                if ci in self.channels:
-                    lst.append(self.channels.index(ci))
-                else:
-                    raise ValueError("{} is not a valid channel name."
-                        .format(ci))
-            return lst
+        # Call constructor of numpy array
+        obj = data.view(cls)
 
+        # Add attributes
+        obj.infile = infile
+        obj.text = text
+        obj.analysis = analysis
+        obj.channel_info = channel_info
+        obj.metadata = metadata
+
+        # Finally, we must return the newly created object:
+        return obj
+
+    def __array_finalize__(self, obj):
+        """
+        Method called after all methods of construction of the class.
+
+        """
+        # If called from explicit constructor, do nothing.
+        if obj is None: return
+
+        # Otherwise, copy attributes from "parent"
+        self.infile = getattr(obj, 'infile', None)
+        if hasattr(obj, 'text'):
+            self.text = copy.deepcopy(obj.text)
+        if hasattr(obj, 'analysis'):
+            self.analysis = copy.deepcopy(obj.analysis)
+        if hasattr(obj, 'channel_info'):
+            self.channel_info = copy.deepcopy(obj.channel_info)
+        if hasattr(obj, 'metadata'):
+            self.metadata = copy.deepcopy(obj.metadata)
+
+    ###
+    # Functions overridden to allow string-based indexing.
+    ###
+    def __array_wrap__(self, out_arr, context = None):
+        """
+        Method called after numpy ufuncs.
+
+        """
+        if out_arr.ndim == 0:
+            return None
         else:
-            raise ValueError("Input argument should be a string or list \
-                of strings.")
+            return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __getitem__(self, key):
         """
@@ -804,3 +808,13 @@ class FCSData(np.ndarray):
         else:
             # Get sliced array using native getitem function.
             np.ndarray.__setitem__(self, key, item)
+
+    ###
+    # Functions overridden to improve printed representation.
+    ###
+    def __str__(self):
+        """
+        Return name of FCS file.
+
+        """
+        return os.path.basename(str(self.infile))
