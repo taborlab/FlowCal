@@ -386,6 +386,16 @@ def density2d(data, channels=[0,1],
     # been thrown out as outliers.
     n = int(np.ceil(gate_fraction*float(N)))
 
+    # n = 0 edge case (e.g. if gate_fraction = 0.0); incorrectly handled below
+    if n == 0:
+        mask = np.zeros(shape=data_ch.shape[0], dtype=bool)
+        gated_data = data[mask]
+        if full_output:
+            return Density2dGateOutput(
+                gated_data=gated_data, mask=mask, contour=[])
+        else:
+            return gated_data
+
     # Blur 2D histogram
     sH = scipy.ndimage.filters.gaussian_filter(
         H,
@@ -411,15 +421,24 @@ def density2d(data, channels=[0,1],
 
     # Get indices of events to keep
     vHi = Hi.ravel()
-    mask = vHi[sidx[:(Nidx+1)]]
-    mask = np.array([item for sublist in mask for item in sublist])
-    mask = np.sort(mask)
+    accepted_indices = vHi[sidx[:(Nidx+1)]]
+    accepted_indices = np.array([item       # flatten list of lists
+                                 for sublist in accepted_indices
+                                 for item in sublist])
+    accepted_indices = np.sort(accepted_indices)
+
+    # Convert list of accepted indices to boolean mask array
+    mask = np.zeros(shape=data.shape[0], dtype=bool)
+    mask[accepted_indices] = True
+
     gated_data = data[mask]
 
     if full_output:
         # Use matplotlib contour plotter (implemented in C) to generate contour(s)
         # at the probability associated with the last accepted point.
-        x,y = np.meshgrid(xe[:-1], ye[:-1], indexing = 'ij')
+        xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
+        yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
+        x,y = np.meshgrid(xc, yc, indexing='ij')
         mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
         tr = mpl_cntr.trace(vD[sidx[Nidx]])
 

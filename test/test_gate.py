@@ -803,7 +803,7 @@ class TestDensity2dGate2(unittest.TestCase):
         np.testing.assert_array_equal(
             fc.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0),
-            np.array([])
+            np.empty((0,2), dtype=self.pyramid.dtype)     # empty 2D array
             )
 
     def test_gate_fraction_2_gated_data_2(self):
@@ -812,7 +812,7 @@ class TestDensity2dGate2(unittest.TestCase):
             fc.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0,
                 full_output=True).gated_data,
-            np.array([])
+            np.empty((0,2), dtype=self.pyramid.dtype)     # empty 2D array
             )
 
     def test_gate_fraction_2_mask(self):
