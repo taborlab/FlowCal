@@ -1,18 +1,7 @@
-#!/usr/bin/python
-#
-# transform.py - Module containing functions related to calibration beads
-#                   analysis and standard curve determination.
-#
-# Authors: John T. Sexton (john.t.sexton@rice.edu)
-#          Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 9/7/2015
-#
-# Requires:
-#   * numpy
-#   * scipy
-#   * scikit-learn
-#   * fc.plot
-#   * fc.transform
+"""
+Functions for transforming flow cytometer data to MEF units.
+
+"""
 
 import os
 import functools
@@ -29,19 +18,58 @@ import fc.plot
 import fc.transform
 
 def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
-    '''
-    Find clusters in the data array using the DBSCAN method from the 
-    scikit-learn library.
+    """
+    Find clusters in an array using the DBSCAN method.
 
-    data           - NxD numpy array.
-    eps            - Parameter for DBSCAN. Check scikit-learn documentation for
-                     more info.
-    min_samples    - Parameter for DBSCAN. Check scikit-learn documentation for
-                     more info.
-    n_clusters_exp - Number of expected clusters
+    Parameters
+    ----------
+    data : array_like
+        NxD array to cluster.
+    eps : float, optional
+        Maximum distance between core samples.
+    min_samples : int, optional
+        Minimum number of neighbors for a sample to be considered core
+        sample. If not specified, it defaults to the number of events in
+        `data`, divided by 200. Passed directly to ``scikit-learn``'s
+        DBSCAN.
+    n_clusters_exp : int, optional
+        Expected number of clusters. Passed directly to ``scikit-learn``'s
+        DBSCAN.
 
-    returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    Returns
+    -------
+    labels : array
+        Nx1 array with labels for each element in `data`, assigning
+        ``data[i]`` to cluster ``labels[i]``.
+
+    Notes
+    -----
+    The DBSCAN method views clusters as areas of high density of samples,
+    separated by areas of low density. This algorithm works by defining
+    'core samples' as samples that have `min_samples` neighbors separated
+    by a distance of `eps` or less. To get a cluster, start with a core
+    sample, find all its neighbors that are core samples, find the
+    neighbors of these core samples that are also core samples, and so on.
+    The cluster is then defined as this set of core samples, plus their
+    neighbors that are not core samples.
+
+    DBSCAN normally finds the number of clusters automatically. However,
+    `clustering_dbscan` makes some post-processing that we have found
+    improves results when clustering calibration beads. In particular,
+    `clustering_dbscan` accepts a parameter `n_clusters_exp` which contains
+    the expected number of clusters. The clusters are expected to be
+    approximately the same size. If the size of a cluster is found to be 10
+    standard deviations smaller than the average cluster size, it is
+    automatically eliminated, and its samples are added to the 'outliers'
+    cluster. Additionally, the 'outliers' cluster has been found to
+    correspond most of the time to non-fluorescent beads, given the
+    relatively high distance between events. Therefore, we consider it a
+    distinct cluster.
+
+    `clustering_dbscan` internally uses `DBSCAN` from the ``scikit-learn``
+    library. For more information, consult their documentation.
+
+    """
     # Default value of min_samples
     if min_samples is None:
         min_samples = data.shape[0]/200.
@@ -93,14 +121,28 @@ def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     return labels
 
 def clustering_distance(data, n_clusters = 8):
-    '''
+    """
     Find clusters in the data array based on distance to the origin.
 
-    data        - NxD numpy array.
-    n_clusters  - Number of expected clusters
+    This function sorts all the samples in `data` based on their Euclidean
+    distance to the origin. Then, the ``n/n_clusters`` samples closest to
+    the origin are assigned to cluster 0, the next ``n/n_clusters`` are
+    assigned to cluster 1, and so on.
 
-    returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    Parameters
+    ----------
+    data : array_like
+        NxD array to cluster.
+    n_clusters : int, optional
+        Number of clusters to find.
+
+    Returns
+    -------
+    labels : array
+        Nx1 array with labels for each element in `data`, assigning
+        ``data[i]`` to cluster ``labels[i]``.
+
+    """
     # Number of elements per cluster
     fractions = np.ones(n_clusters)*1./n_clusters
 
@@ -126,21 +168,53 @@ def clustering_distance(data, n_clusters = 8):
 
 def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub', 
     tol = 1e-7, min_covar = 1e-2):
-    '''
-    Find clusters in the data array using the GMM method from the 
-    scikit-learn library.
+    """
+    Find clusters in an array using Gaussian Mixture Models (GMM).
 
-    data            - NxD numpy array.
-    n_clusters      - Number of expected clusters
-    initialization  - Initialization method
-    tol             - Tolerance for convergence of GMM method. Check 
-                        scikit-learn documentation for more info.
-    min_covar       - Minimum covariance for the GMM method. Check 
-                        scikit-learn documentation for more info.
-    returns     - Nx1 numpy array, labeling each sample to a cluster.
-    '''
+    The likelihood maximization method used requires an initial parameter
+    choice for the Gaussian pdfs, and the results can be fairly sensitive
+    to it. `clustering_gmm` can perform two types of initialization, which
+    we have found work well with calibration beads data. On the first one,
+    the function group samples in `data` by their Euclidean distance to the
+    origin, similarly to what is done in `clustering_distance`. Then, the
+    function calculates the Gaussian Mixture parameters, assuming that this
+    clustering is correct. These parameters are used as the initial
+    conditions. The second initialization procedure also starts by
+    clustering based on distance to the origin. Then, for each cluster,
+    the 50% datapoints farther away from the mean are discarded, and the
+    rest are used to calculate the initial parameters. The parameter
+    `initialization` selects any of these two procedures.
 
+    Parameters
+    ----------
+    data : array_like
+        NxD array to cluster.
+    n_clusters : int, optional
+        Number of clusters to find.
+    initialization : {'distance', 'distance_sub'}, optional
+        Initialization method.
+    tol : float, optional
+        Tolerance for convergence of GMM method. Passed directly to
+        ``scikit-learn``'s GMM.
+    min_covar : float, optional
+        Minimum covariance. Passed directly to ``scikit-learn``'s GMM.
 
+    Returns
+    -------
+    labels : array
+        Nx1 array with labels for each element in `data`, assigning
+        ``data[i]`` to cluster ``labels[i]``.
+
+    Notes
+    -----
+    GMM finds clusters by fitting a linear combination of `n_clusters`
+    Gaussian probability density functions (pdf) to `data`, by likelihood
+    maximization.
+
+    `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
+    library. For more information, consult their documentation.
+
+    """
     # Initialization method
     if initialization == 'distance':
         # Perform distance-based clustering
@@ -219,27 +293,33 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     return labels
 
 def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
-    '''
-    Find histogram peaks using the smoothed mode method.
+    """
+    Find the mode of a dataset by finding the peak of a smoothed histogram.
 
-    The algorithm then proceeds as follows:
-        1. Calculate the histogram.
-        2. Use a 1D Gaussian filter to smooth out the histogram. The sigma 
-            value for the Gaussian filter is chosen based on the standard 
-            deviation of the fit Gaussian from the GMM for that paritcular 
-            segment.
-        3. Identify peak as the maximum value of the Gaussian-blurred histogram.
+    This function finds the mode of a dataset by calculating the histogram,
+    using a 1D Gaussian filter to smooth out the histogram, and identifying
+    the maximum value of the smoothed histogram. The ``sigma`` parameter of
+    the Gaussian filter is taken from the standard deviation of `data`.
 
-    data        - Nx1 numpy array with the 1D data from where peaks should be 
-                  identified. Data values are assumed to be integer.
-    min_val     - minimum possible value in data.
-    max_val     - maximum possible value in data.
+    Parameters
+    ----------
+    data : array
+        Nx1 array to calculate the mode from. `data` is assumed to contain
+        only integers.
+    min_val : int, optional
+        Minimum possible value in `data`.
+    max_val : int, optional
+        Maximum possible value in `data`.
 
-    returns     - The value of the identified peak.
-                - (max_val - min_val + 1) numpy array with a smoothed 
-                  histogram for each cluster.
-    '''
+    Returns
+    -------
+    peak : float
+        Mode of `data`.
+    hist_smooth : array
+        ``(max_val - min_val + 1)``-long array containing the smoothed
+        histogram.
 
+    """
     # Calculate bin edges and centers
     bin_edges = np.arange(min_val, max_val + 2) - 0.5
     bin_edges[0] = -np.inf
@@ -263,17 +343,21 @@ def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
     return peak, hist_smooth
 
 def find_peaks_median(data):
-    '''
-    Find histogram peaks as the median.
+    """
+    Find the median of a data array.
 
-    data        - Nx1 numpy array with the 1D data from where peaks should be 
-                  identified. 
+    Parameters
+    ----------
+    data : array
+        Nx1 array to calculate the median from.
 
-    returns     - The median of data.
-    '''
+    Returns
+    -------
+    peak : int or float
+        Median of `data`.
 
+    """
     peak = np.median(data)
-
     return peak
 
 def select_peaks_proximity(peaks_ch,
@@ -283,24 +367,38 @@ def select_peaks_proximity(peaks_ch,
                            peaks_ch_std_mult_r = 2.5,
                            peaks_ch_min = 0,
                            peaks_ch_max = 1023):
-    '''Select peaks for fitting based on proximity to the minimum and maximum 
-    values.
+    """
+    Select bead subpopulations based on proximity to a minimum and maximum.
 
-    This function discards some peaks on channel space from peaks_ch if they're
-    too close to either peaks_ch_min or peaks_ch_max. Next, it discards the
-    corresponding peaks in peaks_mef. Finally, it discards peaks from peaks_mef
-    that have an undetermined value (NaN), and it also discards the 
-    corresponding peaks in peaks_ch.
+    This function discards some values from `peaks_ch` if they're closer
+    than `peaks_ch_std_mult_l` standard deviations to `peaks_ch_min`, or
+    `peaks_ch_std_mult_r` standard deviations to `peaks_ch_max`. Standard
+    deviations should be provided in `peaks_ch_std`. Then, it discards the
+    corresponding values in `peaks_mef`. Finally, it discards the values in
+    `peaks_mef` that have an undetermined value (NaN), and the
+    corresponding values in peaks_ch.
 
-    Arguments:
-    peaks_ch            - Sorted peak values in channel space 
-    peaks_mef           - Peak values in MEF units
-    peaks_ch_std_mult_l - Tolerance for peaks at the left, in std. devs.
-    peaks_ch_std_mult_r - Tolerance for peaks at the right, in std. devs.
-    peaks_ch_min        - Minimum tolerable value in channel space
-    peaks_ch_max        - Maximum tolerable value in channel space
-    '''
+    Parameters
+    ----------
+    peaks_ch : array
+        Sorted fluorescence values of bead populations in channel units.
+    peaks_mef : array
+        Sorted fluorescence values of bead populations in MEF units.
+    peaks_ch_std_mult_l, peaks_ch_std_mult_r : float, optional
+        Number of standard deviations from `peaks_ch_min` and
+        `peaks_ch_max`, respectively, that a value in `peaks_ch` has to be
+        closer than to be discarded.
+    peaks_ch_min, peaks_ch_max : int, optional
+        Minimum and maximum tolerable fluorescence value in channel units.
 
+    Returns
+    -------
+    sel_peaks_ch : array
+        Selected fluorescence values of bead populations in channel units.
+    sel_peaks_mef : array
+        Selected fluorescence values of bead populations in MEF units.
+
+    """
     # Minimum peak standard deviation will be 1.0
     min_std = 1.0
     peaks_ch_std = peaks_ch_std.copy()
@@ -350,46 +448,56 @@ def select_peaks_proximity(peaks_ch,
     return sel_peaks_ch, sel_peaks_mef
 
 def fit_standard_curve(peaks_ch, peaks_mef):
-    '''Fit a model mapping calibration bead fluroescence in channel space units 
-    to their known MEF values.
+    """
+    Fit a standard curve to known fluorescence values of calibration beads.
 
-    We first fit a beads fluroescence model using the peaks_ch and peaks_mef 
-    arguments. We have determined from first principles that the appropriate 
-    model for bead fluorescence is as follows:
+    Parameters
+    ----------
+    peaks_ch : array
+        Fluorescence values of bead populations in channel units.
+    peaks_mef : array
+        Fluorescence values of bead populations in MEF units.
 
-        m*fl_ch_i + b = log(fl_mef_auto + fl_mef_i)
+    Returns
+    -------
+    sc : function
+        Standard curve that transforms fluorescence from channel units to
+        MEF units.
+    sc_beads : function
+        Bead fluorescence model, mapping bead fluorescence in channel space
+        to bead fluorescence in MEF units, without autofluorescence.
+    sc_params : array
+        Fitted parameters of the bead fluorescence model: ``[m, b,
+        fl_mef_auto]``.
 
-    where fl_ch_i is the fluorescence of peak i in channel space, and fl_mef_i
-    is the fluorescence in mef values. The model includes 3 parameters: m, b, 
-    and fl_mef_auto.
+    Notes
+    -----
+    The following model is used to describe bead fluorescence:
 
-    This model is fit in a log-mef space using nonlinear least squares
-    regression (as opposed to fitting an exponential model in y space). 
-    Fitting in the log-mef space weights the residuals more evenly, whereas 
-    fitting an exponential would vastly overvalue the brighter peaks.
+        m*fl_ch[i] + b = log(fl_mef_auto + fl_mef[i])
 
-    After fitting the beads model, this function returns a standard curve 
-    function mapping channel space flurescence to MEF values, as follows:
+    where fl_ch[i] is the fluorescence of bead subpopulation i in channel
+    units and fl_mef[i] is the corresponding fluorescence in MEF units. The
+    model includes 3 parameters: m (slope), b (intercept), and fl_mef_auto
+    (bead autofluorescence).
+
+    The bead fluorescence model is fit in a log-MEF space using nonlinear
+    least squares regression (as opposed to fitting an exponential model in
+    MEF space). In our experience, fitting in the log-MEF space weights the
+    residuals more evenly, whereas fitting an exponential vastly overvalues
+    the brighter peaks.
+
+    A standard curve is constructed by solving for fl_mef. As cell samples
+    may not have the same autofluorescence as beads, the bead
+    autofluorescence term (fl_mef_auto) is omitted from the standard curve;
+    the user is expected to use an appropriate white cell sample to account
+    for cellular autofluorescence if necessary. The returned standard curve
+    mapping fluorescence in channel units to MEF units is thus of the
+    following form:
 
         fl_mef = exp(m*fl_ch + b)
 
-    Note that this is identical to the beads model after solving for fl_mef_i, 
-    except that we are setting fl_mef_auto to zero. This is made so that the
-    standard curve function returns absolute mef values.
-
-    arguments:
-    peaks_ch   - numpy array with fluorescence values of bead peaks in channel 
-                 space.
-    peaks_mef  - numpy array with fluorescence values of bead peaks in MEF.
-
-    returns:
-    sc         - standard curve function from channel space fluorescence to MEF
-    sc_beads   - standard curve function from channel space fluorescence to MEF,
-                considering the autofluorescence of the beads.
-    sc_params  - array with fitted parameters of the beads model: 
-                [m, b, fl_mef_auto].
-    '''
-
+    """
     # Check that the input data has consistent dimensions
     assert len(peaks_ch) == len(peaks_mef), "peaks_ch and  \
         peaks_mef have different lengths"
@@ -441,72 +549,130 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     select_peaks_method = 'proximity', select_peaks_params = {},
     verbose = False, plot = False, plot_dir = None, plot_filename = None,
     full = False):
-    '''Generate a function that transforms channel data into MEF data.
+    """
+    Get a transformation function to convert flow cytometry data to MEF.
 
-    This is performed using flow cytometry beads data, contained in the 
-    data_beads argument. The steps involved in the MEF standard curve 
-    generation are:
-        1. The individual groups of beads are first clustered using a method
-            of choice. 
-        2. The value of the peak is identified for each cluster, for each
-            channel in mef_channels.
-        3. Clusters that are too close to one of the edges are discarded. The 
-            corresponding known MEF values in peaks_mef are also discarded. If
-            the expected mef value of some peak is unknown (represented as a 
-            NaN value in peaks_mef), the corresponding peak is also discarded.
-        4. The peaks identified from the beads are contrasted with the expected
-            MEF values, and a standard curve function is generated using the
-            appropriate MEF model. 
+    Parameters
+    ----------
+    data_beads : FCSData object
+        Flow cytometry data, taken from calibration beads.
+    peaks_mef : array
+        Known MEF values of the calibration beads' subpopulations, for
+        each channel specified in `mef_channels`.
+    mef_channels : int, or str, or list of int, or list of str
+        Channels for which to generate transformation functions.
+    cluster_channels : list, optional
+        Channels used for clustering. If not specified, used the first
+        channel in `data_beads`.
+    verbose : bool, optional
+        Flag specifying whether to print information about step completion
+        and warnings.
+    plot : bool, optional
+        Flag specifying whether to produce diagnostic plots.
+    plot_dir : str, optional
+        Directory where to save diagnostics plots. Ignored if `plot` is
+        False. If ``plot==True`` and ``plot_dir is None``, plot without
+        saving.
+    plot_filename : str, optional
+        Name to use for plot files. If None, use ``str(data_beads)``.
+    full : bool, optional
+        Flag specifying whether to include intermediate results in the
+        output. If `full` is True, the function returns a named tuple with
+        fields as described below. If `full` is False, the function only
+        returns the calculated transformation function.
 
-    This function can print information about partial results if verbose is
-    True, and generate plots after each step if plot is True.
+    Returns
+    -------
+    transform_fxn : function, if ``full==False``
+        Transformation function to convert flow cytometry data from channel
+        units to MEF. This function has the same basic signature as the
+        general transformation function specified in ``fc.transform``.
+    namedtuple, if ``full==True``
+        ``namedtuple``, containing the following fields in this order:
+        transform_fxn : function
+            Transformation function to convert flow cytometry data from
+            channel units to MEF. This function has the same basic
+            signature as the general transformation function specified in
+            ``fc.transform``.
+        clustering_res : dict
+            Results of the clustering step, containing the following
+            fields:
+            labels : array
+                Labels for each element in `data_beads`.
+        peak_find_res : dict
+            Results of the calculation of bead subpopulations'
+            fluorescence, containing the following fields:
+            peaks_ch : list
+                The representative fluorescence of each subpopulation, for
+                each channel in `mef_channels`.
+            peaks_hists : list
+                Only included if ``find_peaks_method=='smoothed_mode'. The
+                smoothed histogram of each subpopulation, for each channel
+                in `mef_channels`.
+        peak_sel_res : dict
+            Results of the subpopulation selection step, containing the
+            following fields:
+            sel_peaks_ch : list
+                The fluorescence values of each selected subpopulation in
+                channel units, for each channel in `mef_channels`.
+            sel_peaks_mef : list
+                The fluorescence values of each selected subpopulation in
+                MEF units, for each channel in `mef_channels`.
+        fitting_res : dict
+            Results of the model fitting step, containing the following
+            fields:
+            sc : list
+                Functions encoding the standard curves, for each channel in
+                `mef_channels`.
+            sc_beads : list
+                Functions encoding the fluorescence model of the
+                calibration beads, for each channel in `mef_channels`.
+            sc_params : list
+                Fitted parameters of the bead fluorescence model: ``[m, b,
+                fl_mef_auto]``, for each channel in `mef_chanels`.
 
-    The function generated is a transformation function, as specified in the 
-    header of the transform module.
+    Other parameters
+    ----------------
+    cluster_method : {'dbscan', 'distance', 'gmm'}, optional
+        Method used for clustering, or identification of subpopulations.
+    cluster_params : dict, optional
+        Parameters to pass to the clustering method.
+    find_peaks_method : {'smoothed_mode', 'median'}, optional
+        Method used to calculate the representative fluorescence of each
+        subpopulation.
+    find_peaks_params : dict, optional
+        Parameters to pass to the method that calculates the fluorescence
+        of each subpopulation.
+    select_peaks_method : {'proximity'}, optional
+        Method to use for peak selection.
+    select_peaks_params : dict, optional
+        Parameters to pass to the peak selection method.
 
-    Arguments:
-    
-    data_beads          - an NxD numpy array or FCSData object.
-    peaks_mef           - a numpy array with the P known MEF values of the
-                          beads. If mef_channels is an iterable of lenght C,
-                          peaks mef should be a CxP array, where P is the
-                          number of MEF peaks.
-    mef_channels        - channel name, or iterable with channel names, on
-                          which to generate MEF transformation functions.
-    cluster_method      - method used for peak clustering.
-    cluster_params      - parameters to pass to the clustering method.
-    cluster_channels    - channels used for clustering.
-    find_peaks_method   - Method used to find the peak value.
-    find_peaks_params   - parameters to pass to the peak finding method.
-    select_peaks_method - Method to use for peak selection
-    select_peaks_params - Parameters to pass to the peak selection method.
-    verbose             - whether to print information about step completion,
-                          warnings and errors.
-    plot                - If True, produce diagnostic plots.
-    plot_dir            - Directory where to save diagnostics plots. Ignored
-                          if plot is False. If plot = True and plot_dir = None,
-                          plot without saving.
-    plot_filename       - Name to use for plot files. If None, use the filename
-                          of the FCSData file provided.
-    full                - Whether to include intermediate results in the
-                          output. If full is True, the function returns a named
-                          tuple with fields as described below. If full is
-                          False, the function only returns the calculated
-                          transformation function.
+    Notes
+    -----
+    The steps involved in generating the MEF transformation function are:
 
-    Returns: 
+    1. The individual subpopulations of beads are first identified using a
+       clustering method of choice.
+    2. The fluorescence of each subpopulation is calculated for each
+       cluster, for each channel in `mef_channels`.
+    3. Some subpopulations are then discarded if they are close to either
+       the minimum or the maximum channel value. In addition, if the MEF
+       value of some subpopulation is unknown (represented as a ``NaN`` in
+       `peaks_mef`), the whole subpopulation is also discarded.
+    4. The measured fluorescence of each subpopulation is compared with
+       the known MEF values in `peaks_mef`, and a standard curve function
+       is generated using the appropriate MEF model.
 
-    transform_fxn   - A transformation function encoding the standard curves.
-    clustering_res  - If full == True, this is a dictionary that contains the 
-                        results of the clustering step.
-    peak_find_res   - If full == True, this is a dictionary that contains the 
-                        results of the peak finding step.
-    peak_sel_res    - If full == True, this is a dictionary that contains the 
-                        results of the peak selection step.
-    fitting_res     - If full == True, this is a dictionary that contains the 
-                        results of the model fitting step.
+    At the end, a transformation function is generated using the calculated
+    standard curves, `mef_channels`, and ``fc.transform.to_mef()``.
 
-    '''
+    Note that applying the resulting transformation function to other
+    flow cytometry samples only yields correct results if they have been
+    taken at the same settings as the calibration beads, for all channels
+    in `mef_channels`.
+
+    """
     if verbose:
         prev_precision = np.get_printoptions()['precision']
         np.set_printoptions(precision=2)
