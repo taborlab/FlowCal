@@ -1,14 +1,7 @@
-#!/usr/bin/python
-#
-# test_io.py - Unit tests for io module
-#
-# Author: Sebastian M. Castillo-Hair (smc9@rice.edu)
-# Date: 8/10/2015
-#
-# Requires:
-#   * fc.io
-#   * numpy
-#
+"""
+Unit tests for the `io` module.
+
+"""
 
 import fc.io
 import numpy as np
