@@ -1,5 +1,6 @@
 """
 `gate` module unit tests.
+
 """
 
 import fc.gate
