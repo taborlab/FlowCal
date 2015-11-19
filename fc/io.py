@@ -9,6 +9,524 @@ import collections
 import warnings
 import numpy as np
 
+###
+# Utility functions for importing segments of FCS files
+###
+
+def read_fcs_header_segment(buf, begin=0):
+    '''Parse beginning of specified buffer and interpret as HEADER segment of
+    FCS file.
+
+    OTHER segment offsets are ignored (see FCS standards). Blank ANALYSIS
+    segment offsets are converted to zeros.
+
+    buf     - file-like object
+    begin   - offset (in bytes) to first byte of HEADER segment
+
+    returns - namedtuple of the following form:
+                  (FCSHeader.version        -> str,
+                   FCSHeader.text_begin     -> int,
+                   FCSHeader.text_end       -> int,
+                   FCSHeader.data_begin     -> int,
+                   FCSHeader.data_end       -> int,
+                   FCSHeader.analysis_begin -> int,
+                   FCSHeader.analysis_end   -> int)'''
+
+    fields = [
+        'version',
+        'text_begin',
+        'text_end',
+        'data_begin',
+        'data_end',
+        'analysis_begin',
+        'analysis_end']
+
+    FCSHeader = collections.namedtuple('FCSHeader', fields)
+
+    field_values = []
+
+    buf.seek(begin)
+    field_values.append(str(buf.read(10)).rstrip())     # version
+
+    field_values.append(int(buf.read(8)))               # text_begin
+    field_values.append(int(buf.read(8)))               # text_end
+    field_values.append(int(buf.read(8)))               # data_begin
+    field_values.append(int(buf.read(8)))               # data_end
+
+    fv = buf.read(8)                                    # analysis_begin
+    field_values.append(0 if fv == ' '*8 else int(fv))
+    fv = buf.read(8)                                    # analysis_end
+    field_values.append(0 if fv == ' '*8 else int(fv))
+
+    return FCSHeader._make(field_values)
+
+def read_fcs_text_segment(buf, begin, end, delim=None):
+    '''Parse region of specified buffer and interpret as TEXT segment of FCS
+    file.
+
+    Note: ANALYSIS segments are parsed the same way as TEXT segments, so this
+    function can also be used to read ANALYSIS segments.
+
+    buf     - file-like object
+    begin   - offset (in bytes) to first byte of TEXT segment
+    end     - offset (in bytes) to last byte of TEXT segment
+    delim   - 1-byte delimiter character (optional). If None, will extract
+              delimiter as first byte of TEXT segment. See FCS standards.
+
+    returns - dictionary of KEY-VALUE pairs, string containing delimiter'''
+
+    if delim is None:
+        buf.seek(begin)
+        delim = str(buf.read(1))
+
+    # The offsets are inclusive (meaning they specify first and last byte
+    # WITHIN segment) and seeking is inclusive (read() after seek() reads the
+    # byte which was seeked to). This means the length of the segment is
+    # ((end+1) - begin).
+    buf.seek(begin)
+    raw = buf.read((end+1)-begin)
+
+    l = raw.split(delim)
+
+    # The first and last list items should be empty because the TEXT
+    # segment starts and ends with the delimiter
+    if l[0] != '' or l[-1] != '':
+        raise ImportError('segment should start and end with delimiter')
+    else:
+        del l[0]
+        del l[-1]
+
+    # Detect if delimiter was used in keyword or value. This is technically
+    # legal, but I'm too lazy to properly address it because I don't think
+    # it's a common use case. According to the FCS2.0 standard, "If the
+    # separator appears in a keyword or in a keyword value, it must be
+    # 'quoted' by being repeated" and "null (zero length) keywords or keyword
+    # values are not permitted", so this issue should manifest itself as an
+    # empty element in the list.
+    if any(x=='' for x in l):
+        raise NotImplementedError('use of delimiter in keywords or keyword'
+            + ' values is not supported')
+
+    # List length should be even since all key-value entries should be pairs
+    if len(l) % 2 != 0:
+        raise ImportError('odd # of (keys + values); unpaired key or value')
+
+    text = dict(zip(l[0::2], l[1::2]))
+
+    return text, delim
+
+def read_fcs_data_segment(buf,
+                          begin,
+                          end,
+                          datatype,
+                          num_events,
+                          param_bit_widths,
+                          param_ranges,
+                          big_endian):
+    '''Parse region of specified buffer and interpret as DATA segment of FCS
+    file.
+
+    If datatype = 'I' (unsigned binary integer):
+        * Data must be byte aligned: all(bw%8 == 0 for bw in param_bit_widths)
+        * Data are upcast to the nearest uint8, uint16, uint32, or uint64 data
+          type.
+        * Bit widths larger than 64 bits are not supported.
+
+    buf              - file-like object
+    begin            - offset (in bytes) to first byte of DATA segment
+    end              - offset (in bytes) to last byte of DATA segment
+    datatype         - string containing datatype, pursuant to FCS standards.
+                       'I' (unsigned binary integer), 'F' (single precision
+                       floating point), and 'D' (double precision floating
+                       point) are supported.
+    num_events       - total number of events ($TOT, see FCS standards)
+    param_bit_widths - sequence type (list, numpy array) containing parameter
+                       bit width for each parameter ($PnB, see FCS standards)
+    param_ranges     - sequence type (list, numpy array) containing parameter
+                       range for each parameter ($PnR, see FCS standards)
+    big_endian       - boolean value specifying endianness. Little endian is
+                       assumed if False.
+
+    returns          - NxD numpy array describing N cytometry events observing
+                       D data dimensions'''
+
+    if len(param_bit_widths) != len(param_ranges):
+        raise ValueError('param_bit_widths and param_ranges must have same'
+            + ' length')
+    else:
+        num_params = len(param_bit_widths)
+
+    shape = (int(num_events), num_params)
+
+    if datatype == 'I':
+        # Check if all parameters fit into preexisting data type
+        if (all(bw == 8  for bw in param_bit_widths) or
+            all(bw == 16 for bw in param_bit_widths) or
+            all(bw == 32 for bw in param_bit_widths) or
+            all(bw == 64 for bw in param_bit_widths)):
+
+            num_bits = param_bit_widths[0]
+
+            # Sanity check that the total # of bytes that we're about to
+            # interpret is exactly the # of bytes in the DATA segment.
+            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+                raise ImportError('DATA size does not match expected array'
+                    + ' size (array size ='
+                    + ' {0} bytes,'.format(shape[0]*shape[1]*(num_bits/8))
+                    + ' DATA segment size = {0} bytes)'.format((end+1)-begin))
+
+            dtype = np.dtype('{0}u{1}'.format('>' if big_endian else '<',
+                                              num_bits/8))
+            data = np.memmap(
+                buf,
+                dtype=dtype,
+                mode='r',
+                offset=begin,
+                shape=shape,
+                order='C')
+
+            # Cast memmap object to regular numpy array stored in memory (as
+            # opposed to being backed by disk)
+            data = np.array(data)
+        else:
+            # The FCS standards technically allows for parameters to NOT be
+            # byte aligned, but parsing a DATA segment which is not byte
+            # aligned requires significantly more computation (and probably an
+            # external library which exposes bit level resolution to a block
+            # of memory). I don't think this is a common use case, so I'm just
+            # going to detect it and raise an error.
+            if (not all(bw % 8 == 0 for bw in param_bit_widths) or
+                any(bw > 64 for bw in param_bit_widths)):
+                raise NotImplementedError('only byte aligned parameter bit'
+                    + ' widths (bw % 8 = 0) <= 64 are supported'
+                    + ' (param_bit_widths={0})'.format(param_bit_widths))
+
+            # Read data in as a byte array
+            byte_shape = (int(num_events),
+                          np.sum(np.array(param_bit_widths)/8))
+
+            # Sanity check that the total # of bytes that we're about to
+            # interpret is exactly the # of bytes in the DATA segment.
+            if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin):
+                raise ImportError('DATA size does not match expected array'
+                    + ' size (array size ='
+                    + ' {0} bytes,'.format(byte_shape[0]*byte_shape[1])
+                    + ' DATA segment size = {0} bytes)'.format((end+1)-begin))
+
+            byte_data = np.memmap(
+                buf,
+                dtype='uint8',  # endianness doesn't matter for 1 byte
+                mode='r',
+                offset=begin,
+                shape=byte_shape,
+                order='C')
+
+            # Upcast all data to fit nearest supported data type of largest
+            # bit width
+            upcast_bw = int(2**np.max(np.ceil(np.log2(param_bit_widths))))
+
+            # Create new array of upcast data type and use byte data to
+            # populate it. The new array will have endianness native to user's
+            # machine; does not preserve endianness of stored FCS data.
+            upcast_dtype = 'u{0}'.format(upcast_bw/8)
+            data = np.zeros(shape,dtype=upcast_dtype)
+
+            # Array mapping each column of data to first corresponding column
+            # in byte_data
+            byte_boundaries = np.roll(np.cumsum(param_bit_widths)/8,1)
+            byte_boundaries[0] = 0
+
+            # Reconstitute columns of data by bit shifting appropriate columns
+            # in byte_data and accumulating them
+            for col in xrange(data.shape[1]):
+                num_bytes = param_bit_widths[col]/8
+                for b in xrange(num_bytes):
+                    byte_data_col = byte_boundaries[col] + b
+                    byteshift = (num_bytes-b-1) if big_endian else b
+
+                    if byteshift > 0:
+                        # byte_data must be upcast or else bit shift fails
+                        data[:,col] += \
+                            byte_data[:,byte_data_col].astype(upcast_dtype) \
+                            << (byteshift*8)
+                    else:
+                        data[:,col] += byte_data[:,byte_data_col]
+
+        # To strictly follow the FCS standards, mask off the unused high bits
+        # as specified by param_ranges.
+        for col in xrange(data.shape[1]):
+            # bits_used should be related to resolution of cytometer ADC
+            bits_used = int(np.ceil(np.log2(param_ranges[col])))
+
+            # Create a bit mask to mask off all but the lowest bits_used bits.
+            # bitmask is a native python int type which does not have an
+            # underlying size. The int type is effectively left-padded with
+            # 0s (infinitely), and the '&' operation preserves the dataype of
+            # the array, so this shouldn't be an issue.
+            bitmask = ~((~0) << bits_used)
+            data[:,col] &= bitmask
+
+    elif datatype in ('F','D'):
+        num_bits = 32 if datatype == 'F' else 64
+
+        # Confirm that bit widths are consistent with data type
+        if not all(bw == num_bits for bw in param_bit_widths):
+            raise ValueError('all param_bit_widths should be'
+                + ' {0} if datatype ='.format(num_bits)
+                + ' \'{0}\' (param_bit_widths='.format(datatype)
+                + '{0})'.format(param_bit_widths))
+
+        # Sanity check that the total # of bytes that we're about to interpret
+        # is exactly the # of bytes in the DATA segment.
+        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+            raise ImportError('DATA size does not match expected array size'
+                + ' (array size = {0}'.format(shape[0]*shape[1]*(num_bits/8))
+                + ' bytes, DATA segment size ='
+                + ' {0} bytes)'.format((end+1)-begin))
+
+        dtype = np.dtype('{0}f{1}'.format('>' if big_endian else '<',
+                                          num_bits/8))
+        data = np.memmap(
+            buf,
+            dtype=dtype,
+            mode='r',
+            offset=begin,
+            shape=shape,
+            order='C')
+
+        # Cast memmap object to regular numpy array stored in memory (as
+        # opposed to being backed by disk)
+        data = np.array(data)
+    elif datatype == 'A':
+        raise NotImplementedError('only \'I\' (unsigned binary integer),'
+            + ' \'F\' (single precision floating point), and \'D\' (double'
+            + ' precision floating point) data types are supported (detected'
+            + ' datatype=\'{0}\')'.format(datatype))
+    else:
+        raise ValueError('unrecognized datatype (detected datatype='
+            + '\'{0}\')'.format(datatype))
+
+    return data
+
+###
+# Wrapper classes for FCS files
+###
+
+class FCSFile(object):
+    '''Class describing FCS flow cytometry data files.
+
+    Supported FCS versions: subset of FCS3.1 standard (which should be
+    backwards compatible with FCS3.0 and FCS2.0). FCS file assumptions:
+        * $MODE = 'L' (list mode)
+        * $DATATYPE = 'I' (unsigned binary integers), 'F' (single precision
+          floating point), or 'D' (double precision floating point)
+        * If $DATATYPE = 'I', $PnB % 8 = 0 for all $PAR (meaning data is byte
+          aligned for all channels)
+        * $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian)
+        * only 1 data set per file (raises warning otherwise)
+    
+    For more details, see the FCS2.0 standard:
+    
+    [Dean PN, Bagwell CB, Lindmo T, Murphy RF, Salzman GC. "Data file standard
+    for flow cytometry. Data File Standards Committee of the Society for
+    Analytical Cytology.". Cytometry. 1990;11(3):323-32. PMID 2340769]
+
+    the FCS3.0 standard:
+
+    [Seamer LC, Bagwell CB, Barden L, Redelman D, Salzman GC, Wood JC,
+    Murphy RF. "Proposed new data file standard for flow cytometry, version
+    FCS 3.0.". Cytometry. 1997 Jun 1;28(2):118-22. PMID 9181300]
+
+    and the FCS3.1 standard:
+
+    [Spidlen J et al. "Data File Standard for Flow Cytometry, version
+    FCS 3.1.". Cytometry A. 2010 Jan;77(1):97-100. PMID 19937951]
+    '''
+    
+    def __init__(self, infile):
+        'infile - string or file-like object'
+        
+        self._infile = infile
+
+        if isinstance(infile, basestring):
+            f = open(infile, 'rb')
+        else:
+            f = infile
+
+        self._header = read_fcs_header_segment(buf=f)
+
+        # Import primary TEXT segment and optional supplemental TEXT segment.
+        # Primary TEXT segment offsets are always specified in the HEADER
+        # segment. For FCS3.0 and above, supplemental TEXT segment offsets
+        # are always specified via required key-value pairs in the primary
+        # TEXT segment.
+        self._text, delim = read_fcs_text_segment(
+            buf=f,
+            begin=self._header.text_begin,
+            end=self._header.text_end)
+
+        if self._header.version in ('FCS3.0','FCS3.1'):
+            stext_begin = int(self._text['$BEGINSTEXT'])   # required keyword
+            stext_end = int(self._text['$ENDSTEXT'])       # required keyword
+            if stext_begin and stext_end:
+                stext = read_fcs_text_segment(
+                    buf=f,
+                    begin=stext_begin,
+                    end=stext_end,
+                    delim=delim)[0]
+                self._text.update(stext)
+
+        # Confirm FCS file assumptions. All queried keywords are required
+        # keywords.
+        if self._text['$MODE'] != 'L':
+            raise NotImplementedError('only $MODE = \'L\' is supported'
+                + ' (detected $MODE = \'{0}\')'.format(self._text['$MODE']))
+
+        if self._text['$DATATYPE'] not in ('I','F','D'):
+            raise NotImplementedError('only $DATATYPE = \'I\', \'F\', and'
+                + ' \'D\' are supported (detected $DATATYPE ='
+                + ' \'{0}\')'.format(self._text['$DATATYPE']))
+
+        D = int(self._text['$PAR'])  # total number of dimensions/"parameters"
+        param_bit_widths = [int(self._text['$P{0}B'.format(p)])
+                            for p in xrange(1,D+1)]
+        if self._text['$DATATYPE'] == 'I':
+            if not all(bw % 8 == 0 for bw in param_bit_widths):
+                raise NotImplementedError('if $DATATYPE = \'I\', only byte'
+                    + ' aligned parameter bit widths (bw % 8 = 0) are'
+                    + ' supported (detected {0})'.format(
+                        ', '.join('$P{0}B={1}'.format(
+                            p,self._text['$P{0}B'.format(p)])
+                        for p in xrange(1,D+1)
+                        if param_bit_widths[p-1] % 8 != 0)))
+
+        if self._text['$BYTEORD'] not in ('4,3,2,1', '2,1', '1,2,3,4', '1,2'):
+            raise NotImplementedError('only big endian ($BYTEORD = \'4,3,2,1\''
+                + ' or \'2,1\') and little endian ($BYTEORD = \'1,2,3,4\' or'
+                + ' \'1,2\') are supported (detected $BYTEORD ='
+                + ' \'{0}\')'.format(self._text['$BYTEORD']))
+        big_endian = self._text['$BYTEORD'] in ('4,3,2,1', '2,1')
+
+        if int(self._text['$NEXTDATA']):
+            warnings.warn('detected (and ignoring) additional data set'
+                + ' ($NEXTDATA = {0})'.format(self._text['$NEXTDATA']))
+
+        # Import optional ANALYSIS segment
+        if self._header.analysis_begin and self._header.analysis_end:
+            # Prioritize ANALYSIS segment offsets specified in HEADER over
+            # offsets specified in TEXT segment.
+            self._analysis = read_fcs_text_segment(
+                buf=f,
+                begin=self._header.analysis_begin,
+                end=self._header.analysis_end,
+                delim=delim)[0]
+        elif self._header.version in ('FCS3.0', 'FCS3.1'):
+            analysis_begin = int(self._text['$BEGINANALYSIS'])
+            analysis_end = int(self._text['$ENDANALYSIS'])
+            if analysis_begin and analysis_end:
+                self._analysis = read_fcs_text_segment(
+                    buf=f,
+                    begin=analysis_begin,
+                    end=analysis_end,
+                    delim=delim)[0]
+            else:
+                self._analysis = {}
+        else:
+            self._analysis = {}
+        
+        # Import DATA segment
+        param_ranges = [int(self._text['$P{0}R'.format(p)])
+                        for p in xrange(1,D+1)]
+        if self._header.data_begin and self._header.data_end:
+            # Prioritize DATA segment offsets specified in HEADER over
+            # offsets specified in TEXT segment.
+            self._data = read_fcs_data_segment(
+                buf=f,
+                begin=self._header.data_begin,
+                end=self._header.data_end,
+                datatype=self._text['$DATATYPE'],
+                num_events=int(self._text['$TOT']),
+                param_bit_widths=param_bit_widths,
+                param_ranges=param_ranges,
+                big_endian=big_endian)
+        elif self._header.version in ('FCS3.0', 'FCS3.1'):
+            data_begin = int(self._text['$BEGINDATA'])
+            data_end = int(self._text['$ENDDATA'])
+            if data_begin and data_end:
+                self._data = read_fcs_data_segment(
+                    buf=f,
+                    begin=data_begin,
+                    end=data_end,
+                    datatype=self._text['$DATATYPE'],
+                    num_events=int(self._text['$TOT']),
+                    param_bit_widths=param_bit_widths,
+                    param_ranges=param_ranges,
+                    big_endian=big_endian)
+            else:
+                raise ImportError('DATA segment incorrectly specified')
+        else:
+            raise ImportError('DATA segment incorrectly specified')
+        self._data.flags.writeable = False
+
+        if isinstance(infile, basestring):
+            f.close()
+
+    # Expose attributes as read-only properties
+    @property
+    def infile(self):
+        '''string or file-like object'''
+        return self._infile
+
+    @property
+    def header(self):
+        '''namedtuple with the following fields: (version, text_begin,
+        text_end, data_begin, data_end, analysis_begin, analysis_end)
+        extracted from FCS HEADER segment'''
+        return self._header
+
+    @property
+    def text(self):
+        '''dictionary of KEY-VALUE pairs extracted from FCS TEXT segment(s)'''
+        return self._text
+
+    @property
+    def data(self):
+        '''unwriteable NxD numpy array describing N cytometry events
+        observing D data dimensions extracted from FCS DATA segment'''
+        return self._data
+
+    @property
+    def analysis(self):
+        '''dictionary of KEY-VALUE pairs extracted from FCS ANALYSIS
+        segment'''
+        return self._analysis
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.infile == other.infile
+                and self.header == other.header
+                and self.text == other.text
+                and np.array_equal(self.data, other.data)
+                and self.analysis == other.analysis)
+        else:
+            return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return not self == other
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        return hash((self.infile,
+                     self.header,
+                     frozenset(self.text.items()),
+                     self.data.tobytes(),
+                     frozenset(self.analysis.items())))
+
+    def __repr__(self):
+        return str(self.infile)
+
 class FCSData(np.ndarray):
     """
     Object containing events from a flow cytometry sample.
