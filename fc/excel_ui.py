@@ -516,61 +516,67 @@ def add_stats(samples_table, samples):
                                         channel + ' RCV',
                                         fc.stats.RCV(sample, channel))
 
-def generate_histograms_lists(samples_table, samples):
+def generate_histograms_table(samples_table, samples):
     """
-    Generate a list of the histograms for each specified channel.
-    
-    Histogram information is generated with the following specifications:
-    -  The first row contains the headers 'ID' and 'Channel' in cells 1
-       and 2
-    -  The following rows contain the following in order:
-    1. sample_id
-    2. channel
-    3. The type of data in the row: 'Bins' or 'Counts'
-    4. A list of all of the bin or count values associated with the row
-    
+    Generate a table of histograms as a DataFrame.
 
     Parameters
     ----------
-    samples_table : dict or OrderedDict
+    samples_table : DataFrame
         Table specifying samples to analyze
     samples : list
         FCSData objects from which to calculate histograms. ``samples[i]``
-        should correspond to ``samples_table.values()[i]``
+        should correspond to ``samples_table.iloc[i]``
     
     Returns
     -------
-    rows: list-of-lists
-        A list of lists where the top levels represents individual rows and
-        the second level represents cell values in that row
+    hist_table: DataFrame
+        A multi-indexed DataFrame. Rows cotain the histogram bins and
+        counts for every sample and channel specified in samples_table.
+        `hist_table` is indexed by the sample's ID, the channel name,
+        and whether the row corresponds to bins or counts.
 
     """
-    # List of channels that require stats histograms
-    headers = samples_table.values()[0].keys()
+    # Extract channels that require stats histograms
+    headers = samples_table.columns.tolist()
     r = re.compile(r'^(\S)*(\s)*Units$')
     hist_headers = [h for h in headers if r.match(h)]
     hist_channels = [s[:-5].strip() for s in hist_headers]
 
-    rows = []
-    rows.append(['ID','Channel'])
-
-    for sample_id, sample_row, sample \
-            in zip(samples_table.keys(), samples_table.values(), samples):
+    # The number of columns in the DataFrame has to be set to the maximum
+    # number of bins of any of the histograms about to be generated.
+    # The following iterates through these histograms and finds the
+    # largest.
+    n_columns = 0
+    for sample_id, sample in zip(samples_table.index, samples):
         for header, channel in zip(hist_headers, hist_channels):
-            if sample_row[header]:
-                info = sample[:,channel].channel_info[0]
+            if pd.notnull(samples_table[header][sample_id]):
+                bins = sample[:,channel].channel_info[0]['bin_vals']
+                if n_columns < len(bins):
+                    n_columns = len(bins)
 
-                bins_row = [sample_id, channel, 'Bins']
-                bins_row.extend(info['bin_vals'])
-                rows.append(bins_row)
+    # Declare multi-indexed DataFrame
+    index = pd.MultiIndex.from_arrays([[],[],[]],
+                                      names = ['Sample ID', 'Channel', ''])
+    hist_table = pd.DataFrame([],
+                              index=index,
+                              columns=np.arange(n_columns))
 
-                val_row = [sample_id, channel, 'Counts']
-                counts, bins = np.histogram(sample[:,channel],
-                                            bins=info['bin_edges'])
-                val_row.extend(counts)
-                rows.append(val_row)
+    # Generate histograms
+    for sample_id, sample in zip(samples_table.index, samples):
+        for header, channel in zip(hist_headers, hist_channels):
+            if pd.notnull(samples_table[header][sample_id]):
+                # Store bins
+                bins = sample[:,channel].channel_info[0]['bin_vals']
+                hist_table.loc[(sample_id, channel, 'Bins'),
+                               0:len(bins) - 1] = bins
+                # Calculate and store histogram counts
+                bin_edges = sample[:,channel].channel_info[0]['bin_edges']
+                hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
+                hist_table.loc[(sample_id, channel, 'Counts'),
+                               0:len(bins) - 1] = hist
 
-    return rows
+    return hist_table
 
 def show_open_file_dialog(filetypes):
     """
@@ -666,7 +672,7 @@ def run(verbose=True, plot=True):
     add_stats(samples_table, samples)
 
     # # Generate histograms
-    # histograms = generate_histograms_lists(samples_table, samples)
+    histograms_table = generate_histograms_table(samples_table, samples)
 
     # Generate output writer object
     output_filename = "{}_output.xlsx".format(input_filename_no_ext)
@@ -678,7 +684,7 @@ def run(verbose=True, plot=True):
     instruments_table.to_excel(output_writer, 'Instruments')
     beads_table.to_excel(output_writer, 'Beads')
     samples_table.to_excel(output_writer, 'Samples')
-    # output_wb['Histograms'] = histograms
+    histograms_table.to_excel(output_writer, 'Histograms')
 
     # Write output excel file
     output_writer.save()
