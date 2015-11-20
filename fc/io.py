@@ -263,7 +263,7 @@ def read_fcs_data_segment(buf,
     NotImplementedError
         If `datatype` is 'A'.
     NotImplementedError
-        If `datatype` is 'I', but data is not byte aligned.
+        If `datatype` is 'I' but data is not byte aligned.
 
     References
     ----------
@@ -445,38 +445,112 @@ def read_fcs_data_segment(buf,
 ###
 
 class FCSFile(object):
-    """Class describing FCS flow cytometry data files.
-
-    Supported FCS versions: subset of FCS3.1 standard (which should be
-    backwards compatible with FCS3.0 and FCS2.0). FCS file assumptions:
-        * $MODE = 'L' (list mode)
-        * $DATATYPE = 'I' (unsigned binary integers), 'F' (single precision
-          floating point), or 'D' (double precision floating point)
-        * If $DATATYPE = 'I', $PnB % 8 = 0 for all $PAR (meaning data is byte
-          aligned for all channels)
-        * $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian)
-        * only 1 data set per file (raises warning otherwise)
-    
-    For more details, see the FCS2.0 standard:
-    
-    [Dean PN, Bagwell CB, Lindmo T, Murphy RF, Salzman GC. "Data file standard
-    for flow cytometry. Data File Standards Committee of the Society for
-    Analytical Cytology.". Cytometry. 1990;11(3):323-32. PMID 2340769]
-
-    the FCS3.0 standard:
-
-    [Seamer LC, Bagwell CB, Barden L, Redelman D, Salzman GC, Wood JC,
-    Murphy RF. "Proposed new data file standard for flow cytometry, version
-    FCS 3.0.". Cytometry. 1997 Jun 1;28(2):118-22. PMID 9181300]
-
-    and the FCS3.1 standard:
-
-    [Spidlen J et al. "Data File Standard for Flow Cytometry, version
-    FCS 3.1.". Cytometry A. 2010 Jan;77(1):97-100. PMID 19937951]
     """
+    Class representing an FCS flow cytometry data file.
+
+    The Flow Cytometry Standard (FCS) describes the de facto standard
+    file format used by flow cytometry acquisition and analysis software
+    to record flow cytometry data to and load flow cytometry data from a
+    file. The standard dictates that each file must have the following
+    segments: HEADER, TEXT, and DATA. The HEADER segment contains
+    version information and byte offset values of other segments, the
+    TEXT segment contains delimited key-value pairs containing
+    acquisition information, and the DATA segment contains the recorded
+    flow cytometry data. The file may optionally have an ANALYSIS
+    segment (structurally identicaly to the TEXT segment), a
+    supplemental TEXT segment (according to more recent versions of the
+    standard), and user-defined OTHER segments. This class parses a
+    binary FCS file and exposes a read-only view of the HEADER, TEXT,
+    DATA, and ANALYSIS segments via Python-friendly data structures.
+
+    Parameters
+    ----------
+    infile : str or file-like
+        Reference to the associated FCS file.
+
+    Attributes
+    ----------
+    infile : str or file-like
+        Reference to the associated FCS file.
+    header : namedtuple
+        ``namedtuple`` containing version information and byte offset
+        values of other FCS segments in the following order:
+        version : str
+        text_begin : int
+        text_end : int
+        data_begin : int
+        data_end : int
+        analysis_begin : int
+        analysis_end : int
+    text : dict
+        Dictionary of key-value entries from TEXT segment and optional
+        supplemental TEXT segment.
+    data : numpy array
+        Unwriteable NxD numpy array describing N cytometry events
+        observing D data dimensions.
+    analysis : dict
+        Dictionary of key-value entries from ANALYSIS segment.
+
+    Raises (see FCS standards for more information)
+    -----------------------------------------------
+    NotImplementedError
+        If $MODE is not 'L'.
+    NotImplementedError
+        If $DATATYPE is not 'I', 'F', or 'D'.
+    NotImplementedError
+        If $DATATYPE is 'I' but data is not byte aligned.
+    NotImplementedError
+        If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
+        endian ('1,2,3,4', '1,2').
+    ValueError
+        If TEXT-like segment does not start and end with delimiter.
+    ValueError
+        If TEXT-like segment has odd number of total extracted keys and
+        values (indicating an unpaired key or value).
+    NotImplementedError
+        If the TEXT segment delimiter is used in a TEXT-like segment
+        keyword or value.
+    ValueError
+        If calculated DATA segment size (as determined from the number
+        of events, the number of parameters, and the number of bytes per
+        data point) does not match size specified in HEADER segment
+        offsets.
+    Warning
+        If more than one data set is detected in the same file.
     
+    Notes
+    -----
+    This class supports a subset of the FCS3.1 standard which should be
+    backwards compatible with FCS3.0 and FCS2.0. The FCS file must be
+    of the following form:
+        - $MODE = 'L' (list mode; histogram mode is not supported).
+        - $DATATYPE = 'I' (unsigned binary integers), 'F' (single
+          precision floating point), or 'D' (double precision floating
+          point). 'A' (ASCII) is not supported.
+        - If $DATATYPE = 'I', $PnB % 8 = 0 (byte aligned) for all
+          parameters (aka channels).
+        - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little
+          endian).
+        - One data set per file.
+
+    References
+    ----------
+    .. [1] P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+       "Data file standard for flow cytometry. Data File Standards
+       Committee of the Society for Analytical Cytology," Cytometry vol
+       11, pp 323-332, 1990, PMID 2340769.
+
+    .. [2] L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+       J.C. Wood, R.F. Murphy, "Proposed new data file standard for flow
+       cytometry, version FCS 3.0," Cytometry vol 28, pp 118-122, 1997,
+       PMID 9181300.
+
+    .. [3] J. Spidlen, et al, "Data File Standard for Flow Cytometry,
+       version FCS 3.1," Cytometry A vol 77A, pp 97-100, 2009, PMID
+       19937951.
+
+    """
     def __init__(self, infile):
-        'infile - string or file-like object'
         
         self._infile = infile
 
@@ -511,37 +585,37 @@ class FCSFile(object):
         # Confirm FCS file assumptions. All queried keywords are required
         # keywords.
         if self._text['$MODE'] != 'L':
-            raise NotImplementedError('only $MODE = \'L\' is supported'
-                + ' (detected $MODE = \'{0}\')'.format(self._text['$MODE']))
+            raise NotImplementedError("only $MODE = \'L\' is supported"
+                + " (detected $MODE = \'{0}\')".format(self._text['$MODE']))
 
         if self._text['$DATATYPE'] not in ('I','F','D'):
-            raise NotImplementedError('only $DATATYPE = \'I\', \'F\', and'
-                + ' \'D\' are supported (detected $DATATYPE ='
-                + ' \'{0}\')'.format(self._text['$DATATYPE']))
+            raise NotImplementedError("only $DATATYPE = \'I\', \'F\', and"
+                + " \'D\' are supported (detected $DATATYPE ="
+                + " \'{0}\')".format(self._text['$DATATYPE']))
 
-        D = int(self._text['$PAR'])  # total number of dimensions/"parameters"
+        D = int(self._text['$PAR']) # total number of parameters (aka channels)
         param_bit_widths = [int(self._text['$P{0}B'.format(p)])
                             for p in xrange(1,D+1)]
         if self._text['$DATATYPE'] == 'I':
             if not all(bw % 8 == 0 for bw in param_bit_widths):
-                raise NotImplementedError('if $DATATYPE = \'I\', only byte'
-                    + ' aligned parameter bit widths (bw % 8 = 0) are'
-                    + ' supported (detected {0})'.format(
-                        ', '.join('$P{0}B={1}'.format(
+                raise NotImplementedError("if $DATATYPE = \'I\', only byte"
+                    + " aligned parameter bit widths (bw % 8 = 0) are"
+                    + " supported (detected {0})".format(
+                        ", ".join('$P{0}B={1}'.format(
                             p,self._text['$P{0}B'.format(p)])
                         for p in xrange(1,D+1)
                         if param_bit_widths[p-1] % 8 != 0)))
 
         if self._text['$BYTEORD'] not in ('4,3,2,1', '2,1', '1,2,3,4', '1,2'):
-            raise NotImplementedError('only big endian ($BYTEORD = \'4,3,2,1\''
-                + ' or \'2,1\') and little endian ($BYTEORD = \'1,2,3,4\' or'
-                + ' \'1,2\') are supported (detected $BYTEORD ='
-                + ' \'{0}\')'.format(self._text['$BYTEORD']))
+            raise NotImplementedError("only big endian ($BYTEORD = \'4,3,2,1\'"
+                + " or \'2,1\') and little endian ($BYTEORD = \'1,2,3,4\' or"
+                + " \'1,2\') are supported (detected $BYTEORD ="
+                + " \'{0}\')".format(self._text['$BYTEORD']))
         big_endian = self._text['$BYTEORD'] in ('4,3,2,1', '2,1')
 
         if int(self._text['$NEXTDATA']):
-            warnings.warn('detected (and ignoring) additional data set'
-                + ' ($NEXTDATA = {0})'.format(self._text['$NEXTDATA']))
+            warnings.warn("detected (and ignoring) additional data set"
+                + " ($NEXTDATA = {0})".format(self._text['$NEXTDATA']))
 
         # Import optional ANALYSIS segment
         if self._header.analysis_begin and self._header.analysis_end:
@@ -595,9 +669,9 @@ class FCSFile(object):
                     param_ranges=param_ranges,
                     big_endian=big_endian)
             else:
-                raise ImportError('DATA segment incorrectly specified')
+                raise ValueError("DATA segment incorrectly specified")
         else:
-            raise ImportError('DATA segment incorrectly specified')
+            raise ValueError("DATA segment incorrectly specified")
         self._data.flags.writeable = False
 
         if isinstance(infile, basestring):
@@ -606,31 +680,52 @@ class FCSFile(object):
     # Expose attributes as read-only properties
     @property
     def infile(self):
-        """string or file-like object"""
+        """
+        Reference to the associated FCS file.
+
+        """
         return self._infile
 
     @property
     def header(self):
-        """namedtuple with the following fields: (version, text_begin,
-        text_end, data_begin, data_end, analysis_begin, analysis_end)
-        extracted from FCS HEADER segment"""
+        """
+        ``namedtuple`` containing version information and byte offset
+        values of other FCS segments in the following order:
+        version : str
+        text_begin : int
+        text_end : int
+        data_begin : int
+        data_end : int
+        analysis_begin : int
+        analysis_end : int
+
+        """
         return self._header
 
     @property
     def text(self):
-        """dictionary of KEY-VALUE pairs extracted from FCS TEXT segment(s)"""
+        """
+        Dictionary of key-value entries from TEXT segment and optional
+        supplemental TEXT segment.
+
+        """
         return self._text
 
     @property
     def data(self):
-        """unwriteable NxD numpy array describing N cytometry events
-        observing D data dimensions extracted from FCS DATA segment"""
+        """
+        Unwriteable NxD numpy array describing N cytometry events
+        observing D data dimensions.
+
+        """
         return self._data
 
     @property
     def analysis(self):
-        """dictionary of KEY-VALUE pairs extracted from FCS ANALYSIS
-        segment"""
+        """
+        Dictionary of key-value entries from ANALYSIS segment.
+
+        """
         return self._analysis
 
     def __eq__(self, other):
