@@ -31,7 +31,7 @@ def read_table(filename, sheetname, index_col=None):
     ----------
     filename : str
         Name of the Excel file to read.
-    worksheet_name : str
+    sheetname : str
         Name of the sheet inside the Excel file to read.
     index_col : str, optional
         Column name or index to be used as row labels of the DataFrame. If
