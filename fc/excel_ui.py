@@ -14,9 +14,7 @@ from tkFileDialog import askopenfilename
 
 from matplotlib import pyplot as plt
 import numpy as np
-import openpyxl
 import pandas as pd
-import xlrd
 
 import fc.io
 import fc.plot
