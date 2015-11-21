@@ -338,19 +338,22 @@ def density2d(data, channels=[0,1],
                             data_ch.channel_info[1]['bin_edges'],
                             ])
 
-    # Make 2D histogram and get bins
+    # Make 2D histogram
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
-    # Map each data point to its histogram bin.
+    # Map each event to its histogram bin by sorting events into a 2D array of
+    # lists which mimics the histogram.
     #
-    # Note that the index returned by np.digitize is such that
-    # bins[i-1] <= x < bins[i], whereas indexing the histogram will result in
-    # the following: hist[i,j] = bin corresponding to
+    # Use np.digitize to calculate the histogram bin index for each event
+    # given the histogram bin edges. Note that the index returned by
+    # np.digitize is such that bins[i-1] <= x < bins[i], whereas indexing the
+    # histogram will result in the following: hist[i,j] = bin corresponding to
     # xedges[i] <= x < xedges[i+1] and yedges[i] <= y < yedges[i+1].
     # Therefore, we need to subtract 1 from the np.digitize result to be able
     # to index into the appropriate bin in the histogram.
-    ix = np.digitize(data_ch[:,0], bins=xe) - 1
-    iy = np.digitize(data_ch[:,1], bins=ye) - 1
+    event_indices = np.arange(data_ch.shape[0])
+    x_bin_indices = np.digitize(data_ch[:,0], bins=xe) - 1
+    y_bin_indices = np.digitize(data_ch[:,1], bins=ye) - 1
 
     # In the current version of numpy, there exists a disparity in how
     # np.histogram and np.digitize treat the rightmost bin edge (np.digitize
@@ -360,31 +363,35 @@ def density2d(data, channels=[0,1],
     # half-open (you can specify which side is closed and which side is open;
     # `right` parameter). The expected behavior for this gating function is to
     # mimic np.histogram behavior, so we must reconcile this disparity.
-    ix[data_ch[:,0] == xe[-1]] = len(xe)-2
-    iy[data_ch[:,1] == ye[-1]] = len(ye)-2
+    x_bin_indices[data_ch[:,0] == xe[-1]] = len(xe)-2
+    y_bin_indices[data_ch[:,1] == ye[-1]] = len(ye)-2
 
-    # Create a 2D array of lists corresponding to the 2D histogram to
-    # accumulate events associated with each bin.
+    # Ignore (gate out) events which exist outside specified bins.
+    # `np.digitize()-1` will assign events less than `bins` to bin "-1" and
+    # events greater than `bins` to len(bins)-1.
+    outlier_mask = (
+        (x_bin_indices == -1) |
+        (x_bin_indices == len(xe)-1) |
+        (y_bin_indices == -1) |
+        (y_bin_indices == len(ye)-1))
+
+    event_indices = event_indices[~outlier_mask]
+    x_bin_indices = x_bin_indices[~outlier_mask]
+    y_bin_indices = y_bin_indices[~outlier_mask]
+
+    # Create a 2D array of lists mimicking the histogram to accumulate events
+    # associated with each bin.
     filler = np.frompyfunc(lambda x: list(), 1, 1)
-    Hi = np.empty_like(H, dtype=np.object)
-    filler(Hi, Hi)
+    H_events = np.empty_like(H, dtype=np.object)
+    filler(H_events, H_events)
 
-    x_outliers = (-1, len(xe)-1)    # Ignore (gate out) points which exist
-    y_outliers = (-1, len(ye)-1)    # outside specified bins.
-                                    # `np.digitize()-1` will assign points
-                                    # less than `bins` to bin "-1" and points
-                                    # greater than `bins` to len(bins)-1.
+    for event_idx, x_bin_idx, y_bin_idx in \
+            zip(event_indices, x_bin_indices, y_bin_indices):
+        H_events[x_bin_idx, y_bin_idx].append(event_idx)
 
-    N = 0   # Keep track of total number of events after implicit gating
-
-    for i, (xi, yi) in enumerate(zip(ix, iy)):
-        if (xi not in x_outliers and yi not in y_outliers):
-            Hi[xi, yi].append(i)
-            N = N+1
-
-    # Determine number of points to keep. Only consider points which have not
+    # Determine number of events to keep. Only consider events which have not
     # been thrown out as outliers.
-    n = int(np.ceil(gate_fraction*float(N)))
+    n = int(np.ceil(gate_fraction*float(len(event_indices))))
 
     # n = 0 edge case (e.g. if gate_fraction = 0.0); incorrectly handled below
     if n == 0:
@@ -420,8 +427,8 @@ def density2d(data, channels=[0,1],
     Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
     # Get indices of events to keep
-    vHi = Hi.ravel()
-    accepted_indices = vHi[sidx[:(Nidx+1)]]
+    vH_events = H_events.ravel()
+    accepted_indices = vH_events[sidx[:(Nidx+1)]]
     accepted_indices = np.array([item       # flatten list of lists
                                  for sublist in accepted_indices
                                  for item in sublist])
