@@ -104,11 +104,11 @@ def write_workbook(filename, table_list):
     pd.core.format.header_style = old_header_style
 
 def process_beads_table(beads_table,
-                      instruments_table,
-                      base_dir="",
-                      verbose=False,
-                      plot=False,
-                      plot_dir=""):
+                        instruments_table,
+                        base_dir="",
+                        verbose=False,
+                        plot=False,
+                        plot_dir=""):
     """
     Load and process FCS files corresponding to beads.
 
@@ -134,9 +134,9 @@ def process_beads_table(beads_table,
 
     Parameters
     ----------
-    beads_table : OrderedDict or dict
+    beads_table : DataFrame
         Table specifying beads samples to be processed.
-    instruments_table : OrderedDict or dict
+    instruments_table : DataFrame
         Table specifying instruments.
     base_dir : str, optional
         Directory from where all the other paths are specified from.
@@ -282,12 +282,12 @@ def process_beads_table(beads_table,
     return beads_samples, mef_transform_fxns
 
 def process_samples_table(samples_table,
-                        instruments_table,
-                        mef_transform_fxns=None,
-                        base_dir="",
-                        verbose=False,
-                        plot=False,
-                        plot_dir=""):
+                          instruments_table,
+                          mef_transform_fxns=None,
+                          base_dir="",
+                          verbose=False,
+                          plot=False,
+                          plot_dir=""):
     """
     Load and process FCS files corresponding to samples.
 
@@ -309,9 +309,9 @@ def process_samples_table(samples_table,
 
     Parameters
     ----------
-    samples_table : OrderedDict or dict
+    samples_table : DataFrame
         Table specifying samples to be processed.
-    instruments_table : OrderedDict or dict
+    instruments_table : DataFrame
         Table specifying instruments.
     mef_transform_fxns : dict or OrderedDict, optional
         Dictionary containing MEF transformation functions. If any entry
@@ -490,7 +490,7 @@ def add_stats(samples_table, samples):
 
     Parameters
     ----------
-    samples_table : dict or OrderedDict
+    samples_table : DataFrame
         Table specifying samples to analyze
     samples : list
         FCSData objects from which to calculate statistics. ``samples[i]``
