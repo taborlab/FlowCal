@@ -74,8 +74,7 @@ setup(
                       'matplotlib>=1.4.3',
                       'palettable>=2.1.1',
                       'scikit-learn>=0.16.1',
-                      'xlrd>=0.9.3',
-                      'openpyxl==2.0.2'],
+                      'pandas>=0.16.2'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
