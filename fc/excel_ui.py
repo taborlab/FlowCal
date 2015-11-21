@@ -81,8 +81,12 @@ def write_workbook(filename, table_list):
         string, and the contents of the table as a DataFrame.
 
     """
+    # Modify default header format
+    old_header_style = pd.core.format.header_style
+    pd.core.format.header_style = {"font": {"bold": True}}
+
     # Generate output writer object
-    writer = pd.ExcelWriter(filename)
+    writer = pd.ExcelWriter(filename, engine='xlsxwriter')
 
     # Write tables
     for sheet_name, df in table_list:
@@ -90,9 +94,14 @@ def write_workbook(filename, table_list):
         df = df.reset_index()
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
+        # Set column width
+        writer.sheets[sheet_name].set_column(0, len(df.columns) - 1, width=15)
 
     # Write excel file
     writer.save()
+
+    # Restore previous header format
+    pd.core.format.header_style = old_header_style
 
 def process_beads_table(beads_table,
                       instruments_table,
@@ -585,9 +594,8 @@ def generate_histograms_table(samples_table, samples):
     # Declare multi-indexed DataFrame
     index = pd.MultiIndex.from_arrays([[],[],[]],
                                       names = ['Sample ID', 'Channel', ''])
-    hist_table = pd.DataFrame([],
-                              index=index,
-                              columns=np.arange(n_columns))
+    columns = ['Bin {}'.format(i + 1) for i in range(n_columns)]
+    hist_table = pd.DataFrame([], index=index, columns=columns)
 
     # Generate histograms
     for sample_id, sample in zip(samples_table.index, samples):
@@ -596,12 +604,12 @@ def generate_histograms_table(samples_table, samples):
                 # Store bins
                 bins = sample[:,channel].channel_info[0]['bin_vals']
                 hist_table.loc[(sample_id, channel, 'Bins'),
-                               0:len(bins) - 1] = bins
+                               columns[0:len(bins)]] = bins
                 # Calculate and store histogram counts
                 bin_edges = sample[:,channel].channel_info[0]['bin_edges']
                 hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
                 hist_table.loc[(sample_id, channel, 'Counts'),
-                               0:len(bins) - 1] = hist
+                               columns[0:len(bins)]] = hist
 
     return hist_table
 
