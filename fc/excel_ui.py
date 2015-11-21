@@ -67,6 +67,33 @@ def read_table(filename, sheetname, index_col=None):
 
     return table
 
+def write_workbook(filename, table_list):
+    """
+    Write an Excel workbook from a list of tables.
+
+    Parameters
+    ----------
+    filename: str
+        Name of the Excel file to write.
+    table_list: list of ``(str, DataFrame)`` tuples
+        Tables to be saved as individual sheets in the Excel table. Each
+        tuple contains two values: the name of the sheet to be saved as a
+        string, and the contents of the table as a DataFrame.
+
+    """
+    # Generate output writer object
+    writer = pd.ExcelWriter(filename)
+
+    # Write tables
+    for sheet_name, df in table_list:
+        # Convert index names to regular columns
+        df = df.reset_index()
+        # Write to an Excel sheet
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    # Write excel file
+    writer.save()
+
 def process_beads_table(beads_table,
                       instruments_table,
                       base_dir="",
@@ -674,20 +701,17 @@ def run(verbose=True, plot=True):
     # # Generate histograms
     histograms_table = generate_histograms_table(samples_table, samples)
 
-    # Generate output writer object
-    output_filename = "{}_output.xlsx".format(input_filename_no_ext)
-    output_path = os.path.join(input_dir, output_filename)
-    output_writer = pd.ExcelWriter(output_path)
-
-    # Write tables
-    # Note that the following does not take care of formatting.
-    instruments_table.to_excel(output_writer, 'Instruments')
-    beads_table.to_excel(output_writer, 'Beads')
-    samples_table.to_excel(output_writer, 'Samples')
-    histograms_table.to_excel(output_writer, 'Histograms')
+    # Generate list of tables to save
+    table_list = []
+    table_list.append(('Instruments', instruments_table))
+    table_list.append(('Beads', beads_table))
+    table_list.append(('Samples', samples_table))
+    table_list.append(('Histograms', histograms_table))
 
     # Write output excel file
-    output_writer.save()
+    output_filename = "{}_output.xlsx".format(input_filename_no_ext)
+    output_path = os.path.join(input_dir, output_filename)
+    write_workbook(output_path, table_list)
 
 if __name__ == '__main__':
     run(verbose=True, plot=True)
