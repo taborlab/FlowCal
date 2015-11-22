@@ -27,16 +27,15 @@ def read_fcs_header_segment(buf, begin=0):
     Returns
     -------
     header : namedtuple
-        ``namedtuple`` containing version information and byte offset
-        values of other FCS segments (see FCS standards for more
-        information) in the following order:
-        version : str
-        text_begin : int
-        text_end : int
-        data_begin : int
-        data_end : int
-        analysis_begin : int
-        analysis_end : int
+        Version information and byte offset values of other FCS segments
+        (see FCS standards for more information) in the following order:
+            - version : str
+            - text_begin : int
+            - text_end : int
+            - data_begin : int
+            - data_end : int
+            - analysis_begin : int
+            - analysis_end : int
 
     Notes
     -----
@@ -463,15 +462,15 @@ class FCSFile(object):
     infile : str or file-like
         Reference to associated FCS file.
     header : namedtuple
-        ``namedtuple`` containing version information and byte offset
-        values of other FCS segments in the following order:
-        version : str
-        text_begin : int
-        text_end : int
-        data_begin : int
-        data_end : int
-        analysis_begin : int
-        analysis_end : int
+        Version information and byte offset values of other FCS segments
+        in the following order:
+            - version : str
+            - text_begin : int
+            - text_end : int
+            - data_begin : int
+            - data_end : int
+            - analysis_begin : int
+            - analysis_end : int
     text : dict
         Dictionary of keyword-value entries from TEXT segment and
         optional supplemental TEXT segment.
@@ -481,8 +480,8 @@ class FCSFile(object):
     analysis : dict
         Dictionary of keyword-value entries from ANALYSIS segment.
 
-    Raises (see FCS standards for more information)
-    -----------------------------------------------
+    Raises
+    ------
     NotImplementedError
         If $MODE is not 'L'.
     NotImplementedError
@@ -535,6 +534,9 @@ class FCSFile(object):
         - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little
           endian).
         - One data set per file.
+
+    For more information on the TEXT segment keywords (e.g. $MODE,
+    $DATATYPE, etc.), consult the FCS standards.
 
     References
     ----------
@@ -694,13 +696,13 @@ class FCSFile(object):
         """
         ``namedtuple`` containing version information and byte offset
         values of other FCS segments in the following order:
-        version : str
-        text_begin : int
-        text_end : int
-        data_begin : int
-        data_end : int
-        analysis_begin : int
-        analysis_end : int
+            - version : str
+            - text_begin : int
+            - text_end : int
+            - data_begin : int
+            - data_end : int
+            - analysis_begin : int
+            - analysis_end : int
 
         """
         return self._header
