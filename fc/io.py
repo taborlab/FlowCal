@@ -88,7 +88,8 @@ def read_fcs_header_segment(buf, begin=0):
     fv = buf.read(8)                                    # analysis_end
     field_values.append(0 if fv == ' '*8 else int(fv))
 
-    return FCSHeader._make(field_values)
+    header = FCSHeader._make(field_values)
+    return header
 
 def read_fcs_text_segment(buf, begin, end, delim=None):
     """
