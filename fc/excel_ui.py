@@ -114,18 +114,19 @@ def process_beads_table(beads_table,
 
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
-    - Load the FCS file specified in the field "File Path".
-    - Transform the forward scatter/side scatter channels if needed.
-    - Remove the 250 first and 100 last events.
-    - Remove saturated events in the forward scatter and side scatter
-      channels.
-    - Apply density gating on the forward scatter/side scatter channels.
-    - Generate a standard curve transformation function, for each
-      fluorescence channel in which the associated MEF values are
-      specified.
-    - Generate forward/side scatter density plots and fluorescence
-      histograms, and plots of the clustering and fitting steps of
-      standard curve generation, if `plot` = True.
+        - Load the FCS file specified in the field "File Path".
+        - Transform the forward scatter/side scatter channels if needed.
+        - Remove the 250 first and 100 last events.
+        - Remove saturated events in the forward scatter and side scatter
+          channels.
+        - Apply density gating on the forward scatter/side scatter
+          channels.
+        - Generate a standard curve transformation function, for each
+          fluorescence channel in which the associated MEF values are
+          specified.
+        - Generate forward/side scatter density plots and fluorescence
+          histograms, and plots of the clustering and fitting steps of
+          standard curve generation, if `plot` = True.
     
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
@@ -291,16 +292,17 @@ def process_samples_table(samples_table,
 
     The function processes each entry in `samples_table`, and does the
     following:
-    - Load the FCS file specified in the field "File Path".
-    - Transform the forward scatter/side scatter channels if needed.
-    - Remove the 250 first and 100 last events.
-    - Remove saturated events in the forward scatter and side scatter
-      channels.
-    - Apply density gating on the forward scatter/side scatter channels.
-    - Transform the fluorescence channels to the units specified in the
-      column "<Channel name> Units".
-    - Plot combined forward/side scatter density plots and fluorescence
-      historgrams, if `plot` = True.
+        - Load the FCS file specified in the field "File Path".
+        - Transform the forward scatter/side scatter channels if needed.
+        - Remove the 250 first and 100 last events.
+        - Remove saturated events in the forward scatter and side scatter
+          channels.
+        - Apply density gating on the forward scatter/side scatter
+          channels.
+        - Transform the fluorescence channels to the units specified in the
+          column "<Channel name> Units".
+        - Plot combined forward/side scatter density plots and fluorescence
+          historgrams, if `plot` = True.
     
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
@@ -471,20 +473,20 @@ def add_stats(samples_table, samples):
     Add stats fields to samples table.
 
     The following numbers are added to each row:
-    - Number of Events
-    - Acquisition Time (s)
+        - Number of Events
+        - Acquisition Time (s)
     
     The following stats are added for each row, for each channel in which
     fluorescence units have been specified:
-    - Gain
-    - Mean
-    - Geometric Mean
-    - Media
-    - Mode
-    - Standard Deviation
-    - Coefficient of Variation (CV)
-    - Inter-Quartile Range
-    - Robust Coefficient of Variation (RCV)
+        - Gain
+        - Mean
+        - Geometric Mean
+        - Media
+        - Mode
+        - Standard Deviation
+        - Coefficient of Variation (CV)
+        - Inter-Quartile Range
+        - Robust Coefficient of Variation (RCV)
 
     Parameters
     ----------
