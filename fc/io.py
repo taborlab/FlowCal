@@ -448,20 +448,9 @@ class FCSFile(object):
     """
     Class representing an FCS flow cytometry data file.
 
-    The Flow Cytometry Standard (FCS) describes the de facto standard
-    file format used by flow cytometry acquisition and analysis software
-    to record flow cytometry data to and load flow cytometry data from a
-    file. The standard dictates that each file must have the following
-    segments: HEADER, TEXT, and DATA. The HEADER segment contains
-    version information and byte offset values of other segments, the
-    TEXT segment contains delimited key-value pairs containing
-    acquisition information, and the DATA segment contains the recorded
-    flow cytometry data. The file may optionally have an ANALYSIS
-    segment (structurally identicaly to the TEXT segment), a
-    supplemental TEXT segment (according to more recent versions of the
-    standard), and user-defined OTHER segments. This class parses a
-    binary FCS file and exposes a read-only view of the HEADER, TEXT,
-    DATA, and ANALYSIS segments via Python-friendly data structures.
+    This class parses a binary FCS file and exposes a read-only view
+    of the HEADER, TEXT, DATA, and ANALYSIS segments via Python-friendly
+    data structures.
 
     Parameters
     ----------
@@ -520,6 +509,19 @@ class FCSFile(object):
     
     Notes
     -----
+    The Flow Cytometry Standard (FCS) describes the de facto standard
+    file format used by flow cytometry acquisition and analysis software
+    to record flow cytometry data to and load flow cytometry data from a
+    file. The standard dictates that each file must have the following
+    segments: HEADER, TEXT, and DATA. The HEADER segment contains
+    version information and byte offset values of other segments, the
+    TEXT segment contains delimited key-value pairs containing
+    acquisition information, and the DATA segment contains the recorded
+    flow cytometry data. The file may optionally have an ANALYSIS
+    segment (structurally identicaly to the TEXT segment), a
+    supplemental TEXT segment (according to more recent versions of the
+    standard), and user-defined OTHER segments.
+
     This class supports a subset of the FCS3.1 standard which should be
     backwards compatible with FCS3.0 and FCS2.0. The FCS file must be
     of the following form:
@@ -963,7 +965,7 @@ class FCSData(np.ndarray):
             raise IOError("Time information not available.")
 
     ###
-    # Functions inherited from np.ndarray
+    # Functions overriding inhereted np.ndarray functions
     ###
     # For more details, see
     # http://docs.scipy.org/doc/numpy/user/basics.subclassing.html.
