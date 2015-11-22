@@ -15,7 +15,7 @@ import numpy as np
 
 def read_fcs_header_segment(buf, begin=0):
     """
-    Parse HEADER segment of FCS file.
+    Read HEADER segment of FCS file.
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def read_fcs_header_segment(buf, begin=0):
 
 def read_fcs_text_segment(buf, begin, end, delim=None):
     """
-    Parse TEXT segment of FCS file.
+    Read TEXT segment of FCS file.
 
     Parameters
     ----------
@@ -201,7 +201,7 @@ def read_fcs_data_segment(buf,
                           big_endian,
                           param_ranges=None):
     """
-    Parse DATA segment of FCS file.
+    Read DATA segment of FCS file.
 
     Parameters
     ----------
