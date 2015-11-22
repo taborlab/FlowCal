@@ -474,7 +474,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     -----
     The following model is used to describe bead fluorescence:
 
-        m*fl_ch[i] + b = log(fl_mef_auto + fl_mef[i])
+        m*fl_ch[i] + b = ln(fl_mef_auto + fl_mef[i])
 
     where fl_ch[i] is the fluorescence of bead subpopulation i in channel
     units and fl_mef[i] is the corresponding fluorescence in MEF units. The
