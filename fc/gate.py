@@ -338,8 +338,60 @@ def density2d(data, channels=[0,1],
                             data_ch.channel_info[1]['bin_edges'],
                             ])
 
-    # Determine number of events to keep
-    n = int(np.ceil(gate_fraction*float(data_ch.shape[0])))
+    # Make 2D histogram
+    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+
+    # Map each event to its histogram bin by sorting events into a 2D array of
+    # lists which mimics the histogram.
+    #
+    # Use np.digitize to calculate the histogram bin index for each event
+    # given the histogram bin edges. Note that the index returned by
+    # np.digitize is such that bins[i-1] <= x < bins[i], whereas indexing the
+    # histogram will result in the following: hist[i,j] = bin corresponding to
+    # xedges[i] <= x < xedges[i+1] and yedges[i] <= y < yedges[i+1].
+    # Therefore, we need to subtract 1 from the np.digitize result to be able
+    # to index into the appropriate bin in the histogram.
+    event_indices = np.arange(data_ch.shape[0])
+    x_bin_indices = np.digitize(data_ch[:,0], bins=xe) - 1
+    y_bin_indices = np.digitize(data_ch[:,1], bins=ye) - 1
+
+    # In the current version of numpy, there exists a disparity in how
+    # np.histogram and np.digitize treat the rightmost bin edge (np.digitize
+    # is not the strict inverse of np.histogram). Specifically, np.histogram
+    # treats the rightmost bin interval as fully closed (rightmost bin edge is
+    # included in rightmost bin), whereas np.digitize treats all bins as
+    # half-open (you can specify which side is closed and which side is open;
+    # `right` parameter). The expected behavior for this gating function is to
+    # mimic np.histogram behavior, so we must reconcile this disparity.
+    x_bin_indices[data_ch[:,0] == xe[-1]] = len(xe)-2
+    y_bin_indices[data_ch[:,1] == ye[-1]] = len(ye)-2
+
+    # Ignore (gate out) events which exist outside specified bins.
+    # `np.digitize()-1` will assign events less than `bins` to bin "-1" and
+    # events greater than `bins` to len(bins)-1.
+    outlier_mask = (
+        (x_bin_indices == -1) |
+        (x_bin_indices == len(xe)-1) |
+        (y_bin_indices == -1) |
+        (y_bin_indices == len(ye)-1))
+
+    event_indices = event_indices[~outlier_mask]
+    x_bin_indices = x_bin_indices[~outlier_mask]
+    y_bin_indices = y_bin_indices[~outlier_mask]
+
+    # Create a 2D array of lists mimicking the histogram to accumulate events
+    # associated with each bin.
+    filler = np.frompyfunc(lambda x: list(), 1, 1)
+    H_events = np.empty_like(H, dtype=np.object)
+    filler(H_events, H_events)
+
+    for event_idx, x_bin_idx, y_bin_idx in \
+            zip(event_indices, x_bin_indices, y_bin_indices):
+        H_events[x_bin_idx, y_bin_idx].append(event_idx)
+
+    # Determine number of events to keep. Only consider events which have not
+    # been thrown out as outliers.
+    n = int(np.ceil(gate_fraction*float(len(event_indices))))
 
     # n = 0 edge case (e.g. if gate_fraction = 0.0); incorrectly handled below
     if n == 0:
@@ -350,19 +402,6 @@ def density2d(data, channels=[0,1],
                 gated_data=gated_data, mask=mask, contour=[])
         else:
             return gated_data
-
-    # Make 2D histogram and get bins
-    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
-
-    # Get lists of indices per bin
-    ix = np.digitize(data_ch[:,0], bins=xe) - 1
-    iy = np.digitize(data_ch[:,1], bins=ye) - 1
-
-    filler = np.frompyfunc(lambda x: list(), 1, 1)
-    Hi = np.empty_like(H, dtype=np.object)
-    filler(Hi, Hi)
-    for i, (xi, yi) in enumerate(zip(ix, iy)):
-        Hi[xi, yi].append(i)
 
     # Smooth 2D histogram
     sH = scipy.ndimage.filters.gaussian_filter(
@@ -388,8 +427,8 @@ def density2d(data, channels=[0,1],
     Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
     # Get indices of events to keep
-    vHi = Hi.ravel()
-    accepted_indices = vHi[sidx[:(Nidx+1)]]
+    vH_events = H_events.ravel()
+    accepted_indices = vH_events[sidx[:(Nidx+1)]]
     accepted_indices = np.array([item       # flatten list of lists
                                  for sublist in accepted_indices
                                  for item in sublist])
