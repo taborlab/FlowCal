@@ -179,5 +179,39 @@ class TestReadTable(unittest.TestCase):
                           sheetname,
                           index_col)
 
+    def test_read_table_list_argument_error(self):
+        """
+        Test for error when `sheetname` is a list.
+
+        """
+        # Sheet to read
+        sheetname = ["Instruments", "Instruments (duplicated)"]
+        # Column to use as index labels
+        index_col = "ID"
+
+        # Call function
+        self.assertRaises(TypeError,
+                          fc.excel_ui.read_table,
+                          self.filename,
+                          sheetname,
+                          index_col)
+
+    def test_read_table_none_argument_error(self):
+        """
+        Test for error when `sheetname` is None.
+
+        """
+        # Sheet to read
+        sheetname = None
+        # Column to use as index labels
+        index_col = "ID"
+
+        # Call function
+        self.assertRaises(TypeError,
+                          fc.excel_ui.read_table,
+                          self.filename,
+                          sheetname,
+                          index_col)
+
 if __name__ == '__main__':
     unittest.main()

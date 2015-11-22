@@ -31,8 +31,8 @@ def read_table(filename, sheetname, index_col=None):
     ----------
     filename : str
         Name of the Excel file to read.
-    sheetname : str
-        Name of the sheet inside the Excel file to read.
+    sheetname : str or int
+        Name or index of the sheet inside the Excel file to read.
     index_col : str, optional
         Column name or index to be used as row labels of the DataFrame. If
         None, default index will be used.
@@ -51,6 +51,10 @@ def read_table(filename, sheetname, index_col=None):
         `index_col` field.
 
     """
+    # Catch sheetname as list or None
+    if sheetname is None or hasattr(sheetname, '__iter__'):
+        raise TypeError("sheetname should specify a single sheet")
+
     # Load excel table using pandas
     table = pd.read_excel(filename,
                           sheetname=sheetname,
