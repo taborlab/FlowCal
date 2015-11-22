@@ -965,7 +965,7 @@ class FCSData(np.ndarray):
             raise IOError("Time information not available.")
 
     ###
-    # Functions overriding inhereted np.ndarray functions
+    # Functions overriding inherited np.ndarray functions
     ###
     # For more details, see
     # http://docs.scipy.org/doc/numpy/user/basics.subclassing.html.
