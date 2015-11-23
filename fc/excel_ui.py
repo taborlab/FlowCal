@@ -142,7 +142,7 @@ def process_beads_table(beads_table,
     instruments_table : DataFrame
         Table specifying instruments.
     base_dir : str, optional
-        Directory from where all the other paths are specified from.
+        Directory from where all the other paths are specified.
     verbose: bool, optional
         Whether to print information messages during the execution of this
         function.
@@ -323,7 +323,7 @@ def process_samples_table(samples_table,
         pair must exist in mef_transform_fxns, with the key being equal to the
         contents of field "Beads ID".
     base_dir : str, optional
-        Directory from where all the other paths are specified from.
+        Directory from where all the other paths are specified.
     verbose: bool, optional
         Whether to print information messages during the execution of this
         function.
