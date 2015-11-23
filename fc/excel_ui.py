@@ -274,7 +274,7 @@ def process_beads_table(beads_table,
                 # Extract text. If empty, ignore.
                 mef_str = beads_row['{} MEF Values'.format(fl_channel)]
                 if pd.isnull(mef_str):
-                    pass
+                    continue
                 # Save channel name
                 mef_channels.append(fl_channel)
                 # Parse list of values
