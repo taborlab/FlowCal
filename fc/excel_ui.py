@@ -219,7 +219,8 @@ def process_beads_table(beads_table,
         ###
         # Gate
         ###
-        # Remove first and last events
+        # Remove first and last events. Transients in fluidics can make the
+        # first few and last events slightly different from the rest.
         beads_sample_gated = fc.gate.start_end(beads_sample,
                                                num_start=250,
                                                num_end=100)
@@ -441,7 +442,8 @@ def process_samples_table(samples_table,
         ###
         if verbose:
             print("Performing gating...")
-        # Remove first and last events
+        # Remove first and last events. Transients in fluidics can make the
+        # first few and last events slightly different from the rest.
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
         # Remove saturating events in forward/side scatter. The value of a
         # saturating event is taken automatically from
