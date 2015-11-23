@@ -150,9 +150,8 @@ def process_beads_table(beads_table,
         Whether to generate and save density/histogram plots of each
         sample, and each beads sample.
     plot_dir : str, optional
-        The directory where to save the generated plots of beads samples,
-        relative to `base_dir`. If `plot` is False, this parameter is
-        ignored.
+        Directory relative to `base_dir` into which plots are saved. If
+        `plot` is False, this parameter is ignored.
 
     Returns
     -------
@@ -331,9 +330,8 @@ def process_samples_table(samples_table,
         Whether to generate and save density/histogram plots of each
         sample, and each beads sample.
     plot_dir : str, optional
-        The directory where to save the generated plots of beads samples,
-        relative to `base_dir`. If `plot` is False, this parameter is
-        ignored.
+        Directory relative to `base_dir` into which plots are saved. If
+        `plot` is False, this parameter is ignored.
 
     Returns
     -------
