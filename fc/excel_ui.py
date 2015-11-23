@@ -1,6 +1,13 @@
 """
 `FlowCal`'s Microsoft Excel User Interface.
 
+This module contains functions to read, gate, and transform data from a set
+of FCS files, according to an input Microsoft Excel file. This file should
+contain the following tables:
+    - "Instruments" table (TODO: describe fields of the table)
+    - "Beads" table (TODO: describe fields of the table)
+    - "Samples" table (TODO: describe fields of the table)
+
 """
 
 import collections
@@ -116,8 +123,6 @@ def process_beads_table(beads_table,
     """
     Load and process FCS files corresponding to beads.
 
-    TODO: Describe format of table.
-
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
         - Load the FCS file specified in the field "File Path".
@@ -140,9 +145,12 @@ def process_beads_table(beads_table,
     Parameters
     ----------
     beads_table : DataFrame
-        Table specifying beads samples to be processed.
+        Table specifying beads samples to be processed. For more
+        information about the fields required in this table, please consult
+        the module's documentation.
     instruments_table : DataFrame
-        Table specifying instruments.
+        Table specifying instruments. For more information about the fields
+        required in this table, please consult the module's documentation.
     base_dir : str, optional
         Directory from where all the other paths are specified.
     verbose: bool, optional
@@ -209,14 +217,14 @@ def process_beads_table(beads_table,
         cluster_channels = [cc.strip() for cc in cluster_channels]
 
         ###
-        # Gating
+        # Gate
         ###
         # Remove first and last events
         beads_sample_gated = fc.gate.start_end(beads_sample,
                                                num_start=250,
                                                num_end=100)
-        # Remove saturating events in forward/side scatter
-        # The value of a saturating event is taken automatically from
+        # Remove saturating events in forward/side scatter. The value of a
+        # saturating event is taken automatically from
         # `beads_sample_gated.channel_info`.
         beads_sample_gated = fc.gate.high_low(beads_sample_gated,
                                               channels=sc_channels)
@@ -324,9 +332,12 @@ def process_samples_table(samples_table,
     Parameters
     ----------
     samples_table : DataFrame
-        Table specifying samples to be processed.
+        Table specifying samples to be processed. For more information
+        about the fields required in this table, please consult the
+        module's documentation.
     instruments_table : DataFrame
-        Table specifying instruments.
+        Table specifying instruments. For more information about the fields
+        required in this table, please consult the module's documentation.
     mef_transform_fxns : dict or OrderedDict, optional
         Dictionary containing MEF transformation functions. If any entry
         in `samples_table` requires transformation to MEF, a key: value
@@ -432,8 +443,8 @@ def process_samples_table(samples_table,
             print("Performing gating...")
         # Remove first and last events
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
-        # Remove saturating events in forward/side scatter
-        # The value of a saturating event is taken automatically from
+        # Remove saturating events in forward/side scatter. The value of a
+        # saturating event is taken automatically from
         # `sample_gated.channel_info`.
         sample_gated = fc.gate.high_low(sample_gated, sc_channels)
         # Remove saturating events in channels to report
@@ -504,7 +515,9 @@ def add_stats(samples_table, samples):
     Parameters
     ----------
     samples_table : DataFrame
-        Table specifying samples to analyze
+        Table specifying samples to analyze. For more information about the
+        fields required in this table, please consult the module's
+        documentation.
     samples : list
         FCSData objects from which to calculate statistics. ``samples[i]``
         should correspond to ``samples_table.values()[i]``
@@ -513,7 +526,7 @@ def add_stats(samples_table, samples):
     # Add per-row stats
     samples_table['Number of Events'] = [sample.shape[0] for sample in samples]
     samples_table['Acquisition Time (s)'] = [sample.acquisition_time
-                                                for sample in samples]
+                                             for sample in samples]
 
     # List of channels that require stats columns
     headers = list(samples_table.columns)
@@ -539,7 +552,7 @@ def add_stats(samples_table, samples):
                 samples_table.set_value(row_id,
                                         channel + ' Gain',
                                         sample[:, channel].
-                                        channel_info[0]['pmt_voltage'])
+                                            channel_info[0]['pmt_voltage'])
                 samples_table.set_value(row_id,
                                         channel + ' Mean',
                                         fc.stats.mean(sample, channel))
@@ -572,7 +585,9 @@ def generate_histograms_table(samples_table, samples):
     Parameters
     ----------
     samples_table : DataFrame
-        Table specifying samples to analyze
+        Table specifying samples to analyze. For more information about the
+        fields required in this table, please consult the module's
+        documentation.
     samples : list
         FCSData objects from which to calculate histograms. ``samples[i]``
         should correspond to ``samples_table.iloc[i]``
