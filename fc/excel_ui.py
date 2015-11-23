@@ -249,18 +249,27 @@ def process_beads_table(beads_table,
         # Save sample
         beads_samples.append(beads_sample_gated)
 
+        ###
         # Process MEF values
-        # For each channel specified in mef_channels, check whether a list of
-        # MEF values is provided in the spreadsheet, and save them.
-        # If there is no such list in the spreadsheet, throw error.
+        ###
+        # For each fluorescence channel, check whether a list of known MEF
+        # values of the bead subpopulations is provided in `beads_row`. This
+        # involves checking that a column named "[channel] MEF Values" exists
+        # and is not empty. If so, store the name of the channel in
+        # `mef_channels`, and the specified MEF values in `mef_values`.
+        ###
         mef_values = []
         mef_channels = []
         for fl_channel in fl_channels:
             if '{} MEF Values'.format(fl_channel) in beads_row:
+                # Extract text. If empty, ignore.
+                mef_str = beads_row['{} MEF Values'.format(fl_channel)]
+                if pd.isnull(mef_str):
+                    pass
                 # Save channel name
                 mef_channels.append(fl_channel)
                 # Parse list of values
-                mef = beads_row[fl_channel + ' MEF Values'].split(',')
+                mef = mef_str.split(',')
                 mef = [int(e) if e.strip().isdigit() else np.nan
                        for e in mef]
                 mef_values.append(mef)
