@@ -212,20 +212,20 @@ def process_beads_table(beads_table,
         # Gating
         ###
         # Remove first and last events
-        beads_sample = fc.gate.start_end(beads_sample,
-                                         num_start=250,
-                                         num_end=100)
+        beads_sample_gated = fc.gate.start_end(beads_sample,
+                                               num_start=250,
+                                               num_end=100)
         # Remove saturating events in forward/side scatter
         # The value of a saturating event is taken automatically from
-        # `beads_sample.channel_info`.
-        beads_sample = fc.gate.high_low(beads_sample,
-                                        channels=sc_channels)
+        # `beads_sample_gated.channel_info`.
+        beads_sample_gated = fc.gate.high_low(beads_sample_gated,
+                                              channels=sc_channels)
         # Density gating
         if verbose:
             print("Running density gate (fraction = {:.2f})...".format(
                 beads_row['Gate Fraction']))
         beads_sample_gated, __, gate_contour = fc.gate.density2d(
-            data=beads_sample,
+            data=beads_sample_gated,
             channels=sc_channels,
             gate_fraction=beads_row['Gate Fraction'],
             full_output=True)
