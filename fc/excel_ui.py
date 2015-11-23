@@ -648,9 +648,13 @@ def generate_histograms_table(samples_table, samples):
     for sample_id, sample in zip(samples_table.index, samples):
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
+                # Get units in which bins are being reported
+                unit = samples_table[header][sample_id]
                 # Store bins
                 bins = sample[:,channel].channel_info[0]['bin_vals']
-                hist_table.loc[(sample_id, channel, 'Bins'),
+                hist_table.loc[(sample_id,
+                                channel,
+                                'Bin Values ({})'.format(unit)),
                                columns[0:len(bins)]] = bins
                 # Calculate and store histogram counts
                 bin_edges = sample[:,channel].channel_info[0]['bin_edges']
