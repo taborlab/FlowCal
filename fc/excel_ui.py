@@ -159,10 +159,10 @@ def process_beads_table(beads_table,
     -------
     beads_samples : list of FCSData objects
         A list of processed, gated, and transformed samples, as specified
-        in `beads_table`, in the order of ``beads_table.keys()``.
+        in `beads_table`, in the order of ``beads_table.index``.
     mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
-        ``beads_table.keys()``.
+        ``beads_table.index``.
 
     """
     # Do nothing if beads table is empty
@@ -321,8 +321,8 @@ def process_samples_table(samples_table,
     mef_transform_fxns : dict or OrderedDict, optional
         Dictionary containing MEF transformation functions. If any entry
         in `samples_table` requires transformation to MEF, a key: value
-        pair must exist in mef_transform_fxns, with the key being equal to the
-        contents of field "Beads ID".
+        pair must exist in mef_transform_fxns, with the key being equal to
+        the contents of field "Beads ID".
     base_dir : str, optional
         Directory from where all the other paths are specified.
     verbose: bool, optional
@@ -339,7 +339,7 @@ def process_samples_table(samples_table,
     -------
     samples : list of FCSData objects
         A list of processed, gated, and transformed samples, as specified
-        in `samples_table`, in the order of ``samples_table.keys()``.
+        in `samples_table`, in the order of ``samples_table.index``.
 
     """
     # Do nothing if samples table is empty
