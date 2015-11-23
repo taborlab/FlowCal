@@ -462,12 +462,11 @@ def process_samples_table(samples_table,
         # Remove first and last events. Transients in fluidics can make the
         # first few and last events slightly different from the rest.
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
-        # Remove saturating events in forward/side scatter. The value of a
-        # saturating event is taken automatically from
-        # `sample_gated.channel_info`.
-        sample_gated = fc.gate.high_low(sample_gated, sc_channels)
-        # Remove saturating events in channels to report
-        sample_gated = fc.gate.high_low(sample_gated, report_channels)
+        # Remove saturating events in forward/side scatter, and fluorescent
+        # channels to report. The value of a saturating event is taken
+        # automatically from `sample_gated.channel_info`.
+        sample_gated = fc.gate.high_low(sample_gated,
+                                        sc_channels + report_channels)
         # Density gating
         sample_gated, __, gate_contour = fc.gate.density2d(
             data=sample_gated,
