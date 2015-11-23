@@ -1,5 +1,5 @@
 """
-`FlowCal`'s' Microsoft Excel User Interface.
+`FlowCal`'s Microsoft Excel User Interface.
 
 """
 
