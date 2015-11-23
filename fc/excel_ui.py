@@ -84,6 +84,8 @@ def write_workbook(filename, table_list):
 
     """
     # Modify default header format
+    # Pandas' default header format is bold text with thin borders. Here we
+    # use bold text only, without borders.
     old_header_style = pd.core.format.header_style
     pd.core.format.header_style = {"font": {"bold": True}}
 
