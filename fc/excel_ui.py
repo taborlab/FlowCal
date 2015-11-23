@@ -517,9 +517,9 @@ def add_stats(samples_table, samples):
 
     # List of channels that require stats columns
     headers = list(samples_table.columns)
-    r = re.compile(r'^(\S)*(\s)*Units$')
-    stats_headers = [h for h in headers if r.match(h)]
-    stats_channels = [s[:-5].strip() for s in stats_headers]
+    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
+    stats_headers = [h.strip() for h in headers if r.match(h)]
+    stats_channels = [r.search(s).group(1) for s in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
