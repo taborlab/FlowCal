@@ -188,6 +188,12 @@ def process_beads_table(beads_table,
     beads_samples = []
     mef_transform_fxns = collections.OrderedDict()
 
+    # Extract header and channel names for which MEF values are specified.
+    r = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
+    headers = list(beads_table.columns)
+    mef_headers_all = [h for h in headers if r.match(h)]
+    mef_channels_all = [r.search(h).group(1) for h in mef_headers_all]
+
     # Iterate through table
     for beads_id, beads_row in beads_table.iterrows():
 
@@ -270,9 +276,11 @@ def process_beads_table(beads_table,
         mef_values = []
         mef_channels = []
         for fl_channel in fl_channels:
-            if '{} MEF Values'.format(fl_channel) in beads_row:
+            if fl_channel in mef_channels_all:
+                # Get header from channel name
+                mef_header = mef_headers_all[mef_channels_all.index(fl_channel)]
                 # Extract text. If empty, ignore.
-                mef_str = beads_row['{} MEF Values'.format(fl_channel)]
+                mef_str = beads_row[mef_header]
                 if pd.isnull(mef_str):
                     continue
                 # Save channel name
@@ -374,7 +382,13 @@ def process_samples_table(samples_table,
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
 
-    # Load sample files
+    # Extract header and channel names for which units are specified.
+    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
+    headers = list(samples_table.columns)
+    report_headers_all = [h for h in headers if r.match(h)]
+    report_channels_all = [r.search(h).group(1) for h in report_headers_all]
+
+    # Iterate through table
     samples = []
     for sample_id, sample_row in samples_table.iterrows():
 
@@ -412,30 +426,33 @@ def process_samples_table(samples_table,
         report_channels = []
         report_units = []
         for fl_channel in fl_channels:
-            # Check whether there is a column with units for fl_channel
-            if ("{} Units".format(fl_channel) not in sample_row
-                    or sample_row['{} Units'.format(fl_channel)] == ''
-                    or pd.isnull(sample_row['{} Units'.format(fl_channel)])):
-                continue
+            if fl_channel in report_channels_all:
+                # Get header from channel name
+                report_header = report_headers_all[report_channels_all.index(
+                    fl_channel)]
+                # Extract text. If empty, ignore.
+                units_str = sample_row[report_header]
+                if pd.isnull(units_str):
+                    continue
+                # Decide what transformation to perform
+                units = units_str.strip()
+                if units == 'Channel':
+                    units_label = "Channel Number"
+                elif units == 'RFI':
+                    units_label = "Relative Fluorescence Intensity, RFI"
+                    sample = fc.transform.exponentiate(sample, fl_channel)
+                elif units == 'MEF':
+                    units_label = "Molecules of Equivalent Fluorophore, MEF"
+                    sample = mef_transform_fxns[sample_row['Beads ID']](
+                        sample,
+                        fl_channel)
+                else:
+                    raise ValueError("units {} not recognized for sample {}".
+                        format(units, sample_id))
 
-            # Decide what transformation to perform
-            units = sample_row['{} Units'.format(fl_channel)].strip()
-            if units == 'Channel':
-                units_label = "Channel Number"
-            elif units == 'RFI':
-                units_label = "Relative Fluorescence Intensity, RFI"
-                sample = fc.transform.exponentiate(sample, fl_channel)
-            elif units == 'MEF':
-                units_label = "Molecules of Equivalent Fluorophore, MEF"
-                sample = mef_transform_fxns[sample_row['Beads ID']](sample,
-                                                                    fl_channel)
-            else:
-                raise ValueError("units {} not recognized for sample {}".
-                    format(units, sample_id))
-
-            # Register that reporting in this channel must be done
-            report_channels.append(fl_channel)
-            report_units.append(units_label)
+                # Register that reporting in this channel must be done
+                report_channels.append(fl_channel)
+                report_units.append(units_label)
 
         ###
         # Gate
@@ -531,10 +548,10 @@ def add_stats(samples_table, samples):
                                              for sample in samples]
 
     # List of channels that require stats columns
-    headers = list(samples_table.columns)
     r = re.compile(r'^\s*(\S*)\s*Units\s*$')
-    stats_headers = [h.strip() for h in headers if r.match(h)]
-    stats_channels = [r.search(s).group(1) for s in stats_headers]
+    headers = list(samples_table.columns)
+    stats_headers = [h for h in headers if r.match(h)]
+    stats_channels = [r.search(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -604,10 +621,10 @@ def generate_histograms_table(samples_table, samples):
 
     """
     # Extract channels that require stats histograms
-    headers = samples_table.columns.tolist()
-    r = re.compile(r'^(\S)*(\s)*Units$')
+    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
+    headers = list(samples_table.columns)
     hist_headers = [h for h in headers if r.match(h)]
-    hist_channels = [s[:-5].strip() for s in hist_headers]
+    hist_channels = [r.search(h).group(1) for h in hist_headers]
 
     # The number of columns in the DataFrame has to be set to the maximum
     # number of bins of any of the histograms about to be generated.
