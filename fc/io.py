@@ -856,44 +856,6 @@ class FCSData(np.ndarray):
         """
         return self._channels
 
-    # def name_to_index(self, channels):
-    #     """
-    #     Return the channel indices for the specified channel names.
-
-    #     Parameters
-    #     ----------
-    #     channels : str or list of str
-    #         Name(s) of the channel(s) of interest.
-
-    #     Returns
-    #     -------
-    #     int or list of int
-    #         Numerical index(ces) of the specified channels.
-
-    #     """
-    #     if isinstance(channels, basestring):
-    #         # channels is a string containing a channel name
-    #         if channels in self.channels:
-    #             return self.channels.index(channels)
-    #         else:
-    #             raise ValueError("{} is not a valid channel name."
-    #                 .format(channels))
-
-    #     elif isinstance(channels, list):
-    #         # channels is a list of strings
-    #         lst = []
-    #         for ci in channels:
-    #             if ci in self.channels:
-    #                 lst.append(self.channels.index(ci))
-    #             else:
-    #                 raise ValueError("{} is not a valid channel name."
-    #                     .format(ci))
-    #         return lst
-
-    #     else:
-    #         raise ValueError("Input argument should be a string or list \
-    #             of strings.")
-
     # @property
     # def time_step(self):
     #     """
@@ -987,6 +949,7 @@ class FCSData(np.ndarray):
         # Channel names
         channels = [fcs_file.text.get('$P{}N'.format(i))
                     for i in range(1, num_channels + 1)]
+
         # # Populate channel_info
         # channel_info = []
         # for i in range(1, num_channels + 1):
@@ -1060,6 +1023,47 @@ class FCSData(np.ndarray):
 
     # Functions overridden to allow string-based indexing.
 
+    def _name_to_index(self, channels):
+        """
+        Return the channel indices for the specified channel names.
+
+        Integers contained in `channel` are returned unmodified, if they
+        are within the range of ``self.channels``.
+
+        Parameters
+        ----------
+        channels : int or str or list of int or list of str
+            Name(s) of the channel(s) of interest.
+
+        Returns
+        -------
+        int or list of int
+            Numerical index(ces) of the specified channels.
+
+        """
+        # Check if list, then run recursively
+        if hasattr(channels, '__iter__'):
+            return [self._name_to_index(ch) for ch in channels]
+
+        if isinstance(channels, basestring):
+            # channels is a string containing a channel name
+            if channels in self.channels:
+                return self.channels.index(channels)
+            else:
+                raise ValueError("{} is not a valid channel name."
+                    .format(channels))
+
+        if isinstance(channels, int):
+            if (channels < len(self.channels)
+                    and channels >= -len(self.channels)):
+                return channels
+            else:
+                raise ValueError("index out of range")
+
+        else:
+            raise TypeError("Input argument should be an integer, string or \
+                list of integers or strings.")
+
     def __array_wrap__(self, out_arr, context = None):
         """
         Method called after numpy ufuncs.
@@ -1093,22 +1097,12 @@ class FCSData(np.ndarray):
             key_sample = key[0]
             key_channel = key[1]
 
-            # Check if key_channel is a string, list/tuple, or other
-            if isinstance(key_channel, basestring):
-                key_channel = self.name_to_index(key_channel)
-                key_all = (key_sample, key_channel)
+            # Convert key_channel to integers if necessary
+            if not isinstance(key_channel, slice):
+                key_channel = self._name_to_index(key_channel)
 
-            elif hasattr(key_channel, '__iter__'):
-                # Make mutable
-                key_channel = list(key_channel)  
-                # Change any strings into channel indices
-                for i, j in enumerate(key_channel):
-                    if isinstance(j, basestring):
-                        key_channel[i] = self.name_to_index(j)
-                key_all = (key_sample, key_channel)
-
-            else:
-                key_all = (key_sample, key_channel)
+            # Reassemble key components
+            key_all = (key_sample, key_channel)
 
             # Get sliced array
             new_arr = np.ndarray.__getitem__(self, key_all)
@@ -1116,14 +1110,14 @@ class FCSData(np.ndarray):
             if not hasattr(new_arr, '__iter__'):
                 return new_arr
 
-            # # Finally, slice the channel_info attribute
-            # if hasattr(key_channel, '__iter__'):
-            #     new_arr.channel_info = [new_arr.channel_info[kc] \
-            #         for kc in key_channel]
-            # elif isinstance(key_channel, slice):
-            #     new_arr.channel_info = new_arr.channel_info[key_channel]
-            # else:
-            #     new_arr.channel_info = [new_arr.channel_info[key_channel]]
+            # Finally, slice channel information
+            if hasattr(key_channel, '__iter__'):
+                new_arr._channels = [new_arr._channels[kc] \
+                    for kc in key_channel]
+            elif isinstance(key_channel, slice):
+                new_arr._channels = new_arr._channels[key_channel]
+            else:
+                new_arr._channels = [new_arr._channels[key_channel]]
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
@@ -1158,22 +1152,12 @@ class FCSData(np.ndarray):
             key_sample = key[0]
             key_channel = key[1]
 
-            # Check if key_channel is a string, list/tuple, or other
-            if isinstance(key_channel, basestring):
-                key_channel = self.name_to_index(key_channel)
-                key_all = (key_sample, key_channel)
+            # Convert key_channel to integers if necessary
+            if not isinstance(key_channel, slice):
+                key_channel = self._name_to_index(key_channel)
 
-            elif hasattr(key_channel, '__iter__'):
-                # Make mutable
-                key_channel = list(key_channel)  
-                # Change any strings into channel indices
-                for i, j in enumerate(key_channel):
-                    if isinstance(j, basestring):
-                        key_channel[i] = self.name_to_index(j)
-                key_all = (key_sample, key_channel)
-
-            else:
-                key_all = (key_sample, key_channel)
+            # Reassemble key components
+            key_all = (key_sample, key_channel)
 
             # Write into array
             np.ndarray.__setitem__(self, key_all, item)
