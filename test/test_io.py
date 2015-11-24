@@ -121,10 +121,10 @@ class TestFCSMetadata(unittest.TestCase):
         d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.assertEqual(d.metadata, {'l2': 4, 'a': 'r'})
 
-# class TestFCSAttributes(unittest.TestCase):
-#     def setUp(self):
-#         self.d = fc.io.FCSData(filenames[0])
-#         self.n_samples = self.d.shape[0]
+class TestFCSAttributes(unittest.TestCase):
+    def setUp(self):
+        self.d = fc.io.FCSData(filenames[0])
+        self.n_samples = self.d.shape[0]
 
 #     def test_range(self):
 #         """
@@ -172,15 +172,15 @@ class TestFCSMetadata(unittest.TestCase):
 #         """
 #         self.assertEqual(str(self.d), 'Data001.fcs')
 
-#     def test_time_step(self):
-#         """
-#         Testing of the time step.
+    def test_time_step(self):
+        """
+        Testing of the time step.
 
-#         """
-#         # Data.001 is a FCS2.0 file, use the timeticks parameter.
-#         # We have previously looked at self.d.text['TIMETICKS']) to determine
-#         # the correct output for this file.
-#         self.assertEqual(self.d.time_step, 0.2)
+        """
+        # Data.001 is a FCS2.0 file, use the timeticks parameter.
+        # We have previously looked at self.d.text['TIMETICKS']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.time_step, 0.2)
 
 #     def test_acquisition_time_event(self):
 #         """

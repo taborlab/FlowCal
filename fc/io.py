@@ -856,31 +856,17 @@ class FCSData(np.ndarray):
         """
         return self._channels
 
-    # @property
-    # def time_step(self):
-    #     """
-    #     Time step of the time channel.
+    @property
+    def time_step(self):
+        """
+        Time step of the time channel.
 
-    #     The time step is such that ``self[:,'Time']*time_step`` is in
-    #     seconds.
+        The time step is such that ``self[:,'Time']*time_step`` is in
+        seconds. If no time step was found in the FCS file, `time_step` is
+        None.
 
-    #     FCS Standard files store the time step in the $TIMESTEP keyword.
-    #     In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
-    #     the time step in milliseconds.
-
-    #     Raises
-    #     ------
-    #     IOError
-    #         If the $TIMESTEP and the $TIMETICKS keywords are both not
-    #         available.
-
-    #     """
-    #     if 'TIMETICKS' in self.text:
-    #         return float(self.text['TIMETICKS'])/1000.
-    #     elif '$TIMESTEP' in self.text:
-    #         return float(self.text['$TIMESTEP'])
-    #     else:
-    #         raise IOError("Time information not available.")
+        """
+        return self._time_step
 
     # @property
     # def acquisition_time(self):
@@ -943,6 +929,25 @@ class FCSData(np.ndarray):
         # Load FCS file
         fcs_file = FCSFile(infile)
 
+        ###
+        # Channel-independent information
+        ###
+
+        # The time step is such that ``self[:,'Time']*time_step`` is in seconds.
+        # FCS-Standard files store the time step in the $TIMESTEP keyword.
+        # In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
+        # the time step in milliseconds.
+        if 'TIMETICKS' in fcs_file.text:
+            time_step = float(fcs_file.text['TIMETICKS'])/1000.
+        elif '$TIMESTEP' in fcs_file.text:
+            time_step = float(fcs_file.text['$TIMESTEP'])
+        else:
+            time_step = None
+
+        ###
+        # Channel-dependent information
+        ###
+
         # Number of channels
         num_channels = int(fcs_file.text['$PAR'])
 
@@ -996,9 +1001,12 @@ class FCSData(np.ndarray):
         obj.text = fcs_file.text
         obj.analysis = fcs_file.analysis
 
-        # Add other attributes
-        obj._channels = channels
+        # Add channel-independent attributes
+        obj._time_step = time_step
         obj.metadata = metadata
+
+        # Add channel-dependent attributes
+        obj._channels = channels
 
         return obj
 
@@ -1011,15 +1019,22 @@ class FCSData(np.ndarray):
         if obj is None: return
 
         # Otherwise, copy attributes from "parent"
+        # FCS file attributes
         self.infile = getattr(obj, 'infile', None)
         if hasattr(obj, 'text'):
             self.text = copy.deepcopy(obj.text)
         if hasattr(obj, 'analysis'):
             self.analysis = copy.deepcopy(obj.analysis)
-        if hasattr(obj, '_channels'):
-            self._channels = copy.deepcopy(obj._channels)
+
+        # Channel-independent attributes
+        if hasattr(obj, '_time_step'):
+            self._time_step = copy.deepcopy(obj._time_step)
         if hasattr(obj, 'metadata'):
             self.metadata = copy.deepcopy(obj.metadata)
+
+        # Channel-dependent attributes
+        if hasattr(obj, '_channels'):
+            self._channels = copy.deepcopy(obj._channels)
 
     # Functions overridden to allow string-based indexing.
 
