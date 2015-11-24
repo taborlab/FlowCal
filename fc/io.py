@@ -854,118 +854,118 @@ class FCSData(np.ndarray):
         List of channel names.
 
         """
-        return [i['label'] for i in self.channel_info]
+        return self._channels
 
-    def name_to_index(self, channels):
-        """
-        Return the channel indices for the specified channel names.
+    # def name_to_index(self, channels):
+    #     """
+    #     Return the channel indices for the specified channel names.
 
-        Parameters
-        ----------
-        channels : str or list of str
-            Name(s) of the channel(s) of interest.
+    #     Parameters
+    #     ----------
+    #     channels : str or list of str
+    #         Name(s) of the channel(s) of interest.
 
-        Returns
-        -------
-        int or list of int
-            Numerical index(ces) of the specified channels.
+    #     Returns
+    #     -------
+    #     int or list of int
+    #         Numerical index(ces) of the specified channels.
 
-        """
-        if isinstance(channels, basestring):
-            # channels is a string containing a channel name
-            if channels in self.channels:
-                return self.channels.index(channels)
-            else:
-                raise ValueError("{} is not a valid channel name."
-                    .format(channels))
+    #     """
+    #     if isinstance(channels, basestring):
+    #         # channels is a string containing a channel name
+    #         if channels in self.channels:
+    #             return self.channels.index(channels)
+    #         else:
+    #             raise ValueError("{} is not a valid channel name."
+    #                 .format(channels))
 
-        elif isinstance(channels, list):
-            # channels is a list of strings
-            lst = []
-            for ci in channels:
-                if ci in self.channels:
-                    lst.append(self.channels.index(ci))
-                else:
-                    raise ValueError("{} is not a valid channel name."
-                        .format(ci))
-            return lst
+    #     elif isinstance(channels, list):
+    #         # channels is a list of strings
+    #         lst = []
+    #         for ci in channels:
+    #             if ci in self.channels:
+    #                 lst.append(self.channels.index(ci))
+    #             else:
+    #                 raise ValueError("{} is not a valid channel name."
+    #                     .format(ci))
+    #         return lst
 
-        else:
-            raise ValueError("Input argument should be a string or list \
-                of strings.")
+    #     else:
+    #         raise ValueError("Input argument should be a string or list \
+    #             of strings.")
 
-    @property
-    def time_step(self):
-        """
-        Time step of the time channel.
+    # @property
+    # def time_step(self):
+    #     """
+    #     Time step of the time channel.
 
-        The time step is such that ``self[:,'Time']*time_step`` is in
-        seconds.
+    #     The time step is such that ``self[:,'Time']*time_step`` is in
+    #     seconds.
 
-        FCS Standard files store the time step in the $TIMESTEP keyword.
-        In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
-        the time step in milliseconds.
+    #     FCS Standard files store the time step in the $TIMESTEP keyword.
+    #     In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
+    #     the time step in milliseconds.
 
-        Raises
-        ------
-        IOError
-            If the $TIMESTEP and the $TIMETICKS keywords are both not
-            available.
+    #     Raises
+    #     ------
+    #     IOError
+    #         If the $TIMESTEP and the $TIMETICKS keywords are both not
+    #         available.
 
-        """
-        if 'TIMETICKS' in self.text:
-            return float(self.text['TIMETICKS'])/1000.
-        elif '$TIMESTEP' in self.text:
-            return float(self.text['$TIMESTEP'])
-        else:
-            raise IOError("Time information not available.")
+    #     """
+    #     if 'TIMETICKS' in self.text:
+    #         return float(self.text['TIMETICKS'])/1000.
+    #     elif '$TIMESTEP' in self.text:
+    #         return float(self.text['$TIMESTEP'])
+    #     else:
+    #         raise IOError("Time information not available.")
 
-    @property
-    def acquisition_time(self):
-        """
-        Acquisition time, in seconds.
+    # @property
+    # def acquisition_time(self):
+    #     """
+    #     Acquisition time, in seconds.
 
-        The acquisition time is calculated using the 'time' channel by
-        default (case independent). If the 'time' channel is not available,
-        the ETIM and BTIM keyword parameters will be used, if available.
+    #     The acquisition time is calculated using the 'time' channel by
+    #     default (case independent). If the 'time' channel is not available,
+    #     the ETIM and BTIM keyword parameters will be used, if available.
 
-        Raises
-        ------
-        IOError
-            If the 'time' channel and the ETIM and BTIM keywords are not
-            available.
+    #     Raises
+    #     ------
+    #     IOError
+    #         If the 'time' channel and the ETIM and BTIM keywords are not
+    #         available.
 
-        """
-        # Get time channels indices
-        channel_i = [i for i, chi in enumerate(self.channels)\
-                                                    if chi.lower() == 'time']
-        if len(channel_i) > 1:
-            raise KeyError("More than one time channel in data.")
-        # Check if the time channel is available
-        elif len(channel_i) == 1:
-            # Use the event list
-            ch = self.channels[channel_i[0]]
-            return (self[-1, ch] - self[0, ch]) * self.time_step
-        elif '$BTIM' and '$ETIM' in self.text:
-            # Use BTIM and ETIM keywords
-            # In FCS2.0, times are specified as HH:MM:SS
-            # In FCS3.0, times are specified as HH:MM:SS[.cc] (cc optional)
-            # First, separate string into HH:MM:SS and .cc parts
-            t0s = self.text['$BTIM'].split('.')
-            tfs = self.text['$ETIM'].split('.')
-            # Read HH:MM:SS portion and subtract
-            import datetime
-            t0 = datetime.datetime.strptime(t0s[0], '%H:%M:%S')
-            tf = datetime.datetime.strptime(tfs[0], '%H:%M:%S')
-            dt = (tf - t0).total_seconds()
-            # Add .cc portion if available
-            if len(t0s) > 1:
-                dt = dt - float(t0s[1])/100
-            if len(tfs) > 1:
-                dt = dt + float(tfs[1])/100
-            return dt
-        else:
-            raise IOError("Time information not available.")
+    #     """
+    #     # Get time channels indices
+    #     channel_i = [i for i, chi in enumerate(self.channels)\
+    #                                                 if chi.lower() == 'time']
+    #     if len(channel_i) > 1:
+    #         raise KeyError("More than one time channel in data.")
+    #     # Check if the time channel is available
+    #     elif len(channel_i) == 1:
+    #         # Use the event list
+    #         ch = self.channels[channel_i[0]]
+    #         return (self[-1, ch] - self[0, ch]) * self.time_step
+    #     elif '$BTIM' and '$ETIM' in self.text:
+    #         # Use BTIM and ETIM keywords
+    #         # In FCS2.0, times are specified as HH:MM:SS
+    #         # In FCS3.0, times are specified as HH:MM:SS[.cc] (cc optional)
+    #         # First, separate string into HH:MM:SS and .cc parts
+    #         t0s = self.text['$BTIM'].split('.')
+    #         tfs = self.text['$ETIM'].split('.')
+    #         # Read HH:MM:SS portion and subtract
+    #         import datetime
+    #         t0 = datetime.datetime.strptime(t0s[0], '%H:%M:%S')
+    #         tf = datetime.datetime.strptime(tfs[0], '%H:%M:%S')
+    #         dt = (tf - t0).total_seconds()
+    #         # Add .cc portion if available
+    #         if len(t0s) > 1:
+    #             dt = dt - float(t0s[1])/100
+    #         if len(tfs) > 1:
+    #             dt = dt + float(tfs[1])/100
+    #         return dt
+    #     else:
+    #         raise IOError("Time information not available.")
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -981,53 +981,60 @@ class FCSData(np.ndarray):
         # Load FCS file
         fcs_file = FCSFile(infile)
 
-        # Populate channel_info
+        # Number of channels
         num_channels = int(fcs_file.text['$PAR'])
-        channel_info = []
-        for i in range(1, num_channels + 1):
-            chi = {}
 
-            # Get label
-            chi['label'] = fcs_file.text.get('$P{}N'.format(i))
+        # Channel names
+        channels = [fcs_file.text.get('$P{}N'.format(i))
+                    for i in range(1, num_channels + 1)]
+        # # Populate channel_info
+        # channel_info = []
+        # for i in range(1, num_channels + 1):
+        #     chi = {}
 
-            if chi['label'].lower() == 'time':
-                pass
-            else:
-                # Gain
-                if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
-                    chi['pmt_voltage'] = \
-                        fcs_file.text.get('BD$WORD{}'.format(12 + i))
-                else:
-                    chi['pmt_voltage'] = fcs_file.text.get('$P{}V'.format(i))
+        #     # Get label
+        #     chi['label'] = fcs_file.text.get('$P{}N'.format(i))
 
-                # Amplification type
-                if '$P{}E'.format(i) in fcs_file.text:
-                    if fcs_file.text['$P{}E'.format(i)] == '0,0':
-                        chi['amplifier'] = 'lin'
-                    else:
-                        chi['amplifier'] = 'log'
-                else:
-                    chi['amplifier'] = None
+        #     if chi['label'].lower() == 'time':
+        #         pass
+        #     else:
+        #         # Gain
+        #         if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+        #             chi['pmt_voltage'] = \
+        #                 fcs_file.text.get('BD$WORD{}'.format(12 + i))
+        #         else:
+        #             chi['pmt_voltage'] = fcs_file.text.get('$P{}V'.format(i))
 
-                # Range and bins
-                PnR = '$P{}R'.format(i)
-                chi['range'] = [0,
-                                int(fcs_file.text.get(PnR))-1,
-                                int(fcs_file.text.get(PnR))]
-                chi['bin_vals'] = np.arange(int(fcs_file.text.get(PnR)))
-                chi['bin_edges'] = \
-                    np.arange(int(fcs_file.text.get(PnR)) + 1) - 0.5
+        #         # Amplification type
+        #         if '$P{}E'.format(i) in fcs_file.text:
+        #             if fcs_file.text['$P{}E'.format(i)] == '0,0':
+        #                 chi['amplifier'] = 'lin'
+        #             else:
+        #                 chi['amplifier'] = 'log'
+        #         else:
+        #             chi['amplifier'] = None
 
-            channel_info.append(chi)
+        #         # Range and bins
+        #         PnR = '$P{}R'.format(i)
+        #         chi['range'] = [0,
+        #                         int(fcs_file.text.get(PnR))-1,
+        #                         int(fcs_file.text.get(PnR))]
+        #         chi['bin_vals'] = np.arange(int(fcs_file.text.get(PnR)))
+        #         chi['bin_edges'] = \
+        #             np.arange(int(fcs_file.text.get(PnR)) + 1) - 0.5
+
+        #     channel_info.append(chi)
 
         # Call constructor of numpy array
         obj = fcs_file.data.view(cls)
 
-        # Add attributes
+        # Add FCS file attributes
         obj.infile = infile
         obj.text = fcs_file.text
         obj.analysis = fcs_file.analysis
-        obj.channel_info = channel_info
+
+        # Add other attributes
+        obj._channels = channels
         obj.metadata = metadata
 
         return obj
@@ -1046,8 +1053,8 @@ class FCSData(np.ndarray):
             self.text = copy.deepcopy(obj.text)
         if hasattr(obj, 'analysis'):
             self.analysis = copy.deepcopy(obj.analysis)
-        if hasattr(obj, 'channel_info'):
-            self.channel_info = copy.deepcopy(obj.channel_info)
+        if hasattr(obj, '_channels'):
+            self._channels = copy.deepcopy(obj._channels)
         if hasattr(obj, 'metadata'):
             self.metadata = copy.deepcopy(obj.metadata)
 
@@ -1109,14 +1116,14 @@ class FCSData(np.ndarray):
             if not hasattr(new_arr, '__iter__'):
                 return new_arr
 
-            # Finally, slice the channel_info attribute
-            if hasattr(key_channel, '__iter__'):
-                new_arr.channel_info = [new_arr.channel_info[kc] \
-                    for kc in key_channel]
-            elif isinstance(key_channel, slice):
-                new_arr.channel_info = new_arr.channel_info[key_channel]
-            else:
-                new_arr.channel_info = [new_arr.channel_info[key_channel]]
+            # # Finally, slice the channel_info attribute
+            # if hasattr(key_channel, '__iter__'):
+            #     new_arr.channel_info = [new_arr.channel_info[kc] \
+            #         for kc in key_channel]
+            # elif isinstance(key_channel, slice):
+            #     new_arr.channel_info = new_arr.channel_info[key_channel]
+            # else:
+            #     new_arr.channel_info = [new_arr.channel_info[key_channel]]
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
