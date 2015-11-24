@@ -12,7 +12,7 @@ import fc
 # Directories
 directory = 'FCFiles'
 beads_plot_dir = 'plot_beads'
-gated_plot_dir = 'plot_gated'
+gated_plot_dir = 'plot_samples'
 
 # Plot options
 plot_gated = True
@@ -35,8 +35,7 @@ mef_channels = ['FL1']
 mef_names = {'FL1': 'Molecules of Equivalent Fluorescein, MEFL',
             }
 # MEF bead values
-mef_values = {'FL1': [np.nan, 792, 2079, 6588, 16471, 
-                                                    47497, 137049, 271647],
+mef_values = {'FL1': [0, 792, 2079, 6588, 16471, 47497, 137049, 271647],
              }
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@
 __version__ = '0.7.1'
 
 import io
-import excel_io
+import excel_ui
 import gate
 import transform
 import mef

@@ -22,8 +22,9 @@ Python 2.7 is required. The following Python packages should also be present:
 * ``matplotlib`` (1.4.3)
 * ``palettable`` (2.1.1)
 * ``scikit-learn`` (0.16.1)
+* ``pandas`` (0.16.2)
 * ``xlrd`` (0.9.3)
-* ``openpyxl`` (2.0.2)
+* ``XlsxWriter`` (0.7.3)
 
 If ``fc`` is installed through ``pip`` or ``setuptools``, prerequisites should be taken care of automatically.
 

@@ -1,5 +1,6 @@
 """
 `gate` module unit tests.
+
 """
 
 import fc.gate
@@ -953,6 +954,97 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,0,0,0,0], dtype=bool)
             )
 
+    def test_implicit_gating_4_gated_data_1(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/22, sigma=0.0),
+            np.array([
+                [2,2],
+                [2,2],
+                [2,2],
+                ])
+            )
+
+    def test_implicit_gating_4_gated_data_2(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/22, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [2,2],
+                [2,2],
+                [2,2],
+                ])
+            )
+
+    def test_implicit_gating_4_mask(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/22, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
+                1,1,0,0,0,0], dtype=bool)
+            )
+
+    # Test sub-binning (multiple values per bin)
+
+    def test_sub_bin_1_gated_data_1(self):
+        bins = [0.5, 2.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0),
+            np.array([
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_sub_bin_1_gated_data_2(self):
+        bins = [0.5, 2.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).gated_data,
+            np.array([
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [3,3],
+                [3,4],
+                [4,3],
+                [4,4],
+                [4,4],
+                ])
+            )
+
+    def test_sub_bin_1_mask(self):
+        bins = [0.5, 2.5, 4.5]
+        np.testing.assert_array_equal(
+            fc.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).mask,
+            np.array([0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,1,0,1,1,
+                1,1,1,1,1], dtype=bool)
+            )
 
     # Test bins edge case (when bin edges = values)
     #
