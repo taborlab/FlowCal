@@ -75,6 +75,7 @@ setup(
                       'palettable>=2.1.1',
                       'scikit-learn>=0.16.1',
                       'pandas>=0.16.2',
+                      'xlrd>=0.9.3',
                       'XlsxWriter>=0.7.3'],
 
     # List additional groups of dependencies here (e.g. development
