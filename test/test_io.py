@@ -3,9 +3,12 @@ Unit tests for the `io` module.
 
 """
 
-import fc.io
-import numpy as np
+import datetime
 import unittest
+
+import numpy as np
+
+import fc.io
 
 """
 Files to test:
@@ -165,12 +168,12 @@ class TestFCSAttributes(unittest.TestCase):
 #         np.testing.assert_array_equal(self.d.channel_info[4]['bin_edges'], 
 #             np.arange(1025) - 0.5)
 
-#     def test_str(self):
-#         """
-#         Testing string representation.
+    def test_str(self):
+        """
+        Testing string representation.
 
-#         """
-#         self.assertEqual(str(self.d), 'Data001.fcs')
+        """
+        self.assertEqual(str(self.d), 'Data001.fcs')
 
     def test_time_step(self):
         """
@@ -182,33 +185,53 @@ class TestFCSAttributes(unittest.TestCase):
         # the correct output for this file.
         self.assertEqual(self.d.time_step, 0.2)
 
-#     def test_acquisition_time_event(self):
-#         """
-#         Testing acquisition time.
+    def test_acquisition_start_time(self):
+        """
+        Testing of acquisition start time.
 
-#         """
-#         # Data.001 has the time channel, so the acquisition time should be
-#         # calculated using the event list.
-#         # We have previously looked at self.d[0, 'Time'] and self.d[-1, 'Time']
-#         # to determine the correct output for this file.
-#         self.assertEqual(self.d.acquisition_time, 74.8)
+        """
+        # We have previously looked at the $BTIM and #DATE attributes of
+        # Data.001 to determine the correct value of acquisition_start_time.
+        time_correct = datetime.datetime(2015, 5, 19, 16, 50, 29)
+        self.assertEqual(self.d.acquisition_start_time, time_correct)
 
-#     def test_acquisition_time_btim_etim(self):
-#         """
-#         Testing acquisition time using the btim/etim method.
+    def test_acquisition_end_time(self):
+        """
+        Testing of acquisition end time.
 
-#         """
-#         # Data.001 has the time channel, so we will remove it so that the
-#         # BTIM and ETIM keyword arguments are used.
-#         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
-#         # determine the correct output for this file.
-#         d = self.d[:,['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']]
-#         self.assertEqual(d.acquisition_time, 77)
+        """
+        # We have previously looked at the $ETIM and #DATE attributes of
+        # Data.001 to determine the correct value of acquisition_end_time.
+        time_correct = datetime.datetime(2015, 5, 19, 16, 51, 46)
+        self.assertEqual(self.d.acquisition_end_time, time_correct)
 
-# class TestFCSAttributes3(unittest.TestCase):
-#     def setUp(self):
-#         self.d = fc.io.FCSData(filenames[2])
-#         self.n_samples = self.d.shape[0]
+    def test_acquisition_time_event(self):
+        """
+        Testing acquisition time.
+
+        """
+        # Data.001 has the time channel, so the acquisition time should be
+        # calculated using the event list.
+        # We have previously looked at self.d[0, 'Time'] and self.d[-1, 'Time']
+        # to determine the correct output for this file.
+        self.assertEqual(self.d.acquisition_time, 74.8)
+
+    def test_acquisition_time_btim_etim(self):
+        """
+        Testing acquisition time using the btim/etim method.
+
+        """
+        # Data.001 has the time channel, so we will remove it so that the
+        # BTIM and ETIM keyword arguments are used.
+        # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
+        # determine the correct output for this file.
+        d = self.d[:,['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']]
+        self.assertEqual(d.acquisition_time, 77)
+
+class TestFCSAttributes3(unittest.TestCase):
+    def setUp(self):
+        self.d = fc.io.FCSData(filenames[2])
+        self.n_samples = self.d.shape[0]
 
 #     def test_range(self):
 #         """
@@ -249,45 +272,65 @@ class TestFCSAttributes(unittest.TestCase):
 #         np.testing.assert_array_equal(self.d.channel_info[5]['bin_edges'], 
 #             np.arange(1025) - 0.5)
 
-#     def test_str(self):
-#         """
-#         Testing string representation.
+    def test_str(self):
+        """
+        Testing string representation.
 
-#         """
-#         self.assertEqual(str(self.d), 'Data003.fcs')
+        """
+        self.assertEqual(str(self.d), 'Data003.fcs')
 
-#     def test_time_step(self):
-#         """
-#         Testing of the time step.
+    def test_time_step(self):
+        """
+        Testing of the time step.
 
-#         """
-#         # Data.003 is a FCS3.0 file, use the $TIMESTEP parameter.
-#         # We have previously looked at self.d.text['$TIMESTEP']) to determine
-#         # the correct output for this file.
-#         self.assertEqual(self.d.time_step, 0.1)
+        """
+        # Data.003 is a FCS3.0 file, use the $TIMESTEP parameter.
+        # We have previously looked at self.d.text['$TIMESTEP']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.time_step, 0.1)
 
-#     def test_acquisition_time_event(self):
-#         """
-#         Testing acquisition time.
+    def test_acquisition_start_time(self):
+        """
+        Testing of acquisition start time.
 
-#         """
-#         # Data.003 has the time channel, so the acquisition time should be
-#         # calculated using the event list.
-#         # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
-#         # to determine the correct output for this file.
-#         self.assertEqual(self.d.acquisition_time, 134.8)
+        """
+        # We have previously looked at the $BTIM and #DATE attributes of
+        # Data.003 to determine the correct value of acquisition_start_time.
+        time_correct = datetime.datetime(2015, 7, 27, 19, 57, 40)
+        self.assertEqual(self.d.acquisition_start_time, time_correct)
 
-#     def test_acquisition_time_btim_etim(self):
-#         """
-#         Testing acquisition time using the btim/etim method.
+    def test_acquisition_end_time(self):
+        """
+        Testing of acquisition end time.
 
-#         """
-#         # Data.001 has the time channel, so we will remove it so that the
-#         # BTIM and ETIM keyword arguments are used.
-#         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
-#         # determine the correct output for this file.
-#         d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
-#         self.assertEqual(d.acquisition_time, 156)
+        """
+        # We have previously looked at the $ETIM and #DATE attributes of
+        # Data.003 to determine the correct value of acquisition_end_time.
+        time_correct = datetime.datetime(2015, 7, 27, 20, 00, 16)
+        self.assertEqual(self.d.acquisition_end_time, time_correct)
+
+    def test_acquisition_time_event(self):
+        """
+        Testing acquisition time.
+
+        """
+        # Data.003 has the time channel, so the acquisition time should be
+        # calculated using the event list.
+        # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
+        # to determine the correct output for this file.
+        self.assertEqual(self.d.acquisition_time, 134.8)
+
+    def test_acquisition_time_btim_etim(self):
+        """
+        Testing acquisition time using the btim/etim method.
+
+        """
+        # Data.001 has the time channel, so we will remove it so that the
+        # BTIM and ETIM keyword arguments are used.
+        # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
+        # determine the correct output for this file.
+        d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
+        self.assertEqual(d.acquisition_time, 156)
 
 
 class TestFCSDataSlicing(unittest.TestCase):

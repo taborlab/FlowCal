@@ -6,7 +6,9 @@ Classes and utiliy functions for interpreting FCS files.
 import os
 import copy
 import collections
+import datetime
 import warnings
+
 import numpy as np
 
 ###
@@ -868,52 +870,61 @@ class FCSData(np.ndarray):
         """
         return self._time_step
 
-    # @property
-    # def acquisition_time(self):
-    #     """
-    #     Acquisition time, in seconds.
+    @property
+    def acquisition_start_time(self):
+        """
+        Acquisition start time, as a python time or datetime object.
 
-    #     The acquisition time is calculated using the 'time' channel by
-    #     default (case independent). If the 'time' channel is not available,
-    #     the ETIM and BTIM keyword parameters will be used, if available.
+        If date information is found in the FCS file,
+        `acquisition_start_time` is a datetime object with the acquisition
+        date. If not, `acquisition_start_time` is a datetime.time object.
+        If no start time is found in the FCS file, return None.
 
-    #     Raises
-    #     ------
-    #     IOError
-    #         If the 'time' channel and the ETIM and BTIM keywords are not
-    #         available.
+        """
+        return self._acquisition_start_time
 
-    #     """
-    #     # Get time channels indices
-    #     channel_i = [i for i, chi in enumerate(self.channels)\
-    #                                                 if chi.lower() == 'time']
-    #     if len(channel_i) > 1:
-    #         raise KeyError("More than one time channel in data.")
-    #     # Check if the time channel is available
-    #     elif len(channel_i) == 1:
-    #         # Use the event list
-    #         ch = self.channels[channel_i[0]]
-    #         return (self[-1, ch] - self[0, ch]) * self.time_step
-    #     elif '$BTIM' and '$ETIM' in self.text:
-    #         # Use BTIM and ETIM keywords
-    #         # In FCS2.0, times are specified as HH:MM:SS
-    #         # In FCS3.0, times are specified as HH:MM:SS[.cc] (cc optional)
-    #         # First, separate string into HH:MM:SS and .cc parts
-    #         t0s = self.text['$BTIM'].split('.')
-    #         tfs = self.text['$ETIM'].split('.')
-    #         # Read HH:MM:SS portion and subtract
-    #         import datetime
-    #         t0 = datetime.datetime.strptime(t0s[0], '%H:%M:%S')
-    #         tf = datetime.datetime.strptime(tfs[0], '%H:%M:%S')
-    #         dt = (tf - t0).total_seconds()
-    #         # Add .cc portion if available
-    #         if len(t0s) > 1:
-    #             dt = dt - float(t0s[1])/100
-    #         if len(tfs) > 1:
-    #             dt = dt + float(tfs[1])/100
-    #         return dt
-    #     else:
-    #         raise IOError("Time information not available.")
+    @property
+    def acquisition_end_time(self):
+        """
+        Acquisition end time, as a python time or datetime object.
+
+        If date information is found in the FCS file,
+        `acquisition_end_time` is a datetime object with the acquisition
+        date. If not, `acquisition_end_time` is a datetime.time object.
+        If no end time is found in the FCS file, return None.
+
+        """
+        return self._acquisition_end_time
+
+    @property
+    def acquisition_time(self):
+        """
+        Acquisition time, in seconds.
+
+        The acquisition time is calculated using the 'time' channel by
+        default (case independent). If the 'time' channel is not available,
+        the acquisition_start_time and acquisition_end_time, extracted from
+        the BTIM and ETIM keyword parameters will be used. If these are not
+        found, None will be returned.
+
+        """
+        # Get time channels indices
+        channel_i = [i for i, chi in enumerate(self.channels)\
+                                                    if chi.lower() == 'time']
+        if len(channel_i) > 1:
+            raise KeyError("More than one time channel in data.")
+        # Check if the time channel is available
+        elif len(channel_i) == 1:
+            # Use the event list
+            ch = self.channels[channel_i[0]]
+            return (self[-1, ch] - self[0, ch]) * self.time_step
+        elif (self._acquisition_start_time is not None and
+                self._acquisition_end_time is not None):
+            # Use start_time and end_time:
+            dt = (self._acquisition_end_time - self._acquisition_start_time)
+            return dt.total_seconds()
+        else:
+            return None
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -943,6 +954,102 @@ class FCSData(np.ndarray):
             time_step = float(fcs_file.text['$TIMESTEP'])
         else:
             time_step = None
+
+        # Extract the acquisition date. The FCS standard includes an optional
+        # keyword parameter $DATE in which the acquistion date is stored. In
+        # FCS 2.0, the date is saved as 'dd-mmm-yy', whereas in FCS 3.0 and 3.1
+        # the date is saved as 'dd-mmm-yyyy'.
+        if '$DATE' in fcs_file.text:
+            try:
+                acquisition_date = datetime.datetime.strptime(
+                    fcs_file.text['$DATE'],
+                    '%d-%b-%y')
+            except ValueError:
+                acquisition_date = datetime.datetime.strptime(
+                    fcs_file.text['$DATE'],
+                    '%d-%b-%Y')
+            acquisition_date = acquisition_date.date()
+        else:
+            acquisition_date = None
+
+        # Extract the times of start and end of acquisition time. These are
+        # stored in the optional keyword parameters $BTIM and $ETIM. The
+        # following formats are used according to the FCS standard:
+        #     - FCS 2.0: 'hh:mm:ss'
+        #     - FCS 3.0: 'hh:mm:ss[:tt]', where 'tt' is optional, and represents
+        #       fractional seconds in 1/60ths.
+        #     - FCS 3.1: 'hh:mm:ss[.cc]', where 'cc' is optional, and represents
+        #       fractional seconds in 1/100ths.
+        # The following attempts to transform these formats to 'hh:mm:ss:fff',
+        # where 'fff' is in milliseconds, and then parse it using the datetime
+        # module.
+        if '$BTIM' in fcs_file.text:
+            time_str = fcs_file.text['$BTIM']
+            time_l = time_str.split(':')
+            if len(time_l) == 3:
+                # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
+                if '.' in time_l[2]:
+                    # 'hh:mm:ss.cc' format
+                    time_str = time.str.replace('.', ':')
+                    time_str = time_str + '0'
+                else:
+                    # 'hh:mm:ss' format
+                    time_str = time_str + ':000'
+                acquisition_start_time = datetime.datetime.strptime(
+                    time_str,
+                    '%H:%M:%S:%f').time()
+            elif len(time_l) == 4:
+                # 'hh:mm:ss:tt' format
+                time_l[3] = '{%03d}'.format(float(time_l[3])/60*1000)
+                time_str = ':'.join(time_l)
+                acquisition_start_time = datetime.datetime.strptime(
+                    time_str,
+                    '%H:%M:%S:%f').time()
+            else:
+                warnings.warn("unable to parse $BTIM parameter.")
+                acquisition_start_time = None
+        else:
+            acquisition_start_time = None
+
+        if '$ETIM' in fcs_file.text:
+            time_str = fcs_file.text['$ETIM']
+            time_l = time_str.split(':')
+            if len(time_l) == 3:
+                # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
+                if '.' in time_l[2]:
+                    # 'hh:mm:ss.cc' format
+                    time_str = time.str.replace('.', ':')
+                    time_str = time_str + '0'
+                else:
+                    # 'hh:mm:ss' format
+                    time_str = time_str + ':000'
+                acquisition_end_time = datetime.datetime.strptime(
+                    time_str,
+                    '%H:%M:%S:%f').time()
+            elif len(time_l) == 4:
+                # 'hh:mm:ss:tt' format
+                time_l[3] = '{%03d}'.format(float(time_l[3])/60*1000)
+                time_str = ':'.join(time_l)
+                acquisition_end_time = datetime.datetime.strptime(
+                    time_str,
+                    '%H:%M:%S:%f').time()
+            else:
+                warnings.warn("unable to parse $ETIM parameter.")
+                acquisition_end_time = None
+        else:
+            acquisition_end_time = None
+
+        # If date information was available, add to acquisition_start_time and
+        # acquisition_end_time.
+        if acquisition_date is not None:
+            if acquisition_start_time is not None:
+                acquisition_start_time = datetime.datetime.combine(
+                    acquisition_date,
+                    acquisition_start_time)
+            if acquisition_end_time is not None:
+                acquisition_end_time = datetime.datetime.combine(
+                    acquisition_date,
+                    acquisition_end_time)
 
         ###
         # Channel-dependent information
@@ -1003,6 +1110,8 @@ class FCSData(np.ndarray):
 
         # Add channel-independent attributes
         obj._time_step = time_step
+        obj._acquisition_start_time = acquisition_start_time
+        obj._acquisition_end_time = acquisition_end_time
         obj.metadata = metadata
 
         # Add channel-dependent attributes
@@ -1029,6 +1138,12 @@ class FCSData(np.ndarray):
         # Channel-independent attributes
         if hasattr(obj, '_time_step'):
             self._time_step = copy.deepcopy(obj._time_step)
+        if hasattr(obj, '_acquisition_start_time'):
+            self._acquisition_start_time = copy.deepcopy(
+                obj._acquisition_start_time)
+        if hasattr(obj, '_acquisition_end_time'):
+            self._acquisition_end_time = copy.deepcopy(
+                obj._acquisition_end_time)
         if hasattr(obj, 'metadata'):
             self.metadata = copy.deepcopy(obj.metadata)
 
