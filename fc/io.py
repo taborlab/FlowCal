@@ -907,8 +907,8 @@ class FCSData(np.ndarray):
         The acquisition time is calculated using the 'time' channel by
         default (case independent). If the 'time' channel is not available,
         the acquisition_start_time and acquisition_end_time, extracted from
-        the BTIM and ETIM keyword parameters will be used. If these are not
-        found, None will be returned.
+        the $BTIM and $ETIM keyword parameters will be used. If these are
+        not found, None will be returned.
 
         """
         # Get time channels indices
