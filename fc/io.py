@@ -875,10 +875,12 @@ class FCSData(np.ndarray):
         """
         Acquisition start time, as a python time or datetime object.
 
-        If date information is found in the FCS file,
-        `acquisition_start_time` is a datetime object with the acquisition
-        date. If not, `acquisition_start_time` is a datetime.time object.
-        If no start time is found in the FCS file, return None.
+        `acquisition_start_time` is taken from the $BTIM keyword parameter
+        in the text section of the FCS file. If date information is also
+        found, `acquisition_start_time` is a datetime object with the
+        acquisition date. If not, `acquisition_start_time` is a
+        datetime.time object. If no start time is found in the FCS file,
+        return None.
 
         """
         return self._acquisition_start_time
@@ -888,10 +890,11 @@ class FCSData(np.ndarray):
         """
         Acquisition end time, as a python time or datetime object.
 
-        If date information is found in the FCS file,
-        `acquisition_end_time` is a datetime object with the acquisition
-        date. If not, `acquisition_end_time` is a datetime.time object.
-        If no end time is found in the FCS file, return None.
+        `acquisition_end_time` is taken from the $ETIM keyword parameter in
+        the text section of the FCS file. If date information is also
+        found, `acquisition_end_time` is a datetime object with the
+        acquisition date. If not, `acquisition_end_time` is a datetime.time
+        object. If no end time is found in the FCS file, return None.
 
         """
         return self._acquisition_end_time
