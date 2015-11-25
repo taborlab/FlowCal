@@ -36,12 +36,12 @@ class TestFCSDataLoading(unittest.TestCase):
         d = fc.io.FCSData(filenames[0])
         self.assertEqual(d.shape, (20949, 6))
         self.assertEqual(d.channels,
-            ['FSC-H',
+            ('FSC-H',
              'SSC-H',
              'FL1-H',
              'FL2-H',
              'FL3-H',
-             'Time'])
+             'Time'))
 
     def test_loading_2(self):
         """
@@ -51,7 +51,7 @@ class TestFCSDataLoading(unittest.TestCase):
         d = fc.io.FCSData(filenames[1])
         self.assertEqual(d.shape, (20000, 9))
         self.assertEqual(d.channels,
-            ['FSC-A',
+            ('FSC-A',
              'SSC-A',
              'FITC-A',
              'PE-A',
@@ -60,7 +60,7 @@ class TestFCSDataLoading(unittest.TestCase):
              'APC-A',
              'APC-Cy7-A',
              'Time',
-            ])
+            ))
 
     def test_loading_3(self):
         """
@@ -70,7 +70,7 @@ class TestFCSDataLoading(unittest.TestCase):
         d = fc.io.FCSData(filenames[2])
         self.assertEqual(d.shape, (25000, 8))
         self.assertEqual(d.channels,
-            ['TIME',
+            ('TIME',
              'FSC',
              'SSC',
              'FL1',
@@ -78,7 +78,7 @@ class TestFCSDataLoading(unittest.TestCase):
              'FL3',
              'FSCW',
              'FSCA',
-            ])
+            ))
 
     def test_loading_4(self):
         """
@@ -88,21 +88,21 @@ class TestFCSDataLoading(unittest.TestCase):
         d = fc.io.FCSData(filenames[3])
         self.assertEqual(d.shape, (50000, 14))
         self.assertEqual(d.channels,
-            ['FSC-A',
-            'FSC-H',
-            'FSC-W',
-            'SSC-A',
-            'SSC-H',
-            'SSC-W',
-            'FSC PMT-A',
-            'FSC PMT-H',
-            'FSC PMT-W',
-            'GFP-A',
-            'GFP-H',
-            'mCherry-A',
-            'mCherry-H',
-            'Time',
-            ])
+            ('FSC-A',
+             'FSC-H',
+             'FSC-W',
+             'SSC-A',
+             'SSC-H',
+             'SSC-W',
+             'FSC PMT-A',
+             'FSC PMT-H',
+             'FSC PMT-W',
+             'GFP-A',
+             'GFP-H',
+             'mCherry-A',
+             'mCherry-H',
+             'Time',
+             ))
 
 class TestFCSMetadata(unittest.TestCase):
     def setUp(self):
@@ -388,7 +388,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (6,))
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
 
     def test_1d_slicing_with_list(self):
         """
@@ -399,7 +399,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
 
     def test_slicing_channel_with_int(self):
         """
@@ -409,7 +409,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,2]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
-        self.assertEqual(ds.channels, ['FL1-H'])
+        self.assertEqual(ds.channels, ('FL1-H',))
 
     def test_slicing_channel_with_string(self):
         """
@@ -419,7 +419,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,'SSC-H']
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
-        self.assertEqual(ds.channels, ['SSC-H'])
+        self.assertEqual(ds.channels, ('SSC-H', ))
 
     def test_slicing_channel_with_int_array(self):
         """
@@ -429,7 +429,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,[1,3]]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
-        self.assertEqual(ds.channels, ['SSC-H', 'FL2-H'])
+        self.assertEqual(ds.channels, ('SSC-H', 'FL2-H'))
 
     def test_slicing_channel_with_string_array(self):
         """
@@ -440,7 +440,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:,['FSC-H', 'FL3-H']]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
-        self.assertEqual(ds.channels, ['FSC-H', 'FL3-H'])
+        self.assertEqual(ds.channels, ('FSC-H', 'FL3-H'))
 
     def test_slicing_sample(self):
         """
@@ -451,7 +451,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (1000,6))
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
 
     def test_2d_slicing(self):
         """
@@ -461,7 +461,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[:1000,['SSC-H', 'FL3-H']]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.shape, (1000,2))
-        self.assertEqual(ds.channels, ['SSC-H', 'FL3-H'])
+        self.assertEqual(ds.channels, ('SSC-H', 'FL3-H'))
 
     def test_mask_slicing(self):
         """
@@ -472,7 +472,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds = self.d[m,:]
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
 
     def test_none_slicing_1(self):
         """
@@ -501,7 +501,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds[:,[1,2]] = 5
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)
@@ -517,7 +517,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         ds[:,['SSC-H', 'FL1-H']] = 5
         self.assertIsInstance(ds, fc.io.FCSData)
         self.assertEqual(ds.channels,
-            ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'])
+            ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
         np.testing.assert_array_equal(ds[:,1], 5)
         np.testing.assert_array_equal(ds[:,2], 5)

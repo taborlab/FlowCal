@@ -1055,6 +1055,7 @@ class FCSData(np.ndarray):
         # Channel names
         channels = [fcs_file.text.get('$P{}N'.format(i))
                     for i in range(1, num_channels + 1)]
+        channels = tuple(channels)
 
         # # Populate channel_info
         # channel_info = []
@@ -1292,12 +1293,12 @@ class FCSData(np.ndarray):
 
             # Finally, slice channel information
             if hasattr(key_channel, '__iter__'):
-                new_arr._channels = [new_arr._channels[kc] \
-                    for kc in key_channel]
+                new_arr._channels = tuple([new_arr._channels[kc] \
+                    for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
             else:
-                new_arr._channels = [new_arr._channels[key_channel]]
+                new_arr._channels = tuple([new_arr._channels[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
