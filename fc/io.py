@@ -1259,7 +1259,7 @@ class FCSData(np.ndarray):
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:
             # Separate key components
-            key_sample = key[0]
+            key_event = key[0]
             key_channel = key[1]
 
             # Convert key_channel to integers if necessary
@@ -1267,7 +1267,7 @@ class FCSData(np.ndarray):
                 key_channel = self._name_to_index(key_channel)
 
             # Reassemble key components
-            key_all = (key_sample, key_channel)
+            key_all = (key_event, key_channel)
 
             # Get sliced array
             new_arr = np.ndarray.__getitem__(self, key_all)
@@ -1314,7 +1314,7 @@ class FCSData(np.ndarray):
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:
             # Separate key components
-            key_sample = key[0]
+            key_event = key[0]
             key_channel = key[1]
 
             # Convert key_channel to integers if necessary
@@ -1322,7 +1322,7 @@ class FCSData(np.ndarray):
                 key_channel = self._name_to_index(key_channel)
 
             # Reassemble key components
-            key_all = (key_sample, key_channel)
+            key_all = (key_event, key_channel)
 
             # Write into array
             np.ndarray.__setitem__(self, key_all, item)
