@@ -851,6 +851,55 @@ class FCSData(np.ndarray):
     ###
 
     @property
+    def infile(self):
+        """
+        Reference to the associated FCS file.
+
+        """
+        return self._infile
+
+    @property
+    def header(self):
+        """
+        ``namedtuple`` containing version information and byte offset
+        values of other FCS segments in the following order:
+            - version : str
+            - text_begin : int
+            - text_end : int
+            - data_begin : int
+            - data_end : int
+            - analysis_begin : int
+            - analysis_end : int
+
+        """
+        return self._header
+
+    @property
+    def text(self):
+        """
+        Dictionary of key-value entries from TEXT segment and optional
+        supplemental TEXT segment.
+
+        """
+        return self._text
+
+    @property
+    def analysis(self):
+        """
+        Dictionary of key-value entries from ANALYSIS segment.
+
+        """
+        return self._analysis
+
+    @property
+    def metadata(self):
+        """
+        Dictionary with channel-independent, sample specific information.
+
+        """
+        return self._metadata
+
+    @property
     def channels(self):
         """
         List of channel names.
@@ -1049,15 +1098,15 @@ class FCSData(np.ndarray):
         obj = fcs_file.data.view(cls)
 
         # Add FCS file attributes
-        obj.infile = infile
-        obj.text = fcs_file.text
-        obj.analysis = fcs_file.analysis
+        obj._infile = infile
+        obj._text = fcs_file.text
+        obj._analysis = fcs_file.analysis
 
         # Add channel-independent attributes
         obj._time_step = time_step
         obj._acquisition_start_time = acquisition_start_time
         obj._acquisition_end_time = acquisition_end_time
-        obj.metadata = metadata
+        obj._metadata = metadata
 
         # Add channel-dependent attributes
         obj._channels = channels
@@ -1074,11 +1123,11 @@ class FCSData(np.ndarray):
 
         # Otherwise, copy attributes from "parent"
         # FCS file attributes
-        self.infile = getattr(obj, 'infile', None)
-        if hasattr(obj, 'text'):
-            self.text = copy.deepcopy(obj.text)
-        if hasattr(obj, 'analysis'):
-            self.analysis = copy.deepcopy(obj.analysis)
+        self._infile = getattr(obj, '_infile', None)
+        if hasattr(obj, '_text'):
+            self._text = copy.deepcopy(obj._text)
+        if hasattr(obj, '_analysis'):
+            self._analysis = copy.deepcopy(obj._analysis)
 
         # Channel-independent attributes
         if hasattr(obj, '_time_step'):
@@ -1089,8 +1138,8 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_acquisition_end_time'):
             self._acquisition_end_time = copy.deepcopy(
                 obj._acquisition_end_time)
-        if hasattr(obj, 'metadata'):
-            self.metadata = copy.deepcopy(obj.metadata)
+        if hasattr(obj, '_metadata'):
+            self._metadata = copy.deepcopy(obj._metadata)
 
         # Channel-dependent attributes
         if hasattr(obj, '_channels'):
