@@ -954,10 +954,10 @@ class FCSData(np.ndarray):
         # FCS-Standard files store the time step in the $TIMESTEP keyword.
         # In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
         # the time step in milliseconds.
-        if 'TIMETICKS' in fcs_file.text:
-            time_step = float(fcs_file.text['TIMETICKS'])/1000.
-        elif '$TIMESTEP' in fcs_file.text:
+        if '$TIMESTEP' in fcs_file.text:
             time_step = float(fcs_file.text['$TIMESTEP'])
+        elif 'TIMETICKS' in fcs_file.text:
+            time_step = float(fcs_file.text['TIMETICKS'])/1000.
         else:
             time_step = None
 
