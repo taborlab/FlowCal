@@ -913,15 +913,17 @@ class FCSData(np.ndarray):
 
         """
         # Get time channels indices
-        channel_i = [i for i, chi in enumerate(self.channels)\
-                                                    if chi.lower() == 'time']
-        if len(channel_i) > 1:
-            raise KeyError("More than one time channel in data.")
+        time_channel_idx = [idx
+                            for idx, channel in enumerate(self.channels)
+                            if channel.lower() == 'time']
+        if len(time_channel_idx) > 1:
+            raise KeyError("more than one time channel in data")
         # Check if the time channel is available
-        elif len(channel_i) == 1:
+        elif len(time_channel_idx) == 1:
             # Use the event list
-            ch = self.channels[channel_i[0]]
-            return (self[-1, ch] - self[0, ch]) * self.time_step
+            time_channel = self.channels[time_channel_idx[0]]
+            return (self[-1, time_channel] - self[0, time_channel]) \
+                * self.time_step
         elif (self._acquisition_start_time is not None and
                 self._acquisition_end_time is not None):
             # Use start_time and end_time:
