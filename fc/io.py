@@ -1240,8 +1240,8 @@ class FCSData(np.ndarray):
                 raise ValueError("index out of range")
 
         else:
-            raise TypeError("Input argument should be an integer, string or \
-                list of integers or strings.")
+            raise TypeError("input argument should be an integer, string or "
+                "list of integers or strings")
 
     # Functions overridden to allow string-based indexing.
 
