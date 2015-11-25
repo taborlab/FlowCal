@@ -124,6 +124,47 @@ class TestFCSMetadata(unittest.TestCase):
         d = fc.io.FCSData(filenames[0], {'l2': 4, 'a': 'r'})
         self.assertEqual(d.metadata, {'l2': 4, 'a': 'r'})
 
+class TestFCSParseTimeString(unittest.TestCase):
+    def test_parse_none(self):
+        """
+        Test that _parse_time_string() returns None when the input is None.
+
+        """
+        t = fc.io.FCSData._parse_time_string(None)
+        self.assertEqual(t, None)
+
+    def test_parse_fcs2(self):
+        """
+        Test that _parse_time_string() interprets the FCS2.0 time format.
+
+        """
+        t = fc.io.FCSData._parse_time_string("20:15:43")
+        self.assertEqual(t, datetime.time(20, 15, 43))
+
+    def test_parse_fcs3(self):
+        """
+        Test that _parse_time_string() interprets the FCS3.0 time format.
+
+        """
+        t = fc.io.FCSData._parse_time_string("20:15:43:20")
+        self.assertEqual(t, datetime.time(20, 15, 43, 333333))
+
+    def test_parse_fcs3_1(self):
+        """
+        Test that _parse_time_string() interprets the FCS3.1 time format.
+
+        """
+        t = fc.io.FCSData._parse_time_string("20:15:43.27")
+        self.assertEqual(t, datetime.time(20, 15, 43, 270000))
+
+    def test_parse_undefined(self):
+        """
+        Test that _parse_time_string() returns None for undefined inputs.
+
+        """
+        t = fc.io.FCSData._parse_time_string("i'm undefined")
+        self.assertEqual(t, None)
+
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[0])

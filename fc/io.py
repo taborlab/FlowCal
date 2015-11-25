@@ -978,72 +978,11 @@ class FCSData(np.ndarray):
         else:
             acquisition_date = None
 
-        # Extract the times of start and end of acquisition time. These are
-        # stored in the optional keyword parameters $BTIM and $ETIM. The
-        # following formats are used according to the FCS standard:
-        #     - FCS 2.0: 'hh:mm:ss'
-        #     - FCS 3.0: 'hh:mm:ss[:tt]', where 'tt' is optional, and represents
-        #       fractional seconds in 1/60ths.
-        #     - FCS 3.1: 'hh:mm:ss[.cc]', where 'cc' is optional, and represents
-        #       fractional seconds in 1/100ths.
-        # The following attempts to transform these formats to 'hh:mm:ss:fff',
-        # where 'fff' is in milliseconds, and then parse it using the datetime
-        # module.
-        if '$BTIM' in fcs_file.text:
-            time_str = fcs_file.text['$BTIM']
-            time_l = time_str.split(':')
-            if len(time_l) == 3:
-                # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
-                if '.' in time_l[2]:
-                    # 'hh:mm:ss.cc' format
-                    time_str = time.str.replace('.', ':')
-                    time_str = time_str + '0'
-                else:
-                    # 'hh:mm:ss' format
-                    time_str = time_str + ':000'
-                acquisition_start_time = datetime.datetime.strptime(
-                    time_str,
-                    '%H:%M:%S:%f').time()
-            elif len(time_l) == 4:
-                # 'hh:mm:ss:tt' format
-                time_l[3] = '{%03d}'.format(float(time_l[3])/60*1000)
-                time_str = ':'.join(time_l)
-                acquisition_start_time = datetime.datetime.strptime(
-                    time_str,
-                    '%H:%M:%S:%f').time()
-            else:
-                warnings.warn("unable to parse $BTIM parameter.")
-                acquisition_start_time = None
-        else:
-            acquisition_start_time = None
-
-        if '$ETIM' in fcs_file.text:
-            time_str = fcs_file.text['$ETIM']
-            time_l = time_str.split(':')
-            if len(time_l) == 3:
-                # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
-                if '.' in time_l[2]:
-                    # 'hh:mm:ss.cc' format
-                    time_str = time.str.replace('.', ':')
-                    time_str = time_str + '0'
-                else:
-                    # 'hh:mm:ss' format
-                    time_str = time_str + ':000'
-                acquisition_end_time = datetime.datetime.strptime(
-                    time_str,
-                    '%H:%M:%S:%f').time()
-            elif len(time_l) == 4:
-                # 'hh:mm:ss:tt' format
-                time_l[3] = '{%03d}'.format(float(time_l[3])/60*1000)
-                time_str = ':'.join(time_l)
-                acquisition_end_time = datetime.datetime.strptime(
-                    time_str,
-                    '%H:%M:%S:%f').time()
-            else:
-                warnings.warn("unable to parse $ETIM parameter.")
-                acquisition_end_time = None
-        else:
-            acquisition_end_time = None
+        # Extract the times of start and end of acquisition time.
+        acquisition_start_time = cls._parse_time_string(
+            fcs_file.text.get('$BTIM'))
+        acquisition_end_time = cls._parse_time_string(
+            fcs_file.text.get('$ETIM'))
 
         # If date information was available, add to acquisition_start_time and
         # acquisition_end_time.
@@ -1157,7 +1096,61 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_channels'):
             self._channels = copy.deepcopy(obj._channels)
 
-    # Functions overridden to allow string-based indexing.
+    # Helper functions
+    @staticmethod
+    def _parse_time_string(time_str):
+        """
+        Get a datetime.time object from a string time representation.
+
+        The start and end of acquisition are stored in the optional keyword
+        parameters $BTIM and $ETIM. The following formats are used
+        according to the FCS standard:
+            - FCS 2.0: 'hh:mm:ss'
+            - FCS 3.0: 'hh:mm:ss[:tt]', where 'tt' is optional, and
+              represents fractional seconds in 1/60ths.
+            - FCS 3.1: 'hh:mm:ss[.cc]', where 'cc' is optional, and
+              represents fractional seconds in 1/100ths.
+        This function attempts to transform these formats to
+        'hh:mm:ss:ffffff', where 'ffffff' is in microseconds, and then
+        parse it using the datetime module.
+
+        Parameters:
+        -----------
+        time_str : str, or None
+            String representation of time, or None.
+
+        Returns:
+        --------
+        t : datetime.time, or None
+            Time parsed from `time_str`. If parsing was not possible,
+            return None. If `time_str` is None, return None
+
+        """
+        # If input is None, return None
+        if time_str is None:
+            return None
+
+        time_l = time_str.split(':')
+        if len(time_l) == 3:
+            # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
+            if '.' in time_l[2]:
+                # 'hh:mm:ss.cc' format
+                time_str = time_str.replace('.', ':')
+            else:
+                # 'hh:mm:ss' format
+                time_str = time_str + ':0'
+            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+        elif len(time_l) == 4:
+            # 'hh:mm:ss:tt' format
+            time_l[3] = '{:06d}'.format(int(float(time_l[3])*1e6/60))
+            time_str = ':'.join(time_l)
+            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+        else:
+            # Unknown format
+            t = None
+
+        return t
+
 
     def _name_to_index(self, channels):
         """
@@ -1199,6 +1192,8 @@ class FCSData(np.ndarray):
         else:
             raise TypeError("Input argument should be an integer, string or \
                 list of integers or strings.")
+
+    # Functions overridden to allow string-based indexing.
 
     def __array_wrap__(self, out_arr, context = None):
         """
