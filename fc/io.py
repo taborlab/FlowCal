@@ -1020,8 +1020,14 @@ class FCSData(np.ndarray):
 
             channel_info.append(chi)
 
-        # Call constructor of numpy array
-        obj = fcs_file.data.view(cls)
+        # Create new array. Copy array from FCSFile so as not to modify
+        # FCSFile (even though we should be the only ones using it here). With
+        # the current numpy implementation, the copy will now be writeable.
+        # Explicitly ensure the copy is writeable in case this behavior ever
+        # changes.
+        data = np.array(fcs_file.data, copy=True)
+        data.flags.writeable = True
+        obj = data.view(cls)
 
         # Add attributes
         obj.infile = infile
