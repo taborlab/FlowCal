@@ -859,22 +859,6 @@ class FCSData(np.ndarray):
         return self._infile
 
     @property
-    def header(self):
-        """
-        ``namedtuple`` containing version information and byte offset
-        values of other FCS segments in the following order:
-            - version : str
-            - text_begin : int
-            - text_end : int
-            - data_begin : int
-            - data_end : int
-            - analysis_begin : int
-            - analysis_end : int
-
-        """
-        return self._header
-
-    @property
     def text(self):
         """
         Dictionary of key-value entries from TEXT segment and optional
