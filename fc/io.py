@@ -6,7 +6,9 @@ Classes and utiliy functions for interpreting FCS files.
 import os
 import copy
 import collections
+import datetime
 import warnings
+
 import numpy as np
 
 ###
@@ -849,50 +851,45 @@ class FCSData(np.ndarray):
     ###
 
     @property
+    def infile(self):
+        """
+        Reference to the associated FCS file.
+
+        """
+        return self._infile
+
+    @property
+    def text(self):
+        """
+        Dictionary of key-value entries from TEXT segment and optional
+        supplemental TEXT segment.
+
+        """
+        return self._text
+
+    @property
+    def analysis(self):
+        """
+        Dictionary of key-value entries from ANALYSIS segment.
+
+        """
+        return self._analysis
+
+    @property
+    def metadata(self):
+        """
+        Dictionary with channel-independent, sample specific information.
+
+        """
+        return self._metadata
+
+    @property
     def channels(self):
         """
         List of channel names.
 
         """
-        return [i['label'] for i in self.channel_info]
-
-    def name_to_index(self, channels):
-        """
-        Return the channel indices for the specified channel names.
-
-        Parameters
-        ----------
-        channels : str or list of str
-            Name(s) of the channel(s) of interest.
-
-        Returns
-        -------
-        int or list of int
-            Numerical index(ces) of the specified channels.
-
-        """
-        if isinstance(channels, basestring):
-            # channels is a string containing a channel name
-            if channels in self.channels:
-                return self.channels.index(channels)
-            else:
-                raise ValueError("{} is not a valid channel name."
-                    .format(channels))
-
-        elif isinstance(channels, list):
-            # channels is a list of strings
-            lst = []
-            for ci in channels:
-                if ci in self.channels:
-                    lst.append(self.channels.index(ci))
-                else:
-                    raise ValueError("{} is not a valid channel name."
-                        .format(ci))
-            return lst
-
-        else:
-            raise ValueError("Input argument should be a string or list \
-                of strings.")
+        return self._channels
 
     @property
     def time_step(self):
@@ -900,25 +897,40 @@ class FCSData(np.ndarray):
         Time step of the time channel.
 
         The time step is such that ``self[:,'Time']*time_step`` is in
-        seconds.
-
-        FCS Standard files store the time step in the $TIMESTEP keyword.
-        In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
-        the time step in milliseconds.
-
-        Raises
-        ------
-        IOError
-            If the $TIMESTEP and the $TIMETICKS keywords are both not
-            available.
+        seconds. If no time step was found in the FCS file, `time_step` is
+        None.
 
         """
-        if 'TIMETICKS' in self.text:
-            return float(self.text['TIMETICKS'])/1000.
-        elif '$TIMESTEP' in self.text:
-            return float(self.text['$TIMESTEP'])
-        else:
-            raise IOError("Time information not available.")
+        return self._time_step
+
+    @property
+    def acquisition_start_time(self):
+        """
+        Acquisition start time, as a python time or datetime object.
+
+        `acquisition_start_time` is taken from the $BTIM keyword parameter
+        in the TEXT segment of the FCS file. If date information is also
+        found, `acquisition_start_time` is a datetime object with the
+        acquisition date. If not, `acquisition_start_time` is a
+        datetime.time object. If no start time is found in the FCS file,
+        return None.
+
+        """
+        return self._acquisition_start_time
+
+    @property
+    def acquisition_end_time(self):
+        """
+        Acquisition end time, as a python time or datetime object.
+
+        `acquisition_end_time` is taken from the $ETIM keyword parameter in
+        the TEXT segment of the FCS file. If date information is also
+        found, `acquisition_end_time` is a datetime object with the
+        acquisition date. If not, `acquisition_end_time` is a datetime.time
+        object. If no end time is found in the FCS file, return None.
+
+        """
+        return self._acquisition_end_time
 
     @property
     def acquisition_time(self):
@@ -926,46 +938,32 @@ class FCSData(np.ndarray):
         Acquisition time, in seconds.
 
         The acquisition time is calculated using the 'time' channel by
-        default (case independent). If the 'time' channel is not available,
-        the ETIM and BTIM keyword parameters will be used, if available.
-
-        Raises
-        ------
-        IOError
-            If the 'time' channel and the ETIM and BTIM keywords are not
-            available.
+        default (channel name is case independent). If the 'time' channel
+        is not available, the acquisition_start_time and
+        acquisition_end_time, extracted from the $BTIM and $ETIM keyword
+        parameters will be used. If these are not found, None will be
+        returned.
 
         """
         # Get time channels indices
-        channel_i = [i for i, chi in enumerate(self.channels)\
-                                                    if chi.lower() == 'time']
-        if len(channel_i) > 1:
-            raise KeyError("More than one time channel in data.")
+        time_channel_idx = [idx
+                            for idx, channel in enumerate(self.channels)
+                            if channel.lower() == 'time']
+        if len(time_channel_idx) > 1:
+            raise KeyError("more than one time channel in data")
         # Check if the time channel is available
-        elif len(channel_i) == 1:
+        elif len(time_channel_idx) == 1:
             # Use the event list
-            ch = self.channels[channel_i[0]]
-            return (self[-1, ch] - self[0, ch]) * self.time_step
-        elif '$BTIM' and '$ETIM' in self.text:
-            # Use BTIM and ETIM keywords
-            # In FCS2.0, times are specified as HH:MM:SS
-            # In FCS3.0, times are specified as HH:MM:SS[.cc] (cc optional)
-            # First, separate string into HH:MM:SS and .cc parts
-            t0s = self.text['$BTIM'].split('.')
-            tfs = self.text['$ETIM'].split('.')
-            # Read HH:MM:SS portion and subtract
-            import datetime
-            t0 = datetime.datetime.strptime(t0s[0], '%H:%M:%S')
-            tf = datetime.datetime.strptime(tfs[0], '%H:%M:%S')
-            dt = (tf - t0).total_seconds()
-            # Add .cc portion if available
-            if len(t0s) > 1:
-                dt = dt - float(t0s[1])/100
-            if len(tfs) > 1:
-                dt = dt + float(tfs[1])/100
-            return dt
+            time_channel = self.channels[time_channel_idx[0]]
+            return (self[-1, time_channel] - self[0, time_channel]) \
+                * self.time_step
+        elif (self._acquisition_start_time is not None and
+                self._acquisition_end_time is not None):
+            # Use start_time and end_time:
+            dt = (self._acquisition_end_time - self._acquisition_start_time)
+            return dt.total_seconds()
         else:
-            raise IOError("Time information not available.")
+            return None
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -981,44 +979,105 @@ class FCSData(np.ndarray):
         # Load FCS file
         fcs_file = FCSFile(infile)
 
-        # Populate channel_info
+        ###
+        # Channel-independent information
+        ###
+
+        # The time step is such that ``self[:,'Time']*time_step`` is in seconds.
+        # FCS-Standard files store the time step in the $TIMESTEP keyword.
+        # In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
+        # the time step in milliseconds.
+        if '$TIMESTEP' in fcs_file.text:
+            time_step = float(fcs_file.text['$TIMESTEP'])
+        elif 'TIMETICKS' in fcs_file.text:
+            time_step = float(fcs_file.text['TIMETICKS'])/1000.
+        else:
+            time_step = None
+
+        # Extract the acquisition date. The FCS standard includes an optional
+        # keyword parameter $DATE in which the acquistion date is stored. In
+        # FCS 2.0, the date is saved as 'dd-mmm-yy', whereas in FCS 3.0 and 3.1
+        # the date is saved as 'dd-mmm-yyyy'.
+        if '$DATE' in fcs_file.text:
+            try:
+                acquisition_date = datetime.datetime.strptime(
+                    fcs_file.text['$DATE'],
+                    '%d-%b-%y')
+            except ValueError:
+                acquisition_date = datetime.datetime.strptime(
+                    fcs_file.text['$DATE'],
+                    '%d-%b-%Y')
+            acquisition_date = acquisition_date.date()
+        else:
+            acquisition_date = None
+
+        # Extract the times of start and end of acquisition time.
+        acquisition_start_time = cls._parse_time_string(
+            fcs_file.text.get('$BTIM'))
+        acquisition_end_time = cls._parse_time_string(
+            fcs_file.text.get('$ETIM'))
+
+        # If date information was available, add to acquisition_start_time and
+        # acquisition_end_time.
+        if acquisition_date is not None:
+            if acquisition_start_time is not None:
+                acquisition_start_time = datetime.datetime.combine(
+                    acquisition_date,
+                    acquisition_start_time)
+            if acquisition_end_time is not None:
+                acquisition_end_time = datetime.datetime.combine(
+                    acquisition_date,
+                    acquisition_end_time)
+
+        ###
+        # Channel-dependent information
+        ###
+
+        # Number of channels
         num_channels = int(fcs_file.text['$PAR'])
-        channel_info = []
-        for i in range(1, num_channels + 1):
-            chi = {}
 
-            # Get label
-            chi['label'] = fcs_file.text.get('$P{}N'.format(i))
+        # Channel names
+        channels = [fcs_file.text.get('$P{}N'.format(i))
+                    for i in range(1, num_channels + 1)]
+        channels = tuple(channels)
 
-            if chi['label'].lower() == 'time':
-                pass
-            else:
-                # Gain
-                if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
-                    chi['pmt_voltage'] = \
-                        fcs_file.text.get('BD$WORD{}'.format(12 + i))
-                else:
-                    chi['pmt_voltage'] = fcs_file.text.get('$P{}V'.format(i))
+        # # Populate channel_info
+        # channel_info = []
+        # for i in range(1, num_channels + 1):
+        #     chi = {}
 
-                # Amplification type
-                if '$P{}E'.format(i) in fcs_file.text:
-                    if fcs_file.text['$P{}E'.format(i)] == '0,0':
-                        chi['amplifier'] = 'lin'
-                    else:
-                        chi['amplifier'] = 'log'
-                else:
-                    chi['amplifier'] = None
+        #     # Get label
+        #     chi['label'] = fcs_file.text.get('$P{}N'.format(i))
 
-                # Range and bins
-                PnR = '$P{}R'.format(i)
-                chi['range'] = [0,
-                                int(fcs_file.text.get(PnR))-1,
-                                int(fcs_file.text.get(PnR))]
-                chi['bin_vals'] = np.arange(int(fcs_file.text.get(PnR)))
-                chi['bin_edges'] = \
-                    np.arange(int(fcs_file.text.get(PnR)) + 1) - 0.5
+        #     if chi['label'].lower() == 'time':
+        #         pass
+        #     else:
+        #         # Gain
+        #         if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+        #             chi['pmt_voltage'] = \
+        #                 fcs_file.text.get('BD$WORD{}'.format(12 + i))
+        #         else:
+        #             chi['pmt_voltage'] = fcs_file.text.get('$P{}V'.format(i))
 
-            channel_info.append(chi)
+        #         # Amplification type
+        #         if '$P{}E'.format(i) in fcs_file.text:
+        #             if fcs_file.text['$P{}E'.format(i)] == '0,0':
+        #                 chi['amplifier'] = 'lin'
+        #             else:
+        #                 chi['amplifier'] = 'log'
+        #         else:
+        #             chi['amplifier'] = None
+
+        #         # Range and bins
+        #         PnR = '$P{}R'.format(i)
+        #         chi['range'] = [0,
+        #                         int(fcs_file.text.get(PnR))-1,
+        #                         int(fcs_file.text.get(PnR))]
+        #         chi['bin_vals'] = np.arange(int(fcs_file.text.get(PnR)))
+        #         chi['bin_edges'] = \
+        #             np.arange(int(fcs_file.text.get(PnR)) + 1) - 0.5
+
+        #     channel_info.append(chi)
 
         # Create new array. Copy array from FCSFile so as not to modify
         # FCSFile (even though we should be the only ones using it here). With
@@ -1029,12 +1088,19 @@ class FCSData(np.ndarray):
         data.flags.writeable = True
         obj = data.view(cls)
 
-        # Add attributes
-        obj.infile = infile
-        obj.text = fcs_file.text
-        obj.analysis = fcs_file.analysis
-        obj.channel_info = channel_info
-        obj.metadata = metadata
+        # Add FCS file attributes
+        obj._infile = infile
+        obj._text = fcs_file.text
+        obj._analysis = fcs_file.analysis
+
+        # Add channel-independent attributes
+        obj._time_step = time_step
+        obj._acquisition_start_time = acquisition_start_time
+        obj._acquisition_end_time = acquisition_end_time
+        obj._metadata = metadata
+
+        # Add channel-dependent attributes
+        obj._channels = channels
 
         return obj
 
@@ -1047,15 +1113,125 @@ class FCSData(np.ndarray):
         if obj is None: return
 
         # Otherwise, copy attributes from "parent"
-        self.infile = getattr(obj, 'infile', None)
-        if hasattr(obj, 'text'):
-            self.text = copy.deepcopy(obj.text)
-        if hasattr(obj, 'analysis'):
-            self.analysis = copy.deepcopy(obj.analysis)
-        if hasattr(obj, 'channel_info'):
-            self.channel_info = copy.deepcopy(obj.channel_info)
-        if hasattr(obj, 'metadata'):
-            self.metadata = copy.deepcopy(obj.metadata)
+        # FCS file attributes
+        self._infile = getattr(obj, '_infile', None)
+        if hasattr(obj, '_text'):
+            self._text = copy.deepcopy(obj._text)
+        if hasattr(obj, '_analysis'):
+            self._analysis = copy.deepcopy(obj._analysis)
+
+        # Channel-independent attributes
+        if hasattr(obj, '_time_step'):
+            self._time_step = copy.deepcopy(obj._time_step)
+        if hasattr(obj, '_acquisition_start_time'):
+            self._acquisition_start_time = copy.deepcopy(
+                obj._acquisition_start_time)
+        if hasattr(obj, '_acquisition_end_time'):
+            self._acquisition_end_time = copy.deepcopy(
+                obj._acquisition_end_time)
+        if hasattr(obj, '_metadata'):
+            self._metadata = copy.deepcopy(obj._metadata)
+
+        # Channel-dependent attributes
+        if hasattr(obj, '_channels'):
+            self._channels = copy.deepcopy(obj._channels)
+
+    # Helper functions
+    @staticmethod
+    def _parse_time_string(time_str):
+        """
+        Get a datetime.time object from a string time representation.
+
+        The start and end of acquisition are stored in the optional keyword
+        parameters $BTIM and $ETIM. The following formats are used
+        according to the FCS standard:
+            - FCS 2.0: 'hh:mm:ss'
+            - FCS 3.0: 'hh:mm:ss[:tt]', where 'tt' is optional, and
+              represents fractional seconds in 1/60ths.
+            - FCS 3.1: 'hh:mm:ss[.cc]', where 'cc' is optional, and
+              represents fractional seconds in 1/100ths.
+        This function attempts to transform these formats to
+        'hh:mm:ss:ffffff', where 'ffffff' is in microseconds, and then
+        parse it using the datetime module.
+
+        Parameters:
+        -----------
+        time_str : str, or None
+            String representation of time, or None.
+
+        Returns:
+        --------
+        t : datetime.time, or None
+            Time parsed from `time_str`. If parsing was not possible,
+            return None. If `time_str` is None, return None
+
+        """
+        # If input is None, return None
+        if time_str is None:
+            return None
+
+        time_l = time_str.split(':')
+        if len(time_l) == 3:
+            # Either 'hh:mm:ss' or 'hh:mm:ss.cc'
+            if '.' in time_l[2]:
+                # 'hh:mm:ss.cc' format
+                time_str = time_str.replace('.', ':')
+            else:
+                # 'hh:mm:ss' format
+                time_str = time_str + ':0'
+            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+        elif len(time_l) == 4:
+            # 'hh:mm:ss:tt' format
+            time_l[3] = '{:06d}'.format(int(float(time_l[3])*1e6/60))
+            time_str = ':'.join(time_l)
+            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+        else:
+            # Unknown format
+            t = None
+
+        return t
+
+
+    def _name_to_index(self, channels):
+        """
+        Return the channel indices for the specified channel names.
+
+        Integers contained in `channel` are returned unmodified, if they
+        are within the range of ``self.channels``.
+
+        Parameters
+        ----------
+        channels : int or str or list of int or list of str
+            Name(s) of the channel(s) of interest.
+
+        Returns
+        -------
+        int or list of int
+            Numerical index(ces) of the specified channels.
+
+        """
+        # Check if list, then run recursively
+        if hasattr(channels, '__iter__'):
+            return [self._name_to_index(ch) for ch in channels]
+
+        if isinstance(channels, basestring):
+            # channels is a string containing a channel name
+            if channels in self.channels:
+                return self.channels.index(channels)
+            else:
+                raise ValueError("{} is not a valid channel name."
+                    .format(channels))
+
+        if isinstance(channels, int):
+            if (channels < len(self.channels)
+                    and channels >= -len(self.channels)):
+                return channels
+            else:
+                raise ValueError("index out of range")
+
+        else:
+            raise TypeError("input argument should be an integer, string or "
+                "list of integers or strings")
 
     # Functions overridden to allow string-based indexing.
 
@@ -1089,25 +1265,15 @@ class FCSData(np.ndarray):
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:
             # Separate key components
-            key_sample = key[0]
+            key_event = key[0]
             key_channel = key[1]
 
-            # Check if key_channel is a string, list/tuple, or other
-            if isinstance(key_channel, basestring):
-                key_channel = self.name_to_index(key_channel)
-                key_all = (key_sample, key_channel)
+            # Convert key_channel to integers if necessary
+            if not isinstance(key_channel, slice):
+                key_channel = self._name_to_index(key_channel)
 
-            elif hasattr(key_channel, '__iter__'):
-                # Make mutable
-                key_channel = list(key_channel)  
-                # Change any strings into channel indices
-                for i, j in enumerate(key_channel):
-                    if isinstance(j, basestring):
-                        key_channel[i] = self.name_to_index(j)
-                key_all = (key_sample, key_channel)
-
-            else:
-                key_all = (key_sample, key_channel)
+            # Reassemble key components
+            key_all = (key_event, key_channel)
 
             # Get sliced array
             new_arr = np.ndarray.__getitem__(self, key_all)
@@ -1115,14 +1281,14 @@ class FCSData(np.ndarray):
             if not hasattr(new_arr, '__iter__'):
                 return new_arr
 
-            # Finally, slice the channel_info attribute
+            # Finally, slice channel information
             if hasattr(key_channel, '__iter__'):
-                new_arr.channel_info = [new_arr.channel_info[kc] \
-                    for kc in key_channel]
+                new_arr._channels = tuple([new_arr._channels[kc] \
+                    for kc in key_channel])
             elif isinstance(key_channel, slice):
-                new_arr.channel_info = new_arr.channel_info[key_channel]
+                new_arr._channels = new_arr._channels[key_channel]
             else:
-                new_arr.channel_info = [new_arr.channel_info[key_channel]]
+                new_arr._channels = tuple([new_arr._channels[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
@@ -1154,25 +1320,15 @@ class FCSData(np.ndarray):
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:
             # Separate key components
-            key_sample = key[0]
+            key_event = key[0]
             key_channel = key[1]
 
-            # Check if key_channel is a string, list/tuple, or other
-            if isinstance(key_channel, basestring):
-                key_channel = self.name_to_index(key_channel)
-                key_all = (key_sample, key_channel)
+            # Convert key_channel to integers if necessary
+            if not isinstance(key_channel, slice):
+                key_channel = self._name_to_index(key_channel)
 
-            elif hasattr(key_channel, '__iter__'):
-                # Make mutable
-                key_channel = list(key_channel)  
-                # Change any strings into channel indices
-                for i, j in enumerate(key_channel):
-                    if isinstance(j, basestring):
-                        key_channel[i] = self.name_to_index(j)
-                key_all = (key_sample, key_channel)
-
-            else:
-                key_all = (key_sample, key_channel)
+            # Reassemble key components
+            key_all = (key_event, key_channel)
 
             # Write into array
             np.ndarray.__setitem__(self, key_all, item)
