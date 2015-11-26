@@ -965,7 +965,7 @@ class FCSData(np.ndarray):
         else:
             return None
 
-    def amplification_type(self, channels = None):
+    def amplification_type(self, channels=None):
         """
         Amplification type used in a specified channel.
 
@@ -1039,7 +1039,7 @@ class FCSData(np.ndarray):
         else:
             return self._detector_voltage[channels]
 
-    def amplifier_gain(self, channels = None):
+    def amplifier_gain(self, channels=None):
         """
         Amplifier gain used in a specified channel.
 
@@ -1074,7 +1074,7 @@ class FCSData(np.ndarray):
         else:
             return self._amplifier_gain[channels]
 
-    def domain(self, channels = None):
+    def domain(self, channels=None):
         """
         Domain of a specified channel.
 
@@ -1108,7 +1108,7 @@ class FCSData(np.ndarray):
         else:
             return self._domain[channels]
 
-    def bin_edges(self, channels = None):
+    def bin_edges(self, channels=None):
         """
         Bin edges of a specified channel.
 
