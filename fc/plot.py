@@ -48,7 +48,7 @@ def hist1d(data_list,
            savefig = None,
            **kwargs):
     """
-    Plot one 1D histogram from one or more FCSData objects.
+    Plot one 1D histogram from one or more flow cytometry data sets.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -62,10 +62,13 @@ def hist1d(data_list,
 
     Parameters
     ----------
-    data_list : FCSData object, or list of FCSData objects
+    data_list : FCSData or numpy array or list of FCSData or numpy array
         Flow cytometry data to plot.
-    channel : int or str
-        Channel from where to take the events to plot.
+    channel : int or str, optional
+        Channel from where to take the events to plot. If ndim == 1,
+        channel is ignored. String channel specifications are only
+        supported for data types which support string-based indexing
+        (e.g. FCSData).
     log : bool, optional
         Flag specifying whether the x axis should be in log scale.
     div : int or float, optional
@@ -75,8 +78,8 @@ def hist1d(data_list,
         actually use ``n/div`` bins that cover the same range as the
         default bins. `div` is ignored if `bins` is specified.
     bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, bins are
-        extracted from the FCSData objects in `data_list`.
+        bins argument to pass to plt.hist. If not specified and data is
+        an FCSData object, attempts to extract bins from FCSData object.
     legend : bool, optional
         Flag specifying whether to include a legend. If `legend` is True,
         the legend labels will be taken from ``kwargs['label']``.
@@ -90,14 +93,15 @@ def hist1d(data_list,
     legend_loc : str, optional
         Location of the legend.
     xlabel : str, optional
-        Label to use on the x axis. If None, the channel name is used.
+        Label to use on the x axis. If None, attempts to extract channel
+        name from last data object.
     ylabel : str, optional
         Label to use on the y axis. If None and ``kwargs['normed']==True``,
         use 'Probability'. If None and ``kwargs['normed']==False``, use
         'Counts'.
     xlim : tuple, optional
-        Limits for the x axis. If not specified, use the lowest and highest
-        values of `bins`.
+        Limits for the x axis. If not specified and `bins` exists, use
+        the lowest and highest values of `bins`.
     ylim : tuple, optional
         Limits for the y axis.
     title : str, optional
@@ -145,7 +149,10 @@ def hist1d(data_list,
     # Iterate through data_list
     for i, data in enumerate(data_list):
         # Extract channel
-        y = data[:, channel]
+        if data.ndim > 1:
+            y = data[:, channel]
+        else:
+            y = data
         # If bins are not specified, get bins from FCSData object
         if bins is None and hasattr(y, 'channel_info'):
             # Get bin information
@@ -168,32 +175,51 @@ def hist1d(data_list,
         if 'label' in kwargsi:
             kwargsi['label'] = kwargsi['label'][i]
         # Actually plot
-        plt.hist(y, bins, histtype = histtype, **kwargsi)
+        if bins is not None:
+            n, edges, patches = plt.hist(y, bins, histtype=histtype, **kwargsi)
+        else:
+            n, edges, patches = plt.hist(y, histtype=histtype, **kwargsi)
         if log == True:
             plt.gca().set_xscale('log')
 
+    ###
     # Final configuration
-    if xlabel is None:
-        plt.xlabel(data[:,channel].channel_info[0]['label'])
-    else:
+    ###
+
+    # x and y labels
+    if xlabel is not None:
+        # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    if ylabel is None:
-        if 'normed' in kwargs:
-            plt.ylabel('Probability')
-        else:
-            plt.ylabel('Counts')
-    else:
+    elif hasattr(y, 'channel_info'):
+        # Attempt to use channel name
+        plt.xlabel(y.channel_info[0]['label'])
+
+    if ylabel is not None:
+        # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    if xlim is None:
-        plt.xlim((bins[0], bins[-1]))
+    elif 'normed' in kwargs:
+        plt.ylabel('Probability')
     else:
+        # Default is "Counts"
+        plt.ylabel('Counts')
+
+    # x and y limits
+    if xlim is not None:
+        # Highest priority is user-provided limits
         plt.xlim(xlim)
-    if ylim:
+    elif bins is not None:
+        # Use bins if specified
+        plt.xlim((edges[0], edges[-1]))
+
+    if ylim is not None:
         plt.ylim(ylim)
-    if title:
+
+    # title and legend
+    if title is not None:
         plt.title(title)
-    if legend:
-        plt.legend(loc = legend_loc, prop={'size': legend_fontsize})
+
+    if legend is not None:
+        plt.legend(loc=legend_loc, prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
