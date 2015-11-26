@@ -368,6 +368,112 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
                                        'Time']].amplifier_gain(),
                          [1.0, 1.0, 0.01])
 
+class TestFCSAttributesAmplificationType(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of amplification_type
+    and amplification_decades.
+
+    We have previously looked at the contents of the $PnE attribute for
+    the test files and identified the correct amplification_type:
+        - Data.001: [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)]
+        - Data.002: [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
+                     (4,1), (0,0)]
+        - Data.003: [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
+                     (0,0)]
+        - Data.004: [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
+                     (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        # for di in self.d:
+        #     print di
+        #     print [di.text.get('$P{}N'.format(j + 1))
+        #            for j in range(len(di.channels))]
+        #     print [di.text.get('$P{}E'.format(j + 1))
+                   # for j in range(len(di.channels))]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of amplification type.
+
+        """
+        self.assertEqual(self.d[0].amplification_type(),
+                         [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)])
+        self.assertEqual(self.d[1].amplification_type(),
+                         [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
+                          (4,1), (0,0)])
+        self.assertEqual(self.d[2].amplification_type(),
+                         [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
+                          (0,0)])
+        self.assertEqual(self.d[3].amplification_type(),
+                         [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
+                          (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of amp. type for a single channel.
+
+        """
+        self.assertEqual(self.d[0].amplification_type('FSC-H'), (0,0))
+        self.assertEqual(self.d[1].amplification_type('FITC-A'), (4,1))
+        self.assertEqual(self.d[2].amplification_type('SSC'), (0,0))
+        self.assertEqual(self.d[3].amplification_type('GFP-A'), (0,0))
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of amp. type for many channels.
+
+        """
+        self.assertEqual(self.d[0].amplification_type(['SSC-H',
+                                                       'FL2-H',
+                                                       'FL3-H']),
+                         [(0,0), (4,1), (4,1)])
+        self.assertEqual(self.d[1].amplification_type(['FITC-A',
+                                                       'PE-A',
+                                                       'PE-Cy7-A']),
+                         [(4,1), (4,1), (4,1)])
+        self.assertEqual(self.d[2].amplification_type(['FSC',
+                                                       'SSC',
+                                                       'FL1']),
+                         [(0,0), (0,0), (4,1)])
+        self.assertEqual(self.d[3].amplification_type(['FSC PMT-A',
+                                                       'FSC PMT-H',
+                                                       'FSC PMT-W']),
+                         [(0,0), (0,0), (0,0)])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of amp. type after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].amplification_type(), [(0,0)])
+        self.assertEqual(self.d[1][:, 'FITC-A'].amplification_type(), [(4,1)])
+        self.assertEqual(self.d[2][:, 'SSC'].amplification_type(), [(0,0)])
+        self.assertEqual(self.d[3][:, 'GFP-A'].amplification_type(), [(0,0)])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of amp. type after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].amplification_type(),
+                         [(0,0), (4,1), (4,1)])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].amplification_type(),
+                         [(4,1), (4,1), (4,1)])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].amplification_type(),
+                         [(0,0), (0,0), (4,1)])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'FSC PMT-W']].amplification_type(),
+                         [(0,0), (0,0), (0,0)])
+
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[0])

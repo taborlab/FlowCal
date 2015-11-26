@@ -965,6 +965,45 @@ class FCSData(np.ndarray):
         else:
             return None
 
+    def amplification_type(self, channels = None):
+        """
+        Amplification type used in a specified channel.
+
+        Each channel uses one of two amplification types: linear or
+        logarithmic. The amplification type for channel "n" is extracted
+        from the required $PnE parameter.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the amplification type. If None,
+            return a list with the amplification type of all channels, in
+            the order of the `channels` attribute.
+
+        Return
+        ------
+        tuple, or list of tuples
+            The amplification type of the specified channel(s). This is
+            reported as a tuple, in which the first element indicates how
+            many decades the logarithmic amplifier covers, and the second
+            indicates the linear value that corresponds to a channel value
+            of zero. If the first element is zero, the amplification type
+            is linear.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._amplification_type[ch] for ch in channels]
+        else:
+            return self._amplification_type[channels]
+
     def detector_voltage(self, channels=None):
         """
         Detector voltage used in a specified channel.
@@ -1111,6 +1150,31 @@ class FCSData(np.ndarray):
                     for i in range(1, num_channels + 1)]
         channels = tuple(channels)
 
+        # Amplification type: The amplification type for channel n is stored
+        # in keyword parameter $PnE. This consists of a tuple of two numbers,
+        # in which the first number indicates the number of decades covered by
+        # the logarithmic amplifier, and the second indicates the linear value
+        # corresponding to the channel value zero. If the first value is zero,
+        # the amplifier used is linear. Note that it is a common non-standard
+        # case to have the first value different from zero, but the second equal
+        # to zero. In this case, information cannot be transformed back to the
+        # linear space. The FCS3.1 standard recommends to assume that the second
+        # value is one in this case.
+        amplification_type = []
+        for i in range(1, num_channels + 1):
+            ati = fcs_file.text.get('$P{}E'.format(i))
+            if ati is not None:
+                # Separate by comma and convert to float
+                ati = ati.split(',')
+                ati = [float(atij) for atij in ati]
+                # Non-standard case: if the first number is nonzero, and the
+                # second is zero, convert the second value to one.
+                if ati[0] != 0.0 and ati[1] == 0.0:
+                    ati[1] = 1.0
+                ati = tuple(ati)
+            amplification_type.append(ati)
+        amplification_type = tuple(amplification_type)
+
         # Detector voltage
         if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
             detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
@@ -1183,6 +1247,7 @@ class FCSData(np.ndarray):
 
         # Add channel-dependent attributes
         obj._channels = channels
+        obj._amplification_type = amplification_type
         obj._detector_voltage = detector_voltage
         obj._amplifier_gain = amplifier_gain
 
@@ -1219,6 +1284,8 @@ class FCSData(np.ndarray):
         # Channel-dependent attributes
         if hasattr(obj, '_channels'):
             self._channels = copy.deepcopy(obj._channels)
+        if hasattr(obj, '_amplification_type'):
+            self._amplification_type = copy.deepcopy(obj._amplification_type)
         if hasattr(obj, '_detector_voltage'):
             self._detector_voltage = copy.deepcopy(obj._detector_voltage)
         if hasattr(obj, '_amplifier_gain'):
@@ -1371,20 +1438,26 @@ class FCSData(np.ndarray):
 
             # Finally, slice channel-dependent attributes
             if hasattr(key_channel, '__iter__'):
-                new_arr._channels = tuple([new_arr._channels[kc]
-                                          for kc in key_channel])
-                new_arr._detector_voltage = tuple([new_arr._detector_voltage[kc]
-                                                  for kc in key_channel])
-                new_arr._amplifier_gain = tuple([new_arr._amplifier_gain[kc]
-                                                 for kc in key_channel])
+                new_arr._channels = tuple(
+                    [new_arr._channels[kc] for kc in key_channel])
+                new_arr._amplification_type = tuple(
+                    [new_arr._amplification_type[kc] for kc in key_channel])
+                new_arr._detector_voltage = tuple(
+                    [new_arr._detector_voltage[kc] for kc in key_channel])
+                new_arr._amplifier_gain = tuple(
+                    [new_arr._amplifier_gain[kc] for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
+                new_arr._amplification_type = \
+                    new_arr._amplification_type[key_channel]
                 new_arr._detector_voltage = \
                     new_arr._detector_voltage[key_channel]
                 new_arr._amplifier_gain = \
                     new_arr._amplifier_gain[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
+                new_arr._amplification_type = \
+                    tuple([new_arr._amplification_type[key_channel]])
                 new_arr._detector_voltage = \
                     tuple([new_arr._detector_voltage[key_channel]])
                 new_arr._amplifier_gain = \
