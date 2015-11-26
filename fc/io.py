@@ -1142,10 +1142,10 @@ class FCSData(np.ndarray):
         # Channel-dependent information
         ###
 
-        # Number of channels
+        # Number of channels: Stored in the $PAR keyword parameter
         num_channels = int(fcs_file.text['$PAR'])
 
-        # Channel names
+        # Channel names: Stored in the keyword parameter $PnN for channel n.
         channels = [fcs_file.text.get('$P{}N'.format(i))
                     for i in range(1, num_channels + 1)]
         channels = tuple(channels)
@@ -1175,7 +1175,10 @@ class FCSData(np.ndarray):
             amplification_type.append(ati)
         amplification_type = tuple(amplification_type)
 
-        # Detector voltage
+        # Detector voltage: Stored in the keyword parameter $PnV for channel n.
+        # The CellQuest Pro software saves the detector voltage in keyword
+        # parameters BD$WORD13, BD$WORD14, BD$WORD15... for channels 1, 2,
+        # 3...
         if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
             detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
                                 for i in range(1, num_channels + 1)]
@@ -1186,7 +1189,7 @@ class FCSData(np.ndarray):
                             for dvi in detector_voltage]
         detector_voltage = tuple(detector_voltage)
 
-        # Amplifier gain
+        # Amplifier gain: Stored in the keyword parameter $PnG for channel n.
         amplifier_gain = [fcs_file.text.get('$P{}G'.format(i))
                           for i in range(1, num_channels + 1)]
         amplifier_gain = [float(agi) if agi is not None else None
