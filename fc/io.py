@@ -976,7 +976,7 @@ class FCSData(np.ndarray):
         ----------
         channels : int, str, list of int, list of str
             Channel(s) for which to get the detector voltage. If None,
-            return a list with the detector type of all channels, in the
+            return a list with the detector voltage of all channels, in the
             order of the `channels` attribute.
 
         Return
@@ -999,6 +999,41 @@ class FCSData(np.ndarray):
             return [self._detector_voltage[ch] for ch in channels]
         else:
             return self._detector_voltage[channels]
+
+    def amplifier_gain(self, channels = None):
+        """
+        Amplifier gain used in a specified channel.
+
+        The amplifier gain for channel "n" is extracted from the $PnG
+        parameter, if available.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the amplifier gain. If None,
+            return a list with the amplifier gain of all channels, in the
+            order of the `channels` attribute.
+
+        Return
+        ------
+        float or list of float
+            The amplifier gain of the specified channel(s). If no
+            information about the amplifier gain is found for a channel,
+            return None.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._amplifier_gain[ch] for ch in channels]
+        else:
+            return self._amplifier_gain[channels]
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -1087,6 +1122,13 @@ class FCSData(np.ndarray):
                             for dvi in detector_voltage]
         detector_voltage = tuple(detector_voltage)
 
+        # Amplifier gain
+        amplifier_gain = [fcs_file.text.get('$P{}G'.format(i))
+                          for i in range(1, num_channels + 1)]
+        amplifier_gain = [float(agi) if agi is not None else None
+                          for agi in amplifier_gain]
+        amplifier_gain = tuple(amplifier_gain)
+
         # # Populate channel_info
         # channel_info = []
         # for i in range(1, num_channels + 1):
@@ -1142,6 +1184,7 @@ class FCSData(np.ndarray):
         # Add channel-dependent attributes
         obj._channels = channels
         obj._detector_voltage = detector_voltage
+        obj._amplifier_gain = amplifier_gain
 
         return obj
 
@@ -1178,6 +1221,8 @@ class FCSData(np.ndarray):
             self._channels = copy.deepcopy(obj._channels)
         if hasattr(obj, '_detector_voltage'):
             self._detector_voltage = copy.deepcopy(obj._detector_voltage)
+        if hasattr(obj, '_amplifier_gain'):
+            self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
 
     # Helper functions
     @staticmethod
@@ -1330,14 +1375,20 @@ class FCSData(np.ndarray):
                                           for kc in key_channel])
                 new_arr._detector_voltage = tuple([new_arr._detector_voltage[kc]
                                                   for kc in key_channel])
+                new_arr._amplifier_gain = tuple([new_arr._amplifier_gain[kc]
+                                                 for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._detector_voltage = \
                     new_arr._detector_voltage[key_channel]
+                new_arr._amplifier_gain = \
+                    new_arr._amplifier_gain[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
                 new_arr._detector_voltage = \
                     tuple([new_arr._detector_voltage[key_channel]])
+                new_arr._amplifier_gain = \
+                    tuple([new_arr._amplifier_gain[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):

@@ -267,6 +267,107 @@ class TestFCSAttributesDetectorVoltage(unittest.TestCase):
                                        'FSC PMT-W']].detector_voltage(),
                          [550, 550, 550])
 
+class TestFCSAttributesAmplifierGain(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of amplifier_gain.
+
+    We have previously looked at the contents of the $PnG attribute for
+    the test files and identified the correct amplifier gain output as follows:
+        - Data.001: [None, None, None, None, None, None]
+        - Data.002: [None, None, None, None, None, None, None, None, None]
+        - Data.003: [None, None, None, None, None, None, None, None]
+        - Data.004: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                     1.0, 1.0, 0.01]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        # for di in self.d:
+        #     print di
+        #     print [di.text.get('$P{}N'.format(j + 1))
+        #            for j in range(len(di.channels))]
+        #     print [di.text.get('$P{}G'.format(j + 1))
+        #            for j in range(len(di.channels))]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of amplifier gain.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain(),
+                         [None, None, None, None, None, None])
+        self.assertEqual(self.d[1].amplifier_gain(),
+                         [None, None, None, None, None, None, None, None, None])
+        self.assertEqual(self.d[2].amplifier_gain(),
+                         [None, None, None, None, None, None, None, None])
+        self.assertEqual(self.d[3].amplifier_gain(),
+                         [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                          1.0, 1.0, 0.01])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of amplifier gain for a single channel.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain('FSC-H'), None)
+        self.assertEqual(self.d[1].amplifier_gain('FITC-A'), None)
+        self.assertEqual(self.d[2].amplifier_gain('SSC'), None)
+        self.assertEqual(self.d[3].amplifier_gain('GFP-A'), 1.0)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of amplifier gain for many channels.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain(['SSC-H',
+                                                   'FL2-H',
+                                                   'FL3-H']),
+                         [None, None, None])
+        self.assertEqual(self.d[1].amplifier_gain(['FITC-A',
+                                                   'PE-A',
+                                                   'PE-Cy7-A']),
+                         [None, None, None])
+        self.assertEqual(self.d[2].amplifier_gain(['FSC',
+                                                   'SSC',
+                                                   'FL1']),
+                         [None, None, None])
+        self.assertEqual(self.d[3].amplifier_gain(['FSC PMT-A',
+                                                   'FSC PMT-H',
+                                                   'FSC PMT-W']),
+                         [1.0, 1.0, 1.0])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of amplifier gain after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].amplifier_gain(), [None])
+        self.assertEqual(self.d[1][:, 'FITC-A'].amplifier_gain(), [None])
+        self.assertEqual(self.d[2][:, 'SSC'].amplifier_gain(), [None])
+        self.assertEqual(self.d[3][:, 'GFP-A'].amplifier_gain(), [1.0])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of amplifier gain after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'Time']].amplifier_gain(),
+                         [1.0, 1.0, 0.01])
+
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[0])
