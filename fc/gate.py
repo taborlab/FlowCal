@@ -43,7 +43,7 @@ Density2dGateOutput = collections.namedtuple(
 # Gate Functions
 ###
 
-def start_end(data, num_start = 250, num_end = 100, full_output=False):
+def start_end(data, num_start=250, num_end=100, full_output=False):
     """
     Gate out first and last events.
 
@@ -52,9 +52,9 @@ def start_end(data, num_start = 250, num_end = 100, full_output=False):
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    num_start, num_end : int
+    num_start, num_end : int, optional
         Number of events to gate out from beginning and end of `data`.
-    full_output : bool
+    full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
@@ -102,13 +102,13 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channels : int, str, list of int, list of str
+    channels : int, str, list of int, list of str, optional
         Channels on which to perform gating. If None, use all channels.
-    high, low : int, float
+    high, low : int, float, optional
         High and low threshold values. If None, `high` and `low` will be
         taken from ``data.channel_info`` if available, otherwise
         ``np.Inf`` and ``-np.Inf`` will be used.
-    full_output : bool
+    full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
@@ -179,12 +179,12 @@ def ellipse(data, channels,
         the number of parameters (aka channels).
     channels : list of int, list of str
         Two channels on which to perform gating.
-    center, a, b, theta : float
+    center, a, b, theta (optional) : float
         Ellipse parameters. `a` is the major axis, `b` is the minor axis.
-    log : bool
+    log : bool, optional
         Flag specifying that log10 transformation should be applied to
         `data` before gating.
-    full_output : bool
+    full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
@@ -259,19 +259,19 @@ def density2d(data, channels=[0,1],
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channels : list of int, list of str
+    channels : list of int, list of str, optional
         Two channels on which to perform gating.
-    bins : int or array_like or [int, int] or [array, array]
+    bins : int or array_like or [int, int] or [array, array], optional
         `bins` argument passed to `np.histogram2d`. If `None`, extracted
         from `FCSData` if possible. `bins` parameter supercedes `FCSData`
         attribute.
-    gate_fraction : float
+    gate_fraction : float, optional
         Fraction of events to retain after gating.
-    sigma : scalar or sequence of scalars
+    sigma : scalar or sequence of scalars, optional
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
         into a density.
-    full_output : bool
+    full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
 
     Returns
@@ -339,7 +339,10 @@ def density2d(data, channels=[0,1],
                             ])
 
     # Make 2D histogram
-    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+    if bins is not None:
+        H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+    else:
+        H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1])
 
     # Map each event to its histogram bin by sorting events into a 2D array of
     # lists which mimics the histogram.
