@@ -965,6 +965,41 @@ class FCSData(np.ndarray):
         else:
             return None
 
+    def detector_voltage(self, channels=None):
+        """
+        Detector voltage used in a specified channel.
+
+        The detector voltage for channel "n" is extracted from the $PnV
+        parameter, if available.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the detector voltage. If None,
+            return a list with the detector type of all channels, in the
+            order of the `channels` attribute.
+
+        Return
+        ------
+        float or list of float
+            The detector voltage of the specified channel(s). If no
+            information about the detector voltage is found for a channel,
+            return None.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._detector_voltage[ch] for ch in channels]
+        else:
+            return self._detector_voltage[channels]
+
     ###
     # Functions overriding inherited np.ndarray functions
     ###
@@ -1041,6 +1076,17 @@ class FCSData(np.ndarray):
                     for i in range(1, num_channels + 1)]
         channels = tuple(channels)
 
+        # Detector voltage
+        if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+            detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
+                                for i in range(1, num_channels + 1)]
+        else:
+            detector_voltage = [fcs_file.text.get('$P{}V'.format(i))
+                            for i in range(1, num_channels + 1)]
+        detector_voltage = [float(dvi) if dvi is not None else None
+                            for dvi in detector_voltage]
+        detector_voltage = tuple(detector_voltage)
+
         # # Populate channel_info
         # channel_info = []
         # for i in range(1, num_channels + 1):
@@ -1095,6 +1141,7 @@ class FCSData(np.ndarray):
 
         # Add channel-dependent attributes
         obj._channels = channels
+        obj._detector_voltage = detector_voltage
 
         return obj
 
@@ -1129,6 +1176,8 @@ class FCSData(np.ndarray):
         # Channel-dependent attributes
         if hasattr(obj, '_channels'):
             self._channels = copy.deepcopy(obj._channels)
+        if hasattr(obj, '_detector_voltage'):
+            self._detector_voltage = copy.deepcopy(obj._detector_voltage)
 
     # Helper functions
     @staticmethod
@@ -1275,14 +1324,20 @@ class FCSData(np.ndarray):
             if not hasattr(new_arr, '__iter__'):
                 return new_arr
 
-            # Finally, slice channel information
+            # Finally, slice channel-dependent attributes
             if hasattr(key_channel, '__iter__'):
-                new_arr._channels = tuple([new_arr._channels[kc] \
-                    for kc in key_channel])
+                new_arr._channels = tuple([new_arr._channels[kc]
+                                          for kc in key_channel])
+                new_arr._detector_voltage = tuple([new_arr._detector_voltage[kc]
+                                                  for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
+                new_arr._detector_voltage = \
+                    new_arr._detector_voltage[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
+                new_arr._detector_voltage = \
+                    tuple([new_arr._detector_voltage[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
