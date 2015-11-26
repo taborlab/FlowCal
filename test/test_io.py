@@ -165,6 +165,108 @@ class TestFCSParseTimeString(unittest.TestCase):
         t = fc.io.FCSData._parse_time_string("i'm undefined")
         self.assertEqual(t, None)
 
+class TestFCSAttributesDetectorVoltage(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of detector_voltage.
+
+    We have previously looked at the contents of the $PnV attribute for
+    the test files ('BD$WORD{12 + n}' for Data.001) and identified the
+    correct detector voltage output as follows:
+        - Data.001: [1, 460, 400, 900, 999, 100]
+        - Data.002: [305, 319, 478, 470, 583, 854, 800, 620, None]
+        - Data.003: [None, 10.0, 460, 501, 501, 501, None, None]
+        - Data.004: [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
+                     575, 575, None]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        # for di in self.d:
+        #     print di
+        #     print [di.text.get('$P{}N'.format(j + 1))
+        #            for j in range(len(di.channels))]
+        #     print [di.text.get('$P{}V'.format(j + 1))
+        #            for j in range(len(di.channels))]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of detector voltage.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage(),
+                         [1, 460, 400, 900, 999, 100])
+        self.assertEqual(self.d[1].detector_voltage(),
+                         [305, 319, 478, 470, 583, 854, 800, 620, None])
+        self.assertEqual(self.d[2].detector_voltage(),
+                         [None, 10.0, 460, 501, 501, 501, None, None])
+        self.assertEqual(self.d[3].detector_voltage(),
+                         [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
+                          575, 575, None])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of detector voltage for a single channel.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage('FSC-H'), 1)
+        self.assertEqual(self.d[1].detector_voltage('FITC-A'), 478)
+        self.assertEqual(self.d[2].detector_voltage('SSC'), 460)
+        self.assertEqual(self.d[3].detector_voltage('GFP-A'), 650)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of detector voltage for many channels.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage(['SSC-H',
+                                                     'FL2-H',
+                                                     'FL3-H']),
+                         [460, 900, 999])
+        self.assertEqual(self.d[1].detector_voltage(['FITC-A',
+                                                     'PE-A',
+                                                     'PE-Cy7-A']),
+                         [478, 470, 854])
+        self.assertEqual(self.d[2].detector_voltage(['FSC',
+                                                     'SSC',
+                                                     'FL1']),
+                         [10, 460, 501])
+        self.assertEqual(self.d[3].detector_voltage(['FSC PMT-A',
+                                                     'FSC PMT-H',
+                                                     'FSC PMT-W']),
+                         [550, 550, 550])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of detector voltage after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].detector_voltage(), [1])
+        self.assertEqual(self.d[1][:, 'FITC-A'].detector_voltage(), [478])
+        self.assertEqual(self.d[2][:, 'SSC'].detector_voltage(), [460])
+        self.assertEqual(self.d[3][:, 'GFP-A'].detector_voltage(), [650])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of detector voltage after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].detector_voltage(),
+                         [460, 900, 999])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].detector_voltage(),
+                         [478, 470, 854])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].detector_voltage(),
+                         [10, 460, 501])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'FSC PMT-W']].detector_voltage(),
+                         [550, 550, 550])
+
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[0])
@@ -269,75 +371,6 @@ class TestFCSAttributes(unittest.TestCase):
         d = self.d[:,['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']]
         self.assertEqual(d.acquisition_time, 77)
 
-    def test_detector_voltage_attribute(self):
-        """
-        Testing correct reporting of detector voltage.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        self.assertEqual(self.d.detector_voltage(),
-                         [1, 460, 400, 900, 999, 100])
-
-    def test_detector_voltage_attribute_single(self):
-        """
-        Testing correct reporting of detector voltage for a single channel.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        self.assertEqual(self.d.detector_voltage('SSC-H'), 460)
-
-    def test_detector_voltage_attribute_many(self):
-        """
-        Testing correct reporting of detector voltage for many channels.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        self.assertEqual(self.d.detector_voltage(['SSC-H', 'FL2-H', 'FL3-H']),
-                         [460, 900, 999])
-
-    def test_detector_voltage_attribute_slice_single_str(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        ds = self.d[:, 'FSC-H']
-        self.assertEqual(ds.detector_voltage(), [1])
-
-    def test_detector_voltage_attribute_slice_single_int(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        ds = self.d[:, 1]
-        self.assertEqual(ds.detector_voltage(), [460.])
-
-    def test_detector_voltage_attribute_slice_many_str(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        ds = self.d[:, ['SSC-H', 'FL2-H']]
-        self.assertEqual(ds.detector_voltage(), [460., 900.])
-
-    def test_detector_voltage_attribute_slice_many_int(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['BD$WORD{12 + n}'], and
-        # determined that the voltages are: 1, 460, 400, 900, 999, and 100.
-        ds = self.d[:, [2,3]]
-        self.assertEqual(ds.detector_voltage(), [400., 900.])
-
 class TestFCSAttributes3(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[2])
@@ -441,76 +474,6 @@ class TestFCSAttributes3(unittest.TestCase):
         # determine the correct output for this file.
         d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
         self.assertEqual(d.acquisition_time, 156)
-
-    def test_detector_voltage_attribute(self):
-        """
-        Testing correct reporting of detector voltage.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        self.assertEqual(self.d.detector_voltage(),
-                         [None, 10.0, 460., 501., 501., 501., None, None])
-
-    def test_detector_voltage_attribute_single(self):
-        """
-        Testing correct reporting of detector voltage for a single channel.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        self.assertEqual(self.d.detector_voltage('SSC'), 460)
-
-    def test_detector_voltage_attribute_many(self):
-        """
-        Testing correct reporting of detector voltage for many channels.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        self.assertEqual(self.d.detector_voltage(['SSC', 'FL2', 'FL3']),
-                         [460, 501, 501])
-
-    def test_detector_voltage_attribute_slice_single_str(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        ds = self.d[:, 'FSC']
-        self.assertEqual(ds.detector_voltage(), [10.])
-
-    def test_detector_voltage_attribute_slice_single_int(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        ds = self.d[:, 1]
-        self.assertEqual(ds.detector_voltage(), [10.])
-
-    def test_detector_voltage_attribute_slice_many_str(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        ds = self.d[:, ['SSC', 'FL2']]
-        self.assertEqual(ds.detector_voltage(), [460., 501.])
-
-    def test_detector_voltage_attribute_slice_many_int(self):
-        """
-        Testing correct reporting of detector voltage after slicing.
-
-        """
-        # We have previously looked at self.d.text['$PnV'], and determined that
-        # the voltages are: None, 10.0, 460, 501, 501, 501, None, and None.
-        ds = self.d[:, [2,3]]
-        self.assertEqual(ds.detector_voltage(), [460., 501.])
-
 
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
