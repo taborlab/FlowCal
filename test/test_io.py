@@ -171,23 +171,17 @@ class TestFCSAttributesAmplificationType(unittest.TestCase):
 
     We have previously looked at the contents of the $PnE attribute for
     the test files and identified the correct amplification_type:
-        - Data.001: [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)]
-        - Data.002: [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
-                     (4,1), (0,0)]
-        - Data.003: [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
-                     (0,0)]
-        - Data.004: [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
-                     (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)]
+        - Data001.fcs: [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)]
+        - Data002.fcs: [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
+                        (4,1), (0,0)]
+        - Data003.fcs: [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
+                        (0,0)]
+        - Data004.fcs: [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
+                        (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)]
 
     """
     def setUp(self):
         self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
-        # for di in self.d:
-        #     print di
-        #     print [di.text.get('$P{}N'.format(j + 1))
-        #            for j in range(len(di.channels))]
-        #     print [di.text.get('$P{}E'.format(j + 1))
-                   # for j in range(len(di.channels))]
 
     def test_attribute(self):
         """
@@ -275,23 +269,17 @@ class TestFCSAttributesDetectorVoltage(unittest.TestCase):
     Test correct extraction, functioning, and slicing of detector_voltage.
 
     We have previously looked at the contents of the $PnV attribute for
-    the test files ('BD$WORD{12 + n}' for Data.001) and identified the
+    the test files ('BD$WORD{12 + n}' for Data001.fcs) and identified the
     correct detector voltage output as follows:
-        - Data.001: [1, 460, 400, 900, 999, 100]
-        - Data.002: [305, 319, 478, 470, 583, 854, 800, 620, None]
-        - Data.003: [None, 10.0, 460, 501, 501, 501, None, None]
-        - Data.004: [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
-                     575, 575, None]
+        - Data001.fcs: [1, 460, 400, 900, 999, 100]
+        - Data002.fcs: [305, 319, 478, 470, 583, 854, 800, 620, None]
+        - Data003.fcs: [None, 10.0, 460, 501, 501, 501, None, None]
+        - Data004.fcs: [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
+                        575, 575, None]
 
     """
     def setUp(self):
         self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
-        # for di in self.d:
-        #     print di
-        #     print [di.text.get('$P{}N'.format(j + 1))
-        #            for j in range(len(di.channels))]
-        #     print [di.text.get('$P{}V'.format(j + 1))
-        #            for j in range(len(di.channels))]
 
     def test_attribute(self):
         """
@@ -377,22 +365,18 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
     Test correct extraction, functioning, and slicing of amplifier_gain.
 
     We have previously looked at the contents of the $PnG attribute for
-    the test files and identified the correct amplifier gain output as follows:
-        - Data.001: [None, None, None, None, None, None]
-        - Data.002: [None, None, None, None, None, None, None, None, None]
-        - Data.003: [None, None, None, None, None, None, None, None]
-        - Data.004: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                     1.0, 1.0, 0.01]
+    the test files and identified the correct amplifier gain output as
+    follows:
+        - Data001.fcs: [None, None, None, None, None, None]
+        - Data002.fcs: [None, None, None, None, None, None, None, None,
+                        None]
+        - Data003.fcs: [None, None, None, None, None, None, None, None]
+        - Data004.fcs: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                        1.0, 1.0, 1.0, 0.01]
 
     """
     def setUp(self):
         self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
-        # for di in self.d:
-        #     print di
-        #     print [di.text.get('$P{}N'.format(j + 1))
-        #            for j in range(len(di.channels))]
-        #     print [di.text.get('$P{}G'.format(j + 1))
-        #            for j in range(len(di.channels))]
 
     def test_attribute(self):
         """
@@ -479,31 +463,25 @@ class TestFCSAttributesDomain(unittest.TestCase):
 
     We have previously looked at the contents of the $PnR attribute for
     the test files and identified the correct domain:
-        - Data.001: [np.arange(1024), np.arange(1024), np.arange(1024),
-                     np.arange(1024), np.arange(1024), np.arange(1024)]
-        - Data.002: [np.arange(1024), np.arange(1024), np.arange(1024),
-                     np.arange(1024), np.arange(1024), np.arange(1024),
-                     np.arange(1024), np.arange(1024), np.arange(1024)]
-        - Data.003: [np.arange(262144), np.arange(1024), np.arange(1024),
-                     np.arange(1024), np.arange(1024), np.arange(1024),
-                     np.arange(1024), np.arange(1024)]
-        - Data.004: [np.arange(262144), np.arange(262144),
-                     np.arange(262144), np.arange(262144), 
-                     np.arange(262144), np.arange(262144), 
-                     np.arange(262144), np.arange(262144), 
-                     np.arange(262144), np.arange(262144), 
-                     np.arange(262144), np.arange(262144), 
-                     np.arange(262144), np.arange(262144)]
+        - Data001.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024)]
+        - Data002.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024)]
+        - Data003.fcs: [np.arange(262144), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024)]
+        - Data004.fcs: [np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144)]
 
     """
     def setUp(self):
         self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
-        # for di in self.d:
-        #     print di
-        #     print [di.text.get('$P{}N'.format(j + 1))
-        #            for j in range(len(di.channels))]
-        #     print [di.text.get('$P{}R'.format(j + 1))
-        #            for j in range(len(di.channels))]
 
     def assert_list_of_arrays_equal(self, l1, l2):
         self.assertEqual(len(l1), len(l2))
@@ -588,25 +566,25 @@ class TestFCSAttributesBinEdges(unittest.TestCase):
 
     We have previously looked at the contents of the $PnR attribute for
     the test files and identified the correct bin edges:
-        - Data.001: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5]
-        - Data.002: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5]
-        - Data.003: [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                     np.arange(1025) - 0.5, np.arange(1025) - 0.5]
-        - Data.004: [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                     np.arange(262145) - 0.5, np.arange(262145) - 0.5]
+        - Data001.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data002.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5]
+        - Data003.fcs: [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data004.fcs: [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5]
 
     """
     def setUp(self):
@@ -755,7 +733,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing of the time step.
 
         """
-        # Data.001 is a FCS2.0 file, use the timeticks parameter.
+        # Data001.fcs is a FCS2.0 file, use the timeticks parameter.
         # We have previously looked at self.d.text['TIMETICKS']) to determine
         # the correct output for this file.
         self.assertEqual(self.d.time_step, 0.2)
@@ -766,7 +744,7 @@ class TestFCSAttributes(unittest.TestCase):
 
         """
         # We have previously looked at the $BTIM and #DATE attributes of
-        # Data.001 to determine the correct value of acquisition_start_time.
+        # Data001.fcs to determine the correct value of acquisition_start_time.
         time_correct = datetime.datetime(2015, 5, 19, 16, 50, 29)
         self.assertEqual(self.d.acquisition_start_time, time_correct)
 
@@ -776,7 +754,7 @@ class TestFCSAttributes(unittest.TestCase):
 
         """
         # We have previously looked at the $ETIM and #DATE attributes of
-        # Data.001 to determine the correct value of acquisition_end_time.
+        # Data001.fcs to determine the correct value of acquisition_end_time.
         time_correct = datetime.datetime(2015, 5, 19, 16, 51, 46)
         self.assertEqual(self.d.acquisition_end_time, time_correct)
 
@@ -785,7 +763,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing acquisition time.
 
         """
-        # Data.001 has the time channel, so the acquisition time should be
+        # Data001.fcs has the time channel, so the acquisition time should be
         # calculated using the event list.
         # We have previously looked at self.d[0, 'Time'] and self.d[-1, 'Time']
         # to determine the correct output for this file.
@@ -796,7 +774,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing acquisition time using the btim/etim method.
 
         """
-        # Data.001 has the time channel, so we will remove it so that the
+        # Data001.fcs has the time channel, so we will remove it so that the
         # BTIM and ETIM keyword arguments are used.
         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
         # determine the correct output for this file.
@@ -820,7 +798,7 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing of the time step.
 
         """
-        # Data.003 is a FCS3.0 file, use the $TIMESTEP parameter.
+        # Data003.fcs is a FCS3.0 file, use the $TIMESTEP parameter.
         # We have previously looked at self.d.text['$TIMESTEP']) to determine
         # the correct output for this file.
         self.assertEqual(self.d.time_step, 0.1)
@@ -831,7 +809,7 @@ class TestFCSAttributes3(unittest.TestCase):
 
         """
         # We have previously looked at the $BTIM and #DATE attributes of
-        # Data.003 to determine the correct value of acquisition_start_time.
+        # Data003.fcs to determine the correct value of acquisition_start_time.
         time_correct = datetime.datetime(2015, 7, 27, 19, 57, 40)
         self.assertEqual(self.d.acquisition_start_time, time_correct)
 
@@ -841,7 +819,7 @@ class TestFCSAttributes3(unittest.TestCase):
 
         """
         # We have previously looked at the $ETIM and #DATE attributes of
-        # Data.003 to determine the correct value of acquisition_end_time.
+        # Data003.fcs to determine the correct value of acquisition_end_time.
         time_correct = datetime.datetime(2015, 7, 27, 20, 00, 16)
         self.assertEqual(self.d.acquisition_end_time, time_correct)
 
@@ -850,7 +828,7 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing acquisition time.
 
         """
-        # Data.003 has the time channel, so the acquisition time should be
+        # Data003.fcs has the time channel, so the acquisition time should be
         # calculated using the event list.
         # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
         # to determine the correct output for this file.
@@ -861,7 +839,7 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing acquisition time using the btim/etim method.
 
         """
-        # Data.003 has the time channel, so we will remove it so that the
+        # Data003.fcs has the time channel, so we will remove it so that the
         # BTIM and ETIM keyword arguments are used.
         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
         # determine the correct output for this file.
