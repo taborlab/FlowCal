@@ -965,6 +965,186 @@ class FCSData(np.ndarray):
         else:
             return None
 
+    def amplification_type(self, channels=None):
+        """
+        Amplification type used in a specified channel.
+
+        Each channel uses one of two amplification types: linear or
+        logarithmic. The amplification type for channel "n" is extracted
+        from the required $PnE parameter.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the amplification type. If None,
+            return a list with the amplification type of all channels, in
+            the order of the `channels` attribute.
+
+        Return
+        ------
+        tuple, or list of tuples
+            The amplification type of the specified channel(s). This is
+            reported as a tuple, in which the first element indicates how
+            many decades the logarithmic amplifier covers, and the second
+            indicates the linear value that corresponds to a channel value
+            of zero. If the first element is zero, the amplification type
+            is linear.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._amplification_type[ch] for ch in channels]
+        else:
+            return self._amplification_type[channels]
+
+    def detector_voltage(self, channels=None):
+        """
+        Detector voltage used in a specified channel.
+
+        The detector voltage for channel "n" is extracted from the $PnV
+        parameter, if available.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the detector voltage. If None,
+            return a list with the detector voltage of all channels, in the
+            order of the `channels` attribute.
+
+        Return
+        ------
+        float or list of float
+            The detector voltage of the specified channel(s). If no
+            information about the detector voltage is found for a channel,
+            return None.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._detector_voltage[ch] for ch in channels]
+        else:
+            return self._detector_voltage[channels]
+
+    def amplifier_gain(self, channels=None):
+        """
+        Amplifier gain used in a specified channel.
+
+        The amplifier gain for channel "n" is extracted from the $PnG
+        parameter, if available.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the amplifier gain. If None,
+            return a list with the amplifier gain of all channels, in the
+            order of the `channels` attribute.
+
+        Return
+        ------
+        float or list of float
+            The amplifier gain of the specified channel(s). If no
+            information about the amplifier gain is found for a channel,
+            return None.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._amplifier_gain[ch] for ch in channels]
+        else:
+            return self._amplifier_gain[channels]
+
+    def domain(self, channels=None):
+        """
+        Domain of a specified channel.
+
+        The domain is inferred from the $PnR parameter, as
+        ``np.arange($PnR)``. The domain should be transformed along with
+        the data when passed through a transformation function.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the domain. If None, return a list
+            with the domain of all channels, in the order of the `channels`
+            attribute.
+
+        Return
+        ------
+        array or list of arrays
+            The domain of the specified channel(s).
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._domain[ch] for ch in channels]
+        else:
+            return self._domain[channels]
+
+    def hist_bin_edges(self, channels=None):
+        """
+        Histograms bin edges for a specified channel.
+
+        This is a convenient set of histogram bin edges, such that each
+        element of the domain is in the center of one bin. More precisely,
+        bin edges are inferred from the $PnR parameter, as
+        ``np.arange($PnR + 1) - 0.5``. These bin edges should be
+        transformed along with the data when passed through a
+        transformation function.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the bin edges. If None, return a
+            list with bin edges for all channels, in the order of the
+            `channels` attribute.
+
+        Return
+        ------
+        array or list of arrays
+            Bin edges for the specified channel(s).
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._hist_bin_edges[ch] for ch in channels]
+        else:
+            return self._hist_bin_edges[channels]
+
     ###
     # Functions overriding inherited np.ndarray functions
     ###
@@ -1033,51 +1213,71 @@ class FCSData(np.ndarray):
         # Channel-dependent information
         ###
 
-        # Number of channels
+        # Number of channels: Stored in the $PAR keyword parameter
         num_channels = int(fcs_file.text['$PAR'])
 
-        # Channel names
+        # Channel names: Stored in the keyword parameter $PnN for channel n.
         channels = [fcs_file.text.get('$P{}N'.format(i))
                     for i in range(1, num_channels + 1)]
         channels = tuple(channels)
 
-        # # Populate channel_info
-        # channel_info = []
-        # for i in range(1, num_channels + 1):
-        #     chi = {}
+        # Amplification type: The amplification type for channel n is stored
+        # in keyword parameter $PnE. This consists of a tuple of two numbers,
+        # in which the first number indicates the number of decades covered by
+        # the logarithmic amplifier, and the second indicates the linear value
+        # corresponding to the channel value zero. If the first value is zero,
+        # the amplifier used is linear. Note that it is a common non-standard
+        # case to have the first value different from zero, but the second equal
+        # to zero. In this case, information cannot be transformed back to the
+        # linear space. The FCS3.1 standard recommends to assume that the second
+        # value is one in this case.
+        amplification_type = []
+        for i in range(1, num_channels + 1):
+            ati = fcs_file.text.get('$P{}E'.format(i))
+            if ati is not None:
+                # Separate by comma and convert to float
+                ati = ati.split(',')
+                ati = [float(atij) for atij in ati]
+                # Non-standard case: if the first number is nonzero, and the
+                # second is zero, convert the second value to one.
+                if ati[0] != 0.0 and ati[1] == 0.0:
+                    ati[1] = 1.0
+                ati = tuple(ati)
+            amplification_type.append(ati)
+        amplification_type = tuple(amplification_type)
 
-        #     # Get label
-        #     chi['label'] = fcs_file.text.get('$P{}N'.format(i))
+        # Domain and hist_bin_edges: These are extracted from the requried $PnR
+        # keyword parameter, and are assumed to be np.arange($PnR) and 
+        # np.arange($PnR + 1) - 0.5, respectively.
+        r = [fcs_file.text.get('$P{}R'.format(i))
+             for i in range(1, num_channels + 1)]
+        domain = [np.arange(float(ri))
+                  if ri is not None else None
+                  for ri in r]
+        hist_bin_edges = [np.arange(float(ri) + 1) - 0.5
+                          if ri is not None else None
+                          for ri in r]
 
-        #     if chi['label'].lower() == 'time':
-        #         pass
-        #     else:
-        #         # Gain
-        #         if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
-        #             chi['pmt_voltage'] = \
-        #                 fcs_file.text.get('BD$WORD{}'.format(12 + i))
-        #         else:
-        #             chi['pmt_voltage'] = fcs_file.text.get('$P{}V'.format(i))
+        # Detector voltage: Stored in the keyword parameter $PnV for channel n.
+        # The CellQuest Pro software saves the detector voltage in keyword
+        # parameters BD$WORD13, BD$WORD14, BD$WORD15... for channels 1, 2,
+        # 3...
+        if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+            detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
+                                for i in range(1, num_channels + 1)]
+        else:
+            detector_voltage = [fcs_file.text.get('$P{}V'.format(i))
+                            for i in range(1, num_channels + 1)]
+        detector_voltage = [float(dvi) if dvi is not None else None
+                            for dvi in detector_voltage]
+        detector_voltage = tuple(detector_voltage)
 
-        #         # Amplification type
-        #         if '$P{}E'.format(i) in fcs_file.text:
-        #             if fcs_file.text['$P{}E'.format(i)] == '0,0':
-        #                 chi['amplifier'] = 'lin'
-        #             else:
-        #                 chi['amplifier'] = 'log'
-        #         else:
-        #             chi['amplifier'] = None
-
-        #         # Range and bins
-        #         PnR = '$P{}R'.format(i)
-        #         chi['range'] = [0,
-        #                         int(fcs_file.text.get(PnR))-1,
-        #                         int(fcs_file.text.get(PnR))]
-        #         chi['bin_vals'] = np.arange(int(fcs_file.text.get(PnR)))
-        #         chi['bin_edges'] = \
-        #             np.arange(int(fcs_file.text.get(PnR)) + 1) - 0.5
-
-        #     channel_info.append(chi)
+        # Amplifier gain: Stored in the keyword parameter $PnG for channel n.
+        amplifier_gain = [fcs_file.text.get('$P{}G'.format(i))
+                          for i in range(1, num_channels + 1)]
+        amplifier_gain = [float(agi) if agi is not None else None
+                          for agi in amplifier_gain]
+        amplifier_gain = tuple(amplifier_gain)
 
         # Create new array. Copy array from FCSFile so as not to modify
         # FCSFile (even though we should be the only ones using it here). With
@@ -1101,6 +1301,11 @@ class FCSData(np.ndarray):
 
         # Add channel-dependent attributes
         obj._channels = channels
+        obj._amplification_type = amplification_type
+        obj._detector_voltage = detector_voltage
+        obj._amplifier_gain = amplifier_gain
+        obj._domain = domain
+        obj._hist_bin_edges = hist_bin_edges
 
         return obj
 
@@ -1135,6 +1340,16 @@ class FCSData(np.ndarray):
         # Channel-dependent attributes
         if hasattr(obj, '_channels'):
             self._channels = copy.deepcopy(obj._channels)
+        if hasattr(obj, '_amplification_type'):
+            self._amplification_type = copy.deepcopy(obj._amplification_type)
+        if hasattr(obj, '_detector_voltage'):
+            self._detector_voltage = copy.deepcopy(obj._detector_voltage)
+        if hasattr(obj, '_amplifier_gain'):
+            self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
+        if hasattr(obj, '_domain'):
+            self._domain = copy.deepcopy(obj._domain)
+        if hasattr(obj, '_hist_bin_edges'):
+            self._hist_bin_edges = copy.deepcopy(obj._hist_bin_edges)
 
     # Helper functions
     @staticmethod
@@ -1281,14 +1496,44 @@ class FCSData(np.ndarray):
             if not hasattr(new_arr, '__iter__'):
                 return new_arr
 
-            # Finally, slice channel information
+            # Finally, slice channel-dependent attributes
             if hasattr(key_channel, '__iter__'):
-                new_arr._channels = tuple([new_arr._channels[kc] \
-                    for kc in key_channel])
+                new_arr._channels = tuple(
+                    [new_arr._channels[kc] for kc in key_channel])
+                new_arr._amplification_type = tuple(
+                    [new_arr._amplification_type[kc] for kc in key_channel])
+                new_arr._detector_voltage = tuple(
+                    [new_arr._detector_voltage[kc] for kc in key_channel])
+                new_arr._amplifier_gain = tuple(
+                    [new_arr._amplifier_gain[kc] for kc in key_channel])
+                new_arr._domain = tuple(
+                    [new_arr._domain[kc] for kc in key_channel])
+                new_arr._hist_bin_edges = tuple(
+                    [new_arr._hist_bin_edges[kc] for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
+                new_arr._amplification_type = \
+                    new_arr._amplification_type[key_channel]
+                new_arr._detector_voltage = \
+                    new_arr._detector_voltage[key_channel]
+                new_arr._amplifier_gain = \
+                    new_arr._amplifier_gain[key_channel]
+                new_arr._domain = \
+                    new_arr._domain[key_channel]
+                new_arr._hist_bin_edges = \
+                    new_arr._hist_bin_edges[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
+                new_arr._amplification_type = \
+                    tuple([new_arr._amplification_type[key_channel]])
+                new_arr._detector_voltage = \
+                    tuple([new_arr._detector_voltage[key_channel]])
+                new_arr._amplifier_gain = \
+                    tuple([new_arr._amplifier_gain[key_channel]])
+                new_arr._domain = \
+                    tuple([new_arr._domain[key_channel]])
+                new_arr._hist_bin_edges = \
+                    tuple([new_arr._hist_bin_edges[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):

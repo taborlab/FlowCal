@@ -165,49 +165,573 @@ class TestFCSParseTimeString(unittest.TestCase):
         t = fc.io.FCSData._parse_time_string("i'm undefined")
         self.assertEqual(t, None)
 
+class TestFCSAttributesAmplificationType(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of amplification_type.
+
+    We have previously looked at the contents of the $PnE attribute for
+    the test files and identified the correct amplification_type:
+        - Data001.fcs: [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)]
+        - Data002.fcs: [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
+                        (4,1), (0,0)]
+        - Data003.fcs: [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
+                        (0,0)]
+        - Data004.fcs: [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
+                        (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of amplification type.
+
+        """
+        self.assertEqual(self.d[0].amplification_type(),
+                         [(0,0), (0,0), (4,1), (4,1), (4,1), (0,0)])
+        self.assertEqual(self.d[1].amplification_type(),
+                         [(4,1), (4,1), (4,1), (4,1), (4,1), (4,1), (4,1),
+                          (4,1), (0,0)])
+        self.assertEqual(self.d[2].amplification_type(),
+                         [(0,0), (0,0), (0,0), (4,1), (4,1), (4,1), (0,0),
+                          (0,0)])
+        self.assertEqual(self.d[3].amplification_type(),
+                         [(0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0),
+                          (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0)])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of amp. type for a single channel.
+
+        """
+        self.assertEqual(self.d[0].amplification_type('FSC-H'), (0,0))
+        self.assertEqual(self.d[1].amplification_type('FITC-A'), (4,1))
+        self.assertEqual(self.d[2].amplification_type('SSC'), (0,0))
+        self.assertEqual(self.d[3].amplification_type('GFP-A'), (0,0))
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of amp. type for many channels.
+
+        """
+        self.assertEqual(self.d[0].amplification_type(['SSC-H',
+                                                       'FL2-H',
+                                                       'FL3-H']),
+                         [(0,0), (4,1), (4,1)])
+        self.assertEqual(self.d[1].amplification_type(['FITC-A',
+                                                       'PE-A',
+                                                       'PE-Cy7-A']),
+                         [(4,1), (4,1), (4,1)])
+        self.assertEqual(self.d[2].amplification_type(['FSC',
+                                                       'SSC',
+                                                       'FL1']),
+                         [(0,0), (0,0), (4,1)])
+        self.assertEqual(self.d[3].amplification_type(['FSC PMT-A',
+                                                       'FSC PMT-H',
+                                                       'FSC PMT-W']),
+                         [(0,0), (0,0), (0,0)])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of amp. type after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].amplification_type(), [(0,0)])
+        self.assertEqual(self.d[1][:, 'FITC-A'].amplification_type(), [(4,1)])
+        self.assertEqual(self.d[2][:, 'SSC'].amplification_type(), [(0,0)])
+        self.assertEqual(self.d[3][:, 'GFP-A'].amplification_type(), [(0,0)])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of amp. type after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].amplification_type(),
+                         [(0,0), (4,1), (4,1)])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].amplification_type(),
+                         [(4,1), (4,1), (4,1)])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].amplification_type(),
+                         [(0,0), (0,0), (4,1)])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'FSC PMT-W']].amplification_type(),
+                         [(0,0), (0,0), (0,0)])
+
+class TestFCSAttributesDetectorVoltage(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of detector_voltage.
+
+    We have previously looked at the contents of the $PnV attribute for
+    the test files ('BD$WORD{12 + n}' for Data001.fcs) and identified the
+    correct detector voltage output as follows:
+        - Data001.fcs: [1, 460, 400, 900, 999, 100]
+        - Data002.fcs: [305, 319, 478, 470, 583, 854, 800, 620, None]
+        - Data003.fcs: [None, 10.0, 460, 501, 501, 501, None, None]
+        - Data004.fcs: [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
+                        575, 575, None]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of detector voltage.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage(),
+                         [1, 460, 400, 900, 999, 100])
+        self.assertEqual(self.d[1].detector_voltage(),
+                         [305, 319, 478, 470, 583, 854, 800, 620, None])
+        self.assertEqual(self.d[2].detector_voltage(),
+                         [None, 10.0, 460, 501, 501, 501, None, None])
+        self.assertEqual(self.d[3].detector_voltage(),
+                         [250, 250, 250, 340, 340, 340, 550, 550, 550, 650, 650,
+                          575, 575, None])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of detector voltage for a single channel.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage('FSC-H'), 1)
+        self.assertEqual(self.d[1].detector_voltage('FITC-A'), 478)
+        self.assertEqual(self.d[2].detector_voltage('SSC'), 460)
+        self.assertEqual(self.d[3].detector_voltage('GFP-A'), 650)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of detector voltage for many channels.
+
+        """
+        self.assertEqual(self.d[0].detector_voltage(['SSC-H',
+                                                     'FL2-H',
+                                                     'FL3-H']),
+                         [460, 900, 999])
+        self.assertEqual(self.d[1].detector_voltage(['FITC-A',
+                                                     'PE-A',
+                                                     'PE-Cy7-A']),
+                         [478, 470, 854])
+        self.assertEqual(self.d[2].detector_voltage(['FSC',
+                                                     'SSC',
+                                                     'FL1']),
+                         [10, 460, 501])
+        self.assertEqual(self.d[3].detector_voltage(['FSC PMT-A',
+                                                     'FSC PMT-H',
+                                                     'FSC PMT-W']),
+                         [550, 550, 550])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of detector voltage after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].detector_voltage(), [1])
+        self.assertEqual(self.d[1][:, 'FITC-A'].detector_voltage(), [478])
+        self.assertEqual(self.d[2][:, 'SSC'].detector_voltage(), [460])
+        self.assertEqual(self.d[3][:, 'GFP-A'].detector_voltage(), [650])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of detector voltage after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].detector_voltage(),
+                         [460, 900, 999])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].detector_voltage(),
+                         [478, 470, 854])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].detector_voltage(),
+                         [10, 460, 501])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'FSC PMT-W']].detector_voltage(),
+                         [550, 550, 550])
+
+class TestFCSAttributesAmplifierGain(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of amplifier_gain.
+
+    We have previously looked at the contents of the $PnG attribute for
+    the test files and identified the correct amplifier gain output as
+    follows:
+        - Data001.fcs: [None, None, None, None, None, None]
+        - Data002.fcs: [None, None, None, None, None, None, None, None,
+                        None]
+        - Data003.fcs: [None, None, None, None, None, None, None, None]
+        - Data004.fcs: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                        1.0, 1.0, 1.0, 0.01]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of amplifier gain.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain(),
+                         [None, None, None, None, None, None])
+        self.assertEqual(self.d[1].amplifier_gain(),
+                         [None, None, None, None, None, None, None, None, None])
+        self.assertEqual(self.d[2].amplifier_gain(),
+                         [None, None, None, None, None, None, None, None])
+        self.assertEqual(self.d[3].amplifier_gain(),
+                         [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                          1.0, 1.0, 0.01])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of amplifier gain for a single channel.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain('FSC-H'), None)
+        self.assertEqual(self.d[1].amplifier_gain('FITC-A'), None)
+        self.assertEqual(self.d[2].amplifier_gain('SSC'), None)
+        self.assertEqual(self.d[3].amplifier_gain('GFP-A'), 1.0)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of amplifier gain for many channels.
+
+        """
+        self.assertEqual(self.d[0].amplifier_gain(['SSC-H',
+                                                   'FL2-H',
+                                                   'FL3-H']),
+                         [None, None, None])
+        self.assertEqual(self.d[1].amplifier_gain(['FITC-A',
+                                                   'PE-A',
+                                                   'PE-Cy7-A']),
+                         [None, None, None])
+        self.assertEqual(self.d[2].amplifier_gain(['FSC',
+                                                   'SSC',
+                                                   'FL1']),
+                         [None, None, None])
+        self.assertEqual(self.d[3].amplifier_gain(['FSC PMT-A',
+                                                   'FSC PMT-H',
+                                                   'FSC PMT-W']),
+                         [1.0, 1.0, 1.0])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of amplifier gain after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, 'FSC-H'].amplifier_gain(), [None])
+        self.assertEqual(self.d[1][:, 'FITC-A'].amplifier_gain(), [None])
+        self.assertEqual(self.d[2][:, 'SSC'].amplifier_gain(), [None])
+        self.assertEqual(self.d[3][:, 'GFP-A'].amplifier_gain(), [1.0])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of amplifier gain after slicing.
+
+        """
+        self.assertEqual(self.d[0][:, ['SSC-H',
+                                       'FL2-H',
+                                       'FL3-H']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[1][:, ['FITC-A',
+                                       'PE-A',
+                                       'PE-Cy7-A']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[2][:, ['FSC',
+                                       'SSC',
+                                       'FL1']].amplifier_gain(),
+                         [None, None, None])
+        self.assertEqual(self.d[3][:, ['FSC PMT-A',
+                                       'FSC PMT-H',
+                                       'Time']].amplifier_gain(),
+                         [1.0, 1.0, 0.01])
+
+class TestFCSAttributesDomain(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of domain.
+
+    We have previously looked at the contents of the $PnR attribute for
+    the test files and identified the correct domain:
+        - Data001.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024)]
+        - Data002.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024)]
+        - Data003.fcs: [np.arange(262144), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024)]
+        - Data004.fcs: [np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144),
+                        np.arange(262144), np.arange(262144)]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+
+    def assert_list_of_arrays_equal(self, l1, l2):
+        self.assertEqual(len(l1), len(l2))
+        for a1, a2 in zip(l1, l2):
+            np.testing.assert_array_equal(a1, a2)
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of domain.
+
+        """
+        self.assert_list_of_arrays_equal(self.d[0].domain(),
+                                         [np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.)])
+        self.assert_list_of_arrays_equal(self.d[1].domain(),
+                                         [np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.)])
+        self.assert_list_of_arrays_equal(self.d[2].domain(),
+                                         [np.arange(262144.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.),
+                                          np.arange(1024.), np.arange(1024.)])
+        self.assert_list_of_arrays_equal(
+            self.d[3].domain(),
+            [np.arange(262144.), np.arange(262144.), np.arange(262144.),
+             np.arange(262144.), np.arange(262144.), np.arange(262144.), 
+             np.arange(262144.), np.arange(262144.), np.arange(262144.),
+             np.arange(262144.), np.arange(262144.), np.arange(262144.), 
+             np.arange(262144.), np.arange(262144.)])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of domain for a single channel.
+
+        """
+        np.testing.assert_array_equal(self.d[0].domain('FSC-H'),
+                                      np.arange(1024))
+        np.testing.assert_array_equal(self.d[1].domain('FITC-A'),
+                                      np.arange(1024))
+        np.testing.assert_array_equal(self.d[2].domain('SSC'),
+                                      np.arange(1024))
+        np.testing.assert_array_equal(self.d[3].domain('GFP-A'),
+                                      np.arange(262144))
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of domain for many channels.
+
+        """
+        self.assert_list_of_arrays_equal(self.d[0].domain(['SSC-H',
+                                                           'FL2-H',
+                                                           'FL3-H']),
+                                         [np.arange(1024),
+                                          np.arange(1024),
+                                          np.arange(1024)])
+        self.assert_list_of_arrays_equal(self.d[1].domain(['FITC-A',
+                                                           'PE-A',
+                                                           'PE-Cy7-A']),
+                                         [np.arange(1024),
+                                          np.arange(1024),
+                                          np.arange(1024)])
+        self.assert_list_of_arrays_equal(self.d[2].domain(['FSC',
+                                                           'SSC',
+                                                           'TIME']),
+                                         [np.arange(1024),
+                                          np.arange(1024),
+                                          np.arange(262144)])
+        self.assert_list_of_arrays_equal(self.d[3].domain(['FSC PMT-A',
+                                                           'FSC PMT-H',
+                                                           'FSC PMT-W']),
+                                         [np.arange(262144),
+                                          np.arange(262144),
+                                          np.arange(262144)])
+
+class TestFCSAttributesHistBinEdges(unittest.TestCase):
+    """
+    Test correct extraction, functioning, and slicing of bin edges.
+
+    We have previously looked at the contents of the $PnR attribute for
+    the test files and identified the correct histogram bin edges:
+        - Data001.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data002.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5]
+        - Data003.fcs: [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data004.fcs: [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5]
+
+    """
+    def setUp(self):
+        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+
+    def assert_list_of_arrays_equal(self, l1, l2):
+        self.assertEqual(len(l1), len(l2))
+        for a1, a2 in zip(l1, l2):
+            np.testing.assert_array_equal(a1, a2)
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of hist_bin_edges.
+
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bin_edges(),
+            [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1].hist_bin_edges(),
+            [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bin_edges(),
+            [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3].hist_bin_edges(),
+            [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of hist_bin_edges for a single channel.
+
+        """
+        np.testing.assert_array_equal(self.d[0].hist_bin_edges('FSC-H'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[1].hist_bin_edges('FITC-A'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[2].hist_bin_edges('SSC'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[3].hist_bin_edges('GFP-A'),
+                                      np.arange(262145) - 0.5)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of hist_bin_edges for many channels.
+
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bin_edges(['SSC-H',
+                                      'FL2-H',
+                                      'FL3-H']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1].hist_bin_edges(['FITC-A',
+                                      'PE-A',
+                                      'PE-Cy7-A']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bin_edges(['FSC',
+                                      'SSC',
+                                      'TIME']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3].hist_bin_edges(['FSC PMT-A',
+                                      'FSC PMT-H',
+                                      'FSC PMT-W']),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of hist_bin_edges after slicing.
+
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, 'FSC-H'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, 'FITC-A'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, 'SSC'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:, 'GFP-A'].hist_bin_edges(),
+            [np.arange(262145) - 0.5])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of hist_bin_edges after slicing.
+
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, ['SSC-H',
+                          'FL2-H',
+                          'FL3-H']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, ['FITC-A',
+                          'PE-A',
+                          'PE-Cy7-A']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, ['FSC',
+                          'SSC',
+                          'TIME']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:,['FSC PMT-A',
+                         'FSC PMT-H',
+                         'FSC PMT-W']].hist_bin_edges(),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
+
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
-
-#     def test_range(self):
-#         """
-#         Testing proper loading of range information.
-
-#         """
-#         self.assertEqual(self.d.channel_info[0]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[1]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[2]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
-
-#     def test_bins(self):
-#         """
-#         Testing proper creation of bins.
-
-#         """
-#         # Bin values
-#         np.testing.assert_array_equal(self.d.channel_info[0]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[1]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[2]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[3]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[4]['bin_vals'], 
-#             np.arange(1024))
-#         # Bin edges
-#         np.testing.assert_array_equal(self.d.channel_info[0]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[1]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[2]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[3]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[4]['bin_edges'], 
-#             np.arange(1025) - 0.5)
 
     def test_str(self):
         """
@@ -221,7 +745,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing of the time step.
 
         """
-        # Data.001 is a FCS2.0 file, use the timeticks parameter.
+        # Data001.fcs is a FCS2.0 file, use the timeticks parameter.
         # We have previously looked at self.d.text['TIMETICKS']) to determine
         # the correct output for this file.
         self.assertEqual(self.d.time_step, 0.2)
@@ -232,7 +756,7 @@ class TestFCSAttributes(unittest.TestCase):
 
         """
         # We have previously looked at the $BTIM and #DATE attributes of
-        # Data.001 to determine the correct value of acquisition_start_time.
+        # Data001.fcs to determine the correct value of acquisition_start_time.
         time_correct = datetime.datetime(2015, 5, 19, 16, 50, 29)
         self.assertEqual(self.d.acquisition_start_time, time_correct)
 
@@ -242,7 +766,7 @@ class TestFCSAttributes(unittest.TestCase):
 
         """
         # We have previously looked at the $ETIM and #DATE attributes of
-        # Data.001 to determine the correct value of acquisition_end_time.
+        # Data001.fcs to determine the correct value of acquisition_end_time.
         time_correct = datetime.datetime(2015, 5, 19, 16, 51, 46)
         self.assertEqual(self.d.acquisition_end_time, time_correct)
 
@@ -251,7 +775,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing acquisition time.
 
         """
-        # Data.001 has the time channel, so the acquisition time should be
+        # Data001.fcs has the time channel, so the acquisition time should be
         # calculated using the event list.
         # We have previously looked at self.d[0, 'Time'] and self.d[-1, 'Time']
         # to determine the correct output for this file.
@@ -262,7 +786,7 @@ class TestFCSAttributes(unittest.TestCase):
         Testing acquisition time using the btim/etim method.
 
         """
-        # Data.001 has the time channel, so we will remove it so that the
+        # Data001.fcs has the time channel, so we will remove it so that the
         # BTIM and ETIM keyword arguments are used.
         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
         # determine the correct output for this file.
@@ -273,45 +797,6 @@ class TestFCSAttributes3(unittest.TestCase):
     def setUp(self):
         self.d = fc.io.FCSData(filenames[2])
         self.n_samples = self.d.shape[0]
-
-#     def test_range(self):
-#         """
-#         Testing proper loading of range information.
-
-#         """
-#         self.assertEqual(self.d.channel_info[1]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[2]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[3]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[4]['range'], [0, 1023, 1024])
-#         self.assertEqual(self.d.channel_info[5]['range'], [0, 1023, 1024])
-
-#     def test_bins(self):
-#         """
-#         Testing proper creation of bins.
-
-#         """
-#         # Bin values
-#         np.testing.assert_array_equal(self.d.channel_info[1]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[2]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[3]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[4]['bin_vals'], 
-#             np.arange(1024))
-#         np.testing.assert_array_equal(self.d.channel_info[5]['bin_vals'], 
-#             np.arange(1024))
-#         # Bin edges
-#         np.testing.assert_array_equal(self.d.channel_info[1]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[2]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[3]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[4]['bin_edges'], 
-#             np.arange(1025) - 0.5)
-#         np.testing.assert_array_equal(self.d.channel_info[5]['bin_edges'], 
-#             np.arange(1025) - 0.5)
 
     def test_str(self):
         """
@@ -325,7 +810,7 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing of the time step.
 
         """
-        # Data.003 is a FCS3.0 file, use the $TIMESTEP parameter.
+        # Data003.fcs is a FCS3.0 file, use the $TIMESTEP parameter.
         # We have previously looked at self.d.text['$TIMESTEP']) to determine
         # the correct output for this file.
         self.assertEqual(self.d.time_step, 0.1)
@@ -336,7 +821,7 @@ class TestFCSAttributes3(unittest.TestCase):
 
         """
         # We have previously looked at the $BTIM and #DATE attributes of
-        # Data.003 to determine the correct value of acquisition_start_time.
+        # Data003.fcs to determine the correct value of acquisition_start_time.
         time_correct = datetime.datetime(2015, 7, 27, 19, 57, 40)
         self.assertEqual(self.d.acquisition_start_time, time_correct)
 
@@ -346,7 +831,7 @@ class TestFCSAttributes3(unittest.TestCase):
 
         """
         # We have previously looked at the $ETIM and #DATE attributes of
-        # Data.003 to determine the correct value of acquisition_end_time.
+        # Data003.fcs to determine the correct value of acquisition_end_time.
         time_correct = datetime.datetime(2015, 7, 27, 20, 00, 16)
         self.assertEqual(self.d.acquisition_end_time, time_correct)
 
@@ -355,7 +840,7 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing acquisition time.
 
         """
-        # Data.003 has the time channel, so the acquisition time should be
+        # Data003.fcs has the time channel, so the acquisition time should be
         # calculated using the event list.
         # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
         # to determine the correct output for this file.
@@ -366,13 +851,12 @@ class TestFCSAttributes3(unittest.TestCase):
         Testing acquisition time using the btim/etim method.
 
         """
-        # Data.001 has the time channel, so we will remove it so that the
+        # Data003.fcs has the time channel, so we will remove it so that the
         # BTIM and ETIM keyword arguments are used.
         # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
         # determine the correct output for this file.
         d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
         self.assertEqual(d.acquisition_time, 156)
-
 
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
