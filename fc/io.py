@@ -1108,15 +1108,16 @@ class FCSData(np.ndarray):
         else:
             return self._domain[channels]
 
-    def bin_edges(self, channels=None):
+    def hist_bin_edges(self, channels=None):
         """
-        Bin edges of a specified channel.
+        Histograms bin edges for a specified channel.
 
-        This is a convenient set of bin edges, such that elements of the
-        domain are in the center of one bin. More precisely, bin edges are
-        inferred from the $PnR parameter, as ``np.arange($PnR + 1) - 0.5``.
-        These bin edges should be transformed along with the data when
-        passed through a transformation function.
+        This is a convenient set of histogram bin edges, such that each
+        element of the domain is in the center of one bin. More precisely,
+        bin edges are inferred from the $PnR parameter, as
+        ``np.arange($PnR + 1) - 0.5``. These bin edges should be
+        transformed along with the data when passed through a
+        transformation function.
 
         Parameters
         ----------
@@ -1140,9 +1141,9 @@ class FCSData(np.ndarray):
 
         # Get detector type of the specified channels
         if hasattr(channels, '__iter__'):
-            return [self._bin_edges[ch] for ch in channels]
+            return [self._hist_bin_edges[ch] for ch in channels]
         else:
-            return self._bin_edges[channels]
+            return self._hist_bin_edges[channels]
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -1245,7 +1246,7 @@ class FCSData(np.ndarray):
             amplification_type.append(ati)
         amplification_type = tuple(amplification_type)
 
-        # Domain and bin_edges: These are extracted from the requried $PnR
+        # Domain and hist_bin_edges: These are extracted from the requried $PnR
         # keyword parameter, and are assumed to be np.arange($PnR) and 
         # np.arange($PnR + 1) - 0.5, respectively.
         r = [fcs_file.text.get('$P{}R'.format(i))
@@ -1253,9 +1254,9 @@ class FCSData(np.ndarray):
         domain = [np.arange(float(ri))
                   if ri is not None else None
                   for ri in r]
-        bin_edges = [np.arange(float(ri) + 1) - 0.5
-                     if ri is not None else None
-                     for ri in r]
+        hist_bin_edges = [np.arange(float(ri) + 1) - 0.5
+                          if ri is not None else None
+                          for ri in r]
 
         # Detector voltage: Stored in the keyword parameter $PnV for channel n.
         # The CellQuest Pro software saves the detector voltage in keyword
@@ -1298,7 +1299,7 @@ class FCSData(np.ndarray):
         obj._detector_voltage = detector_voltage
         obj._amplifier_gain = amplifier_gain
         obj._domain = domain
-        obj._bin_edges = bin_edges
+        obj._hist_bin_edges = hist_bin_edges
 
         return obj
 
@@ -1341,8 +1342,8 @@ class FCSData(np.ndarray):
             self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
         if hasattr(obj, '_domain'):
             self._domain = copy.deepcopy(obj._domain)
-        if hasattr(obj, '_bin_edges'):
-            self._bin_edges = copy.deepcopy(obj._bin_edges)
+        if hasattr(obj, '_hist_bin_edges'):
+            self._hist_bin_edges = copy.deepcopy(obj._hist_bin_edges)
 
     # Helper functions
     @staticmethod
@@ -1501,8 +1502,8 @@ class FCSData(np.ndarray):
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
                 new_arr._domain = tuple(
                     [new_arr._domain[kc] for kc in key_channel])
-                new_arr._bin_edges = tuple(
-                    [new_arr._bin_edges[kc] for kc in key_channel])
+                new_arr._hist_bin_edges = tuple(
+                    [new_arr._hist_bin_edges[kc] for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._amplification_type = \
@@ -1513,8 +1514,8 @@ class FCSData(np.ndarray):
                     new_arr._amplifier_gain[key_channel]
                 new_arr._domain = \
                     new_arr._domain[key_channel]
-                new_arr._bin_edges = \
-                    new_arr._bin_edges[key_channel]
+                new_arr._hist_bin_edges = \
+                    new_arr._hist_bin_edges[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
                 new_arr._amplification_type = \
@@ -1525,8 +1526,8 @@ class FCSData(np.ndarray):
                     tuple([new_arr._amplifier_gain[key_channel]])
                 new_arr._domain = \
                     tuple([new_arr._domain[key_channel]])
-                new_arr._bin_edges = \
-                    tuple([new_arr._bin_edges[key_channel]])
+                new_arr._hist_bin_edges = \
+                    tuple([new_arr._hist_bin_edges[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):

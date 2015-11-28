@@ -560,12 +560,12 @@ class TestFCSAttributesDomain(unittest.TestCase):
                                           np.arange(262144),
                                           np.arange(262144)])
 
-class TestFCSAttributesBinEdges(unittest.TestCase):
+class TestFCSAttributesHistBinEdges(unittest.TestCase):
     """
     Test correct extraction, functioning, and slicing of bin edges.
 
     We have previously looked at the contents of the $PnR attribute for
-    the test files and identified the correct bin edges:
+    the test files and identified the correct histogram bin edges:
         - Data001.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5]
@@ -597,29 +597,29 @@ class TestFCSAttributesBinEdges(unittest.TestCase):
 
     def test_attribute(self):
         """
-        Testing correct reporting of bin_edges.
+        Testing correct reporting of hist_bin_edges.
 
         """
         self.assert_list_of_arrays_equal(
-            self.d[0].bin_edges(),
+            self.d[0].hist_bin_edges(),
             [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5])
         self.assert_list_of_arrays_equal(
-            self.d[1].bin_edges(),
+            self.d[1].hist_bin_edges(),
             [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5])
         self.assert_list_of_arrays_equal(
-            self.d[2].bin_edges(),
+            self.d[2].hist_bin_edges(),
             [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5])
         self.assert_list_of_arrays_equal(
-            self.d[3].bin_edges(),
+            self.d[3].hist_bin_edges(),
             [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
              np.arange(262145) - 0.5, np.arange(262145) - 0.5,
              np.arange(262145) - 0.5, np.arange(262145) - 0.5,
@@ -630,91 +630,103 @@ class TestFCSAttributesBinEdges(unittest.TestCase):
 
     def test_attribute_single(self):
         """
-        Testing correct reporting of bin_edges for a single channel.
+        Testing correct reporting of hist_bin_edges for a single channel.
 
         """
-        np.testing.assert_array_equal(self.d[0].bin_edges('FSC-H'),
+        np.testing.assert_array_equal(self.d[0].hist_bin_edges('FSC-H'),
                                       np.arange(1025) - 0.5)
-        np.testing.assert_array_equal(self.d[1].bin_edges('FITC-A'),
+        np.testing.assert_array_equal(self.d[1].hist_bin_edges('FITC-A'),
                                       np.arange(1025) - 0.5)
-        np.testing.assert_array_equal(self.d[2].bin_edges('SSC'),
+        np.testing.assert_array_equal(self.d[2].hist_bin_edges('SSC'),
                                       np.arange(1025) - 0.5)
-        np.testing.assert_array_equal(self.d[3].bin_edges('GFP-A'),
+        np.testing.assert_array_equal(self.d[3].hist_bin_edges('GFP-A'),
                                       np.arange(262145) - 0.5)
 
     def test_attribute_many(self):
         """
-        Testing correct reporting of bin_edges for many channels.
+        Testing correct reporting of hist_bin_edges for many channels.
 
         """
-        self.assert_list_of_arrays_equal(self.d[0].bin_edges(['SSC-H',
-                                                           'FL2-H',
-                                                           'FL3-H']),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[1].bin_edges(['FITC-A',
-                                                           'PE-A',
-                                                           'PE-Cy7-A']),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[2].bin_edges(['FSC',
-                                                           'SSC',
-                                                           'TIME']),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(262145) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[3].bin_edges(['FSC PMT-A',
-                                                           'FSC PMT-H',
-                                                           'FSC PMT-W']),
-                                         [np.arange(262145) - 0.5,
-                                          np.arange(262145) - 0.5,
-                                          np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bin_edges(['SSC-H',
+                                      'FL2-H',
+                                      'FL3-H']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1].hist_bin_edges(['FITC-A',
+                                      'PE-A',
+                                      'PE-Cy7-A']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bin_edges(['FSC',
+                                      'SSC',
+                                      'TIME']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3].hist_bin_edges(['FSC PMT-A',
+                                      'FSC PMT-H',
+                                      'FSC PMT-W']),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
 
     def test_slice_single_str(self):
         """
-        Testing correct reporting of bin_edges after slicing.
+        Testing correct reporting of hist_bin_edges after slicing.
 
         """
-        self.assert_list_of_arrays_equal(self.d[0][:, 'FSC-H'].bin_edges(),
-                                         [np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[1][:, 'FITC-A'].bin_edges(),
-                                         [np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[2][:, 'SSC'].bin_edges(),
-                                         [np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[3][:, 'GFP-A'].bin_edges(),
-                                         [np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, 'FSC-H'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, 'FITC-A'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, 'SSC'].hist_bin_edges(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:, 'GFP-A'].hist_bin_edges(),
+            [np.arange(262145) - 0.5])
 
     def test_slice_many_str(self):
         """
-        Testing correct reporting of bin_edges after slicing.
+        Testing correct reporting of hist_bin_edges after slicing.
 
         """
-        self.assert_list_of_arrays_equal(self.d[0][:, ['SSC-H',
-                                                       'FL2-H',
-                                                       'FL3-H']].bin_edges(),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[1][:, ['FITC-A',
-                                                       'PE-A',
-                                                       'PE-Cy7-A']].bin_edges(),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[2][:, ['FSC',
-                                                       'SSC',
-                                                       'TIME']].bin_edges(),
-                                         [np.arange(1025) - 0.5,
-                                          np.arange(1025) - 0.5,
-                                          np.arange(262145) - 0.5])
-        self.assert_list_of_arrays_equal(self.d[3][:,['FSC PMT-A',
-                                                      'FSC PMT-H',
-                                                      'FSC PMT-W']].bin_edges(),
-                                         [np.arange(262145) - 0.5,
-                                          np.arange(262145) - 0.5,
-                                          np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, ['SSC-H',
+                          'FL2-H',
+                          'FL3-H']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, ['FITC-A',
+                          'PE-A',
+                          'PE-Cy7-A']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, ['FSC',
+                          'SSC',
+                          'TIME']].hist_bin_edges(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:,['FSC PMT-A',
+                         'FSC PMT-H',
+                         'FSC PMT-W']].hist_bin_edges(),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
 
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
