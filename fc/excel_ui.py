@@ -587,13 +587,13 @@ def add_stats(samples_table, samples):
                                         fc.stats.std(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' CV',
-                                        fc.stats.CV(sample, channel))
+                                        fc.stats.cv(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' IQR',
                                         fc.stats.iqr(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' RCV',
-                                        fc.stats.RCV(sample, channel))
+                                        fc.stats.rcv(sample, channel))
 
 def generate_histograms_table(samples_table, samples):
     """
