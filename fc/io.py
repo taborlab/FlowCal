@@ -773,9 +773,7 @@ class FCSData(np.ndarray):
 
     Two additional attributes are implemented: `channel_info` stores
     information related to each channels, including name, gain,
-    precalculated bins, etc. `metadata` keeps user-defined,
-    channel-independent, sample-specific information, separate from `text`
-    and `analysis`.
+    precalculated bins, etc.
 
     `FCSData` can read standard FCS files with versions 2.0, 3.0, and 3.1.
     Some non-standard FCS files, which store information used by `FCSData`
@@ -797,8 +795,6 @@ class FCSData(np.ndarray):
     ----------
     infile : str or file-like
         Reference to the associated FCS file.
-    metadata : dict
-        Additional channel-independent, sample-specific information.
 
     Attributes
     ----------
@@ -819,8 +815,6 @@ class FCSData(np.ndarray):
         - amplifier : amplifier type, 'lin' or 'log'.
         - bin_vals : numpy array with bin values.
         - bin_vals : numpy array with bin edges.
-    metadata : dict
-        Additional channel-independent, sample-specific information.
     channels
     time_step
     acquisition_time
@@ -874,14 +868,6 @@ class FCSData(np.ndarray):
 
         """
         return self._analysis
-
-    @property
-    def metadata(self):
-        """
-        Dictionary with channel-independent, sample specific information.
-
-        """
-        return self._metadata
 
     @property
     def channels(self):
@@ -1154,7 +1140,7 @@ class FCSData(np.ndarray):
 
     # Functions involved in the creation of new arrays
 
-    def __new__(cls, infile, metadata={}):
+    def __new__(cls, infile):
 
         # Load FCS file
         fcs_file = FCSFile(infile)
@@ -1297,7 +1283,6 @@ class FCSData(np.ndarray):
         obj._time_step = time_step
         obj._acquisition_start_time = acquisition_start_time
         obj._acquisition_end_time = acquisition_end_time
-        obj._metadata = metadata
 
         # Add channel-dependent attributes
         obj._channels = channels
@@ -1334,8 +1319,6 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_acquisition_end_time'):
             self._acquisition_end_time = copy.deepcopy(
                 obj._acquisition_end_time)
-        if hasattr(obj, '_metadata'):
-            self._metadata = copy.deepcopy(obj._metadata)
 
         # Channel-dependent attributes
         if hasattr(obj, '_channels'):
