@@ -474,8 +474,8 @@ class FCSFile(object):
             - analysis_begin : int
             - analysis_end : int
     text : dict
-        Dictionary of keyword-value entries from TEXT segment and
-        optional supplemental TEXT segment.
+        Dictionary of keyword-value entries from TEXT segment and optional
+        supplemental TEXT segment.
     data : numpy array
         Unwriteable NxD numpy array describing N cytometry events
         observing D data dimensions.
@@ -763,33 +763,19 @@ class FCSFile(object):
 
 class FCSData(np.ndarray):
     """
-    Object containing events from a flow cytometry sample.
+    Object containing events data from a flow cytometry sample.
 
     An `FCSData` object is an NxD numpy array representing N cytometry
-    events with D dimensions extracted from the DATA segment of an FCS
-    file. The TEXT segment information is included as a dictionary in one
-    of the class attributes, `text`. ANALYSIS information is parsed
-    similarly.
+    events with D dimensions (channels) extracted from the DATA segment of
+    an FCS file. Indexing along the second axis can be performed by channel
+    name, which allows to easily select data from one or several channels.
+    Otherwise, an `FCSData` object can be treated as a numpy array for most
+    purposes.
 
-    Two additional attributes are implemented: `channel_info` stores
-    information related to each channels, including name, gain,
-    precalculated bins, etc.
-
-    `FCSData` can read standard FCS files with versions 2.0, 3.0, and 3.1.
-    Some non-standard FCS files, which store information used by `FCSData`
-    in vendor-specific keywords, are also supported. Currently,
-    `FCSData` can read non-standard FCS files from the following
-    acquisition software/instrument combinations:
-        - FCS 2.0 from CellQuestPro 5.1.1/BD FACScan Flow Cytometer
-
-    The FCS file must be of the following form:
-        - Only one data set present.
-        - $MODE = 'L' (list mode; histogram mode not supported).
-        - $DATATYPE = 'I' (unsigned integer), 'F' (32-bit floating point),
-            or 'D' (64-bit floating point). 'A' (ASCII) is not supported.
-        - If $DATATYPE = 'I', $PnB % 8 = 0 (byte-aligned) for all channels.
-        - $BYTEORD = '4,3,2,1' (big endian) or '1,2,3,4' (little endian).
-        - $GATE not present in TEXT, or $GATE = 0.
+    Information regarding the acquisition date, time, and information about
+    the detector and the amplifiers are parsed from the TEXT segment of the
+    FCS file and exposed as attributes. The TEXT and ANALYSIS segments are
+    also exposed as attributes.
     
     Parameters
     ----------
@@ -806,18 +792,35 @@ class FCSData(np.ndarray):
     analysis : dict
         Dictionary of keyword-value entries from ANALYSIS segment of FCS
         file.
-    channel_info : list
-        List of dictionaries, each one containing information about each
-        channel. The keys of each one are:
-        - label :  Name of the channel.
-        - number : Channel index.
-        - pmt_voltage : Voltage of the PMT detector.
-        - amplifier : amplifier type, 'lin' or 'log'.
-        - bin_vals : numpy array with bin values.
-        - bin_vals : numpy array with bin edges.
-    channels
-    time_step
-    acquisition_time
+    time_step : float
+        Time step of the time channel.
+    acquisition_start_time : time or datetime
+        Acquisition start time.
+    acquisition_end_time : time or datetime
+        Acquisition end time.
+    acquisition_time : float
+        Acquisition time, in seconds.
+    channels : tuple
+        The name of the channels contained in `FCSData`.
+
+    Methods
+    -------
+    amplification_type(channels=None)
+        Get the amplification type used for the specified channel(s).
+    detector_voltage(channels=None)
+        Get the detector voltage used for the specified channel(s).
+    amplifier_gain(channels=None)
+        Get the amplifier gain used for the specified channel(s).
+    domain(channels=None)
+        Get the domain of the specified channel(s).
+    hist_bin_edges(channels=None)
+        Get histogram bin edges for the specified channel(s).
+
+    Notes
+    -----
+    `FCSData` uses `FCSFile` to parse an FCS file. All restrictions on the
+    FCS file format and the Exceptions spcecified for FCSFile also apply
+    to FCSData.
 
     References
     ----------
@@ -837,6 +840,38 @@ class FCSData(np.ndarray):
     
     .. [4] R. Hicks, "BD$WORD file header fields,"
        https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
+
+    Examples
+    --------
+    Load an FCS file into an FCSData object
+    >>> import fc
+    >>> d = fc.io.FCSData('test/Data001.fcs')
+
+    Check channel names
+    >>> print d.channels
+    ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time')
+
+    Check the size of FCSData
+    >>> print d.shape
+    (20949, 6)
+
+    Get the first 100 events
+    >>> d_sub = d[:100]
+    >>> print d_sub.shape
+    (100, 6)
+
+    Retain only fluorescence channels
+    >>> d_fl = d[:, ['FL1-H', 'FL2-H', 'FL3-H']]
+    >>> d_fl.channels
+    ('FL1-H', 'FL2-H', 'FL3-H')
+
+    Channel slicing can also be done with integer indices
+    >>> d_fl_2 = d[:, [2, 3, 4]]
+    >>> print d_fl_2.channels
+    ('FL1-H', 'FL2-H', 'FL3-H')
+    >>> import numpy as np
+    >>> np.all(d_fl == d_fl_2)
+    True
 
     """
 
@@ -868,14 +903,6 @@ class FCSData(np.ndarray):
 
         """
         return self._analysis
-
-    @property
-    def channels(self):
-        """
-        List of channel names.
-
-        """
-        return self._channels
 
     @property
     def time_step(self):
@@ -951,9 +978,17 @@ class FCSData(np.ndarray):
         else:
             return None
 
+    @property
+    def channels(self):
+        """
+        The name of the channels contained in `FCSData`.
+
+        """
+        return self._channels
+
     def amplification_type(self, channels=None):
         """
-        Amplification type used in a specified channel.
+        Get the amplification type used for the specified channel(s).
 
         Each channel uses one of two amplification types: linear or
         logarithmic. The amplification type for channel "n" is extracted
@@ -992,7 +1027,7 @@ class FCSData(np.ndarray):
 
     def detector_voltage(self, channels=None):
         """
-        Detector voltage used in a specified channel.
+        Get the detector voltage used for the specified channel(s).
 
         The detector voltage for channel "n" is extracted from the $PnV
         parameter, if available.
@@ -1027,7 +1062,7 @@ class FCSData(np.ndarray):
 
     def amplifier_gain(self, channels=None):
         """
-        Amplifier gain used in a specified channel.
+        Get the amplifier gain used for the specified channel(s).
 
         The amplifier gain for channel "n" is extracted from the $PnG
         parameter, if available.
@@ -1062,7 +1097,7 @@ class FCSData(np.ndarray):
 
     def domain(self, channels=None):
         """
-        Domain of a specified channel.
+        Get the domain of the specified channel(s).
 
         The domain is inferred from the $PnR parameter, as
         ``np.arange($PnR)``. The domain should be transformed along with
@@ -1096,7 +1131,7 @@ class FCSData(np.ndarray):
 
     def hist_bin_edges(self, channels=None):
         """
-        Histograms bin edges for a specified channel.
+        Get histogram bin edges for the specified channel(s).
 
         This is a convenient set of histogram bin edges, such that each
         element of the domain is in the center of one bin. More precisely,
@@ -1565,7 +1600,7 @@ class FCSData(np.ndarray):
             # Get sliced array using native getitem function.
             np.ndarray.__setitem__(self, key, item)
 
-    # Functions overridden to improve printed representation.
+    # Functions overridden to define printed representation.
 
     def __str__(self):
         """
