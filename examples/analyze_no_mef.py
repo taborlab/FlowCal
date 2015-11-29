@@ -30,9 +30,9 @@ if __name__ == "__main__":
         di = fc.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
-        gain = di[:,'FL1-H'].channel_info[0]['pmt_voltage']
-        print("{} ({} events, FL1-H gain = {}).".format(str(di),
-            di.shape[0], gain))
+        dv = di.detector_voltage('FL1-H')
+        print("{} ({} events, FL1-H voltage = {}).".format(str(di),
+            di.shape[0], dv))
 
     # Basic gating/trimming
     ch_all = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']

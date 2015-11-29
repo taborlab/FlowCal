@@ -158,8 +158,8 @@ def hist1d(data_list,
             # Get bin information
             bd = y.hist_bin_edges(0)
             # Get bin scaled indices
-            xd = np.linspace(0, 1, len(y.bd))
-            xs = np.linspace(0, 1, (len(y.bd) - 1)/div + 1)
+            xd = np.linspace(0, 1, len(bd))
+            xs = np.linspace(0, 1, (len(bd) - 1)/div + 1)
             # Generate sub-sampled bins
             bins = np.interp(xs, xd, bd)
 
@@ -328,9 +328,9 @@ def density2d(data,
         bdx = data_plot.hist_bin_edges(0)
         bdy = data_plot.hist_bin_edges(1)
         # Get bin scaled indices
-        xdx = np.linspace(0, 1, len(bdx) + 1)
+        xdx = np.linspace(0, 1, len(bdx))
         xsx = np.linspace(0, 1, (len(bdx) - 1)/div + 1)
-        xdy = np.linspace(0, 1, len(bdy) + 1)
+        xdy = np.linspace(0, 1, len(bdy))
         xsy = np.linspace(0, 1, (len(bdy) - 1)/div + 1)
         # Generate sub-sampled bins
         bins = np.array([np.interp(xsx, xdx, bdx), 
@@ -618,9 +618,9 @@ def scatter3d(data_list,
         plt.subplot(224)
         plt.xlabel(data_plot.channels[2])
         # 3d
-        ax_3d.set_xlabel(name_ch[0])
-        ax_3d.set_ylabel(name_ch[1])
-        ax_3d.set_zlabel(name_ch[2])
+        ax_3d.set_xlabel(data_plot.channels[0])
+        ax_3d.set_ylabel(data_plot.channels[1])
+        ax_3d.set_zlabel(data_plot.channels[2])
         ax_3d.xaxis.set_ticklabels([])
         ax_3d.yaxis.set_ticklabels([])
         ax_3d.zaxis.set_ticklabels([])

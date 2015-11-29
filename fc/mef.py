@@ -904,8 +904,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             # Make label for x axis
             channel_name = data_channel.channels[0]
             channel_gain = data_channel.detector_voltage(0)
-            xlabel = '{} (detector volt. = {})'.format(channel_name,
-                                                       channel_gain)
+            xlabel = '{} (Detector voltage = {})'.format(channel_name,
+                                                         channel_gain)
             # Compute filename to save
             if plot_dir is not None:
                 savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
