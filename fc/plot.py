@@ -154,13 +154,12 @@ def hist1d(data_list,
         else:
             y = data
         # If bins are not specified, try to get bins from data object
-        if bins is None and hasattr(y, 'channel_info'):
+        if bins is None and hasattr(y, 'hist_bin_edges'):
             # Get bin information
-            r = y.channel_info[0]['range']
-            bd = y.channel_info[0]['bin_edges']
+            bd = y.hist_bin_edges(0)
             # Get bin scaled indices
-            xd = np.linspace(0, 1, r[2] + 1)
-            xs = np.linspace(0, 1, r[2]/div + 1)
+            xd = np.linspace(0, 1, len(bd))
+            xs = np.linspace(0, 1, (len(bd) - 1)/div + 1)
             # Generate sub-sampled bins
             bins = np.interp(xs, xd, bd)
 
@@ -190,9 +189,9 @@ def hist1d(data_list,
     if xlabel is not None:
         # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    elif hasattr(y, 'channel_info'):
+    elif hasattr(y, 'channels'):
         # Attempt to use channel name
-        plt.xlabel(y.channel_info[0]['label'])
+        plt.xlabel(y.channels[0])
 
     if ylabel is not None:
         # Highest priority is user-provided label
@@ -228,20 +227,20 @@ def hist1d(data_list,
         plt.close()
 
 def density2d(data, 
-            channels = [0,1],
-            log = False, 
-            div = 1, 
-            bins = None, 
-            smooth = True,
-            sigma = 10.0,
-            mode = 'mesh',
-            colorbar = False,
-            normed = False,
-            xlabel = None,
-            ylabel = None,
-            title = None,
-            savefig = None,
-            **kwargs):
+              channels = [0,1],
+              log = False,
+              div = 1,
+              bins = None,
+              smooth = True,
+              sigma = 10.0,
+              mode = 'mesh',
+              colorbar = False,
+              normed = False,
+              xlabel = None,
+              ylabel = None,
+              title = None,
+              savefig = None,
+              **kwargs):
     """
     Plot a 2D density plot from two channels of a flow cytometry data set.
 
@@ -319,21 +318,20 @@ def density2d(data,
 
     """
     # Extract channels to plot
-    assert len(channels) == 2, 'Two channels need to be specified.'
+    if len(channels) != 2:
+        raise ValueError('two channels need to be specified')
     data_plot = data[:, channels]
 
     # If bins are not specified, try to get bins from data object
-    if bins is None and hasattr(data_plot, 'channel_info'):
+    if bins is None and hasattr(data_plot, 'hist_bin_edges'):
         # Get bin information
-        rx = data_plot.channel_info[0]['range']
-        bdx = data_plot.channel_info[0]['bin_edges']
-        ry = data_plot.channel_info[1]['range']
-        bdy = data_plot.channel_info[1]['bin_edges']
+        bdx = data_plot.hist_bin_edges(0)
+        bdy = data_plot.hist_bin_edges(1)
         # Get bin scaled indices
-        xdx = np.linspace(0, 1, rx[2] + 1)
-        xsx = np.linspace(0, 1, rx[2]/div + 1)
-        xdy = np.linspace(0, 1, ry[2] + 1)
-        xsy = np.linspace(0, 1, ry[2]/div + 1)
+        xdx = np.linspace(0, 1, len(bdx))
+        xsx = np.linspace(0, 1, (len(bdx) - 1)/div + 1)
+        xdy = np.linspace(0, 1, len(bdy))
+        xsy = np.linspace(0, 1, (len(bdy) - 1)/div + 1)
         # Generate sub-sampled bins
         bins = np.array([np.interp(xsx, xdx, bdx), 
                             np.interp(xsy, xdy, bdy)])
@@ -418,16 +416,16 @@ def density2d(data,
     if xlabel is not None:
         # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    elif hasattr(data_plot, 'channel_info'):
+    elif hasattr(data_plot, 'channels'):
         # Attempt to use channel name
-        plt.xlabel(data_plot.channel_info[0]['label'])
+        plt.xlabel(data_plot.channels[0])
 
     if ylabel is not None:
         # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    elif hasattr(data_plot, 'channel_info'):
+    elif hasattr(data_plot, 'channels'):
         # Attempt to use channel name
-        plt.ylabel(data_plot.channel_info[1]['label'])
+        plt.ylabel(data_plot.channels[1])
 
     # title
     if title is not None:
@@ -484,7 +482,8 @@ def scatter2d(data_list,
 
     """
     # Check appropriate number of channels
-    assert len(channels) == 2, 'Two channels need to be specified.'
+    if len(channels) != 2:
+        raise ValueError('two channels need to be specified')
 
     # Convert to list if necessary
     if not isinstance(data_list, list):
@@ -508,15 +507,12 @@ def scatter2d(data_list,
             s = 5, alpha = 0.25, **kwargsi)
 
     # Extract info about channels
-    if hasattr(data_plot, 'channel_info'):
-        name_ch = [data_plot[:,i].channel_info[0]['label'] for i in [0,1]]
-        gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage'] for i in [0,1]]
-        range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1]]
-
-        plt.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
-        plt.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
-        plt.xlim(range_ch[0][0], range_ch[0][1])
-        plt.ylim(range_ch[1][0], range_ch[1][1])
+    if hasattr(data_plot, 'channels'):
+        plt.xlabel(data_plot.channels[0])
+        plt.ylabel(data_plot.channels[1])
+    if hasattr(data_plot, 'domain'):
+        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
 
     # Save if necessary
     if savefig is not None:
@@ -570,7 +566,8 @@ def scatter3d(data_list,
 
     """
     # Check appropriate number of channels
-    assert len(channels) == 3, 'Three channels need to be specified.'
+    if len(channels) != 3:
+        raise ValueError('three channels need to be specified')
 
     # Convert to list if necessary
     if not isinstance(data_list, list):
@@ -609,38 +606,42 @@ def scatter3d(data_list,
             marker='o', alpha = 0.1, **kwargsi)
 
     # Extract info about channels
-    if hasattr(data_plot, 'channel_info'):
-        name_ch = [data_plot[:,i].channel_info[0]['label'] for i in [0,1,2]]
-        gain_ch = [data_plot[:,i].channel_info[0]['pmt_voltage']\
-                                                             for i in [0,1,2]]
-        range_ch = [data_plot[:,i].channel_info[0]['range'] for i in [0,1,2]]
-
+    if hasattr(data_plot, 'channels'):
         # ch0 vs ch2
         plt.subplot(221)
-        plt.ylabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-        plt.xlim(range_ch[0][0], range_ch[0][1])
-        plt.ylim(range_ch[2][0], range_ch[2][1])
+        plt.ylabel(data_plot.channels[2])
         # ch0 vs ch1
         plt.subplot(223)
-        plt.xlabel('{} (gain = {})'.format(name_ch[0], gain_ch[0]))
-        plt.ylabel('{} (gain = {})'.format(name_ch[1], gain_ch[1]))
-        plt.xlim(range_ch[0][0], range_ch[0][1])
-        plt.ylim(range_ch[1][0], range_ch[1][1])
+        plt.xlabel(data_plot.channels[0])
+        plt.ylabel(data_plot.channels[1])
         # ch2 vs ch1
         plt.subplot(224)
-        plt.xlabel('{} (gain = {})'.format(name_ch[2], gain_ch[2]))
-        plt.xlim(range_ch[2][0], range_ch[2][1])
-        plt.ylim(range_ch[1][0], range_ch[1][1])
+        plt.xlabel(data_plot.channels[2])
         # 3d
-        ax_3d.set_xlim(range_ch[0][0], range_ch[0][1])
-        ax_3d.set_ylim(range_ch[1][0], range_ch[1][1])
-        ax_3d.set_zlim(range_ch[2][0], range_ch[2][1])
-        ax_3d.set_xlabel(name_ch[0])
-        ax_3d.set_ylabel(name_ch[1])
-        ax_3d.set_zlabel(name_ch[2])
+        ax_3d.set_xlabel(data_plot.channels[0])
+        ax_3d.set_ylabel(data_plot.channels[1])
+        ax_3d.set_zlabel(data_plot.channels[2])
         ax_3d.xaxis.set_ticklabels([])
         ax_3d.yaxis.set_ticklabels([])
         ax_3d.zaxis.set_ticklabels([])
+
+    if hasattr(data_plot, 'domain'):
+        # ch0 vs ch2
+        plt.subplot(221)
+        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        plt.ylim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+        # ch0 vs ch1
+        plt.subplot(223)
+        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        # ch2 vs ch1
+        plt.subplot(224)
+        plt.xlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        # 3d
+        ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
 
     # Save if necessary
     if savefig is not None:
@@ -1077,8 +1078,9 @@ def hist_and_bar(data_list,
         n_in_group = 1
 
     # Check appropriate length of labels array
-    assert len(data_list)/n_in_group == len(labels), \
-        "len(labels) should be the same as len(data_list)/n_in_group."
+    if len(data_list)/n_in_group != len(labels):
+        raise ValueError("len(labels) should be the same as "
+            "len(data_list)/n_in_group.")
 
     # Calculate plot size if necessary
     if figsize is None:

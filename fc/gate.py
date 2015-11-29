@@ -106,7 +106,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         Channels on which to perform gating. If None, use all channels.
     high, low : int, float, optional
         High and low threshold values. If None, `high` and `low` will be
-        taken from ``data.channel_info`` if available, otherwise
+        taken from ``data.domain`` if available, otherwise
         ``np.Inf`` and ``-np.Inf`` will be used.
     full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
@@ -134,16 +134,16 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
 
     # Default values for high and low
     if high is None:
-        if hasattr(data_ch, 'channel_info'):
-            high = [data_ch[:, channel].channel_info[0]['bin_vals'][-1] 
+        if hasattr(data_ch, 'domain'):
+            high = [data_ch.domain(channel)[-1]
                     for channel in data_ch.channels]
             high = np.array(high)
         else:
             high = np.Inf
     if low is None:
-        if hasattr(data_ch, 'channel_info'):
-            low = [data_ch[:, channel].channel_info[0]['bin_vals'][0]
-                   for channel in data_ch.channels]
+        if hasattr(data_ch, 'domain'):
+            low = [data_ch.domain(channel)[0]
+                    for channel in data_ch.channels]
             low = np.array(low)
         else:
             low = -np.Inf
@@ -209,7 +209,8 @@ def ellipse(data, channels,
 
     """
     # Extract channels in which to gate
-    assert len(channels) == 2, '2 channels should be specified.'
+    if len(channels) != 2:
+        raise ValueError('2 channels should be specified.')
     data_ch = data[:,channels].view(np.ndarray)
 
     # Log if necessary
@@ -323,20 +324,21 @@ def density2d(data, channels=[0,1],
 
     """
     # Extract channels in which to gate
-    assert len(channels) == 2, '2 channels should be specified.'
+    if len(channels) != 2:
+        raise ValueError('2 channels should be specified.')
     data_ch = data[:,channels]
     if data_ch.ndim == 1:
         data_ch = data_ch.reshape((-1,1))
 
     # Check dimensions
-    assert data_ch.ndim > 1, 'Data should have at least 2 dimensions'
-    assert data_ch.shape[0] > 1, 'Data must have more than 1 event'
+    if data_ch.ndim < 2:
+        raise ValueError('data should have at least 2 dimensions')
+    if data_ch.shape[0] <= 1:
+        raise ValueError('data should have more than one event')
 
     # Extract default bins if necessary
-    if bins is None and hasattr(data_ch, 'channel_info'):
-        bins = np.array([data_ch.channel_info[0]['bin_edges'],
-                            data_ch.channel_info[1]['bin_edges'],
-                            ])
+    if bins is None and hasattr(data_ch, 'hist_bin_edges'):
+        bins = np.array(data_ch.hist_bin_edges())
 
     # Make 2D histogram
     if bins is not None:

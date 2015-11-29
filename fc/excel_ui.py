@@ -214,7 +214,7 @@ def process_beads_table(beads_table,
         # Beads Data
         ###
         filename = os.path.join(base_dir, beads_row['File Path'])
-        beads_sample = fc.io.FCSData(filename, metadata=beads_row)
+        beads_sample = fc.io.FCSData(filename)
         if verbose:
             print("{} loaded ({} events).".format(beads_id,
                                                   beads_sample.shape[0]))
@@ -232,7 +232,7 @@ def process_beads_table(beads_table,
                                                num_end=100)
         # Remove saturating events in forward/side scatter. The value of a
         # saturating event is taken automatically from
-        # `beads_sample_gated.channel_info`.
+        # `beads_sample_gated.domain`.
         beads_sample_gated = fc.gate.high_low(beads_sample_gated,
                                               channels=sc_channels)
         # Density gating
@@ -409,7 +409,7 @@ def process_samples_table(samples_table,
         # Sample Data
         ###
         filename = os.path.join(base_dir, sample_row['File Path'])
-        sample = fc.io.FCSData(filename, metadata=sample_row)
+        sample = fc.io.FCSData(filename)
         if verbose:
             print("{} loaded ({} events).".format(sample_id,
                                                   sample.shape[0]))
@@ -464,7 +464,7 @@ def process_samples_table(samples_table,
         sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
         # Remove saturating events in forward/side scatter, and fluorescent
         # channels to report. The value of a saturating event is taken
-        # automatically from `sample_gated.channel_info`.
+        # automatically from `sample_gated.domain`.
         sample_gated = fc.gate.high_low(sample_gated,
                                         sc_channels + report_channels)
         # Density gating
@@ -555,7 +555,7 @@ def add_stats(samples_table, samples):
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
         # Add empty columns to table
-        samples_table[channel + ' Gain'] = np.nan
+        samples_table[channel + ' Detector Volt.'] = np.nan
         samples_table[channel + ' Mean'] = np.nan
         samples_table[channel + ' Geom. Mean'] = np.nan
         samples_table[channel + ' Median'] = np.nan
@@ -568,9 +568,8 @@ def add_stats(samples_table, samples):
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
                 samples_table.set_value(row_id,
-                                        channel + ' Gain',
-                                        sample[:, channel].
-                                            channel_info[0]['pmt_voltage'])
+                                        channel + ' Detector Volt.',
+                                        sample.detector_voltage(channel))
                 samples_table.set_value(row_id,
                                         channel + ' Mean',
                                         fc.stats.mean(sample, channel))
@@ -633,7 +632,7 @@ def generate_histograms_table(samples_table, samples):
     for sample_id, sample in zip(samples_table.index, samples):
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
-                bins = sample[:,channel].channel_info[0]['bin_vals']
+                bins = sample.domain(channel)
                 if n_columns < len(bins):
                     n_columns = len(bins)
 
@@ -650,13 +649,13 @@ def generate_histograms_table(samples_table, samples):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
                 # Store bins
-                bins = sample[:,channel].channel_info[0]['bin_vals']
+                bins = sample.domain(channel)
                 hist_table.loc[(sample_id,
                                 channel,
                                 'Bin Values ({})'.format(unit)),
                                columns[0:len(bins)]] = bins
                 # Calculate and store histogram counts
-                bin_edges = sample[:,channel].channel_info[0]['bin_edges']
+                bin_edges = sample.hist_bin_edges(channel)
                 hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
                 hist_table.loc[(sample_id, channel, 'Counts'),
                                columns[0:len(bins)]] = hist
