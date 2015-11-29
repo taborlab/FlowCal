@@ -6,140 +6,171 @@ Functions to calculate statistics from the events in a FCSData object.
 import numpy as np
 import scipy.stats
 
-def mean(data, channel):
+def mean(data, channels=None):
     """
-    Calculate the mean from a specified channel of an FCSData object.
+    Calculate the mean of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    float
-        The mean of the events in the specified channel of `data`.
+    float or numpy array
+        The mean of the events in the specified channels of `data`.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return np.mean(data[:,channel])
+    # Calculate and return statistic
+    return np.mean(data_stats, axis=0)
 
-def gmean(data, channel):
+def gmean(data, channels=None):
     """
-    Calculate the geometric mean from a channel of an FCSData object.
+    Calculate the geometric mean of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    float
-        The geometric mean of the events in the specified channel of
+    float or numpy array
+        The geometric mean of the events in the specified channels of
         `data`.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return scipy.stats.gmean(data[:,channel])
+    # Calculate and return statistic
+    return scipy.stats.gmean(data_stats, axis=0)
 
-def median(data, channel):
+def median(data, channels=None):
     """
-    Calculate the median from a specified channel of an FCSData object.
+    Calculate the median of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    int or float
-        The median of the events in the specified channel of `data`.
+    float or numpy array
+        The median of the events in the specified channels of `data`.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return np.median(data[:,channel])
+    # Calculate and return statistic
+    return np.median(data_stats, axis=0)
 
-def mode(data, channel):
+def mode(data, channels=None):
     """
-    Calculate the mode from a specified channel of an FCSData object.
+    Calculate the mode of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    int or float
-        The mode of the events in the specified channel of `data`.
+    float or numpy array
+        The mode of the events in the specified channels of `data`.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return np.argmax(np.bincount(data[:,channel].astype('int32')))
+    # Calculate and return statistic
+    # scipy.stats.mode returns two outputs, the first of which is an array
+    # containing the modal values. This array has the same number of
+    # dimensions as the input, and with only one element in the first
+    # dimension. We extract this fist element to make it match the other
+    # functions in this module.
+    return scipy.stats.mode(data_stats, axis=0)[0][0]
 
-def std(data, channel):
+def std(data, channels=None):
     """
-    Calculate the standard deviation from a channel of an FCSData object.
+    Calculate the standard deviation of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    float
-        The standard deviation of the events in the specified channel of
+    float or numpy array
+        The standard deviation of the events in the specified channels of
         `data`.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return np.std(data[:,channel])
+    # Calculate and return statistic
+    return np.std(data_stats, axis=0)
 
-def CV(data, channel):
+def cv(data, channels=None):
     """
-    Calculate the Coeff. of Variation from a channel of an FCSData object.
+    Calculate the Coeff. of Variation of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    float
-        The Coefficient of Variation of the events in the specified channel
-        of `data`.
+    float or numpy array
+        The Coefficient of Variation of the events in the specified
+        channels of `data`.
 
     Notes
     -----
@@ -147,27 +178,32 @@ def CV(data, channel):
     standard deviation divided by the mean of such dataset.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    return np.std(data[:,channel])/np.mean(data[:,channel])
+    # Calculate and return statistic
+    return np.std(data_stats, axis=0) / np.mean(data_stats, axis=0)
 
-def iqr(data, channel):
+def iqr(data, channels=None):
     """
-    Calculate the Interquartile Range from a channel of an FCSData object.
+    Calculate the Interquartile Range of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    int or float
-        The Interquartile Range of the events in the specified channel of
+    float or numpy array
+        The Interquartile Range of the events in the specified channels of
         `data`.
 
     Notes
@@ -176,29 +212,34 @@ def iqr(data, channel):
     between the 25% and the 75% percentiles of such dataset.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    q75, q25 = np.percentile(data[:,channel], [75 ,25])
+    # Calculate and return statistic
+    q75, q25 = np.percentile(data_stats, [75 ,25], axis=0)
     return q75 - q25
 
-def RCV(data, channel):
+def rcv(data, channels=None):
     """
-    Calculate the RCV from a specified channel of an FCSData object.
+    Calculate the RCV of the events in an FCSData object.
 
     Parameters
     ----------
     data : FCSData or numpy array
         NxD flow cytometry data where N is the number of events and D is
         the number of parameters (aka channels).
-    channel : int or str
-        Channel on which to calculate the statistic
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
 
     Returns
     -------
-    float
+    float or numpy array
         The Robust Coefficient of Variation of the events in the specified
-        channel of `data`.
+        channels of `data`.
 
     Notes
     -----
@@ -206,8 +247,12 @@ def RCV(data, channel):
     the Interquartile Range (IQR) divided by the median of such dataset.
 
     """
-    if hasattr(channel, '__iter__'):
-        raise ValueError("Channel should be a scalar.")
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
 
-    q75, q25 = np.percentile(data[:,channel], [75 ,25])
-    return (q75 - q25)/np.median(data[:,channel])
+    # Calculate and return statistic
+    q75, q25 = np.percentile(data_stats, [75 ,25], axis=0)
+    return (q75 - q25)/np.median(data_stats, axis=0)
