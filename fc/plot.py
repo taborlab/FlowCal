@@ -48,7 +48,7 @@ def hist1d(data_list,
            savefig = None,
            **kwargs):
     """
-    Plot one 1D histogram from one or more FCSData objects.
+    Plot one 1D histogram from one or more flow cytometry data sets.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -62,10 +62,13 @@ def hist1d(data_list,
 
     Parameters
     ----------
-    data_list : FCSData object, or list of FCSData objects
+    data_list : FCSData or numpy array or list of FCSData or numpy array
         Flow cytometry data to plot.
-    channel : int or str
-        Channel from where to take the events to plot.
+    channel : int or str, optional
+        Channel from where to take the events to plot. If ndim == 1,
+        channel is ignored. String channel specifications are only
+        supported for data types which support string-based indexing
+        (e.g. FCSData).
     log : bool, optional
         Flag specifying whether the x axis should be in log scale.
     div : int or float, optional
@@ -75,8 +78,8 @@ def hist1d(data_list,
         actually use ``n/div`` bins that cover the same range as the
         default bins. `div` is ignored if `bins` is specified.
     bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, bins are
-        extracted from the FCSData objects in `data_list`.
+        bins argument to pass to plt.hist. If not specified, attempts to
+        extract bins from data object.
     legend : bool, optional
         Flag specifying whether to include a legend. If `legend` is True,
         the legend labels will be taken from ``kwargs['label']``.
@@ -90,14 +93,15 @@ def hist1d(data_list,
     legend_loc : str, optional
         Location of the legend.
     xlabel : str, optional
-        Label to use on the x axis. If None, the channel name is used.
+        Label to use on the x axis. If None, attempts to extract channel
+        name from last data object.
     ylabel : str, optional
         Label to use on the y axis. If None and ``kwargs['normed']==True``,
         use 'Probability'. If None and ``kwargs['normed']==False``, use
         'Counts'.
     xlim : tuple, optional
-        Limits for the x axis. If not specified, use the lowest and highest
-        values of `bins`.
+        Limits for the x axis. If not specified and `bins` exists, use
+        the lowest and highest values of `bins`.
     ylim : tuple, optional
         Limits for the y axis.
     title : str, optional
@@ -145,8 +149,11 @@ def hist1d(data_list,
     # Iterate through data_list
     for i, data in enumerate(data_list):
         # Extract channel
-        y = data[:, channel]
-        # If bins are not specified, get bins from FCSData object
+        if data.ndim > 1:
+            y = data[:, channel]
+        else:
+            y = data
+        # If bins are not specified, try to get bins from data object
         if bins is None and hasattr(y, 'channel_info'):
             # Get bin information
             r = y.channel_info[0]['range']
@@ -168,32 +175,51 @@ def hist1d(data_list,
         if 'label' in kwargsi:
             kwargsi['label'] = kwargsi['label'][i]
         # Actually plot
-        plt.hist(y, bins, histtype = histtype, **kwargsi)
+        if bins is not None:
+            n, edges, patches = plt.hist(y, bins, histtype=histtype, **kwargsi)
+        else:
+            n, edges, patches = plt.hist(y, histtype=histtype, **kwargsi)
         if log == True:
             plt.gca().set_xscale('log')
 
+    ###
     # Final configuration
-    if xlabel is None:
-        plt.xlabel(data[:,channel].channel_info[0]['label'])
-    else:
+    ###
+
+    # x and y labels
+    if xlabel is not None:
+        # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    if ylabel is None:
-        if 'normed' in kwargs:
-            plt.ylabel('Probability')
-        else:
-            plt.ylabel('Counts')
-    else:
+    elif hasattr(y, 'channel_info'):
+        # Attempt to use channel name
+        plt.xlabel(y.channel_info[0]['label'])
+
+    if ylabel is not None:
+        # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    if xlim is None:
-        plt.xlim((bins[0], bins[-1]))
+    elif 'normed' in kwargs:
+        plt.ylabel('Probability')
     else:
+        # Default is "Counts"
+        plt.ylabel('Counts')
+
+    # x and y limits
+    if xlim is not None:
+        # Highest priority is user-provided limits
         plt.xlim(xlim)
-    if ylim:
+    elif bins is not None:
+        # Use bins if specified
+        plt.xlim((edges[0], edges[-1]))
+
+    if ylim is not None:
         plt.ylim(ylim)
-    if title:
+
+    # title and legend
+    if title is not None:
         plt.title(title)
-    if legend:
-        plt.legend(loc = legend_loc, prop={'size': legend_fontsize})
+
+    if legend is not None:
+        plt.legend(loc=legend_loc, prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
@@ -217,7 +243,7 @@ def density2d(data,
             savefig = None,
             **kwargs):
     """
-    Plot a 2D density plot from two specified channels of a FCSData object.
+    Plot a 2D density plot from two channels of a flow cytometry data set.
 
     `density2d` has two plotting modes which are selected using the `mode`
     argument. With ``mode=='mesh'``, this function plots the data as a true
@@ -245,9 +271,9 @@ def density2d(data,
 
     Parameters
     ----------
-    data : FCSData object
+    data : FCSData or numpy array
         Flow cytometry data to plot.
-    channels : list of int, list of str
+    channels : list of int, list of str, optional
         Two channels to use for the plot.
     log : bool, optional
         Flag specifying whether the axes should be in log scale.
@@ -258,14 +284,14 @@ def density2d(data,
         ``n/div * m/div`` bins that cover the same range as the default
         bins. `div` is ignored if `bins` is specified.
     bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, bins are
-        extracted from `data`.
+        bins argument to pass to plt.hist. If not specified, attempts to 
+        extract bins from `data`.
     smooth : bool, optional
-        Flag indicating whether to apply gaussian smoothing to the
+        Flag indicating whether to apply Gaussian smoothing to the
         histogram.
     mode : {'mesh', 'scatter'}, str, optional
-        Plotting mode. 'mesh' produces a true 2D-histogram, and 'scatter'
-        produces a histogram-colored scatterplot.
+        Plotting mode. 'mesh' produces a 2D-histogram whereas 'scatter'
+        produces a scatterplot colored by histogram bin value.
     colorbar : bool, optional
         Flag indicating whether to add a colorbar to the plot.
     normed : bool, optional
@@ -279,9 +305,11 @@ def density2d(data,
     sigma : float, optional
         The sigma parameter for the Gaussian kernel to use when smoothing.
     xlabel : str, optional
-        Label to use on the x axis. If None, the channel name is used.
+        Label to use on the x axis. If None, attempts to extract channel
+        name from `data`.
     ylabel : str, optional
-        Label to use on the y axis. If None, the channel name is used.
+        Label to use on the y axis. If None, attempts to extract channel
+        name from `data`.
     title : str, optional
         Plot title.
     kwargs : dict, optional
@@ -294,7 +322,7 @@ def density2d(data,
     assert len(channels) == 2, 'Two channels need to be specified.'
     data_plot = data[:, channels]
 
-    # If bins are not specified, get bins from FCSData object
+    # If bins are not specified, try to get bins from data object
     if bins is None and hasattr(data_plot, 'channel_info'):
         # Get bin information
         rx = data_plot.channel_info[0]['range']
@@ -315,20 +343,10 @@ def density2d(data,
         kwargs['cmap'] = cmap_default
 
     # Calculate histogram
-    H, xedges, yedges = np.histogram2d(data_plot[:,0],
-                                        data_plot[:,1],
-                                        bins = bins)
-
-    # numpy histograms are organized such that the 1st dimension (eg. FSC) =
-    # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
-    # Visualized as is, this results in x-axis = SSC and y-axis = FSC, which
-    # is not what we're used to. Transpose the histogram array to fix the
-    # axes.
-    H = H.T
-
-    # Normalize
-    if normed:
-        H = H/np.sum(H)
+    if bins is not None:
+        H,xe,ye = np.histogram2d(data_plot[:,0], data_plot[:,1], bins=bins)
+    else:
+        H,xe,ye = np.histogram2d(data_plot[:,0], data_plot[:,1])
 
     # Smooth    
     if smooth:
@@ -341,20 +359,37 @@ def density2d(data,
     else:
         sH = None
 
-    # Plotting mode
+    # Normalize
+    if normed:
+        H = H / np.sum(H)
+        sH = sH / np.sum(sH) if sH is not None else None
+
+    ###
+    # Plot
+    ###
+
+    # numpy histograms are organized such that the 1st dimension (eg. FSC) =
+    # rows (1st index) and the 2nd dimension (eg. SSC) = columns (2nd index).
+    # Visualized as is, this results in x-axis = SSC and y-axis = FSC, which
+    # is not what we're used to. Transpose the histogram array to fix the
+    # axes.
+    H = H.T
+    sH = sH.T if sH is not None else None
+
     if mode == 'scatter':
         Hind = np.ravel(H)
-        xv, yv = np.meshgrid(xedges[:-1], yedges[:-1])
+        xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
+        yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
+        xv, yv = np.meshgrid(xc, yc)
         x = np.ravel(xv)[Hind != 0]
         y = np.ravel(yv)[Hind != 0]
         z = np.ravel(H if sH is None else sH)[Hind != 0]
         plt.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
-        plt.pcolormesh(xedges, yedges, H if sH is None else sH, **kwargs)
+        plt.pcolormesh(xe, ye, H if sH is None else sH, **kwargs)
     else:
-        raise ValueError("Mode {} not recognized.".format(mode))
+        raise ValueError("mode {} not recognized".format(mode))
 
-    # Plot
     if colorbar:
         cbar = plt.colorbar()
         if normed:
@@ -366,28 +401,36 @@ def density2d(data,
         plt.gca().set_xscale('log')
         plt.gca().set_yscale('log')
         a = list(plt.axis())
-        a[0] = 10**(np.ceil(np.log10(xedges[0])))
-        a[1] = 10**(np.ceil(np.log10(xedges[-1])))
-        a[2] = 10**(np.ceil(np.log10(yedges[0])))
-        a[3] = 10**(np.ceil(np.log10(yedges[-1])))
+        a[0] = 10**(np.ceil(np.log10(xe[0])))
+        a[1] = 10**(np.ceil(np.log10(xe[-1])))
+        a[2] = 10**(np.ceil(np.log10(ye[0])))
+        a[3] = 10**(np.ceil(np.log10(ye[-1])))
         plt.axis(a)
     else:
         a = list(plt.axis())
-        a[0] = np.ceil(xedges[0])
-        a[1] = np.ceil(xedges[-1])
-        a[2] = np.ceil(yedges[0])
-        a[3] = np.ceil(yedges[-1])
+        a[0] = np.ceil(xe[0])
+        a[1] = np.ceil(xe[-1])
+        a[2] = np.ceil(ye[0])
+        a[3] = np.ceil(ye[-1])
         plt.axis(a)
-    # plt.grid(True)
-    if xlabel:
+
+    # x and y labels
+    if xlabel is not None:
+        # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    else:
+    elif hasattr(data_plot, 'channel_info'):
+        # Attempt to use channel name
         plt.xlabel(data_plot.channel_info[0]['label'])
-    if ylabel:
+
+    if ylabel is not None:
+        # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    else:
+    elif hasattr(data_plot, 'channel_info'):
+        # Attempt to use channel name
         plt.ylabel(data_plot.channel_info[1]['label'])
-    if title:
+
+    # title
+    if title is not None:
         plt.title(title)
 
     # Save if necessary

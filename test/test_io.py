@@ -996,47 +996,63 @@ class TestFCSDataOperations(unittest.TestCase):
 
     def test_sum_integer(self):
         """
-        Testing that the sum of a FCSData object returns a 
-        FCSData object.
+        Testing that scalar + FCSData is consistent with scalar + ndarray
 
         """
         ds = self.d + 3
+        ds_array = self.d.view(np.ndarray) + 3
         self.assertIsInstance(ds, fc.io.FCSData)
-        self.assertEqual(ds[254,3] - self.d[254,3], 3)
+        np.testing.assert_array_equal(ds, ds_array)
         
     def test_sqrt(self):
         """
-        Testing that the square root of a FCSData object returns a 
-        FCSData object.
+        Testing that the sqrt(FCSData) is consistent with sqrt(ndarray)
 
         """
         ds = np.sqrt(self.d)
+        ds_array = np.sqrt(self.d.view(np.ndarray))
         self.assertIsInstance(ds, fc.io.FCSData)
-        self.assertEqual(ds[254,3], np.sqrt(self.d[254,3]))
+        np.testing.assert_array_equal(ds, ds_array)
 
     def test_sum(self):
         """
-        Testing that the sum of a FCSData object returns an scalar.
+        Testing that the sum(FCSData) is consistent with sum(ndarray)
 
         """
         s = np.sum(self.d)
-        self.assertIsInstance(s, np.uint)
+        s_array = np.sum(self.d.view(np.ndarray))
+        self.assertEqual(s, s_array)
+        self.assertEqual(type(s), type(s_array))
 
     def test_mean(self):
         """
-        Testing that the mean of a FCSData object returns an scalar.
+        Testing that the mean(FCSData) is consistent with mean(ndarray)
 
         """
         m = np.mean(self.d)
-        self.assertIsInstance(m, float)
+        m_array = np.mean(self.d.view(np.ndarray))
+        self.assertEqual(m, m_array)
+        self.assertEqual(type(m), type(m_array))
+
+    def test_median(self):
+        """
+        Testing that the median(FCSData) is consistent with median(ndarray)
+
+        """
+        m = np.median(self.d)
+        m_array = np.median(self.d.view(np.ndarray))
+        self.assertEqual(m, m_array)
+        self.assertEqual(type(m), type(m_array))
 
     def test_std(self):
         """
-        Testing that the std of a FCSData object returns an scalar.
+        Testing that the std(FCSData) is consistent with std(ndarray)
 
         """
         s = np.std(self.d)
-        self.assertIsInstance(s, float)
+        s_array = np.std(self.d.view(np.ndarray))
+        self.assertEqual(s, s_array)
+        self.assertEqual(type(s), type(s_array))
 
     def test_mean_axis(self):
         """
@@ -1045,8 +1061,10 @@ class TestFCSDataOperations(unittest.TestCase):
 
         """
         m = np.mean(self.d, axis = 0)
+        m_array = np.mean(self.d.view(np.ndarray), axis = 0)
         self.assertIsInstance(m, fc.io.FCSData)
-        self.assertEqual(m.shape, (6,))
+        self.assertEqual(m.shape, m_array.shape)
+        np.testing.assert_array_equal(m, m_array)
         
 if __name__ == '__main__':
     unittest.main()

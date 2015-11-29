@@ -1474,7 +1474,7 @@ class FCSData(np.ndarray):
 
         """
         if out_arr.ndim == 0:
-            return None
+            return out_arr[()]
         else:
             return np.ndarray.__array_wrap__(self, out_arr, context)
 
