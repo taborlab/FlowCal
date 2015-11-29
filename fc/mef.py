@@ -499,11 +499,12 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
     """
     # Check that the input data has consistent dimensions
-    assert len(peaks_ch) == len(peaks_mef), "peaks_ch and  \
-        peaks_mef have different lengths"
+    if len(peaks_ch) != len(peaks_mef):
+        raise ValueError("peaks_ch and peaks_mef have different lengths")
     # Check that we have at least three points
-    assert len(peaks_ch) > 2, "Standard curve model requires at least three\
-        bead peak values."
+    if len(peaks_ch) <= 2:
+        raise ValueError("Standard curve model requires at least three "
+            "bead peak values.")
         
     # Initialize parameters
     params = np.zeros(3)
@@ -779,8 +780,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # ===============================================
 
         # Find peaks on all the channel data
-        min_fl = data_channel.channel_info[0]['range'][0]
-        max_fl = data_channel.channel_info[0]['range'][1]
+        min_fl = data_channel.domain(0)[0]
+        max_fl = data_channel.domain(0)[-1]
         if find_peaks_method == 'smoothed_mode':
             # Set default values for limit values
             if 'min_val' not in find_peaks_params:
@@ -901,9 +902,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Plot
         if plot:
             # Make label for x axis
-            channel_name = data_channel.channel_info[0]['label']
-            channel_gain = data_channel.channel_info[0]['pmt_voltage']
-            xlabel = '{} (gain = {})'.format(channel_name, channel_gain)
+            channel_name = data_channel.channels[0]
+            channel_gain = data_channel.detector_voltage(0)
+            xlabel = '{} (detector volt. = {})'.format(channel_name,
+                                                       channel_gain)
             # Compute filename to save
             if plot_dir is not None:
                 savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
