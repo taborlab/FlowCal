@@ -15,12 +15,13 @@ try:
     import palettable
 except ImportError, e:
     cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
+    std_crv_colors = ['b', 'g', 'r']
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
-    matplotlib.rcParams['axes.color_cycle'] = palettable.colorbrewer\
-        .qualitative.Paired_12.mpl_colors[1::2]
+    std_crv_colors = \
+        palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
 
-matplotlib.rcParams['savefig.dpi'] = 250
+savefig_dpi = 250
 
 ##############################################################################
 # SIMPLE PLOTS
@@ -217,13 +218,13 @@ def hist1d(data_list,
     if title is not None:
         plt.title(title)
 
-    if legend is not None:
+    if legend:
         plt.legend(loc=legend_loc, prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 def density2d(data, 
@@ -434,7 +435,7 @@ def density2d(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 def scatter2d(data_list, 
@@ -517,7 +518,7 @@ def scatter2d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 
@@ -646,7 +647,7 @@ def scatter3d(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 def mef_std_crv(peaks_ch, 
@@ -704,11 +705,11 @@ def mef_std_crv(peaks_ch,
 
     # Plot
     plt.plot(peaks_ch, peaks_mef, 'o', 
-        label = 'Beads')
+        label = 'Beads', color=std_crv_colors[0])
     plt.plot(xdata, sc_beads(xdata), 
-        label = 'Beads model')
+        label = 'Beads model', color=std_crv_colors[1])
     plt.plot(xdata, sc_abs(xdata), 
-        label = 'Standard curve')
+        label = 'Standard curve', color=std_crv_colors[2])
     plt.yscale('log')
     plt.xlim(xlim)
     plt.ylim(ylim)
@@ -722,7 +723,7 @@ def mef_std_crv(peaks_ch,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 def bar(data, 
@@ -860,7 +861,7 @@ def bar(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 ##############################################################################
@@ -1007,7 +1008,7 @@ def density_and_hist(data,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
 
@@ -1150,5 +1151,5 @@ def hist_and_bar(data_list,
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
-        plt.savefig(savefig)
+        plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
