@@ -173,9 +173,13 @@ def process_beads_table(beads_table,
         ``beads_table.index``.
 
     """
-    # Do nothing if beads table is empty
+    # Initialize output variables
+    beads_samples = []
+    mef_transform_fxns = collections.OrderedDict()
+
+    # Return empty structures if beads table is empty
     if beads_table.empty:
-        return
+        return beads_samples, mef_transform_fxns
 
     if verbose:
         print("\nProcessing beads ({} entries)...".format(len(beads_table)))
@@ -183,10 +187,6 @@ def process_beads_table(beads_table,
     # Check that plotting directory exist, create otherwise
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
-
-    # Initialize output variables
-    beads_samples = []
-    mef_transform_fxns = collections.OrderedDict()
 
     # Extract header and channel names for which MEF values are specified.
     r = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
@@ -371,9 +371,12 @@ def process_samples_table(samples_table,
         in `samples_table`, in the order of ``samples_table.index``.
 
     """
-    # Do nothing if samples table is empty
+    # Initialize output variable
+    samples = []
+
+    # Return empty list if samples table is empty
     if samples_table.empty:
-        return
+        return samples
 
     if verbose:
         print("\nProcessing samples ({} entries)...".format(len(samples_table)))
@@ -389,7 +392,6 @@ def process_samples_table(samples_table,
     report_channels_all = [r.search(h).group(1) for h in report_headers_all]
 
     # Iterate through table
-    samples = []
     for sample_id, sample_row in samples_table.iterrows():
 
         ###
