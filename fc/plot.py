@@ -155,7 +155,8 @@ def hist1d(data_list,
         else:
             y = data
         # If bins are not specified, try to get bins from data object
-        if bins is None and hasattr(y, 'hist_bin_edges'):
+        if (bins is None and hasattr(y, 'hist_bin_edges')
+                and y.hist_bin_edges(0) is not None):
             # Get bin information
             bd = y.hist_bin_edges(0)
             # Get bin scaled indices
@@ -324,7 +325,9 @@ def density2d(data,
     data_plot = data[:, channels]
 
     # If bins are not specified, try to get bins from data object
-    if bins is None and hasattr(data_plot, 'hist_bin_edges'):
+    if (bins is None and hasattr(data_plot, 'hist_bin_edges')
+            and data_plot.hist_bin_edges(0) is not None
+            and data_plot.hist_bin_edges(1) is not None):
         # Get bin information
         bdx = data_plot.hist_bin_edges(0)
         bdy = data_plot.hist_bin_edges(1)
@@ -512,8 +515,10 @@ def scatter2d(data_list,
         plt.xlabel(data_plot.channels[0])
         plt.ylabel(data_plot.channels[1])
     if hasattr(data_plot, 'domain'):
-        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        if data_plot.domain(0) is not None:
+            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        if data_plot.domain(1) is not None:
+            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
 
     # Save if necessary
     if savefig is not None:
@@ -629,20 +634,29 @@ def scatter3d(data_list,
     if hasattr(data_plot, 'domain'):
         # ch0 vs ch2
         plt.subplot(221)
-        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        plt.ylim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+        if data_plot.domain(0) is not None:
+            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        if data_plot.domain(2) is not None:
+            plt.ylim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
         # ch0 vs ch1
         plt.subplot(223)
-        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        if data_plot.domain(0) is not None:
+            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        if data_plot.domain(1) is not None:
+            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
         # ch2 vs ch1
         plt.subplot(224)
-        plt.xlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
-        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        if data_plot.domain(2) is not None:
+            plt.xlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+        if data_plot.domain(1) is not None:
+            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
         # 3d
-        ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
-        ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+        if data_plot.domain(0) is not None:
+            ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+        if data_plot.domain(1) is not None:
+            ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+        if data_plot.domain(2) is not None:
+            ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
 
     # Save if necessary
     if savefig is not None:

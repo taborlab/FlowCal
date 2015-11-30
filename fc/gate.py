@@ -135,15 +135,13 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
     # Default values for high and low
     if high is None:
         if hasattr(data_ch, 'domain'):
-            high = [data_ch.domain(channel)[-1]
-                    for channel in data_ch.channels]
+            high = [np.Inf if di is None else di[-1] for di in data_ch.domain()]
             high = np.array(high)
         else:
             high = np.Inf
     if low is None:
         if hasattr(data_ch, 'domain'):
-            low = [data_ch.domain(channel)[0]
-                    for channel in data_ch.channels]
+            low = [-np.Inf if di is None else di[0] for di in data_ch.domain()]
             low = np.array(low)
         else:
             low = -np.Inf
@@ -337,7 +335,9 @@ def density2d(data, channels=[0,1],
         raise ValueError('data should have more than one event')
 
     # Extract default bins if necessary
-    if bins is None and hasattr(data_ch, 'hist_bin_edges'):
+    if (bins is None and hasattr(data_ch, 'hist_bin_edges')
+            and data_ch.hist_bin_edges(0) is not None
+            and data_ch.hist_bin_edges(1) is not None):
         bins = np.array(data_ch.hist_bin_edges())
 
     # Make 2D histogram

@@ -70,14 +70,16 @@ def transform(data, channels, transform_fxn, def_channels = None):
         for channel in channels:
             # Transform channel name to index if necessary
             channel_idx = data_t._name_to_index(channel)
-            data_t._domain[channel_idx] = \
-                transform_fxn(data_t._domain[channel_idx])
+            if data_t._domain[channel_idx] is not None:
+                data_t._domain[channel_idx] = \
+                    transform_fxn(data_t._domain[channel_idx])
     if hasattr(data_t, '_hist_bin_edges'):
         for channel in channels:
             # Transform channel name to index if necessary
             channel_idx = data_t._name_to_index(channel)
-            data_t._hist_bin_edges[channel_idx] = \
-                transform_fxn(data_t._hist_bin_edges[channel_idx])
+            if data_t._hist_bin_edges[channel_idx] is not None:
+                data_t._hist_bin_edges[channel_idx] = \
+                    transform_fxn(data_t._hist_bin_edges[channel_idx])
 
     return data_t
 
@@ -197,9 +199,10 @@ def to_mef(data, channels, sc_list, sc_channels = None):
         # Apply transformation
         data_t[:,chi] = sc(data_t[:,chi])
         # Apply transformation to domain and hist_bin_edges
-        if hasattr(data_t, '_domain'):
+        if hasattr(data_t, '_domain') and data_t._domain[chi] is not None:
             data_t._domain[chi] = sc(data_t._domain[chi])
-        if hasattr(data_t, '_hist_bin_edges'):
+        if (hasattr(data_t, '_hist_bin_edges')
+                and data_t._hist_bin_edges[chi] is not None):
             data_t._hist_bin_edges[chi] = sc(data_t._hist_bin_edges[chi])
 
     return data_t
