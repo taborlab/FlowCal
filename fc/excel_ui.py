@@ -182,7 +182,10 @@ def process_beads_table(beads_table,
         return beads_samples, mef_transform_fxns
 
     if verbose:
-        print("\nProcessing beads ({} entries)...".format(len(beads_table)))
+        msg = "Processing Beads table ({} entries)".format(len(beads_table))
+        print("")
+        print(msg)
+        print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
@@ -379,7 +382,10 @@ def process_samples_table(samples_table,
         return samples
 
     if verbose:
-        print("\nProcessing samples ({} entries)...".format(len(samples_table)))
+        msg = "Processing Samples table ({} entries)".format(len(samples_table))
+        print("")
+        print(msg)
+        print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
     if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
@@ -410,11 +416,12 @@ def process_samples_table(samples_table,
         ###
         # Sample Data
         ###
+        if verbose:
+            print("\nSample ID {}...".format(sample_id))
+            print("Loading file \"{}\"...".format(sample_row['File Path']))
+
         filename = os.path.join(base_dir, sample_row['File Path'])
         sample = fc.io.FCSData(filename)
-        if verbose:
-            print("{} loaded ({} events).".format(sample_id,
-                                                  sample.shape[0]))
 
         ###
         # Transform
@@ -719,12 +726,16 @@ def run(verbose=True, plot=True):
     # Open input workbook
     input_path = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
     if not input_path:
+        if verbose:
+            print("No input file selected.")
         return
     # Extract directory, filename, and filename with no extension from path
     input_dir, input_filename = os.path.split(input_path)
     input_filename_no_ext, __ = os.path.splitext(input_filename)
 
     # Read relevant tables from workbook
+    if verbose:
+        print("Reading {}...".format(input_filename))
     instruments_table = read_table(input_path,
                                    sheetname='Instruments',
                                    index_col='ID')
@@ -755,9 +766,14 @@ def run(verbose=True, plot=True):
         plot_dir='plot_samples')
 
     # Add stats to samples table
+    if verbose:
+        print ""
+        print("Calculating statistics for all samples...")
     add_stats(samples_table, samples)
 
-    # # Generate histograms
+    # Generate histograms
+    if verbose:
+        print("Generating histograms table...")
     histograms_table = generate_histograms_table(samples_table, samples)
 
     # Generate list of tables to save
@@ -768,9 +784,14 @@ def run(verbose=True, plot=True):
     table_list.append(('Histograms', histograms_table))
 
     # Write output excel file
+    if verbose:
+        print("Saving output Excel file...")
     output_filename = "{}_output.xlsx".format(input_filename_no_ext)
     output_path = os.path.join(input_dir, output_filename)
     write_workbook(output_path, table_list)
+
+    if verbose:
+        print("\nDone.")
 
 if __name__ == '__main__':
     run(verbose=True, plot=True)
