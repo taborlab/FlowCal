@@ -216,11 +216,13 @@ def process_beads_table(beads_table,
         ###
         # Beads Data
         ###
+        if verbose:
+            print("\nBeads ID {}...".format(beads_id))
+            print("Loading file \"{}\"...".format(beads_row['File Path']))
+
         filename = os.path.join(base_dir, beads_row['File Path'])
         beads_sample = fc.io.FCSData(filename)
-        if verbose:
-            print("{} loaded ({} events).".format(beads_id,
-                                                  beads_sample.shape[0]))
+
         # Parse clustering channels data
         cluster_channels = beads_row['Clustering Channels'].split(',')
         cluster_channels = [cc.strip() for cc in cluster_channels]
@@ -228,6 +230,8 @@ def process_beads_table(beads_table,
         ###
         # Gate
         ###
+        if verbose:
+            print("Performing gating...")
         # Remove first and last events. Transients in fluidics can make the
         # first few and last events slightly different from the rest.
         beads_sample_gated = fc.gate.start_end(beads_sample,
@@ -239,9 +243,6 @@ def process_beads_table(beads_table,
         beads_sample_gated = fc.gate.high_low(beads_sample_gated,
                                               channels=sc_channels)
         # Density gating
-        if verbose:
-            print("Running density gate (fraction = {:.2f})...".format(
-                beads_row['Gate Fraction']))
         beads_sample_gated, __, gate_contour = fc.gate.density2d(
             data=beads_sample_gated,
             channels=sc_channels,
@@ -250,6 +251,8 @@ def process_beads_table(beads_table,
 
         # Plot forward/side scatter density plot and fluorescence histograms
         if plot:
+            if verbose:
+                print("Plotting density plot and histogram...")
             figname = os.path.join(base_dir,
                                    plot_dir,
                                    "density_hist_{}.png".format(beads_id))
@@ -298,7 +301,13 @@ def process_beads_table(beads_table,
         # Obtain standard curve transformation
         if mef_channels:
             if verbose:
-                print("\nCalculating standard curve...")
+                if len(mef_channels) == 1:
+                    print("Calculating standard curve for channel {}..." \
+                        .format(mef_channels[0]))
+                else:
+                    print("Calculating standard curve for channels {}..." \
+                        .format(", ".join(mef_channels)))
+
             mef_transform_fxns[beads_id] = fc.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values, 
@@ -307,7 +316,7 @@ def process_beads_table(beads_table,
                 mef_channels=mef_channels,
                 select_peaks_method='proximity',
                 select_peaks_params={'peaks_ch_max': 1015},
-                verbose=verbose, 
+                verbose=False,
                 plot=plot,
                 plot_filename=beads_id,
                 plot_dir=os.path.join(base_dir, plot_dir))
