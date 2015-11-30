@@ -890,7 +890,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         sc, sc_beads, sc_params = fit_standard_curve(sel_peaks_ch, 
             sel_peaks_mef)
         if verbose:
-            print("- STEP 4. STANDARDS CURVE FITTING.")
+            print("- STEP 4. STANDARD CURVE FITTING.")
             print("Fitted parameters:")
             print(sc_params)
 
