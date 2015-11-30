@@ -860,11 +860,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             if verbose:
                 print("Standard deviations of channel peaks:")
                 print(peaks_std)
-            # Set default limits
+            # Set default limits: throw away 1% of the range
             if 'peaks_ch_min' not in select_peaks_params:
-                select_peaks_params['peaks_ch_min'] = min_fl
+                select_peaks_params['peaks_ch_min'] = min_fl*0.01
             if 'peaks_ch_max' not in select_peaks_params:
-                select_peaks_params['peaks_ch_max'] = max_fl
+                select_peaks_params['peaks_ch_max'] = max_fl*0.99
             # Select peaks
             sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(peaks_sorted,
                     peaks_mef_channel, peaks_ch_std = peaks_std,
