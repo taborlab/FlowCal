@@ -444,11 +444,11 @@ class TestFCSAttributesDomain(unittest.TestCase):
     We have previously looked at the contents of the $PnR attribute for
     the test files and identified the correct domain:
         - Data001.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
-                        np.arange(1024), np.arange(1024), np.arange(1024)]
+                        np.arange(1024), np.arange(1024), None]
         - Data002.fcs: [np.arange(1024), np.arange(1024), np.arange(1024),
                         np.arange(1024), np.arange(1024), np.arange(1024),
-                        np.arange(1024), np.arange(1024), np.arange(1024)]
-        - Data003.fcs: [np.arange(262144), np.arange(1024), np.arange(1024),
+                        np.arange(1024), np.arange(1024), None]
+        - Data003.fcs: [None, np.arange(1024), np.arange(1024),
                         np.arange(1024), np.arange(1024), np.arange(1024),
                         np.arange(1024), np.arange(1024)]
         - Data004.fcs: [np.arange(262144), np.arange(262144),
@@ -457,7 +457,7 @@ class TestFCSAttributesDomain(unittest.TestCase):
                         np.arange(262144), np.arange(262144),
                         np.arange(262144), np.arange(262144),
                         np.arange(262144), np.arange(262144),
-                        np.arange(262144), np.arange(262144)]
+                        np.arange(262144), None]
 
     """
     def setUp(self):
@@ -476,15 +476,15 @@ class TestFCSAttributesDomain(unittest.TestCase):
         self.assert_list_of_arrays_equal(self.d[0].domain(),
                                          [np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
-                                          np.arange(1024.), np.arange(1024.)])
+                                          np.arange(1024.), None])
         self.assert_list_of_arrays_equal(self.d[1].domain(),
                                          [np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
-                                          np.arange(1024.)])
+                                          None])
         self.assert_list_of_arrays_equal(self.d[2].domain(),
-                                         [np.arange(262144.), np.arange(1024.),
+                                         [None, np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.),
                                           np.arange(1024.), np.arange(1024.)])
@@ -494,7 +494,7 @@ class TestFCSAttributesDomain(unittest.TestCase):
              np.arange(262144.), np.arange(262144.), np.arange(262144.), 
              np.arange(262144.), np.arange(262144.), np.arange(262144.),
              np.arange(262144.), np.arange(262144.), np.arange(262144.), 
-             np.arange(262144.), np.arange(262144.)])
+             np.arange(262144.), None])
 
     def test_attribute_single(self):
         """
@@ -532,7 +532,7 @@ class TestFCSAttributesDomain(unittest.TestCase):
                                                            'TIME']),
                                          [np.arange(1024),
                                           np.arange(1024),
-                                          np.arange(262144)])
+                                          None])
         self.assert_list_of_arrays_equal(self.d[3].domain(['FSC PMT-A',
                                                            'FSC PMT-H',
                                                            'FSC PMT-W']),
@@ -548,13 +548,13 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
     the test files and identified the correct histogram bin edges:
         - Data001.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+                        np.arange(1025) - 0.5, None]
         - Data002.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-                        np.arange(1025) - 0.5]
-        - Data003.fcs: [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+                        None]
+        - Data003.fcs: [None - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5,
                         np.arange(1025) - 0.5, np.arange(1025) - 0.5]
@@ -564,7 +564,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
                         np.arange(262145) - 0.5, np.arange(262145) - 0.5,
                         np.arange(262145) - 0.5, np.arange(262145) - 0.5,
                         np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-                        np.arange(262145) - 0.5, np.arange(262145) - 0.5]
+                        np.arange(262145) - 0.5, None]
 
     """
     def setUp(self):
@@ -584,17 +584,17 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
             self.d[0].hist_bin_edges(),
             [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-             np.arange(1025) - 0.5, np.arange(1025) - 0.5])
+             np.arange(1025) - 0.5, None])
         self.assert_list_of_arrays_equal(
             self.d[1].hist_bin_edges(),
             [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
-             np.arange(1025) - 0.5])
+             None])
         self.assert_list_of_arrays_equal(
             self.d[2].hist_bin_edges(),
-            [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+            [None, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5,
              np.arange(1025) - 0.5, np.arange(1025) - 0.5])
@@ -606,7 +606,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
              np.arange(262145) - 0.5, np.arange(262145) - 0.5,
              np.arange(262145) - 0.5, np.arange(262145) - 0.5,
              np.arange(262145) - 0.5, np.arange(262145) - 0.5,
-             np.arange(262145) - 0.5, np.arange(262145) - 0.5])
+             np.arange(262145) - 0.5, None])
 
     def test_attribute_single(self):
         """
@@ -647,7 +647,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
                                       'TIME']),
             [np.arange(1025) - 0.5,
              np.arange(1025) - 0.5,
-             np.arange(262145) - 0.5])
+             None])
         self.assert_list_of_arrays_equal(
             self.d[3].hist_bin_edges(['FSC PMT-A',
                                       'FSC PMT-H',
@@ -699,7 +699,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
                           'TIME']].hist_bin_edges(),
             [np.arange(1025) - 0.5,
              np.arange(1025) - 0.5,
-             np.arange(262145) - 0.5])
+             None])
         self.assert_list_of_arrays_equal(
             self.d[3][:,['FSC PMT-A',
                          'FSC PMT-H',

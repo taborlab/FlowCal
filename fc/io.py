@@ -1270,8 +1270,12 @@ class FCSData(np.ndarray):
         # Domain and hist_bin_edges: These are extracted from the requried $PnR
         # keyword parameter, and are assumed to be np.arange($PnR) and 
         # np.arange($PnR + 1) - 0.5, respectively.
-        r = [fcs_file.text.get('$P{}R'.format(i))
-             for i in range(1, num_channels + 1)]
+        r = []
+        for ch_idx, ch in enumerate(channels):
+            if ch.lower() == 'time':
+                r.append(None)
+            else:
+                r.append(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
         domain = [np.arange(float(ri))
                   if ri is not None else None
                   for ri in r]
@@ -1300,12 +1304,8 @@ class FCSData(np.ndarray):
                           for agi in amplifier_gain]
         amplifier_gain = tuple(amplifier_gain)
 
-        # Create new array. Copy array from FCSFile so as not to modify
-        # FCSFile (even though we should be the only ones using it here). With
-        # the current numpy implementation, the copy will now be writeable.
-        # Explicitly ensure the copy is writeable in case this behavior ever
-        # changes.
-        data = np.array(fcs_file.data, copy=True)
+        # Get data from fcs_file object, and change writeable flag.
+        data = fcs_file.data
         data.flags.writeable = True
         obj = data.view(cls)
 
