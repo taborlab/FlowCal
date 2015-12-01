@@ -862,9 +862,9 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                 print(peaks_std)
             # Set default limits: throw away 1% of the range
             if 'peaks_ch_min' not in select_peaks_params:
-                select_peaks_params['peaks_ch_min'] = min_fl*0.01
+                select_peaks_params['peaks_ch_min'] = min_fl*0.015
             if 'peaks_ch_max' not in select_peaks_params:
-                select_peaks_params['peaks_ch_max'] = max_fl*0.99
+                select_peaks_params['peaks_ch_max'] = max_fl*0.985
             # Select peaks
             sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(peaks_sorted,
                     peaks_mef_channel, peaks_ch_std = peaks_std,
@@ -904,8 +904,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             # Make label for x axis
             channel_name = data_channel.channels[0]
             channel_gain = data_channel.detector_voltage(0)
-            xlabel = '{} (Detector voltage = {})'.format(channel_name,
-                                                         channel_gain)
+            xlabel = '{} (Channel Units)'.format(channel_name)
             # Compute filename to save
             if plot_dir is not None:
                 savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
