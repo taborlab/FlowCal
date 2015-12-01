@@ -8,8 +8,22 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+# To scrape version information
+import re
 
-import fc
+def find_version(file_path):
+    """
+    Scrape version information from specified file path.
+
+    """
+    with open(file_path, 'r') as f:
+        file_contents = f.read()
+    version_match = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]",
+                              file_contents, re.M)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise RuntimeError("unable to find version string")
 
 here = path.abspath(path.dirname(__file__))
 
@@ -23,7 +37,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=fc.__version__,
+    version=find_version(path.join(here, 'fc', '__init__.py')),
 
     description='Flow cytometry library',
     long_description=long_description,
@@ -69,12 +83,14 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.9.2', 
-                      'scipy>=0.15.1', 
-                      'matplotlib>=1.4.3', 
-                      'scikit-learn>=0.16.1', 
-                      'xlrd>=0.9.3', 
-                      'openpyxl>=2.0.2'],
+    install_requires=['numpy>=1.9.2',
+                      'scipy>=0.15.1',
+                      'matplotlib>=1.4.3',
+                      'palettable>=2.1.1',
+                      'scikit-learn>=0.16.1',
+                      'pandas>=0.16.2',
+                      'xlrd>=0.9.3',
+                      'XlsxWriter>=0.7.3'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -90,7 +106,7 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         '.': ['CONTRIBUTE.rst'],
-        'fc': ['diverging.csv', 'spectral.csv'],
+        'fc': [],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
