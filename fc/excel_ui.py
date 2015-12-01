@@ -119,7 +119,8 @@ def process_beads_table(beads_table,
                         base_dir="",
                         verbose=False,
                         plot=False,
-                        plot_dir=""):
+                        plot_dir="",
+                        full_output=False):
     """
     Load and process FCS files corresponding to beads.
 
@@ -162,6 +163,10 @@ def process_beads_table(beads_table,
     plot_dir : str, optional
         Directory relative to `base_dir` into which plots are saved. If
         `plot` is False, this parameter is ignored.
+    full_output : bool, optional
+        Flag indicating whether to include an additional output, containing
+        intermediate results from the generation of the MEF transformation
+        functions.
 
     Returns
     -------
@@ -171,15 +176,23 @@ def process_beads_table(beads_table,
     mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
         ``beads_table.index``.
+    mef_outputs : OrderedDict
+        A dictionary with the intermediate results of the generation of the
+        MEF transformation functions, indexed by ``beads_table.index``.
+        Only included if `full_output` is True.
 
     """
     # Initialize output variables
     beads_samples = []
     mef_transform_fxns = collections.OrderedDict()
+    mef_outputs = collections.OrderedDict()
 
     # Return empty structures if beads table is empty
     if beads_table.empty:
-        return beads_samples, mef_transform_fxns
+        if full_output:
+            return beads_samples, mef_transform_fxns, mef_outputs
+        else:
+            return beads_samples, mef_transform_fxns
 
     if verbose:
         msg = "Processing Beads table ({} entries)".format(len(beads_table))
@@ -308,7 +321,7 @@ def process_beads_table(beads_table,
                     print("Calculating standard curve for channels {}..." \
                         .format(", ".join(mef_channels)))
 
-            mef_transform_fxns[beads_id] = fc.mef.get_transform_fxn(
+            mef_output = fc.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values, 
                 cluster_method='gmm', 
@@ -318,9 +331,18 @@ def process_beads_table(beads_table,
                 verbose=False,
                 plot=plot,
                 plot_filename=beads_id,
-                plot_dir=os.path.join(base_dir, plot_dir))
+                plot_dir=os.path.join(base_dir, plot_dir),
+                full=full_output)
+            if full_output:
+                mef_outputs[beads_id] = mef_output
+                mef_transform_fxns[beads_id] = mef_output.transform_fxn
+            else:
+                mef_transform_fxns[beads_id] = mef_output
 
-    return beads_samples, mef_transform_fxns
+    if full_output:
+        return beads_samples, mef_transform_fxns, mef_outputs
+    else:
+        return beads_samples, mef_transform_fxns
 
 def process_samples_table(samples_table,
                           instruments_table,
