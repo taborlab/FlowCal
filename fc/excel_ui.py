@@ -475,12 +475,15 @@ def process_samples_table(samples_table,
                     continue
                 # Decide what transformation to perform
                 units = units_str.strip()
-                if units == 'Channel':
+                if units.lower() == 'channel':
                     units_label = "Channel Number"
-                elif units == 'RFI':
+                elif units.lower() == 'rfi':
                     units_label = "Relative Fluorescence Intensity, RFI"
                     sample = fc.transform.exponentiate(sample, fl_channel)
-                elif units == 'MEF':
+                elif units.lower() == 'a.u.' or units.lower() == 'au':
+                    units_label = "Arbitrary Units, a.u."
+                    sample = fc.transform.exponentiate(sample, fl_channel)
+                elif units.lower() == 'mef':
                     units_label = "Molecules of Equivalent Fluorophore, MEF"
                     sample = mef_transform_fxns[sample_row['Beads ID']](
                         sample,
