@@ -39,11 +39,10 @@ def clustering_gmm(data,
     to it. `clustering_gmm` can perform two types of initialization, which
     we have found work well with calibration beads data. On the first one,
     the function group samples in `data` by their Euclidean distance to the
-    origin, similarly to what is done in `clustering_distance`. Then, the
-    function calculates the Gaussian Mixture parameters, assuming that this
-    clustering is correct. These parameters are used as the initial
-    conditions. The second initialization procedure also starts by
-    clustering based on distance to the origin. Then, for each cluster,
+    origin, Then, the function calculates the Gaussian Mixture parameters,
+    assuming that this clustering is correct. These parameters are used as
+    the initial conditions. The second initialization procedure also starts
+    by clustering based on distance to the origin. Then, for each cluster,
     the 50% datapoints farther away from the mean are discarded, and the
     rest are used to calculate the initial parameters. The parameter
     `initialization` selects any of these two procedures.
@@ -86,10 +85,8 @@ def clustering_gmm(data,
         data_clustered = [data[labels == i] for i in labels_all]
         
         # Initialize parameters for GMM
-        weights = np.tile(1.0 / n_clusters,
-                                        n_clusters)
-        means = np.array([np.mean(di, axis = 0) 
-            for di in data_clustered])
+        weights = np.tile(1.0 / n_clusters, n_clusters)
+        means = np.array([np.mean(di, axis=0) for di in data_clustered])
         
         if data.shape[1] == 1:
             covars = [np.cov(di.T).reshape(1,1) for di in data_clustered]
@@ -97,37 +94,40 @@ def clustering_gmm(data,
             covars = [np.cov(di.T) for di in data_clustered]
 
         # Initialize GMM object
-        gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
-            covariance_type = 'full', params = 'mc', init_params = '')
+        gmm = GMM(n_components=n_clusters,
+                  tol=tol,
+                  min_covar=min_covar,
+                  covariance_type='full',
+                  params='mc',
+                  init_params='')
         gmm.weight_ = weights
         gmm.means_ = means
         gmm.covars_ = covars
 
     elif initialization == 'distance_sub':
         # Initialize parameters for GMM
-        weights = np.tile(1.0 / n_clusters,
-                                        n_clusters)
+        weights = np.tile(1.0 / n_clusters, n_clusters)
         means = []
         covars = []
 
         # Get distance and sort based on it
-        dist = np.sum(data**2., axis = 1)
+        dist = np.sum(data**2., axis=1)
         sorted_i = np.argsort(dist)
 
         # Expected number of elements per cluster
         n_per_cluster = data.shape[0]/float(n_clusters)
 
         # Get the means and covariances per cluster
-        # We will just use a fraction of 1-2*discard_frac of the data.
+        # We will just use a fraction of ``1 - 2*discard_frac`` of the data.
         # Data at the edges that actually corresponds to another cluster can
         # really mess up the final result.
         discard_frac = 0.25
         for i in range(n_clusters):
-            il = int((i+discard_frac)*n_per_cluster)
-            ih = int((i+1-discard_frac)*n_per_cluster)
+            il = int((i + discard_frac)*n_per_cluster)
+            ih = int((i + 1 - discard_frac)*n_per_cluster)
             sorted_i_i = sorted_i[il:ih]
             data_i = data[sorted_i_i]
-            means.append(np.mean(data_i, axis = 0))
+            means.append(np.mean(data_i, axis=0))
             if data.shape[1] == 1:
                 covars.append(np.cov(data_i.T).reshape(1,1))
             else:
@@ -135,14 +135,18 @@ def clustering_gmm(data,
         means = np.array(means)
 
         # Initialize GMM object
-        gmm = GMM(n_components = n_clusters, tol = tol, min_covar = min_covar,
-            covariance_type = 'full', params = 'mc', init_params = '')
+        gmm = GMM(n_components=n_clusters,
+                  tol=tol,
+                  min_covar=min_covar,
+                  covariance_type='full',
+                  params='mc',
+                  init_params='')
         gmm.weight_ = weights
         gmm.means_ = means
         gmm.covars_ = covars
 
     else:
-        raise ValueError('Initialization method {} not implemented.'\
+        raise ValueError("initialization method {} not implemented"
             .format(initialization))
 
     # Fit 
@@ -151,7 +155,7 @@ def clustering_gmm(data,
     # This avoids the complete elimination of a cluster if two or more clusters
     # have very similar means.
     resp = gmm.predict_proba(data)
-    labels = [np.random.choice(range(n_clusters), p = ri) for ri in resp]
+    labels = [np.random.choice(range(n_clusters), p=ri) for ri in resp]
 
     return labels
 
@@ -176,10 +180,10 @@ def find_peaks_median(data):
 def select_peaks_proximity(peaks_ch,
                            peaks_mef,
                            peaks_ch_std,
-                           peaks_ch_std_mult_l = 2.5,
-                           peaks_ch_std_mult_r = 2.5,
-                           peaks_ch_min = 0,
-                           peaks_ch_max = 1023):
+                           peaks_ch_std_mult_l=2.5,
+                           peaks_ch_std_mult_r=2.5,
+                           peaks_ch_min=0,
+                           peaks_ch_max=1023):
     """
     Select bead subpopulations based on proximity to a minimum and maximum.
 
@@ -218,21 +222,21 @@ def select_peaks_proximity(peaks_ch,
     peaks_ch_std[peaks_ch_std < min_std] = min_std
 
     # Discard channel-space peaks
-    if (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min and\
-        (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max:
-        raise ValueError('Peaks are being cut off at both sides.')
+    if ((peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min and
+        (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max):
+        raise ValueError("peaks are being cut off at both sides")
     elif (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min:
         discard_ch = 'left'
         discard_ch_n = 1
         while (peaks_ch[discard_ch_n] - 
-            peaks_ch_std[discard_ch_n]*peaks_ch_std_mult_l) <= peaks_ch_min:
+               peaks_ch_std[discard_ch_n]*peaks_ch_std_mult_l) <= peaks_ch_min:
             discard_ch_n = discard_ch_n + 1
         sel_peaks_ch = peaks_ch[discard_ch_n:]
     elif (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max:
         discard_ch = 'right'
         discard_ch_n = 1
         while (peaks_ch[-1-discard_ch_n] +
-            peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult_r) >= peaks_ch_max:
+               peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult_r)>=peaks_ch_max:
             discard_ch_n = discard_ch_n + 1
         sel_peaks_ch = peaks_ch[:-discard_ch_n]
     else:
@@ -249,7 +253,7 @@ def select_peaks_proximity(peaks_ch,
     elif discard_ch == False and discard_mef_n == 0:
         sel_peaks_mef = peaks_mef.copy()
     else:
-        ValueError('Number of MEF values and channel peaks does not match.')
+        ValueError("number of MEF values and channel peaks does not match")
     
     # Discard unknown (NaN) peaks
     unknown_mef = np.isnan(sel_peaks_mef)
@@ -316,8 +320,8 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         raise ValueError("peaks_ch and peaks_mef have different lengths")
     # Check that we have at least three points
     if len(peaks_ch) <= 2:
-        raise ValueError("Standard curve model requires at least three "
-            "bead peak values.")
+        raise ValueError("standard curve model requires at least three "
+            "bead peak values")
         
     # Initialize parameters
     params = np.zeros(3)
@@ -361,8 +365,8 @@ def plot_standard_curve(peaks_ch,
                         peaks_mef,
                         sc_beads,
                         sc_abs,
-                        xlim = (0., 1023.),
-                        ylim = (1, 1e8)):
+                        xlim=(0.,1023.),
+                        ylim=(1.,1e8)):
     """
     Plot a standard curve with fluorescence of calibration beads.
 
@@ -382,15 +386,22 @@ def plot_standard_curve(peaks_ch,
 
     """
     # Generate x data
-    xdata = np.linspace(xlim[0],xlim[1],200)
+    xdata = np.linspace(xlim[0], xlim[1], 200)
 
     # Plot
-    plt.plot(peaks_ch, peaks_mef, 'o', 
-        label = 'Beads', color=standard_curve_colors[0])
-    plt.plot(xdata, sc_beads(xdata), 
-        label = 'Beads model', color=standard_curve_colors[1])
-    plt.plot(xdata, sc_abs(xdata), 
-        label = 'Standard curve', color=standard_curve_colors[2])
+    plt.plot(peaks_ch,
+             peaks_mef,
+             'o',
+             label='Beads',
+             color=standard_curve_colors[0])
+    plt.plot(xdata,
+             sc_beads(xdata),
+             label='Beads model',
+             color=standard_curve_colors[1])
+    plt.plot(xdata,
+             sc_abs(xdata),
+             label='Standard curve',
+             color=standard_curve_colors[2])
 
     plt.yscale('log')
     plt.xlim(xlim)
@@ -398,12 +409,21 @@ def plot_standard_curve(peaks_ch,
     plt.grid(True)
     plt.legend(loc = 'best')
 
-def get_transform_fxn(data_beads, peaks_mef, mef_channels,
-    cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
-    find_peaks_method = 'median', find_peaks_params = {},
-    select_peaks_method = 'proximity', select_peaks_params = {},
-    verbose = False, plot = False, plot_dir = None, plot_filename = None,
-    full = False):
+def get_transform_fxn(data_beads,
+                      peaks_mef,
+                      mef_channels,
+                      cluster_method='gmm',
+                      cluster_params={},
+                      cluster_channels=0,
+                      find_peaks_method='median',
+                      find_peaks_params={},
+                      select_peaks_method='proximity',
+                      select_peaks_params={},
+                      verbose=False,
+                      plot=False,
+                      plot_dir=None,
+                      plot_filename=None,
+                      full=False):
     """
     Get a transformation function to convert flow cytometry data to MEF.
 
@@ -527,6 +547,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     if verbose:
         prev_precision = np.get_printoptions()['precision']
         np.set_printoptions(precision=2)
+
     # Create directory if plot is True
     if plot and plot_dir is not None:
         if not os.path.exists(plot_dir):
@@ -536,13 +557,14 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     if plot_filename is None:
         plot_filename = str(data_beads)
 
-    # 1. Cluster
-    # ===========
+    ###
+    # 1. Clustering
+    ###
     if cluster_method == 'gmm':
         labels = clustering_gmm(data_beads[:,cluster_channels], 
             **cluster_params)
     else:
-        raise ValueError("Clustering method {} not recognized."
+        raise ValueError("clustering method {} not recognized"
             .format(cluster_method))
 
     labels_all = np.array(list(set(labels)))
@@ -558,11 +580,12 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         data_perc = data_count*100.0/data_count.sum()
         print("Percentage of samples in each cluster:")
         print(data_perc)
+
     # Plot
     if plot:
         # Sort
-        cluster_dist = [np.sum((np.mean(di[:,cluster_channels], 
-                axis = 0))**2) for di in data_clustered]
+        cluster_dist = [np.sum((np.mean(di[:,cluster_channels], axis=0))**2)
+                        for di in data_clustered]
         cluster_sorted_ind = np.argsort(cluster_dist)
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
@@ -579,7 +602,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             if plot_dir is not None:
                 plt.close()
             
-        if len(cluster_channels) == 3:
+        elif len(cluster_channels) == 3:
             if plot_dir is not None:
                 savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
             else:
@@ -618,18 +641,19 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         if verbose: 
             print("- MEF transformation for channel {}...".format(mef_channel))
 
-        # Step 2. Find peaks in each one of the clusters. 
-        # ===============================================
+        ###
+        # 2. Find peaks in each one of the clusters.
+        ###
 
         # Find peaks on all the channel data
         min_fl = data_channel.domain(0)[0]
         max_fl = data_channel.domain(0)[-1]
         if find_peaks_method == 'median':
             peaks_ch = np.array([find_peaks_median(di[:,mef_channel],
-                                                        **find_peaks_params)
-                                    for di in data_clustered])
+                                                   **find_peaks_params)
+                                 for di in data_clustered])
         else:
-            raise ValueError("Peak finding method {} not recognized."
+            raise ValueError("peak finding method {} not recognized"
                 .format(find_peaks_method))
         # Sort peaks and clusters
         ind_sorted = np.argsort(peaks_ch)
@@ -647,28 +671,33 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Plot
         if plot:
             # Get colors for peaks
-            colors = [fc.plot.cmap_default(i)\
-                                for i in np.linspace(0, 1, n_clusters)]
+            colors = [fc.plot.cmap_default(i)
+                      for i in np.linspace(0, 1, n_clusters)]
             # Plot histograms
-            plt.figure(figsize = (8,4))
-            fc.plot.hist1d(data_plot, channel = mef_channel, div = 4, 
-                alpha = 0.75)
+            plt.figure(figsize=(8,4))
+            fc.plot.hist1d(data_plot,
+                           channel=mef_channel,
+                           div=4,
+                           alpha=0.75)
             # Plot histograms and peaks
             for c, i in zip(colors, cluster_sorted_ind):
                 # Peak values
                 p = peaks_ch[i]
                 ylim = plt.ylim()
-                plt.plot([p, p], [ylim[0], ylim[1]], color = c)
+                plt.plot([p, p], [ylim[0], ylim[1]], color=c)
                 plt.ylim(ylim)
             # Save and close
             if plot_dir is not None:
                 plt.tight_layout()
                 plt.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
-                                    mef_channel, plot_filename), dpi = 300)
+                                                        mef_channel,
+                                                        plot_filename),
+                            dpi=fc.plot.savefig_dpi)
                 plt.close()
 
+        ###
         # 3. Select peaks for fitting
-        # ===========================
+        ###
         
         # Print information
         if verbose:
@@ -678,8 +707,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
         if select_peaks_method == 'proximity':
             # Get the standard deviation of each peak
-            peaks_std = np.array([np.std(di[:,mef_channel]) \
-                for di in data_sorted])
+            peaks_std = np.array([np.std(di[:,mef_channel])
+                                  for di in data_sorted])
             if verbose:
                 print("Standard deviations of channel peaks:")
                 print(peaks_std)
@@ -689,11 +718,13 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             if 'peaks_ch_max' not in select_peaks_params:
                 select_peaks_params['peaks_ch_max'] = max_fl*0.985
             # Select peaks
-            sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(peaks_sorted,
-                    peaks_mef_channel, peaks_ch_std = peaks_std,
-                    **select_peaks_params)
+            sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(
+                peaks_sorted,
+                peaks_mef_channel,
+                peaks_ch_std=peaks_std,
+                **select_peaks_params)
         else:
-            raise ValueError("Peak selection method {} not recognized."
+            raise ValueError("peak selection method {} not recognized"
                 .format(select_peaks_method))
 
         # Accumulate results
@@ -708,9 +739,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             print("Selected MEF peaks:")
             print(sel_peaks_mef)
 
+        ###
         # 4. Get standard curve
-        # ======================
-        sc, sc_beads, sc_params = fit_standard_curve(sel_peaks_ch, 
+        ###
+        sc, sc_beads, sc_params = fit_standard_curve(
+            sel_peaks_ch,
             sel_peaks_mef)
         if verbose:
             print("- STEP 4. STANDARD CURVE FITTING.")
@@ -725,8 +758,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Plot
         if plot:
             # Plot standard curve
-            plt.figure(figsize = (6,4))
-            plot_standard_curve(sel_peaks_ch, 
+            plt.figure(figsize=(6,4))
+            plot_standard_curve(sel_peaks_ch,
                                 sel_peaks_mef,
                                 sc_beads,
                                 sc,
@@ -744,11 +777,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
-                                    sc_list = sc_all,
-                                    sc_channels = mef_channel_all)
+                                      sc_list=sc_all,
+                                      sc_channels=mef_channel_all)
 
     if verbose:
-        np.set_printoptions(precision = prev_precision)
+        np.set_printoptions(precision=prev_precision)
 
     if full:
         # Clustering results
@@ -774,12 +807,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
                   'peak_sel_res',
                   'fitting_res']
         MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
-        out = MEFOutput(transform_fxn = transform_fxn,
-                        clustering_res = clustering_res,
-                        peak_find_res = peak_find_res,
-                        peak_sel_res = peak_sel_res,
-                        fitting_res = fitting_res,
-                        )
+        out = MEFOutput(transform_fxn=transform_fxn,
+                        clustering_res=clustering_res,
+                        peak_find_res=peak_find_res,
+                        peak_sel_res=peak_sel_res,
+                        fitting_res=fitting_res)
         return out
     else:
         return transform_fxn
