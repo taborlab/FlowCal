@@ -30,20 +30,24 @@ savefig_dpi = 250
 ##############################################################################
 
 def hist1d(data_list,
-           channel = 0,
-           log = False,
-           div = 1,
-           bins = None,
-           legend = False,
-           legend_loc = 'best',
-           legend_fontsize = 'medium',
-           xlabel = None,
-           ylabel = None,
-           xlim = None,
-           ylim = None,
-           title = None,
-           histtype = 'stepfilled',
-           savefig = None,
+           channel=0,
+           log=False,
+           div=1,
+           bins=None,
+           histtype='stepfilled',
+           normed=False,
+           xlabel=None,
+           ylabel=None,
+           xlim=None,
+           ylim=None,
+           title=None,
+           legend=False,
+           legend_loc='best',
+           legend_fontsize='medium',
+           legend_labels=None,
+           facecolor=None,
+           edgecolor=None,
+           savefig=None,
            **kwargs):
     """
     Plot one 1D histogram from one or more flow cytometry data sets.
@@ -71,32 +75,30 @@ def hist1d(data_list,
         Flag specifying whether the x axis should be in log scale.
     div : int or float, optional
         Downscaling factor for the default number of bins. If `bins` is not
-        specified, the default set of bins extracted from an element in
-        `data_list` contains ``n`` bins, and ``div != 1``, `hist1d` will
-        actually use ``n/div`` bins that cover the same range as the
-        default bins. `div` is ignored if `bins` is specified.
+        specified, the default set of bins extracted from
+        ``data_list[i].domain`` contains ``n`` bins, and ``div != 1``,
+        `hist1d` will actually use ``n/div`` bins, covering the same range
+        as ``data_list[i].domain``. `div` is ignored if `bins` is
+        specified.
     bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, attempts to
-        extract bins from data object.
-    legend : bool, optional
-        Flag specifying whether to include a legend. If `legend` is True,
-        the legend labels will be taken from ``kwargs['label']``.
+        bins argument to pass to plt.hist. If not specified, `hist1d`
+        attempts to extract bins from ``data_list[i].domain``.
     histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, str, optional
         Histogram type. Directly passed to ``plt.hist``.
+    normed : bool, optional
+        Flag indicating whether to normalize the histogram such that the
+        area under the curve is equal to one.
     savefig : str, optional
         The name of the file to save the figure to. If None, do not save.
 
     Other parameters
     ----------------
-    legend_loc : str, optional
-        Location of the legend.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
     ylabel : str, optional
-        Label to use on the y axis. If None and ``kwargs['normed']==True``,
-        use 'Probability'. If None and ``kwargs['normed']==False``, use
-        'Counts'.
+        Label to use on the y axis. If None and ``normed==True``, use
+        'Probability'. If None and `normed==False``, use 'Counts'.
     xlim : tuple, optional
         Limits for the x axis. If not specified and `bins` exists, use
         the lowest and highest values of `bins`.
@@ -104,17 +106,28 @@ def hist1d(data_list,
         Limits for the y axis.
     title : str, optional
         Plot title.
-        `edgecolor`, `facecolor`, `linestyle`, and `label` can be specified
-        as lists, with an element for each data object.
+    legend : bool, optional
+        Flag specifying whether to include a legend. If `legend` is True,
+        the legend labels will be taken from `legend_labels` if present,
+        else they will be taken from ``str(data_list[i])``.
+    legend_loc : str, optional
+        Location of the legend.
+    legend_fontsize : int or str, optional
+        Font size for the legend.
+    legend_labels : list, optional
+        Labels to use for the legend.
+    facecolor : matplotlib color or list of matplotlib colors, optional
+        The histogram's facecolor. It can be a list with the same length as
+        `data_list`. If `edgecolor` and `facecolor` are not specified, and
+        ``histtype == 'stepfilled'``, the facecolor will be taken from the
+        module-level variable `cmap_default`.
+    edgecolor : matplotlib color or list of matplotlib colors, optional
+        The histogram's edgecolor. It can be a list with the same length as
+        `data_list`. If `edgecolor` and `facecolor` are not specified, and
+        ``histtype == 'step'``, the edgecolor will be taken from the
+        module-level variable `cmap_default`.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``hist``.
-        ``facecolor``, ``edgecolor``, ``linestyle``, and ``label`` can be
-        specified as a list, with an element for each object in
-        `data_list`. If ``histtype=='stepfilled'`` and no ``facecolor`` is
-        specified, default values for ``facecolor`` are taken from the
-        default colormap. If ``histtype=='step'`` and no ``edgecolor``
-        is specified in `kwargs`, default values for ``edgecolor`` are
-        taken from the default colormap.
 
     Notes
     -----
@@ -127,22 +140,20 @@ def hist1d(data_list,
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
-        if 'edgecolor' in kwargs:
-            kwargs['edgecolor'] = [kwargs['edgecolor']]
-        if 'facecolor' in kwargs:
-            kwargs['facecolor'] = [kwargs['facecolor']]
-        if 'linestyle' in kwargs:
-            kwargs['linestyle'] = [kwargs['linestyle']]
-        if 'label' in kwargs:
-            kwargs['label'] = [kwargs['label']]
 
     # Default colors
-    if histtype == 'stepfilled' and 'facecolor' not in kwargs:
-        kwargs['facecolor'] = [cmap_default(i)\
-                                for i in np.linspace(0, 1, len(data_list))]
-    elif histtype == 'step' and 'edgecolor' not in kwargs:
-        kwargs['edgecolor'] = [cmap_default(i)\
-                                for i in np.linspace(0, 1, len(data_list))]
+    if histtype == 'stepfilled' and edgecolor is None and facecolor is None:
+        facecolor = [cmap_default(i)
+                     for i in np.linspace(0, 1, len(data_list))]
+    elif histtype == 'step' and edgecolor is None and facecolor is None:
+        edgecolor = [cmap_default(i)
+                     for i in np.linspace(0, 1, len(data_list))]
+
+    # Convert colors to lists if necessary
+    if not isinstance(edgecolor, list):
+        edgecolor = [edgecolor]*len(data_list)
+    if not isinstance(facecolor, list):
+        facecolor = [facecolor]*len(data_list)
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
@@ -162,21 +173,22 @@ def hist1d(data_list,
             # Generate sub-sampled bins
             bins = np.interp(xs, xd, bd)
 
-        # Check for properties specified as lists.
-        kwargsi = kwargs.copy()
-        if 'edgecolor' in kwargsi:
-            kwargsi['edgecolor'] = kwargsi['edgecolor'][i]
-        if 'facecolor' in kwargsi:
-            kwargsi['facecolor'] = kwargsi['facecolor'][i]
-        if 'linestyle' in kwargsi:
-            kwargsi['linestyle'] = kwargsi['linestyle'][i]
-        if 'label' in kwargsi:
-            kwargsi['label'] = kwargsi['label'][i]
         # Actually plot
         if bins is not None:
-            n, edges, patches = plt.hist(y, bins, histtype=histtype, **kwargsi)
+            n, edges, patches = plt.hist(y,
+                                         bins,
+                                         histtype=histtype,
+                                         normed=normed,
+                                         edgecolor=edgecolor[i],
+                                         facecolor=facecolor[i],
+                                         **kwargs)
         else:
-            n, edges, patches = plt.hist(y, histtype=histtype, **kwargsi)
+            n, edges, patches = plt.hist(y,
+                                         histtype=histtype,
+                                         normed=normed,
+                                         edgecolor=edgecolor[i],
+                                         facecolor=facecolor[i],
+                                         **kwargs)
         if log == True:
             plt.gca().set_xscale('log')
 
@@ -195,7 +207,7 @@ def hist1d(data_list,
     if ylabel is not None:
         # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    elif 'normed' in kwargs:
+    elif normed:
         plt.ylabel('Probability')
     else:
         # Default is "Counts"
@@ -217,7 +229,11 @@ def hist1d(data_list,
         plt.title(title)
 
     if legend:
-        plt.legend(loc=legend_loc, prop={'size': legend_fontsize})
+        if legend_labels is None:
+            legend_labels = [str(data) for data in data_list]
+        plt.legend(legend_labels,
+                   loc=legend_loc,
+                   prop={'size': legend_fontsize})
 
     # Save if necessary
     if savefig is not None:
@@ -226,19 +242,19 @@ def hist1d(data_list,
         plt.close()
 
 def density2d(data, 
-              channels = [0,1],
-              log = False,
-              div = 1,
-              bins = None,
-              smooth = True,
-              sigma = 10.0,
-              mode = 'mesh',
-              colorbar = False,
-              normed = False,
-              xlabel = None,
-              ylabel = None,
-              title = None,
-              savefig = None,
+              channels=[0,1],
+              log=False,
+              div=1,
+              bins=None,
+              smooth=True,
+              sigma=10.0,
+              mode='mesh',
+              colorbar=False,
+              normed=False,
+              xlabel=None,
+              ylabel=None,
+              title=None,
+              savefig=None,
               **kwargs):
     """
     Plot a 2D density plot from two channels of a flow cytometry data set.
@@ -704,15 +720,14 @@ def scatter3d(data_list,
 ##############################################################################
 
 def density_and_hist(data,
-                    gated_data = None,
-                    gate_contour = None,
-                    density_channels = None,
-                    density_params = {},
-                    hist_channels = None,
-                    hist_params = {},
-                    figsize = None,
-                    savefig = None,
-                    ):
+                     gated_data=None,
+                     gate_contour=None,
+                     density_channels=None,
+                     density_params={},
+                     hist_channels=None,
+                     hist_params={},
+                     figsize=None,
+                     savefig=None):
     """
     Make a combined density/histogram plot of a FCSData object.
 
@@ -776,8 +791,8 @@ def density_and_hist(data,
     """
     # Check number of plots
     if density_channels is None and hist_channels is None:
-        raise ValueError("density_channels and hist_channels cannot be both \
-            None.")
+        raise ValueError("density_channels and hist_channels cannot be both "
+            "None")
     # Change hist_channels to iterable if necessary
     if not hasattr(hist_channels, "__iter__"):
         hist_channels = [hist_channels]
@@ -793,18 +808,17 @@ def density_and_hist(data,
         figsize = (6, height)
 
     # Create plot
-    plt.figure(figsize = figsize)
+    plt.figure(figsize=figsize)
 
     # Density plot
     if plot_density:
         plt.subplot(n_plots, 1, 1)
         # Plot density diagram
-        density2d(data, channels = density_channels, **density_params)
+        density2d(data, channels=density_channels, **density_params)
         # Plot gate contour
         if gate_contour is not None:
             for g in gate_contour:
-                plt.plot(g[:,0], g[:,1], color = 'k',
-                    linewidth = 1.25)
+                plt.plot(g[:,0], g[:,1], color='k', linewidth=1.25)
         # Add title
         if 'title' not in density_params:
             if gated_data is not None:
@@ -827,13 +841,17 @@ def density_and_hist(data,
             hist_params_i['facecolor'] = colors[i]
         # Plots
         if gated_data is not None:
-            hist1d(data, channel = hist_channel, 
-                alpha = 0.5, **hist_params_i)
-            hist1d(gated_data, channel = hist_channel, 
-                alpha = 1.0, **hist_params_i)
-            plt.legend(['Ungated', 'Gated'], loc = 'best', fontsize = 'medium')
+            hist1d(data,
+                   channel=hist_channel,
+                   alpha=0.5,
+                   **hist_params_i)
+            hist1d(gated_data,
+                   channel=hist_channel,
+                   alpha=1.0,
+                   **hist_params_i)
+            plt.legend(['Ungated', 'Gated'], loc='best', fontsize='medium')
         else:
-            hist1d(data, channel = hist_channel, **hist_params_i)
+            hist1d(data, channel=hist_channel, **hist_params_i)
     
     # Save if necessary
     if savefig is not None:
