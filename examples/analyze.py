@@ -137,14 +137,4 @@ if __name__ == "__main__":
                 savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
 
-    # Generate bar plot
-    print("\nGenerating bar plot...")
-
-    labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
-    fc.plot.hist_and_bar(data_gated, channel = 'FL1', labels = labels,
-        hist_params = {'log': True, 'div': 4,
-                'xlabel': 'MEFL', 'ylim': (0, 400)},
-        bar_params = {'ylabel': 'MEFL', 'ylim': (0, 40000)},
-        bar_stats_func = np.median, savefig = 'hist_bar.png')
-
     print("\nDone.")
