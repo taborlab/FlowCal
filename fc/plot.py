@@ -439,14 +439,15 @@ def density2d(data,
         plt.close()
 
 def scatter2d(data_list, 
-                channels = [0,1],
-                savefig = None,
-                **kwargs):
+              channels=[0,1],
+              xlabel=None,
+              ylabel=None,
+              xlim=None,
+              ylim=None,
+              savefig=None,
+              **kwargs):
     """
-    Plot one 2D scatter plot from one or more FCSData objects.
-
-    The name of the specified channels and the detector gain are used for
-    the axes labels.
+    Plot 2D scatter plot from one or more FCSData objects or numpy arrays.
 
     This function does not create a new figure or axis, so it can be called
     directly to plot in a previously created axis if desired. If `savefig`
@@ -459,7 +460,7 @@ def scatter2d(data_list,
 
     Parameters
     ----------
-    data_list : FCSData object, or list of FCSData objects
+    data_list : array or FCSData or list of array or list of FCSData
         Flow cytometry data to plot.
     channels : list of int, list of str
         Two channels to use for the plot.
@@ -468,6 +469,18 @@ def scatter2d(data_list,
 
     Other parameters
     ----------------
+    xlabel : str, optional
+        Label to use on the x axis. If None, attempts to extract channel
+        name from last data object.
+    ylabel : str, optional
+        Label to use on the y axis. If None, attempts to extract channel
+        name from last data object.
+    xlim : tuple, optional
+        Limits for the x axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    ylim : tuple, optional
+        Limits for the y axis. If None, attempts to extract limits from the
+        domain of the last data object.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
         `color` can be specified as a list, with an element for each data
@@ -489,33 +502,50 @@ def scatter2d(data_list,
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
-    if 'color' in kwargs:
-        kwargs['color'] = [kwargs['color']]
+
+    # Convert color to list, if necessary
+    if 'color' in kwargs and not isinstance(kwargs['color'], list):
+        kwargs['color'] = [kwargs['color']]*len(data_list)
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = [cmap_default(i)\
-                                for i in np.linspace(0, 1, len(data_list))]
+        kwargs['color'] = [cmap_default(i)
+                           for i in np.linspace(0, 1, len(data_list))]
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
+        # Get channels to plot
         data_plot = data[:, channels]
+        # Get kwargs
         kwargsi = kwargs.copy()
         if 'color' in kwargsi:
             kwargsi['color'] = kwargs['color'][i]
-        # ch0 vs ch2
-        plt.scatter(data_plot[:,0], data_plot[:,1],
-            s = 5, alpha = 0.25, **kwargsi)
+        # Make scatter plot
+        plt.scatter(data_plot[:,0],
+                    data_plot[:,1],
+                    s=5,
+                    alpha=0.25,
+                    **kwargsi)
 
-    # Extract info about channels
-    if hasattr(data_plot, 'channels'):
+    # Set labels if specified, else try to extract channel names
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+    elif hasattr(data_plot, 'channels'):
         plt.xlabel(data_plot.channels[0])
+    if ylabel is not None:
+        plt.ylabel(ylabel)
+    elif hasattr(data_plot, 'channels'):
         plt.ylabel(data_plot.channels[1])
-    if hasattr(data_plot, 'domain'):
-        if data_plot.domain(0) is not None:
-            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        if data_plot.domain(1) is not None:
-            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+
+    # Set plot limits if specified, else extract range from domain
+    if xlim is not None:
+        plt.xlim(xlim)
+    elif hasattr(data_plot, 'domain') and data_plot.domain(0) is not None:
+        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+    if ylim is not None:
+        plt.ylim(ylim)
+    elif hasattr(data_plot, 'domain') and data_plot.domain(1) is not None:
+        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
 
     # Save if necessary
     if savefig is not None:
@@ -523,29 +553,31 @@ def scatter2d(data_list,
         plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
-
 def scatter3d(data_list, 
-                channels = [0,1,2],
-                savefig = None,
-                **kwargs):
+              channels=[0,1,2],
+              xlabel=None,
+              ylabel=None,
+              zlabel=None,
+              xlim=None,
+              ylim=None,
+              zlim=None,
+              savefig=None,
+              **kwargs):
     """
-    Plot one 3D scatter plot from one or more FCSData objects.
+    Plot 3D scatter plot from one or more FCSData objects or numpy arrays.
 
-    `scatter3d` creates a 3D scatter plot and three 2D projected scatter
-    plots in four different axes for each FCSData object in `data_list`,
-    in the same figure. The name of the specified channels and the detector
-    gain are used for the axes labels.
-
-    This function does not create a new figure, so it can be called
-    directly to plot in a previously created figure if desired. However,
-    it creates four axes using ``plt.subplot``. If `savefig` is not
-    specified, the plot is maintained in the current figure when the
-    function returns. If `savefig` is specified, the figure is closed
-    after being saved.
+    This function does not create a new figure or axis, so it can be called
+    directly to plot in a previously created axis if desired. If `savefig`
+    is not specified, the plot is maintained in the current axis when the
+    function returns. This allows for further modifications to the axis by
+    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+    However, if `savefig` is specified, the figure is closed after being
+    saved. In this case, the default values for ``xlabel`` and ``ylabel``
+    will be used.
 
     Parameters
     ----------
-    data_list : FCSData object, or list of FCSData objects
+    data_list : array or FCSData or list of array or list of FCSData
         Flow cytometry data to plot.
     channels : list of int, list of str
         Three channels to use for the plot.
@@ -554,6 +586,24 @@ def scatter3d(data_list,
 
     Other parameters
     ----------------
+    xlabel : str, optional
+        Label to use on the x axis. If None, attempts to extract channel
+        name from last data object.
+    ylabel : str, optional
+        Label to use on the y axis. If None, attempts to extract channel
+        name from last data object.
+    zlabel : str, optional
+        Label to use on the z axis. If None, attempts to extract channel
+        name from last data object.
+    xlim : tuple, optional
+        Limits for the x axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    ylim : tuple, optional
+        Limits for the y axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    zlim : tuple, optional
+        Limits for the z axis. If None, attempts to extract limits from the
+        domain of the last data object.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
         `color` can be specified as a list, with an element for each data
@@ -563,9 +613,9 @@ def scatter3d(data_list,
 
     Notes
     -----
-    `scatter3d` uses matplotlib's ``scatter``, with the 3D scatter plot
-    using a 3D projection. Additional keyword arguments provided to
-    `scatter3d` are passed directly to ``scatter``.
+    `scatter3d` uses matplotlib's ``scatter`` with a 3D projection.
+    Additional keyword arguments provided to `scatter3d` are passed
+    directly to ``scatter``.
 
     """
     # Check appropriate number of channels
@@ -575,85 +625,68 @@ def scatter3d(data_list,
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
-    if 'color' in kwargs:
-        kwargs['color'] = [kwargs['color']]
+
+    # Convert color to list, if necessary
+    if 'color' in kwargs and not isinstance(kwargs['color'], list):
+        kwargs['color'] = [kwargs['color']]*len(data_list)
 
     # Default colors
     if 'color' not in kwargs:
-        kwargs['color'] = [cmap_default(i)\
-                                for i in np.linspace(0, 1, len(data_list))]
+        kwargs['color'] = [cmap_default(i)
+                           for i in np.linspace(0, 1, len(data_list))]
 
-    # Initial setup
-    ax_3d = plt.gcf().add_subplot(222, projection='3d')
+    # Make 3d axis if necessary
+    ax_3d = plt.gca(projection='3d')
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
+        # Get channels to plot
         data_plot = data[:, channels]
+        # Get kwargs
         kwargsi = kwargs.copy()
         if 'color' in kwargsi:
             kwargsi['color'] = kwargs['color'][i]
-        # ch0 vs ch2
-        plt.subplot(221)
-        plt.scatter(data_plot[:,0], data_plot[:,2],
-            s = 5, alpha = 0.25, **kwargsi)
-        # ch0 vs ch1
-        plt.subplot(223)
-        plt.scatter(data_plot[:,0], data_plot[:,1],
-            s = 5, alpha = 0.25, **kwargsi)
-        # ch2 vs ch1
-        plt.subplot(224)
-        plt.scatter(data_plot[:,2], data_plot[:,1],
-            s = 5, alpha = 0.25, **kwargsi)
-        # 3d
-        ax_3d.scatter(data_plot[:,0], data_plot[:,1], data_plot[:,2], 
-            marker='o', alpha = 0.1, **kwargsi)
+            kwargsi['c'] = kwargs['color'][i]
+        # Make scatter plot
+        ax_3d.scatter(data_plot[:,0],
+                      data_plot[:,1],
+                      data_plot[:,2],
+                      marker='o',
+                      alpha=0.1,
+                      **kwargsi)
 
-    # Extract info about channels
-    if hasattr(data_plot, 'channels'):
-        # ch0 vs ch2
-        plt.subplot(221)
-        plt.ylabel(data_plot.channels[2])
-        # ch0 vs ch1
-        plt.subplot(223)
-        plt.xlabel(data_plot.channels[0])
-        plt.ylabel(data_plot.channels[1])
-        # ch2 vs ch1
-        plt.subplot(224)
-        plt.xlabel(data_plot.channels[2])
-        # 3d
+    # Remove tick marks
+    ax_3d.xaxis.set_ticklabels([])
+    ax_3d.yaxis.set_ticklabels([])
+    ax_3d.zaxis.set_ticklabels([])
+
+    # Set labels if specified, else try to extract channel names
+    if xlabel is not None:
+        ax_3d.set_xlabel(xlabel)
+    elif hasattr(data_plot, 'channels'):
         ax_3d.set_xlabel(data_plot.channels[0])
+    if ylabel is not None:
+        ax_3d.set_ylabel(ylabel)
+    elif hasattr(data_plot, 'channels'):
         ax_3d.set_ylabel(data_plot.channels[1])
+    if zlabel is not None:
+        ax_3d.set_zlabel(zlabel)
+    elif hasattr(data_plot, 'channels'):
         ax_3d.set_zlabel(data_plot.channels[2])
-        ax_3d.xaxis.set_ticklabels([])
-        ax_3d.yaxis.set_ticklabels([])
-        ax_3d.zaxis.set_ticklabels([])
 
-    if hasattr(data_plot, 'domain'):
-        # ch0 vs ch2
-        plt.subplot(221)
-        if data_plot.domain(0) is not None:
-            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        if data_plot.domain(2) is not None:
-            plt.ylim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
-        # ch0 vs ch1
-        plt.subplot(223)
-        if data_plot.domain(0) is not None:
-            plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        if data_plot.domain(1) is not None:
-            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
-        # ch2 vs ch1
-        plt.subplot(224)
-        if data_plot.domain(2) is not None:
-            plt.xlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
-        if data_plot.domain(1) is not None:
-            plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
-        # 3d
-        if data_plot.domain(0) is not None:
-            ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
-        if data_plot.domain(1) is not None:
-            ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
-        if data_plot.domain(2) is not None:
-            ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+    # Set plot limits if specified, else extract range from domain
+    if xlim is not None:
+        ax_3d.set_xlim(xlim)
+    elif hasattr(data_plot, 'domain') and data_plot.domain(0) is not None:
+        ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+    if ylim is not None:
+        ax_3d.set_ylim(ylim)
+    elif hasattr(data_plot, 'domain') and data_plot.domain(1) is not None:
+        ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+    if zlim is not None:
+        ax_3d.set_zlim(zlim)
+    elif hasattr(data_plot, 'domain') and data_plot.domain(2) is not None:
+        ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
 
     # Save if necessary
     if savefig is not None:
@@ -802,6 +835,130 @@ def density_and_hist(data,
         else:
             hist1d(data, channel = hist_channel, **hist_params_i)
     
+    # Save if necessary
+    if savefig is not None:
+        plt.tight_layout()
+        plt.savefig(savefig, dpi=savefig_dpi)
+        plt.close()
+
+def scatter3d_and_projections(data_list,
+                              channels=[0,1,2],
+                              xlabel=None,
+                              ylabel=None,
+                              zlabel=None,
+                              xlim=None,
+                              ylim=None,
+                              zlim=None,
+                              figsize=None,
+                              savefig=None,
+                              **kwargs):
+    """
+    Plot a 3D scatter plot and 2D projections from FCSData objects.
+
+    `scatter3d_and_projections` creates a 3D scatter plot and three 2D
+    projected scatter plots in four different axes for each FCSData object
+    in `data_list`, in the same figure.
+
+    This function creates a new figure and a set of axes. If `savefig` is
+    not specified, the plot is maintained in the newly created figure when
+    the function returns. However, if `savefig` is specified, the figure
+    is closed after being saved.
+
+    Parameters
+    ----------
+    data_list : FCSData object, or list of FCSData objects
+        Flow cytometry data to plot.
+    channels : list of int, list of str
+        Three channels to use for the plot.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
+
+    Other parameters
+    ----------------
+    xlabel : str, optional
+        Label to use on the x axis. If None, attempts to extract channel
+        name from last data object.
+    ylabel : str, optional
+        Label to use on the y axis. If None, attempts to extract channel
+        name from last data object.
+    zlabel : str, optional
+        Label to use on the z axis. If None, attempts to extract channel
+        name from last data object.
+    xlim : tuple, optional
+        Limits for the x axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    ylim : tuple, optional
+        Limits for the y axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    zlim : tuple, optional
+        Limits for the z axis. If None, attempts to extract limits from the
+        domain of the last data object.
+    figsize : tuple, optional
+        Figure size. If None, use matplotlib's default.
+    kwargs : dict, optional
+        Additional parameters passed directly to matploblib's ``scatter``.
+        `color` can be specified as a list, with an element for each data
+        object. If the keyword argument `color` is not provided, elements
+        from `data_list` are plotted with colors taken from the default
+        colormap.
+
+    Notes
+    -----
+    `scatter3d_and_projections` uses matplotlib's ``scatter``, with the 3D
+    scatter plot using a 3D projection. Additional keyword arguments
+    provided to `scatter3d_and_projections` are passed directly to
+    ``scatter``.
+
+    """
+    # Check appropriate number of channels
+    if len(channels) != 3:
+        raise ValueError('three channels need to be specified')
+
+    # Create figure
+    plt.figure(figsize=figsize)
+
+    # Axis 1: channel 0 vs channel 2
+    plt.subplot(221)
+    scatter2d(data_list,
+              channels=[channels[0], channels[2]],
+              xlabel=xlabel,
+              ylabel=zlabel,
+              xlim=xlim,
+              ylim=zlim,
+              **kwargs)
+
+    # Axis 2: 3d plot
+    ax_3d = plt.gcf().add_subplot(222, projection='3d')
+    scatter3d(data_list,
+              channels=channels,
+              xlabel=xlabel,
+              ylabel=ylabel,
+              zlabel=zlabel,
+              xlim=xlim,
+              ylim=ylim,
+              zlim=zlim,
+              **kwargs)
+
+    # Axis 3: channel 0 vs channel 1
+    plt.subplot(223)
+    scatter2d(data_list,
+              channels=[channels[0], channels[1]],
+              xlabel=xlabel,
+              ylabel=ylabel,
+              xlim=xlim,
+              ylim=ylim,
+              **kwargs)
+
+    # Axis 4: channel 2 vs channel 1
+    plt.subplot(224)
+    scatter2d(data_list,
+              channels=[channels[2], channels[1]],
+              xlabel=zlabel,
+              ylabel=ylabel,
+              xlim=zlim,
+              ylim=ylim,
+              **kwargs)
+
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()

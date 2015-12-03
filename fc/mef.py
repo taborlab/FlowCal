@@ -778,10 +778,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            plt.figure(figsize = (6,4))
+            plt.figure(figsize=(6,4))
             fc.plot.scatter2d(data_plot, 
-                    channels = cluster_channels,
-                    savefig = savefig)
+                              channels=cluster_channels,
+                              savefig=savefig)
             if plot_dir is not None:
                 plt.close()
             
@@ -791,10 +791,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            plt.figure(figsize = (8,6))
-            fc.plot.scatter3d(data_plot, 
-                    channels = cluster_channels,
-                    savefig = savefig)
+            plt.figure(figsize=(8,6))
+            fc.plot.scatter3d_and_projections(data_plot,
+                                              channels=cluster_channels,
+                                              savefig=savefig)
             if plot_dir is not None:
                 plt.close()
 
