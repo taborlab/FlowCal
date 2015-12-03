@@ -26,157 +26,11 @@ else:
     standard_curve_colors = \
         palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
 
-def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
-    """
-    Find clusters in an array using the DBSCAN method.
-
-    Parameters
-    ----------
-    data : array_like
-        NxD array to cluster.
-    eps : float, optional
-        Maximum distance between core samples.
-    min_samples : int, optional
-        Minimum number of neighbors for a sample to be considered core
-        sample. If not specified, it defaults to the number of events in
-        `data`, divided by 200. Passed directly to ``scikit-learn``'s
-        DBSCAN.
-    n_clusters_exp : int, optional
-        Expected number of clusters. Passed directly to ``scikit-learn``'s
-        DBSCAN.
-
-    Returns
-    -------
-    labels : array
-        Nx1 array with labels for each element in `data`, assigning
-        ``data[i]`` to cluster ``labels[i]``.
-
-    Notes
-    -----
-    The DBSCAN method views clusters as areas of high density of samples,
-    separated by areas of low density. This algorithm works by defining
-    'core samples' as samples that have `min_samples` neighbors separated
-    by a distance of `eps` or less. To get a cluster, start with a core
-    sample, find all its neighbors that are core samples, find the
-    neighbors of these core samples that are also core samples, and so on.
-    The cluster is then defined as this set of core samples, plus their
-    neighbors that are not core samples.
-
-    DBSCAN normally finds the number of clusters automatically. However,
-    `clustering_dbscan` makes some post-processing that we have found
-    improves results when clustering calibration beads. In particular,
-    `clustering_dbscan` accepts a parameter `n_clusters_exp` which contains
-    the expected number of clusters. The clusters are expected to be
-    approximately the same size. If the size of a cluster is found to be 10
-    standard deviations smaller than the average cluster size, it is
-    automatically eliminated, and its samples are added to the 'outliers'
-    cluster. Additionally, the 'outliers' cluster has been found to
-    correspond most of the time to non-fluorescent beads, given the
-    relatively high distance between events. Therefore, we consider it a
-    distinct cluster.
-
-    `clustering_dbscan` internally uses `DBSCAN` from the ``scikit-learn``
-    library. For more information, consult their documentation.
-
-    """
-    # Default value of min_samples
-    if min_samples is None:
-        min_samples = data.shape[0]/200.
-
-    # Initialize DBSCAN object
-    db = DBSCAN(eps = eps, min_samples = min_samples)
-    # Fit data
-    db.fit(data)
-    # Extract labels
-    # A value of -1 indicates no assignment to any cluster
-    labels = db.labels_
-
-    # Extract individual labels and number of labels
-    labels_all = list(set(labels))
-    n_labels = len(labels_all)
-    n_samples = len(labels)
-
-    # Calculate number of samples in each cluster
-    n_samples_cluster = [np.sum(labels==li) for li in labels_all]
-
-    # Check that no cluster is too small.
-    # Clusters are assumed to be uniformly distributed. Any cluster 10 std 
-    # smaller than the expected size (under a binomial distribution) will be 
-    # assimilated with the next smallest
-    # Larger than expected clusters will be assumed to correspond to clusters
-    # containing data for 2 or more bead types.
-    p = 1./n_clusters_exp
-    n_samples_exp = data.shape[0]*p
-    n_samples_std = np.sqrt(data.shape[0]*p*(1-p))
-    while(True):
-        cluster_size = np.array([np.sum(labels==li) for li in labels_all])
-        cluster_i = np.argsort(cluster_size)
-        if cluster_size[cluster_i[0]] < n_samples_exp - n_samples_std*10:
-            labels[labels==labels_all[cluster_i[0]]] = labels_all[cluster_i[1]]
-            labels_all.remove(labels_all[cluster_i[0]])
-        else:
-            break
-
-    # Change the cluster numbers to a contiguous positive sequence
-    labels_checked = -1*np.ones(len(labels))
-    cn = 0
-    for li in labels_all:
-        labels_checked[labels==li] = cn
-        cn = cn + 1
-    labels = labels_checked
-
-    assert(np.any(labels==-1) == False)
-
-    return labels
-
-def clustering_distance(data, n_clusters = 8):
-    """
-    Find clusters in the data array based on distance to the origin.
-
-    This function sorts all the samples in `data` based on their Euclidean
-    distance to the origin. Then, the ``n/n_clusters`` samples closest to
-    the origin are assigned to cluster 0, the next ``n/n_clusters`` are
-    assigned to cluster 1, and so on.
-
-    Parameters
-    ----------
-    data : array_like
-        NxD array to cluster.
-    n_clusters : int, optional
-        Number of clusters to find.
-
-    Returns
-    -------
-    labels : array
-        Nx1 array with labels for each element in `data`, assigning
-        ``data[i]`` to cluster ``labels[i]``.
-
-    """
-    # Number of elements per cluster
-    fractions = np.ones(n_clusters)*1./n_clusters
-
-    n_per_cluster = fractions*data.shape[0]
-    cluster_cum = np.append([0], np.cumsum(n_per_cluster))
-
-    # Get distance and sort based on it
-    dist = np.sum(data**2., axis = 1)
-    sorted_i = np.argsort(dist)
-
-    # Initialize labels
-    labels = np.ones(data.shape[0])*-1
-
-    # Assign labels
-    for i in range(n_clusters):
-        il = int(cluster_cum[i])
-        ih = int(cluster_cum[i+1])
-        sorted_i_i = sorted_i[il:ih]
-        labels[sorted_i_i] = i
-
-    return labels
-
-
-def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub', 
-    tol = 1e-7, min_covar = 1e-2):
+def clustering_gmm(data,
+                   n_clusters=8,
+                   initialization='distance_sub',
+                   tol=1e-7,
+                   min_covar=1e-2):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
 
@@ -300,56 +154,6 @@ def clustering_gmm(data, n_clusters = 8, initialization = 'distance_sub',
     labels = [np.random.choice(range(n_clusters), p = ri) for ri in resp]
 
     return labels
-
-def find_peaks_smoothed_mode(data, min_val = 0, max_val = 1023):
-    """
-    Find the mode of a dataset by finding the peak of a smoothed histogram.
-
-    This function finds the mode of a dataset by calculating the histogram,
-    using a 1D Gaussian filter to smooth out the histogram, and identifying
-    the maximum value of the smoothed histogram. The ``sigma`` parameter of
-    the Gaussian filter is taken from the standard deviation of `data`.
-
-    Parameters
-    ----------
-    data : array
-        Nx1 array to calculate the mode from. `data` is assumed to contain
-        only integers.
-    min_val : int, optional
-        Minimum possible value in `data`.
-    max_val : int, optional
-        Maximum possible value in `data`.
-
-    Returns
-    -------
-    peak : float
-        Mode of `data`.
-    hist_smooth : array
-        ``(max_val - min_val + 1)``-long array containing the smoothed
-        histogram.
-
-    """
-    # Calculate bin edges and centers
-    bin_edges = np.arange(min_val, max_val + 2) - 0.5
-    bin_edges[0] = -np.inf
-    bin_edges[-1] = np.inf
-    bin_centers = np.arange(min_val, max_val + 1)
-
-    # Identify peak
-    # Calculate sample mean and standard deviation
-    # mu = np.mean(data)
-    sigma = np.std(data)
-    # Calculate histogram
-    hist, __ = np.histogram(data, bin_edges)
-    # Do Gaussian blur on histogram
-    # We have found empirically that using one half of the distribution's 
-    # standard deviation results in a nice fit.
-    hist_smooth = scipy.ndimage.filters.gaussian_filter1d(hist, sigma/2.)
-    # Extract peak
-    i_max = np.argmax(hist_smooth)
-    peak = bin_centers[i_max]
-
-    return peak, hist_smooth
 
 def find_peaks_median(data):
     """
@@ -656,10 +460,6 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             peaks_ch : list
                 The representative fluorescence of each subpopulation, for
                 each channel in `mef_channels`.
-            peaks_hists : list
-                Only included if ``find_peaks_method=='smoothed_mode'. The
-                smoothed histogram of each subpopulation, for each channel
-                in `mef_channels`.
         peak_sel_res : dict
             Results of the subpopulation selection step, containing the
             following fields:
@@ -684,11 +484,11 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     Other parameters
     ----------------
-    cluster_method : {'dbscan', 'distance', 'gmm'}, optional
+    cluster_method : {'gmm'}, optional
         Method used for clustering, or identification of subpopulations.
     cluster_params : dict, optional
         Parameters to pass to the clustering method.
-    find_peaks_method : {'smoothed_mode', 'median'}, optional
+    find_peaks_method : {'median'}, optional
         Method used to calculate the representative fluorescence of each
         subpopulation.
     find_peaks_params : dict, optional
@@ -738,13 +538,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
     # 1. Cluster
     # ===========
-    if cluster_method == 'dbscan':
-        labels = clustering_dbscan(data_beads[:,cluster_channels], 
-            **cluster_params)
-    elif cluster_method == 'distance':
-        labels = clustering_distance(data_beads[:,cluster_channels], 
-            **cluster_params)
-    elif cluster_method == 'gmm':
+    if cluster_method == 'gmm':
         labels = clustering_gmm(data_beads[:,cluster_channels], 
             **cluster_params)
     else:
@@ -810,8 +604,6 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     sc_all = []
     if full:
         peaks_ch_all = []
-        if find_peaks_method == 'smoothed_mode':
-            peaks_hists_all = []
         sel_peaks_ch_all = []
         sel_peaks_mef_all = []
         sc_beads_all = []
@@ -832,19 +624,7 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Find peaks on all the channel data
         min_fl = data_channel.domain(0)[0]
         max_fl = data_channel.domain(0)[-1]
-        if find_peaks_method == 'smoothed_mode':
-            # Set default values for limit values
-            if 'min_val' not in find_peaks_params:
-                find_peaks_params['min_val'] = min_fl
-            if 'max_val' not in find_peaks_params:
-                find_peaks_params['max_val'] = max_fl
-            # Get peak values
-            peaks_hists = [find_peaks_smoothed_mode(di[:,mef_channel], 
-                                                        **find_peaks_params)
-                                    for di in data_clustered]
-            peaks_ch = np.array([ph[0] for ph in peaks_hists])
-            hists_smooth = [ph[1] for ph in peaks_hists]
-        elif find_peaks_method == 'median':
+        if find_peaks_method == 'median':
             peaks_ch = np.array([find_peaks_median(di[:,mef_channel],
                                                         **find_peaks_params)
                                     for di in data_clustered])
@@ -859,8 +639,6 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Accumulate results
         if full:
             peaks_ch_all.append(peaks_ch)
-            if find_peaks_method == 'smoothed_mode':
-                peaks_hists_all.append(hists_smooth)
         # Print information
         if verbose:
             print("- STEP 2. PEAK IDENTIFICATION.")
@@ -875,13 +653,8 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             plt.figure(figsize = (8,4))
             fc.plot.hist1d(data_plot, channel = mef_channel, div = 4, 
                 alpha = 0.75)
-            # Plot smoothed histograms and peaks
+            # Plot histograms and peaks
             for c, i in zip(colors, cluster_sorted_ind):
-                # Smoothed histogram, if applicable
-                if find_peaks_method == 'smoothed_mode':
-                    h = hists_smooth[i]
-                    plt.plot(np.linspace(min_fl, max_fl, len(h)), h*4, 
-                        color = c)
                 # Peak values
                 p = peaks_ch[i]
                 ylim = plt.ylim()
@@ -984,8 +757,6 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
         # Peak finding results
         peak_find_res = {}
         peak_find_res['peaks_ch'] = peaks_ch_all
-        if find_peaks_method == 'smoothed_mode':
-            peak_find_res['peaks_hists'] = peaks_hists_all
         # Peak selection results
         peak_sel_res = {}
         peak_sel_res['sel_peaks_ch'] = sel_peaks_ch_all
