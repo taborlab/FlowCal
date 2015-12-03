@@ -9,9 +9,7 @@ import collections
 
 import numpy as np
 from scipy.optimize import minimize
-import scipy.ndimage.filters
 import matplotlib.pyplot as plt
-from sklearn.cluster import DBSCAN 
 from sklearn.mixture import GMM 
 
 import fc.plot
