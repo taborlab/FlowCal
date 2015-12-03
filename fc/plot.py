@@ -247,13 +247,15 @@ def density2d(data,
               log=False,
               div=1,
               bins=None,
+              mode='mesh',
+              normed=False,
               smooth=True,
               sigma=10.0,
-              mode='mesh',
               colorbar=False,
-              normed=False,
               xlabel=None,
               ylabel=None,
+              xlim=None,
+              ylim=None,
               title=None,
               savefig=None,
               **kwargs):
@@ -301,17 +303,17 @@ def density2d(data,
     bins : array_like, optional
         bins argument to pass to plt.hist. If not specified, attempts to 
         extract bins from `data`.
-    smooth : bool, optional
-        Flag indicating whether to apply Gaussian smoothing to the
-        histogram.
     mode : {'mesh', 'scatter'}, str, optional
         Plotting mode. 'mesh' produces a 2D-histogram whereas 'scatter'
         produces a scatterplot colored by histogram bin value.
-    colorbar : bool, optional
-        Flag indicating whether to add a colorbar to the plot.
     normed : bool, optional
         Flag indicating whether to plot a normed histogram (probability
         mass function instead of a counts-based histogram).
+    smooth : bool, optional
+        Flag indicating whether to apply Gaussian smoothing to the
+        histogram.
+    colorbar : bool, optional
+        Flag indicating whether to add a colorbar to the plot.
     savefig : str, optional
         The name of the file to save the figure to. If None, do not save.
 
@@ -325,6 +327,12 @@ def density2d(data,
     ylabel : str, optional
         Label to use on the y axis. If None, attempts to extract channel
         name from `data`.
+    xlim : tuple, optional
+        Limits for the x axis. If not specified and `bins` exists, use
+        the lowest and highest values of `bins`.
+    ylim : tuple, optional
+        Limits for the y axis. If not specified and `bins` exists, use
+        the lowest and highest values of `bins`.
     title : str, optional
         Plot title.
     kwargs : dict, optional
@@ -412,23 +420,26 @@ def density2d(data,
             cbar.ax.set_ylabel('Probability')
         else:
             cbar.ax.set_ylabel('Counts')
-    # Reset axis and log if necessary
+
+    # Make axes log if necessary
     if log:
         plt.gca().set_xscale('log')
         plt.gca().set_yscale('log')
-        a = list(plt.axis())
-        a[0] = 10**(np.ceil(np.log10(xe[0])))
-        a[1] = 10**(np.ceil(np.log10(xe[-1])))
-        a[2] = 10**(np.ceil(np.log10(ye[0])))
-        a[3] = 10**(np.ceil(np.log10(ye[-1])))
-        plt.axis(a)
+
+    # x and y limits
+    if xlim is not None:
+        # Highest priority is user-provided limits
+        plt.xlim(xlim)
     else:
-        a = list(plt.axis())
-        a[0] = np.ceil(xe[0])
-        a[1] = np.ceil(xe[-1])
-        a[2] = np.ceil(ye[0])
-        a[3] = np.ceil(ye[-1])
-        plt.axis(a)
+        # Use histogram edges
+        plt.xlim((xe[0], xe[-1]))
+
+    if ylim is not None:
+        # Highest priority is user-provided limits
+        plt.ylim(ylim)
+    else:
+        # Use histogram edges
+        plt.ylim((ye[0], ye[-1]))
 
     # x and y labels
     if xlabel is not None:
@@ -804,6 +815,7 @@ def density_and_hist(data,
     if density_channels is None and hist_channels is None:
         raise ValueError("density_channels and hist_channels cannot be both "
             "None")
+
     # Change hist_channels to iterable if necessary
     if not hasattr(hist_channels, "__iter__"):
         hist_channels = [hist_channels]
@@ -833,7 +845,7 @@ def density_and_hist(data,
         # Add title
         if 'title' not in density_params:
             if gated_data is not None:
-                ret = gated_data.shape[0]*100./data.shape[0]
+                ret = gated_data.shape[0] * 100. / data.shape[0]
                 title = "{} ({:.1f}% retained)".format(str(data), ret)
             else:
                 title = str(data)
