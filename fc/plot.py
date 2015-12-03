@@ -224,10 +224,11 @@ def hist1d(data_list,
     if ylim is not None:
         plt.ylim(ylim)
 
-    # title and legend
+    # Title
     if title is not None:
         plt.title(title)
 
+    # Legend
     if legend:
         if legend_labels is None:
             legend_labels = [str(data) for data in data_list]
@@ -460,6 +461,8 @@ def scatter2d(data_list,
               ylabel=None,
               xlim=None,
               ylim=None,
+              title=None,
+              color=None,
               savefig=None,
               **kwargs):
     """
@@ -497,12 +500,15 @@ def scatter2d(data_list,
     ylim : tuple, optional
         Limits for the y axis. If None, attempts to extract limits from the
         domain of the last data object.
+    title : str, optional
+        Plot title.
+    color : matplotlib color or list of matplotlib colors, optional
+        Color for the scatter plot. It can be a list with the same length
+        as `data_list`. If `color` is not specified, elements from
+        `data_list` are plotted with colors taken from the module-level
+        variable `cmap_default`.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
-        `color` can be specified as a list, with an element for each data
-        object. If the keyword argument `color` is not provided, elements
-        from `data_list` are plotted with colors taken from the default
-        colormap.
 
     Notes
     -----
@@ -519,29 +525,25 @@ def scatter2d(data_list,
     if not isinstance(data_list, list):
         data_list = [data_list]
 
-    # Convert color to list, if necessary
-    if 'color' in kwargs and not isinstance(kwargs['color'], list):
-        kwargs['color'] = [kwargs['color']]*len(data_list)
-
     # Default colors
-    if 'color' not in kwargs:
-        kwargs['color'] = [cmap_default(i)
-                           for i in np.linspace(0, 1, len(data_list))]
+    if color is None:
+        color = [cmap_default(i) for i in np.linspace(0, 1, len(data_list))]
+
+    # Convert color to list, if necessary
+    if not isinstance(color, list):
+       color = [color]*len(data_list)
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
         # Get channels to plot
         data_plot = data[:, channels]
-        # Get kwargs
-        kwargsi = kwargs.copy()
-        if 'color' in kwargsi:
-            kwargsi['color'] = kwargs['color'][i]
         # Make scatter plot
         plt.scatter(data_plot[:,0],
                     data_plot[:,1],
                     s=5,
                     alpha=0.25,
-                    **kwargsi)
+                    color=color[i],
+                    **kwargs)
 
     # Set labels if specified, else try to extract channel names
     if xlabel is not None:
@@ -563,6 +565,10 @@ def scatter2d(data_list,
     elif hasattr(data_plot, 'domain') and data_plot.domain(1) is not None:
         plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
 
+    # Title
+    if title is not None:
+        plt.title(title)
+
     # Save if necessary
     if savefig is not None:
         plt.tight_layout()
@@ -577,6 +583,8 @@ def scatter3d(data_list,
               xlim=None,
               ylim=None,
               zlim=None,
+              title=None,
+              color=None,
               savefig=None,
               **kwargs):
     """
@@ -620,12 +628,15 @@ def scatter3d(data_list,
     zlim : tuple, optional
         Limits for the z axis. If None, attempts to extract limits from the
         domain of the last data object.
+    title : str, optional
+        Plot title.
+    color : matplotlib color or list of matplotlib colors, optional
+        Color for the scatter plot. It can be a list with the same length
+        as `data_list`. If `color` is not specified, elements from
+        `data_list` are plotted with colors taken from the module-level
+        variable `cmap_default`.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
-        `color` can be specified as a list, with an element for each data
-        object. If the keyword argument `color` is not provided, elements
-        from `data_list` are plotted with colors taken from the default
-        colormap.
 
     Notes
     -----
@@ -642,14 +653,13 @@ def scatter3d(data_list,
     if not isinstance(data_list, list):
         data_list = [data_list]
 
-    # Convert color to list, if necessary
-    if 'color' in kwargs and not isinstance(kwargs['color'], list):
-        kwargs['color'] = [kwargs['color']]*len(data_list)
-
     # Default colors
-    if 'color' not in kwargs:
-        kwargs['color'] = [cmap_default(i)
-                           for i in np.linspace(0, 1, len(data_list))]
+    if color is None:
+        color = [cmap_default(i) for i in np.linspace(0, 1, len(data_list))]
+
+    # Convert color to list, if necessary
+    if not isinstance(color, list):
+       color = [color]*len(data_list)
 
     # Make 3d axis if necessary
     ax_3d = plt.gca(projection='3d')
@@ -658,18 +668,15 @@ def scatter3d(data_list,
     for i, data in enumerate(data_list):
         # Get channels to plot
         data_plot = data[:, channels]
-        # Get kwargs
-        kwargsi = kwargs.copy()
-        if 'color' in kwargsi:
-            kwargsi['color'] = kwargs['color'][i]
-            kwargsi['c'] = kwargs['color'][i]
         # Make scatter plot
         ax_3d.scatter(data_plot[:,0],
                       data_plot[:,1],
                       data_plot[:,2],
                       marker='o',
                       alpha=0.1,
-                      **kwargsi)
+                      color=color[i],
+                      c=color[i],
+                      **kwargs)
 
     # Remove tick marks
     ax_3d.xaxis.set_ticklabels([])
@@ -703,6 +710,10 @@ def scatter3d(data_list,
         ax_3d.set_zlim(zlim)
     elif hasattr(data_plot, 'domain') and data_plot.domain(2) is not None:
         ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+
+    # Title
+    if title is not None:
+        plt.title(title)
 
     # Save if necessary
     if savefig is not None:
@@ -867,6 +878,7 @@ def scatter3d_and_projections(data_list,
                               xlim=None,
                               ylim=None,
                               zlim=None,
+                              color=None,
                               figsize=None,
                               savefig=None,
                               **kwargs):
@@ -911,14 +923,15 @@ def scatter3d_and_projections(data_list,
     zlim : tuple, optional
         Limits for the z axis. If None, attempts to extract limits from the
         domain of the last data object.
+    color : matplotlib color or list of matplotlib colors, optional
+        Color for the scatter plot. It can be a list with the same length
+        as `data_list`. If `color` is not specified, elements from
+        `data_list` are plotted with colors taken from the module-level
+        variable `cmap_default`.
     figsize : tuple, optional
         Figure size. If None, use matplotlib's default.
     kwargs : dict, optional
         Additional parameters passed directly to matploblib's ``scatter``.
-        `color` can be specified as a list, with an element for each data
-        object. If the keyword argument `color` is not provided, elements
-        from `data_list` are plotted with colors taken from the default
-        colormap.
 
     Notes
     -----
@@ -943,6 +956,7 @@ def scatter3d_and_projections(data_list,
               ylabel=zlabel,
               xlim=xlim,
               ylim=zlim,
+              color=color,
               **kwargs)
 
     # Axis 2: 3d plot
@@ -955,6 +969,7 @@ def scatter3d_and_projections(data_list,
               xlim=xlim,
               ylim=ylim,
               zlim=zlim,
+              color=color,
               **kwargs)
 
     # Axis 3: channel 0 vs channel 1
@@ -965,6 +980,7 @@ def scatter3d_and_projections(data_list,
               ylabel=ylabel,
               xlim=xlim,
               ylim=ylim,
+              color=color,
               **kwargs)
 
     # Axis 4: channel 2 vs channel 1
@@ -975,6 +991,7 @@ def scatter3d_and_projections(data_list,
               ylabel=ylabel,
               xlim=zlim,
               ylim=ylim,
+              color=color,
               **kwargs)
 
     # Save if necessary
