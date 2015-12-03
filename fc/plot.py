@@ -15,11 +15,8 @@ try:
     import palettable
 except ImportError, e:
     cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
-    std_crv_colors = ['b', 'g', 'r']
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
-    std_crv_colors = \
-        palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
 
 savefig_dpi = 250
 
@@ -664,81 +661,7 @@ def scatter3d(data_list,
         plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
-def mef_std_crv(peaks_ch, 
-                peaks_mef,
-                sc_beads,
-                sc_abs,
-                xlim = (0., 1023.),
-                ylim = (1, 1e8),
-                xlabel = None,
-                ylabel = None,
-                savefig = None,
-                **kwargs):
-    """
-    Plot a standard curve with fluorescence of calibration beads.
 
-    This function does not create a new figure or axis, so it can be called
-    directly to plot in a previously created axis if desired. If `savefig`
-    is not specified, the plot is maintained in the current axis when the
-    function returns. This allows for further modifications to the axis by
-    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
-    However, if `savefig` is specified, the figure is closed after being
-    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, and `ylim`
-    are the only way to modify the axis.
-
-    Parameters
-    ----------
-    peaks_ch : array_like
-        Fluorescence of the calibration beads' subpopulations, in channel
-        numbers.
-    peaks_mef : array_like
-        Fluorescence of the calibration beads' subpopulations, in MEF
-        units.
-    sc_beads : function
-        The calibration beads fluorescence model.
-    sc_abs : function
-        The standard curve (transformation functionfrom channel number to
-        MEF units).
-    savefig : str, optional
-        The name of the file to save the figure to. If None, do not save.
-
-    Other parameters
-    ----------------
-    xlim : tuple, optional
-        Limits for the x axis.
-    ylim : tuple, optional
-        Limits for the y axis.
-    xlabel : str, optional
-        Label to use on the x axis.
-    ylabel : str, optional
-        Label to use on the y axis.
-
-    """
-    # Generate x data
-    xdata = np.linspace(xlim[0],xlim[1],200)
-
-    # Plot
-    plt.plot(peaks_ch, peaks_mef, 'o', 
-        label = 'Beads', color=std_crv_colors[0])
-    plt.plot(xdata, sc_beads(xdata), 
-        label = 'Beads model', color=std_crv_colors[1])
-    plt.plot(xdata, sc_abs(xdata), 
-        label = 'Standard curve', color=std_crv_colors[2])
-    plt.yscale('log')
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    plt.grid(True)
-    if xlabel:
-        plt.xlabel(xlabel)
-    if xlabel:
-        plt.ylabel(ylabel)
-    plt.legend(loc = 'best')
-    
-    # Save if necessary
-    if savefig is not None:
-        plt.tight_layout()
-        plt.savefig(savefig, dpi=savefig_dpi)
-        plt.close()
 
 def bar(data, 
         labels,
