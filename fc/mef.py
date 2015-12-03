@@ -17,6 +17,15 @@ from sklearn.mixture import GMM
 import fc.plot
 import fc.transform
 
+# Use default colors from palettable if available
+try:
+    import palettable
+except ImportError, e:
+    standard_curve_colors = ['b', 'g', 'r']
+else:
+    standard_curve_colors = \
+        palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
+
 def clustering_dbscan(data, eps = 20.0, min_samples = None, n_clusters_exp = 8):
     """
     Find clusters in an array using the DBSCAN method.
@@ -544,6 +553,47 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     
     return (sc, sc_beads, sc_params)
 
+def plot_standard_curve(peaks_ch, 
+                        peaks_mef,
+                        sc_beads,
+                        sc_abs,
+                        xlim = (0., 1023.),
+                        ylim = (1, 1e8)):
+    """
+    Plot a standard curve with fluorescence of calibration beads.
+
+    Parameters
+    ----------
+    peaks_ch : array_like
+        Fluorescence of the calibration beads' subpopulations, in channel
+        numbers.
+    peaks_mef : array_like
+        Fluorescence of the calibration beads' subpopulations, in MEF
+        units.
+    sc_beads : function
+        The calibration beads fluorescence model.
+    sc_abs : function
+        The standard curve (transformation function from channel number to
+        MEF units).
+
+    """
+    # Generate x data
+    xdata = np.linspace(xlim[0],xlim[1],200)
+
+    # Plot
+    plt.plot(peaks_ch, peaks_mef, 'o', 
+        label = 'Beads', color=standard_curve_colors[0])
+    plt.plot(xdata, sc_beads(xdata), 
+        label = 'Beads model', color=standard_curve_colors[1])
+    plt.plot(xdata, sc_abs(xdata), 
+        label = 'Standard curve', color=standard_curve_colors[2])
+
+    plt.yscale('log')
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+    plt.grid(True)
+    plt.legend(loc = 'best')
+
 def get_transform_fxn(data_beads, peaks_mef, mef_channels,
     cluster_method = 'gmm', cluster_params = {}, cluster_channels = 0, 
     find_peaks_method = 'median', find_peaks_params = {},
@@ -728,10 +778,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            plt.figure(figsize = (6,4))
+            plt.figure(figsize=(6,4))
             fc.plot.scatter2d(data_plot, 
-                    channels = cluster_channels,
-                    savefig = savefig)
+                              channels=cluster_channels,
+                              savefig=savefig)
             if plot_dir is not None:
                 plt.close()
             
@@ -741,10 +791,10 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
             else:
                 savefig = None
             # Plot
-            plt.figure(figsize = (8,6))
-            fc.plot.scatter3d(data_plot, 
-                    channels = cluster_channels,
-                    savefig = savefig)
+            plt.figure(figsize=(8,6))
+            fc.plot.scatter3d_and_projections(data_plot,
+                                              channels=cluster_channels,
+                                              savefig=savefig)
             if plot_dir is not None:
                 plt.close()
 
@@ -901,28 +951,22 @@ def get_transform_fxn(data_beads, peaks_mef, mef_channels,
 
         # Plot
         if plot:
-            # Make label for x axis
-            channel_name = data_channel.channels[0]
-            channel_gain = data_channel.detector_voltage(0)
-            xlabel = '{} (Channel Units)'.format(channel_name)
-            # Compute filename to save
-            if plot_dir is not None:
-                savefig = '{}/std_crv_{}_{}.png'.format(plot_dir,
-                                                        mef_channel,
-                                                        plot_filename,
-                                                        )
-            else:
-                savefig = None
             # Plot standard curve
             plt.figure(figsize = (6,4))
-            fc.plot.mef_std_crv(sel_peaks_ch, 
-                    sel_peaks_mef,
-                    sc_beads,
-                    sc,
-                    xlabel = xlabel,
-                    ylabel = 'MEF',
-                    savefig = savefig)
+            plot_standard_curve(sel_peaks_ch, 
+                                sel_peaks_mef,
+                                sc_beads,
+                                sc,
+                                xlim=(min_fl, max_fl))
+            plt.xlabel('{} (Channel Units)'.format(data_channel.channels[0]))
+            plt.ylabel('MEF')
+            # Save if required
             if plot_dir is not None:
+                plt.tight_layout()
+                plt.savefig('{}/std_crv_{}_{}.png'.format(plot_dir,
+                                                          mef_channel,
+                                                          plot_filename),
+                            dpi=fc.plot.savefig_dpi)
                 plt.close()
 
     # Make output transformation function
