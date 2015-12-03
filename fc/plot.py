@@ -1,6 +1,43 @@
 """
 Functions for visualizing flow cytometry data.
 
+Functions in this module are divided in two categories:
+
+- Simple Plot Functions, with a signature similar to the following:
+
+      plot_fxn(data_list, channels, parameters, savefig)
+
+  where `data_list` is a NxD FCSData object or numpy array, or a list of
+  such, `channels` spcecifies the channel or channels to use for the plot,
+  `parameters` are function-specific parameters, and `savefig` indicates
+  whether to save the figure to an image file. Note that `hist1d` uses
+  `channel` instead of `channels`, since it uses a single channel, and
+  `density2d` only accepts one FCSData object or numpy array as its first
+  argument.
+
+  Simple Plot Functions do not create a new figure or axis, so they can be
+  called directly to plot in a previously created axis if desired. If
+  `savefig` is not specified, the plot is maintained in the current axis
+  when the function returns. This allows for further modifications to the
+  axis by direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
+  However, if `savefig` is specified, the figure is closed after being
+  saved. In this case, the function may include keyword parameters
+  `xlabel`, `ylabel`, `xlim`, `ylim`, `title`, and others related to
+  legend or color, which allow the user to modify the axis prior to saving.
+
+  The following functions in this module are Simple Plot Functions:
+  `hist1d`, `density2d`, `scatter2d`, and `scatter3d`.
+
+- Complex Plot Functions, which create a figure with several axes, and use
+  one or more Simple Plot functions to populate the axes. They always
+  include a `savefig` argument, which indicates whether to save the figure
+  to a file. If `savefig` is not specified, the plot is maintained in the
+  newly created figure when the function returns. However, if `savefig` is
+  specified, the figure is closed after being saved.
+
+  The following functions in this module are Complex Plot Functions:
+  `density_and_hist` and `scatter3d_and_projections`.
+
 """
 
 import numpy as np
@@ -20,14 +57,9 @@ else:
 
 savefig_dpi = 250
 
-##############################################################################
-# SIMPLE PLOTS
-##############################################################################
-#
-# The following functions produce simple plots independently of any other 
-# function.
-#
-##############################################################################
+###
+# SIMPLE PLOT FUNCTIONS
+###
 
 def hist1d(data_list,
            channel=0,
@@ -51,16 +83,6 @@ def hist1d(data_list,
            **kwargs):
     """
     Plot one 1D histogram from one or more flow cytometry data sets.
-
-    This function does not create a new figure or axis, so it can be called
-    directly to plot in a previously created axis if desired. If `savefig`
-    is not specified, the plot is maintained in the current axis when the
-    function returns. This allows for further modifications to the axis by
-    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
-    However, if `savefig` is specified, the figure is closed after being
-    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, `ylim`,
-    `title`, and the legend-related parameters of this function are the
-    only way to modify the axis.
 
     Parameters
     ----------
@@ -276,16 +298,6 @@ def density2d(data,
     ``smooth=True``. The width of the kernel is, in this case, given by
     `sigma`.
 
-    This function does not create a new figure or axis, so it can be called
-    directly to plot in a previously created axis if desired. If `savefig`
-    is not specified, the plot is maintained in the current axis when the
-    function returns. This allows for further modifications to the axis by
-    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
-    However, if `savefig` is specified, the figure is closed after being
-    saved. In this case, parameters `xlabel`, `ylabel`, `xlim`, `ylim`,
-    `title`, and the legend-related parameters of this function are the
-    only way to modify the axis.
-
     Parameters
     ----------
     data : FCSData or numpy array
@@ -479,15 +491,6 @@ def scatter2d(data_list,
     """
     Plot 2D scatter plot from one or more FCSData objects or numpy arrays.
 
-    This function does not create a new figure or axis, so it can be called
-    directly to plot in a previously created axis if desired. If `savefig`
-    is not specified, the plot is maintained in the current axis when the
-    function returns. This allows for further modifications to the axis by
-    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
-    However, if `savefig` is specified, the figure is closed after being
-    saved. In this case, the default values for ``xlabel`` and ``ylabel``
-    will be used.
-
     Parameters
     ----------
     data_list : array or FCSData or list of array or list of FCSData
@@ -600,15 +603,6 @@ def scatter3d(data_list,
               **kwargs):
     """
     Plot 3D scatter plot from one or more FCSData objects or numpy arrays.
-
-    This function does not create a new figure or axis, so it can be called
-    directly to plot in a previously created axis if desired. If `savefig`
-    is not specified, the plot is maintained in the current axis when the
-    function returns. This allows for further modifications to the axis by
-    direct calls to, for example, ``plt.xlabel``, ``plt.title``, etc.
-    However, if `savefig` is specified, the figure is closed after being
-    saved. In this case, the default values for ``xlabel`` and ``ylabel``
-    will be used.
 
     Parameters
     ----------
@@ -732,14 +726,9 @@ def scatter3d(data_list,
         plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
 
-##############################################################################
-# COMPLEX PLOTS
-##############################################################################
-#
-# The functions below produce plots by composing the results of the functions 
-# defined above.
-#
-##############################################################################
+###
+# COMPLEX PLOT FUNCTIONS
+###
 
 def density_and_hist(data,
                      gated_data=None,
@@ -767,11 +756,6 @@ def density_and_hist(data,
     labels 'Ungated' and 'Gated'. If `gate_contour` is provided and it
     contains a valid list of 2D curves, these will be plotted on top of the
     density plot.
-
-    This function creates a new figure and a set of axes. If `savefig` is
-    not specified, the plot is maintained in the newly created figure when
-    the function returns. However, if `savefig` is specified, the figure
-    is closed after being saved.
 
     Parameters
     ----------
@@ -900,11 +884,6 @@ def scatter3d_and_projections(data_list,
     `scatter3d_and_projections` creates a 3D scatter plot and three 2D
     projected scatter plots in four different axes for each FCSData object
     in `data_list`, in the same figure.
-
-    This function creates a new figure and a set of axes. If `savefig` is
-    not specified, the plot is maintained in the newly created figure when
-    the function returns. However, if `savefig` is specified, the figure
-    is closed after being saved.
 
     Parameters
     ----------
