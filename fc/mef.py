@@ -157,24 +157,6 @@ def clustering_gmm(data,
 
     return labels
 
-def find_peaks_median(data):
-    """
-    Find the median of a data array.
-
-    Parameters
-    ----------
-    data : array
-        Nx1 array to calculate the median from.
-
-    Returns
-    -------
-    peak : int or float
-        Median of `data`.
-
-    """
-    peak = np.median(data)
-    return peak
-
 def select_peaks_proximity(peaks_ch,
                            peaks_mef,
                            peaks_ch_std,
@@ -413,7 +395,7 @@ def get_transform_fxn(data_beads,
                       cluster_method='gmm',
                       cluster_params={},
                       cluster_channels=0,
-                      find_peaks_method='median',
+                      find_peaks_method=fc.stats.median,
                       find_peaks_params={},
                       select_peaks_method='proximity',
                       select_peaks_params={},
@@ -506,12 +488,14 @@ def get_transform_fxn(data_beads,
         Method used for clustering, or identification of subpopulations.
     cluster_params : dict, optional
         Parameters to pass to the clustering method.
-    find_peaks_method : {'median'}, optional
-        Method used to calculate the representative fluorescence of each
-        subpopulation.
+    find_peaks_method : function, optional
+        Function used to calculate the representative fluorescence of each
+        subpopulation. Valid functions should have the form
+        ``s = find_peaks_method(data, **find_peaks_params)``, where `s` is
+        a float. Statistical functions from numpy, scipy, or fc.stats are
+        valid options.
     find_peaks_params : dict, optional
-        Parameters to pass to the method that calculates the fluorescence
-        of each subpopulation.
+        Additional parameters to pass to `find_peaks_method`.
     select_peaks_method : {'proximity'}, optional
         Method to use for peak selection.
     select_peaks_params : dict, optional
@@ -646,13 +630,9 @@ def get_transform_fxn(data_beads,
         # Find peaks on all the channel data
         min_fl = data_channel.domain(0)[0]
         max_fl = data_channel.domain(0)[-1]
-        if find_peaks_method == 'median':
-            peaks_ch = np.array([find_peaks_median(di[:,mef_channel],
-                                                   **find_peaks_params)
-                                 for di in data_clustered])
-        else:
-            raise ValueError("peak finding method {} not recognized"
-                .format(find_peaks_method))
+        peaks_ch = np.array([find_peaks_method(di[:,mef_channel],
+                                               **find_peaks_params)
+                             for di in data_clustered])
         # Sort peaks and clusters
         ind_sorted = np.argsort(peaks_ch)
         peaks_sorted = peaks_ch[ind_sorted]
