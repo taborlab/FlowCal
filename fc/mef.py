@@ -236,7 +236,7 @@ def sel_populations_proximity(fl_channel,
         discard_channel_n = 0
         sel_fl_channel = fl_channel.copy()
 
-    # Discard MEF peaks
+    # Discard MEF values that are None
     discard_mef_n = len(fl_mef) - len(sel_fl_channel)
     if discard_channel == 'left':
         sel_fl_mef = fl_mef[discard_mef_n:]
@@ -295,7 +295,7 @@ def fit_standard_curve(fl_channel, fl_mef):
     least squares regression (as opposed to fitting an exponential model in
     MEF space). In our experience, fitting in the log-MEF space weights the
     residuals more evenly, whereas fitting an exponential vastly overvalues
-    the brighter peaks.
+    the brighter beads.
 
     A standard curve is constructed by solving for fl_mef. As cell samples
     may not have the same autofluorescence as beads, the bead
@@ -319,8 +319,8 @@ def fit_standard_curve(fl_channel, fl_mef):
     # Initialize parameters
     params = np.zeros(3)
     # Initial guesses:
-    # 0: slope found by putting a line through the highest two peaks.
-    # 1: y-intercept found by putting a line through highest two peaks.
+    # 0: slope found by putting a line through the highest two points.
+    # 1: y-intercept found by putting a line through highest two points.
     # 2: bead autofluorescence initialized to 100.
     params[0] = (np.log(fl_mef[-1]) - np.log(fl_mef[-2])) / \
                     (fl_channel[-1] - fl_channel[-2])
