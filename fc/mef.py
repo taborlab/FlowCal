@@ -257,15 +257,15 @@ def sel_populations_proximity(fl_channel,
 
     return sel_fl_channel, sel_fl_mef
 
-def fit_standard_curve(peaks_ch, peaks_mef):
+def fit_standard_curve(fl_channel, fl_mef):
     """
     Fit a standard curve to known fluorescence values of calibration beads.
 
     Parameters
     ----------
-    peaks_ch : array
+    fl_channel : array
         Fluorescence values of bead populations in channel units.
-    peaks_mef : array
+    fl_mef : array
         Fluorescence values of bead populations in MEF units.
 
     Returns
@@ -309,10 +309,10 @@ def fit_standard_curve(peaks_ch, peaks_mef):
 
     """
     # Check that the input data has consistent dimensions
-    if len(peaks_ch) != len(peaks_mef):
-        raise ValueError("peaks_ch and peaks_mef have different lengths")
+    if len(fl_channel) != len(fl_mef):
+        raise ValueError("fl_channel and fl_mef have different lengths")
     # Check that we have at least three points
-    if len(peaks_ch) <= 2:
+    if len(fl_channel) <= 2:
         raise ValueError("standard curve model requires at least three "
             "bead peak values")
         
@@ -322,9 +322,9 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     # 0: slope found by putting a line through the highest two peaks.
     # 1: y-intercept found by putting a line through highest two peaks.
     # 2: bead autofluorescence initialized to 100.
-    params[0] = (np.log(peaks_mef[-1]) - np.log(peaks_mef[-2])) / \
-                    (peaks_ch[-1] - peaks_ch[-2])
-    params[1] = np.log(peaks_mef[-1]) - params[0] * peaks_ch[-1]
+    params[0] = (np.log(fl_mef[-1]) - np.log(fl_mef[-2])) / \
+                    (fl_channel[-1] - fl_channel[-2])
+    params[1] = np.log(fl_mef[-1]) - params[0] * fl_channel[-1]
     params[2] = 100.
 
     # Error function
@@ -340,7 +340,7 @@ def fit_standard_curve(peaks_ch, peaks_mef):
         return np.exp(p[0] * x + p[1])
     
     # Fit parameters
-    err_par = lambda p: err_fun(p, peaks_ch, peaks_mef)
+    err_par = lambda p: err_fun(p, fl_channel, fl_mef)
     res = minimize(err_par, params, options = {'gtol': 1e-6})
 
     # Separate parameters
@@ -354,8 +354,8 @@ def fit_standard_curve(peaks_ch, peaks_mef):
     
     return (sc, sc_beads, sc_params)
 
-def plot_standard_curve(peaks_ch, 
-                        peaks_mef,
+def plot_standard_curve(fl_channel,
+                        fl_mef,
                         sc_beads,
                         sc_abs,
                         xlim=(0.,1023.),
@@ -365,10 +365,10 @@ def plot_standard_curve(peaks_ch,
 
     Parameters
     ----------
-    peaks_ch : array_like
+    fl_channel : array_like
         Fluorescence of the calibration beads' subpopulations, in channel
         numbers.
-    peaks_mef : array_like
+    fl_mef : array_like
         Fluorescence of the calibration beads' subpopulations, in MEF
         units.
     sc_beads : function
@@ -377,13 +377,20 @@ def plot_standard_curve(peaks_ch,
         The standard curve (transformation function from channel number to
         MEF units).
 
+    Other parameters:
+    -----------------
+    xlim : tuple, optional
+        Limits for the x axis.
+    ylim : tuple, optional
+        Limits for the y axis.
+
     """
     # Generate x data
     xdata = np.linspace(xlim[0], xlim[1], 200)
 
     # Plot
-    plt.plot(peaks_ch,
-             peaks_mef,
+    plt.plot(fl_channel,
+             fl_mef,
              'o',
              label='Beads',
              color=standard_curve_colors[0])
