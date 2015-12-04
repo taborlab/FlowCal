@@ -591,6 +591,11 @@ def get_transform_fxn(data_beads,
     labels_all = np.array(list(set(labels)))
     n_clusters = len(labels_all)
     data_clustered = [data_beads[labels == i] for i in labels_all]
+    # Sort clusters based on distance to the origin
+    cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
+                    for di in data_clustered]
+    cluster_sorted_ind = np.argsort(cluster_dist)
+    data_clustered = [data_clustered[i] for i in cluster_sorted_ind]
 
     # Print information
     if verbose:
@@ -604,12 +609,6 @@ def get_transform_fxn(data_beads,
 
     # Plot
     if plot:
-        # Sort
-        cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
-                        for di in data_clustered]
-        cluster_sorted_ind = np.argsort(cluster_dist)
-        data_plot = [data_clustered[i] for i in cluster_sorted_ind]
-            
         # If used two channels for clustering, make 2D scatter plot
         if len(clustering_channels) == 2:
             if plot_dir is not None:
@@ -618,7 +617,7 @@ def get_transform_fxn(data_beads,
                 savefig = None
             # Plot
             plt.figure(figsize=(6,4))
-            fc.plot.scatter2d(data_plot, 
+            fc.plot.scatter2d(data_clustered,
                               channels=clustering_channels,
                               savefig=savefig)
             if plot_dir is not None:
@@ -633,7 +632,7 @@ def get_transform_fxn(data_beads,
                 savefig = None
             # Plot
             plt.figure(figsize=(8,6))
-            fc.plot.scatter3d_and_projections(data_plot,
+            fc.plot.scatter3d_and_projections(data_clustered,
                                               channels=clustering_channels[:3],
                                               savefig=savefig)
             if plot_dir is not None:
@@ -651,8 +650,6 @@ def get_transform_fxn(data_beads,
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
 
-        # Slice relevant channel's data
-        data_channel = data_beads[:, mef_channel]
         # Print information
         if verbose: 
             print("- MEF transformation for channel {}...".format(mef_channel))
@@ -661,18 +658,15 @@ def get_transform_fxn(data_beads,
         # 2. Calculate statistics in each subpopulation.
         ###
 
-        min_fl = data_channel.domain(0)[0]
-        max_fl = data_channel.domain(0)[-1]
+        # Get channel range
+        min_fl = data_clustered[0].domain(mef_channel)[0]
+        max_fl = data_clustered[0].domain(mef_channel)[-1]
 
         # Calculate statistics
-        stats_values = np.array([population_stats_func(di[:,mef_channel],
-                                                   **population_stats_params)
-                             for di in data_clustered])
-
-        # Sort clusters based on statistic values
-        ind_sorted = np.argsort(stats_values)
-        stats_values_sorted = stats_values[ind_sorted]
-        data_sorted = [data_clustered[i] for i in ind_sorted]
+        stats_values = np.array(
+            [population_stats_func(di[:, mef_channel],
+                                   **population_stats_params)
+             for di in data_clustered])
 
         # Accumulate results
         if full_output:
@@ -681,7 +675,7 @@ def get_transform_fxn(data_beads,
         if verbose:
             print("- STEP 2. POPULATION STATISTICS CALCULATION.")
             print("Population statistics values:")
-            print(stats_values_sorted)
+            print(stats_values)
         # Plot
         if plot:
             # Get colors for populations
@@ -689,7 +683,7 @@ def get_transform_fxn(data_beads,
                       for i in np.linspace(0, 1, n_clusters)]
             # Plot histograms
             plt.figure(figsize=(8,4))
-            fc.plot.hist1d(data_plot,
+            fc.plot.hist1d(data_clustered,
                            channel=mef_channel,
                            div=4,
                            alpha=0.75)
@@ -722,7 +716,7 @@ def get_transform_fxn(data_beads,
         if population_selection_func == 'proximity':
             # Get the standard deviation of each population
             population_std = np.array([np.std(di[:,mef_channel])
-                                       for di in data_sorted])
+                                       for di in data_clustered])
             if verbose:
                 print("Standard deviations (channel units):")
                 print(population_std)
@@ -733,7 +727,7 @@ def get_transform_fxn(data_beads,
                 population_selection_params['fl_channel_max'] = max_fl*0.985
             # Select populations
             selected_channel, selected_mef = population_selection_proximity(
-                stats_values_sorted,
+                stats_values,
                 mef_values_channel,
                 fl_channel_std=population_std,
                 **population_selection_params)
@@ -778,7 +772,7 @@ def get_transform_fxn(data_beads,
                                 sc_beads,
                                 sc,
                                 xlim=(min_fl, max_fl))
-            plt.xlabel('{} (Channel Units)'.format(data_channel.channels[0]))
+            plt.xlabel('{} (Channel Units)'.format(mef_channel))
             plt.ylabel('MEF')
             # Save if required
             if plot_dir is not None:
