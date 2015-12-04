@@ -323,9 +323,9 @@ def process_beads_table(beads_table,
 
             mef_output = fc.mef.get_transform_fxn(
                 beads_sample_gated,
-                mef_values, 
-                clustering_channels=cluster_channels,
+                mef_values,
                 mef_channels=mef_channels,
+                clustering_channels=cluster_channels,
                 verbose=False,
                 plot=plot,
                 plot_filename=beads_id,
