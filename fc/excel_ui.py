@@ -324,15 +324,14 @@ def process_beads_table(beads_table,
             mef_output = fc.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values, 
-                cluster_method='gmm', 
-                cluster_channels=cluster_channels,
+                clustering_channels=cluster_channels,
                 mef_channels=mef_channels,
                 select_peaks_method='proximity',
                 verbose=False,
                 plot=plot,
                 plot_filename=beads_id,
                 plot_dir=os.path.join(base_dir, plot_dir),
-                full=full_output)
+                full_output=full_output)
             if full_output:
                 mef_outputs[beads_id] = mef_output
                 mef_transform_fxns[beads_id] = mef_output.transform_fxn

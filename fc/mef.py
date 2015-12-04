@@ -412,9 +412,9 @@ def plot_standard_curve(fl_channel,
 def get_transform_fxn(data_beads,
                       peaks_mef,
                       mef_channels,
-                      cluster_method='gmm',
-                      cluster_params={},
-                      cluster_channels=0,
+                      clustering_func=clustering_gmm,
+                      clustering_params={},
+                      clustering_channels=None,
                       find_peaks_method=fc.stats.median,
                       find_peaks_params={},
                       select_peaks_method='proximity',
@@ -423,7 +423,7 @@ def get_transform_fxn(data_beads,
                       plot=False,
                       plot_dir=None,
                       plot_filename=None,
-                      full=False):
+                      full_output=False):
     """
     Get a transformation function to convert flow cytometry data to MEF.
 
@@ -436,9 +436,6 @@ def get_transform_fxn(data_beads,
         each channel specified in `mef_channels`.
     mef_channels : int, or str, or list of int, or list of str
         Channels for which to generate transformation functions.
-    cluster_channels : list, optional
-        Channels used for clustering. If not specified, used the first
-        channel in `data_beads`.
     verbose : bool, optional
         Flag specifying whether to print information about step completion
         and warnings.
@@ -450,19 +447,19 @@ def get_transform_fxn(data_beads,
         saving.
     plot_filename : str, optional
         Name to use for plot files. If None, use ``str(data_beads)``.
-    full : bool, optional
+    full_output : bool, optional
         Flag specifying whether to include intermediate results in the
-        output. If `full` is True, the function returns a named tuple with
-        fields as described below. If `full` is False, the function only
-        returns the calculated transformation function.
+        output. If `full_output` is True, the function returns a named
+        tuple with fields as described below. If `full_output` is False,
+        the function only returns the calculated transformation function.
 
     Returns
     -------
-    transform_fxn : function, if ``full==False``
+    transform_fxn : function, if ``full_output==False``
         Transformation function to convert flow cytometry data from channel
         units to MEF. This function has the same basic signature as the
         general transformation function specified in ``fc.transform``.
-    namedtuple, if ``full==True``
+    namedtuple, if ``full_output==True``
         ``namedtuple``, containing the following fields in this order:
         transform_fxn : function
             Transformation function to convert flow cytometry data from
@@ -504,10 +501,19 @@ def get_transform_fxn(data_beads,
 
     Other parameters
     ----------------
-    cluster_method : {'gmm'}, optional
-        Method used for clustering, or identification of subpopulations.
-    cluster_params : dict, optional
-        Parameters to pass to the clustering method.
+    clustering_func : function, optional
+        Function used for clustering, or identification of subpopulations.
+        The following signature is required: ``labels = clustering_func(
+        data, n_clusters, **clustering_params)``, where `data` is a NxD
+        FCSData object or numpy array, `n_clusters` is the expected number
+        of bead subpopulations, and `labels` is a 1D numpy array of length
+        N, assigning each event in `data` to one subpopulation.
+    clustering_params : dict, optional
+        Keyword parameters to pass to clustering_func.
+    clustering_channels : list, optional
+        Channels used for clustering. If not specified, use `mef_channels`.
+        If more than three channels are specified, and `plot` is True, only
+        a 3D scatter plot will be produced, using the first three channels.
     find_peaks_method : function, optional
         Function used to calculate the representative fluorescence of each
         subpopulation. Valid functions should have the form
@@ -559,16 +565,28 @@ def get_transform_fxn(data_beads,
     if plot_filename is None:
         plot_filename = str(data_beads)
 
+    # mef_channels and peaks_mef should be iterables.
+    if hasattr(mef_channels, '__iter__'):
+        mef_channel_all = list(mef_channels)
+        peaks_mef_all = np.array(peaks_mef).copy()
+    else:
+        mef_channel_all = [mef_channels]
+        peaks_mef_all = np.array([peaks_mef])
+
     ###
     # 1. Clustering
     ###
-    if cluster_method == 'gmm':
-        labels = clustering_gmm(data_beads[:,cluster_channels], 
-            **cluster_params)
-    else:
-        raise ValueError("clustering method {} not recognized"
-            .format(cluster_method))
+    # If clustering channels not specified, use the same channels as the
+    # mef_channels
+    if clustering_channels is None:
+        clustering_channels = mef_channels
 
+    # Call clustering function
+    labels = clustering_func(data_beads[:, clustering_channels],
+                             n_clusters=peaks_mef_all.shape[1],
+                             **clustering_params)
+
+    # Separate events corresponding to each cluster
     labels_all = np.array(list(set(labels)))
     n_clusters = len(labels_all)
     data_clustered = [data_beads[labels == i] for i in labels_all]
@@ -586,12 +604,13 @@ def get_transform_fxn(data_beads,
     # Plot
     if plot:
         # Sort
-        cluster_dist = [np.sum((np.mean(di[:,cluster_channels], axis=0))**2)
+        cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
                         for di in data_clustered]
         cluster_sorted_ind = np.argsort(cluster_dist)
         data_plot = [data_clustered[i] for i in cluster_sorted_ind]
             
-        if len(cluster_channels) == 2:
+        # If used two channels for clustering, make 2D scatter plot
+        if len(clustering_channels) == 2:
             if plot_dir is not None:
                 savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
             else:
@@ -599,12 +618,14 @@ def get_transform_fxn(data_beads,
             # Plot
             plt.figure(figsize=(6,4))
             fc.plot.scatter2d(data_plot, 
-                              channels=cluster_channels,
+                              channels=clustering_channels,
                               savefig=savefig)
             if plot_dir is not None:
                 plt.close()
-            
-        elif len(cluster_channels) == 3:
+
+        # If used three channels or more for clustering, make 3D scatter plot
+        # with the first three.
+        elif len(clustering_channels) >= 3:
             if plot_dir is not None:
                 savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
             else:
@@ -612,22 +633,14 @@ def get_transform_fxn(data_beads,
             # Plot
             plt.figure(figsize=(8,6))
             fc.plot.scatter3d_and_projections(data_plot,
-                                              channels=cluster_channels,
+                                              channels=clustering_channels[:3],
                                               savefig=savefig)
             if plot_dir is not None:
                 plt.close()
 
-    # mef_channels and peaks_mef should be iterables.
-    if hasattr(mef_channels, '__iter__'):
-        mef_channel_all = list(mef_channels)
-        peaks_mef_all = np.array(peaks_mef).copy()
-    else:
-        mef_channel_all = [mef_channels]
-        peaks_mef_all = np.array([peaks_mef])
-
     # Initialize lists to acumulate results
     sc_all = []
-    if full:
+    if full_output:
         peaks_ch_all = []
         sel_peaks_ch_all = []
         sel_peaks_mef_all = []
@@ -659,7 +672,7 @@ def get_transform_fxn(data_beads,
         data_sorted = [data_clustered[i] for i in ind_sorted]
 
         # Accumulate results
-        if full:
+        if full_output:
             peaks_ch_all.append(peaks_ch)
         # Print information
         if verbose:
@@ -726,7 +739,7 @@ def get_transform_fxn(data_beads,
                 .format(select_peaks_method))
 
         # Accumulate results
-        if full:
+        if full_output:
             sel_peaks_ch_all.append(sel_peaks_ch)
             sel_peaks_mef_all.append(sel_peaks_mef)
         # Print information
@@ -749,7 +762,7 @@ def get_transform_fxn(data_beads,
             print(sc_params)
 
         sc_all.append(sc)
-        if full:
+        if full_output:
             sc_beads_all.append(sc_beads)
             sc_params_all.append(sc_params)
 
@@ -781,7 +794,7 @@ def get_transform_fxn(data_beads,
     if verbose:
         np.set_printoptions(precision=prev_precision)
 
-    if full:
+    if full_output:
         # Clustering results
         clustering_res = {}
         clustering_res['labels'] = labels
