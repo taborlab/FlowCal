@@ -157,92 +157,105 @@ def clustering_gmm(data,
 
     return labels
 
-def select_peaks_proximity(peaks_ch,
-                           peaks_mef,
-                           peaks_ch_std,
-                           peaks_ch_std_mult_l=2.5,
-                           peaks_ch_std_mult_r=2.5,
-                           peaks_ch_min=0,
-                           peaks_ch_max=1023):
+def sel_populations_proximity(fl_channel,
+                              fl_mef,
+                              fl_channel_std,
+                              fl_channel_std_mult_l=2.5,
+                              fl_channel_std_mult_r=2.5,
+                              fl_channel_min=0,
+                              fl_channel_max=1023):
     """
     Select bead subpopulations based on proximity to a minimum and maximum.
 
-    This function discards some values from `peaks_ch` if they're closer
-    than `peaks_ch_std_mult_l` standard deviations to `peaks_ch_min`, or
-    `peaks_ch_std_mult_r` standard deviations to `peaks_ch_max`. Standard
-    deviations should be provided in `peaks_ch_std`. Then, it discards the
-    corresponding values in `peaks_mef`. Finally, it discards the values in
-    `peaks_mef` that have an undetermined value (NaN), and the
-    corresponding values in peaks_ch.
+    This function discards some values from `fl_channel` if they're closer
+    than `fl_channel_std_mult_l` standard deviations to `fl_channel_min`,
+    or `fl_channel_std_mult_r` standard deviations to `fl_channel_max`.
+    Standard deviations should be provided in `fl_channel_std`. Then, it
+    discards the corresponding values in `fl_mef`. Finally, it discards the
+    values in `fl_mef` that have an undetermined value (NaN), and the
+    corresponding values in fl_channel.
 
     Parameters
     ----------
-    peaks_ch : array
+    fl_channel : array
         Sorted fluorescence values of bead populations in channel units.
-    peaks_mef : array
+    fl_mef : array
         Sorted fluorescence values of bead populations in MEF units.
-    peaks_ch_std_mult_l, peaks_ch_std_mult_r : float, optional
-        Number of standard deviations from `peaks_ch_min` and
-        `peaks_ch_max`, respectively, that a value in `peaks_ch` has to be
-        closer than to be discarded.
-    peaks_ch_min, peaks_ch_max : int, optional
+    fl_channel_std_mult_l, fl_channel_std_mult_r : float, optional
+        Number of standard deviations from `fl_channel_min` and
+        `fl_channel_max`, respectively, that a value in `fl_channel` has to
+        be closer than to be discarded.
+    fl_channel_min, fl_channel_max : int, optional
         Minimum and maximum tolerable fluorescence value in channel units.
 
     Returns
     -------
-    sel_peaks_ch : array
+    sel_fl_channel : array
         Selected fluorescence values of bead populations in channel units.
-    sel_peaks_mef : array
+    sel_fl_mef : array
         Selected fluorescence values of bead populations in MEF units.
 
     """
     # Minimum peak standard deviation will be 1.0
     min_std = 1.0
-    peaks_ch_std = peaks_ch_std.copy()
-    peaks_ch_std[peaks_ch_std < min_std] = min_std
+    fl_channel_std = fl_channel_std.copy()
+    fl_channel_std[fl_channel_std < min_std] = min_std
 
-    # Discard channel-space peaks
-    if ((peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min and
-        (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max):
-        raise ValueError("peaks are being cut off at both sides")
-    elif (peaks_ch[0] - peaks_ch_std[0]*peaks_ch_std_mult_l) <= peaks_ch_min:
-        discard_ch = 'left'
-        discard_ch_n = 1
-        while (peaks_ch[discard_ch_n] - 
-               peaks_ch_std[discard_ch_n]*peaks_ch_std_mult_l) <= peaks_ch_min:
-            discard_ch_n = discard_ch_n + 1
-        sel_peaks_ch = peaks_ch[discard_ch_n:]
-    elif (peaks_ch[-1] + peaks_ch_std[-1]*peaks_ch_std_mult_r) >= peaks_ch_max:
-        discard_ch = 'right'
-        discard_ch_n = 1
-        while (peaks_ch[-1-discard_ch_n] +
-               peaks_ch_std[-1-discard_ch_n]*peaks_ch_std_mult_r)>=peaks_ch_max:
-            discard_ch_n = discard_ch_n + 1
-        sel_peaks_ch = peaks_ch[:-discard_ch_n]
+    # Get left and right extreme values of populations
+    fl_channel_l = fl_channel[0] - fl_channel_std[0]*fl_channel_std_mult_l
+    fl_channel_r = fl_channel[-1] + fl_channel_std[-1]*fl_channel_std_mult_r
+
+    # Discard populations in channel units
+    if fl_channel_l <= fl_channel_min and fl_channel_r >= fl_channel_max:
+        # Data saturates at both sides, raise error
+        raise ValueError("populations are saturating at both sides")
+
+    elif fl_channel_l <= fl_channel_min:
+        # Data saturates to the left
+        discard_channel = 'left'
+        discard_channel_n = 1
+        while (fl_channel[discard_channel_n] -
+               fl_channel_std[discard_channel_n]*fl_channel_std_mult_l) \
+               <= fl_channel_min:
+            discard_channel_n = discard_channel_n + 1
+        sel_fl_channel = fl_channel[discard_channel_n:]
+
+    elif fl_channel_r >= fl_channel_max:
+        # Data saturates to the right
+        discard_channel = 'right'
+        discard_channel_n = 1
+        while (fl_channel[-1-discard_channel_n] +
+               fl_channel_std[-1-discard_channel_n]*fl_channel_std_mult_r) \
+               >= fl_channel_max:
+            discard_channel_n = discard_channel_n + 1
+        sel_fl_channel = fl_channel[:-discard_channel_n]
+
     else:
-        discard_ch = False
-        discard_ch_n = 0
-        sel_peaks_ch = peaks_ch.copy()
+        # Data does not saturate
+        discard_channel = False
+        discard_channel_n = 0
+        sel_fl_channel = fl_channel.copy()
 
     # Discard MEF peaks
-    discard_mef_n = len(peaks_mef) - len(sel_peaks_ch)
-    if discard_ch == 'left':
-        sel_peaks_mef = peaks_mef[discard_mef_n:]
-    elif discard_ch == 'right':
-        sel_peaks_mef = peaks_mef[:-discard_mef_n]
-    elif discard_ch == False and discard_mef_n == 0:
-        sel_peaks_mef = peaks_mef.copy()
+    discard_mef_n = len(fl_mef) - len(sel_fl_channel)
+    if discard_channel == 'left':
+        sel_fl_mef = fl_mef[discard_mef_n:]
+    elif discard_channel == 'right':
+        sel_fl_mef = fl_mef[:-discard_mef_n]
+    elif discard_channel == False and discard_mef_n == 0:
+        sel_fl_mef = fl_mef.copy()
     else:
-        ValueError("number of MEF values and channel peaks does not match")
+        ValueError("number of MEF values and channel populations does not"
+            " match")
     
-    # Discard unknown (NaN) peaks
-    unknown_mef = np.isnan(sel_peaks_mef)
+    # Discard unknown (NaN) populations
+    unknown_mef = np.isnan(sel_fl_mef)
     n_unknown_mef = np.sum(unknown_mef)
     if n_unknown_mef > 0:
-        sel_peaks_ch = sel_peaks_ch[np.invert(unknown_mef)]
-        sel_peaks_mef = sel_peaks_mef[np.invert(unknown_mef)]
+        sel_fl_channel = sel_fl_channel[np.invert(unknown_mef)]
+        sel_fl_mef = sel_fl_mef[np.invert(unknown_mef)]
 
-    return sel_peaks_ch, sel_peaks_mef
+    return sel_fl_channel, sel_fl_mef
 
 def fit_standard_curve(peaks_ch, peaks_mef):
     """
@@ -691,15 +704,15 @@ def get_transform_fxn(data_beads,
                 print("Standard deviations of channel peaks:")
                 print(peaks_std)
             # Set default limits: throw away 1% of the range
-            if 'peaks_ch_min' not in select_peaks_params:
-                select_peaks_params['peaks_ch_min'] = min_fl*0.015
-            if 'peaks_ch_max' not in select_peaks_params:
-                select_peaks_params['peaks_ch_max'] = max_fl*0.985
+            if 'fl_channel_min' not in select_peaks_params:
+                select_peaks_params['fl_channel_min'] = min_fl*0.015
+            if 'fl_channel_max' not in select_peaks_params:
+                select_peaks_params['fl_channel_max'] = max_fl*0.985
             # Select peaks
-            sel_peaks_ch, sel_peaks_mef = select_peaks_proximity(
+            sel_peaks_ch, sel_peaks_mef = sel_populations_proximity(
                 peaks_sorted,
                 peaks_mef_channel,
-                peaks_ch_std=peaks_std,
+                fl_channel_std=peaks_std,
                 **select_peaks_params)
         else:
             raise ValueError("peak selection method {} not recognized"
