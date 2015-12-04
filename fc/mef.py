@@ -157,13 +157,13 @@ def clustering_gmm(data,
 
     return labels
 
-def sel_populations_proximity(fl_channel,
-                              fl_mef,
-                              fl_channel_std,
-                              fl_channel_std_mult_l=2.5,
-                              fl_channel_std_mult_r=2.5,
-                              fl_channel_min=0,
-                              fl_channel_max=1023):
+def population_selection_proximity(fl_channel,
+                                   fl_mef,
+                                   fl_channel_std,
+                                   fl_channel_std_mult_l=2.5,
+                                   fl_channel_std_mult_r=2.5,
+                                   fl_channel_min=0,
+                                   fl_channel_max=1023):
     """
     Select bead subpopulations based on proximity to a minimum and maximum.
 
@@ -196,7 +196,7 @@ def sel_populations_proximity(fl_channel,
         Selected fluorescence values of bead populations in MEF units.
 
     """
-    # Minimum peak standard deviation will be 1.0
+    # Minimum standard deviation will be 1.0
     min_std = 1.0
     fl_channel_std = fl_channel_std.copy()
     fl_channel_std[fl_channel_std < min_std] = min_std
@@ -314,7 +314,7 @@ def fit_standard_curve(fl_channel, fl_mef):
     # Check that we have at least three points
     if len(fl_channel) <= 2:
         raise ValueError("standard curve model requires at least three "
-            "bead peak values")
+            "values")
         
     # Initialize parameters
     params = np.zeros(3)
@@ -410,15 +410,15 @@ def plot_standard_curve(fl_channel,
     plt.legend(loc = 'best')
 
 def get_transform_fxn(data_beads,
-                      peaks_mef,
+                      mef_values,
                       mef_channels,
                       clustering_func=clustering_gmm,
                       clustering_params={},
                       clustering_channels=None,
-                      find_peaks_method=fc.stats.median,
-                      find_peaks_params={},
-                      select_peaks_method='proximity',
-                      select_peaks_params={},
+                      population_stats_func=fc.stats.median,
+                      population_stats_params={},
+                      population_selection_func='proximity',
+                      population_selection_params={},
                       verbose=False,
                       plot=False,
                       plot_dir=None,
@@ -431,7 +431,7 @@ def get_transform_fxn(data_beads,
     ----------
     data_beads : FCSData object
         Flow cytometry data, taken from calibration beads.
-    peaks_mef : array
+    mef_values : array
         Known MEF values of the calibration beads' subpopulations, for
         each channel specified in `mef_channels`.
     mef_channels : int, or str, or list of int, or list of str
@@ -466,27 +466,27 @@ def get_transform_fxn(data_beads,
             channel units to MEF. This function has the same basic
             signature as the general transformation function specified in
             ``fc.transform``.
-        clustering_res : dict
+        clustering : dict
             Results of the clustering step, containing the following
             fields:
             labels : array
                 Labels for each element in `data_beads`.
-        peak_find_res : dict
+        population_stats : dict
             Results of the calculation of bead subpopulations'
             fluorescence, containing the following fields:
-            peaks_ch : list
-                The representative fluorescence of each subpopulation, for
-                each channel in `mef_channels`.
-        peak_sel_res : dict
+            values : list
+                The representative fluorescence values of each
+                subpopulation, for each channel in `mef_channels`.
+        population_selection : dict
             Results of the subpopulation selection step, containing the
             following fields:
-            sel_peaks_ch : list
+            channel : list
                 The fluorescence values of each selected subpopulation in
                 channel units, for each channel in `mef_channels`.
-            sel_peaks_mef : list
+            mef : list
                 The fluorescence values of each selected subpopulation in
                 MEF units, for each channel in `mef_channels`.
-        fitting_res : dict
+        fitting : dict
             Results of the model fitting step, containing the following
             fields:
             sc : list
@@ -514,18 +514,19 @@ def get_transform_fxn(data_beads,
         Channels used for clustering. If not specified, use `mef_channels`.
         If more than three channels are specified, and `plot` is True, only
         a 3D scatter plot will be produced, using the first three channels.
-    find_peaks_method : function, optional
+    population_stats_func : function, optional
         Function used to calculate the representative fluorescence of each
         subpopulation. Valid functions should have the form
-        ``s = find_peaks_method(data, **find_peaks_params)``, where `s` is
-        a float. Statistical functions from numpy, scipy, or fc.stats are
+        ``s = population_stats_func(data, **population_stats_params)``,
+        where `data` is a 1D FCSData object or 1Dnumpy array, and `s` is a
+        float. Statistical functions from numpy, scipy, or fc.stats are
         valid options.
-    find_peaks_params : dict, optional
-        Additional parameters to pass to `find_peaks_method`.
-    select_peaks_method : {'proximity'}, optional
-        Method to use for peak selection.
-    select_peaks_params : dict, optional
-        Parameters to pass to the peak selection method.
+    population_stats_params : dict, optional
+        Additional parameters to pass to `population_stats_func`.
+    population_selection_func : {'proximity'}, optional
+        Method to use for bead population selection.
+    population_selection_params : dict, optional
+        Parameters to pass to the population selection method.
 
     Notes
     -----
@@ -538,9 +539,9 @@ def get_transform_fxn(data_beads,
     3. Some subpopulations are then discarded if they are close to either
        the minimum or the maximum channel value. In addition, if the MEF
        value of some subpopulation is unknown (represented as a ``NaN`` in
-       `peaks_mef`), the whole subpopulation is also discarded.
+       `mef_values`), the whole subpopulation is also discarded.
     4. The measured fluorescence of each subpopulation is compared with
-       the known MEF values in `peaks_mef`, and a standard curve function
+       the known MEF values in `mef_values`, and a standard curve function
        is generated using the appropriate MEF model.
 
     At the end, a transformation function is generated using the calculated
@@ -565,13 +566,13 @@ def get_transform_fxn(data_beads,
     if plot_filename is None:
         plot_filename = str(data_beads)
 
-    # mef_channels and peaks_mef should be iterables.
+    # mef_channels and mef_values should be iterables.
     if hasattr(mef_channels, '__iter__'):
         mef_channel_all = list(mef_channels)
-        peaks_mef_all = np.array(peaks_mef).copy()
+        mef_values_all = np.array(mef_values).copy()
     else:
         mef_channel_all = [mef_channels]
-        peaks_mef_all = np.array([peaks_mef])
+        mef_values_all = np.array([mef_values])
 
     ###
     # 1. Clustering
@@ -583,7 +584,7 @@ def get_transform_fxn(data_beads,
 
     # Call clustering function
     labels = clustering_func(data_beads[:, clustering_channels],
-                             n_clusters=peaks_mef_all.shape[1],
+                             n_clusters=mef_values_all.shape[1],
                              **clustering_params)
 
     # Separate events corresponding to each cluster
@@ -641,47 +642,49 @@ def get_transform_fxn(data_beads,
     # Initialize lists to acumulate results
     sc_all = []
     if full_output:
-        peaks_ch_all = []
-        sel_peaks_ch_all = []
-        sel_peaks_mef_all = []
+        stats_values_all = []
+        selected_channel_all = []
+        selected_mef_all = []
         sc_beads_all = []
         sc_params_all =[]
 
     # Iterate through each mef channel
-    for mef_channel, peaks_mef_channel in zip(mef_channel_all, peaks_mef_all):
+    for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
 
         # Slice relevant channel's data
-        data_channel = data_beads[:,mef_channel]
+        data_channel = data_beads[:, mef_channel]
         # Print information
         if verbose: 
             print("- MEF transformation for channel {}...".format(mef_channel))
 
         ###
-        # 2. Find peaks in each one of the clusters.
+        # 2. Calculate statistics in each subpopulation.
         ###
 
-        # Find peaks on all the channel data
         min_fl = data_channel.domain(0)[0]
         max_fl = data_channel.domain(0)[-1]
-        peaks_ch = np.array([find_peaks_method(di[:,mef_channel],
-                                               **find_peaks_params)
+
+        # Calculate statistics
+        stats_values = np.array([population_stats_func(di[:,mef_channel],
+                                                   **population_stats_params)
                              for di in data_clustered])
-        # Sort peaks and clusters
-        ind_sorted = np.argsort(peaks_ch)
-        peaks_sorted = peaks_ch[ind_sorted]
+
+        # Sort clusters based on statistic values
+        ind_sorted = np.argsort(stats_values)
+        stats_values_sorted = stats_values[ind_sorted]
         data_sorted = [data_clustered[i] for i in ind_sorted]
 
         # Accumulate results
         if full_output:
-            peaks_ch_all.append(peaks_ch)
+            stats_values_all.append(stats_values)
         # Print information
         if verbose:
-            print("- STEP 2. PEAK IDENTIFICATION.")
-            print("Channel peaks identified:")
-            print(peaks_sorted)
+            print("- STEP 2. POPULATION STATISTICS CALCULATION.")
+            print("Population statistics values:")
+            print(stats_values_sorted)
         # Plot
         if plot:
-            # Get colors for peaks
+            # Get colors for populations
             colors = [fc.plot.cmap_default(i)
                       for i in np.linspace(0, 1, n_clusters)]
             # Plot histograms
@@ -690,72 +693,72 @@ def get_transform_fxn(data_beads,
                            channel=mef_channel,
                            div=4,
                            alpha=0.75)
-            # Plot histograms and peaks
+            # Plot histograms and populations
             for c, i in zip(colors, cluster_sorted_ind):
                 # Peak values
-                p = peaks_ch[i]
+                p = stats_values[i]
                 ylim = plt.ylim()
                 plt.plot([p, p], [ylim[0], ylim[1]], color=c)
                 plt.ylim(ylim)
             # Save and close
             if plot_dir is not None:
                 plt.tight_layout()
-                plt.savefig('{}/peaks_{}_{}.png'.format(plot_dir,
-                                                        mef_channel,
-                                                        plot_filename),
+                plt.savefig('{}/hist_{}_{}.png'.format(plot_dir,
+                                                       mef_channel,
+                                                       plot_filename),
                             dpi=fc.plot.savefig_dpi)
                 plt.close()
 
         ###
-        # 3. Select peaks for fitting
+        # 3. Select populations to be used for fitting
         ###
         
         # Print information
         if verbose:
-            print("- STEP 3. PEAK SELECTION.")
-            print("MEF peaks provided:")
-            print(peaks_mef_channel)
+            print("- STEP 3. POPULATION SELECTION.")
+            print("MEF values provided:")
+            print(mef_values_channel)
 
-        if select_peaks_method == 'proximity':
-            # Get the standard deviation of each peak
-            peaks_std = np.array([np.std(di[:,mef_channel])
-                                  for di in data_sorted])
+        if population_selection_func == 'proximity':
+            # Get the standard deviation of each population
+            population_std = np.array([np.std(di[:,mef_channel])
+                                       for di in data_sorted])
             if verbose:
-                print("Standard deviations of channel peaks:")
-                print(peaks_std)
+                print("Standard deviations (channel units):")
+                print(population_std)
             # Set default limits: throw away 1% of the range
-            if 'fl_channel_min' not in select_peaks_params:
-                select_peaks_params['fl_channel_min'] = min_fl*0.015
-            if 'fl_channel_max' not in select_peaks_params:
-                select_peaks_params['fl_channel_max'] = max_fl*0.985
-            # Select peaks
-            sel_peaks_ch, sel_peaks_mef = sel_populations_proximity(
-                peaks_sorted,
-                peaks_mef_channel,
-                fl_channel_std=peaks_std,
-                **select_peaks_params)
+            if 'fl_channel_min' not in population_selection_params:
+                population_selection_params['fl_channel_min'] = min_fl*0.015
+            if 'fl_channel_max' not in population_selection_params:
+                population_selection_params['fl_channel_max'] = max_fl*0.985
+            # Select populations
+            selected_channel, selected_mef = population_selection_proximity(
+                stats_values_sorted,
+                mef_values_channel,
+                fl_channel_std=population_std,
+                **population_selection_params)
         else:
-            raise ValueError("peak selection method {} not recognized"
-                .format(select_peaks_method))
+            raise ValueError("population selection method {} not recognized"
+                .format(population_selection_func))
 
         # Accumulate results
         if full_output:
-            sel_peaks_ch_all.append(sel_peaks_ch)
-            sel_peaks_mef_all.append(sel_peaks_mef)
+            selected_channel_all.append(selected_channel)
+            selected_mef_all.append(selected_mef)
         # Print information
         if verbose:
-            print("{} peaks retained.".format(len(sel_peaks_ch)))
-            print("Selected channel peaks:")
-            print(sel_peaks_ch)
-            print("Selected MEF peaks:")
-            print(sel_peaks_mef)
+            print("{} populations retained.".format(len(selected_channel)))
+            print("Selected values (channel):")
+            print(selected_channel)
+            print("Selected MEF (channel):")
+            print(selected_mef)
 
         ###
         # 4. Get standard curve
         ###
         sc, sc_beads, sc_params = fit_standard_curve(
-            sel_peaks_ch,
-            sel_peaks_mef)
+            selected_channel,
+            selected_mef)
         if verbose:
             print("- STEP 4. STANDARD CURVE FITTING.")
             print("Fitted parameters:")
@@ -770,8 +773,8 @@ def get_transform_fxn(data_beads,
         if plot:
             # Plot standard curve
             plt.figure(figsize=(6,4))
-            plot_standard_curve(sel_peaks_ch,
-                                sel_peaks_mef,
+            plot_standard_curve(selected_channel,
+                                selected_mef,
                                 sc_beads,
                                 sc,
                                 xlim=(min_fl, max_fl))
@@ -798,13 +801,13 @@ def get_transform_fxn(data_beads,
         # Clustering results
         clustering_res = {}
         clustering_res['labels'] = labels
-        # Peak finding results
-        peak_find_res = {}
-        peak_find_res['peaks_ch'] = peaks_ch_all
-        # Peak selection results
-        peak_sel_res = {}
-        peak_sel_res['sel_peaks_ch'] = sel_peaks_ch_all
-        peak_sel_res['sel_peaks_mef'] = sel_peaks_mef_all
+        # Population stats results
+        population_stats_res = {}
+        population_stats_res['values'] = stats_values_all
+        # Population selection results
+        population_selection_res = {}
+        population_selection_res['channel'] = selected_channel_all
+        population_selection_res['mef'] = selected_mef_all
         # Fitting results
         fitting_res = {}
         fitting_res['sc'] = sc_all
@@ -813,16 +816,16 @@ def get_transform_fxn(data_beads,
 
         # Make namedtuple
         fields = ['transform_fxn',
-                  'clustering_res',
-                  'peak_find_res',
-                  'peak_sel_res',
-                  'fitting_res']
+                  'clustering',
+                  'population_stats',
+                  'population_selection',
+                  'fitting']
         MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
         out = MEFOutput(transform_fxn=transform_fxn,
-                        clustering_res=clustering_res,
-                        peak_find_res=peak_find_res,
-                        peak_sel_res=peak_sel_res,
-                        fitting_res=fitting_res)
+                        clustering=clustering_res,
+                        population_stats=population_stats_res,
+                        population_selection=population_selection_res,
+                        fitting=fitting_res)
         return out
     else:
         return transform_fxn
