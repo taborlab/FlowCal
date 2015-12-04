@@ -157,105 +157,53 @@ def clustering_gmm(data,
 
     return labels
 
-def population_selection_proximity(fl_channel,
-                                   fl_mef,
-                                   fl_channel_std,
-                                   fl_channel_std_mult_l=2.5,
-                                   fl_channel_std_mult_r=2.5,
-                                   fl_channel_min=0,
-                                   fl_channel_max=1023):
+def population_selection_proximity(populations,
+                                   th_l=None,
+                                   th_r=None,
+                                   std_mult_l=2.5,
+                                   std_mult_r=2.5):
     """
-    Select bead subpopulations based on proximity to a minimum and maximum.
+    Select populations based on proximity to a low and high thresholds.
 
-    This function discards some values from `fl_channel` if they're closer
-    than `fl_channel_std_mult_l` standard deviations to `fl_channel_min`,
-    or `fl_channel_std_mult_r` standard deviations to `fl_channel_max`.
-    Standard deviations should be provided in `fl_channel_std`. Then, it
-    discards the corresponding values in `fl_mef`. Finally, it discards the
-    values in `fl_mef` that have an undetermined value (NaN), and the
-    corresponding values in fl_channel.
+    This function selects populations from `populations` if their means are
+    farther than `std_mult_l` standard deviations to `th_l`, or
+    `std_mult_r` standard deviations to `th_r`.
 
     Parameters
     ----------
-    fl_channel : array
-        Sorted fluorescence values of bead populations in channel units.
-    fl_mef : array
-        Sorted fluorescence values of bead populations in MEF units.
-    fl_channel_std_mult_l, fl_channel_std_mult_r : float, optional
-        Number of standard deviations from `fl_channel_min` and
-        `fl_channel_max`, respectively, that a value in `fl_channel` has to
-        be closer than to be discarded.
-    fl_channel_min, fl_channel_max : int, optional
-        Minimum and maximum tolerable fluorescence value in channel units.
+    populations : list of FCSData objects
+        Populations to select or discard.
+    th_l, th_r : int or float, optional
+        Left and right threshold. If None, use 0.015 of the lowest value
+        and 0.0985 of the highest value in the first population's domain.
+    std_mult_l, std_mult_r : float, optional
+        Number of standard deviations from `th_l` and `th_r`, respectively,
+        that a population's mean has to be closer than to be discarded.
 
     Returns
     -------
-    sel_fl_channel : array
-        Selected fluorescence values of bead populations in channel units.
-    sel_fl_mef : array
-        Selected fluorescence values of bead populations in MEF units.
+    m : boolean array
+        Set of flags indicating whether a population has been selected.
 
     """
-    # Minimum standard deviation will be 1.0
+    # Default thresholds
+    if th_l is None:
+        th_l = 0.015*populations[0].domain(0)[0]
+    if th_r is None:
+        th_r = 0.985*populations[0].domain(0)[-1]
+
+    # Calculate means and standard deviations
+    pop_mean = np.array([fc.stats.mean(p) for p in populations])
+    pop_std = np.array([fc.stats.std(p) for p in populations])
+
+    # Set minimum standard deviation to one.
     min_std = 1.0
-    fl_channel_std = fl_channel_std.copy()
-    fl_channel_std[fl_channel_std < min_std] = min_std
+    pop_std[pop_std < min_std] = min_std
 
-    # Get left and right extreme values of populations
-    fl_channel_l = fl_channel[0] - fl_channel_std[0]*fl_channel_std_mult_l
-    fl_channel_r = fl_channel[-1] + fl_channel_std[-1]*fl_channel_std_mult_r
-
-    # Discard populations in channel units
-    if fl_channel_l <= fl_channel_min and fl_channel_r >= fl_channel_max:
-        # Data saturates at both sides, raise error
-        raise ValueError("populations are saturating at both sides")
-
-    elif fl_channel_l <= fl_channel_min:
-        # Data saturates to the left
-        discard_channel = 'left'
-        discard_channel_n = 1
-        while (fl_channel[discard_channel_n] -
-               fl_channel_std[discard_channel_n]*fl_channel_std_mult_l) \
-               <= fl_channel_min:
-            discard_channel_n = discard_channel_n + 1
-        sel_fl_channel = fl_channel[discard_channel_n:]
-
-    elif fl_channel_r >= fl_channel_max:
-        # Data saturates to the right
-        discard_channel = 'right'
-        discard_channel_n = 1
-        while (fl_channel[-1-discard_channel_n] +
-               fl_channel_std[-1-discard_channel_n]*fl_channel_std_mult_r) \
-               >= fl_channel_max:
-            discard_channel_n = discard_channel_n + 1
-        sel_fl_channel = fl_channel[:-discard_channel_n]
-
-    else:
-        # Data does not saturate
-        discard_channel = False
-        discard_channel_n = 0
-        sel_fl_channel = fl_channel.copy()
-
-    # Discard MEF values that are None
-    discard_mef_n = len(fl_mef) - len(sel_fl_channel)
-    if discard_channel == 'left':
-        sel_fl_mef = fl_mef[discard_mef_n:]
-    elif discard_channel == 'right':
-        sel_fl_mef = fl_mef[:-discard_mef_n]
-    elif discard_channel == False and discard_mef_n == 0:
-        sel_fl_mef = fl_mef.copy()
-    else:
-        ValueError("number of MEF values and channel populations does not"
-            " match")
-    
-    # Discard unknown (NaN) populations
-    unknown_mef = np.isnan(sel_fl_mef)
-    n_unknown_mef = np.sum(unknown_mef)
-    if n_unknown_mef > 0:
-        sel_fl_channel = sel_fl_channel[np.invert(unknown_mef)]
-        sel_fl_mef = sel_fl_mef[np.invert(unknown_mef)]
-
-    return sel_fl_channel, sel_fl_mef
+    # Return populations that don't cross either threshold
+    m = np.logical_and((pop_mean - std_mult_l*pop_std) > th_l,
+                       (pop_mean - std_mult_r*pop_std) < th_r)
+    return m
 
 def fit_standard_curve(fl_channel, fl_mef):
     """
@@ -417,7 +365,7 @@ def get_transform_fxn(data_beads,
                       clustering_channels=None,
                       population_stats_func=fc.stats.median,
                       population_stats_params={},
-                      population_selection_func='proximity',
+                      population_selection_func=population_selection_proximity,
                       population_selection_params={},
                       verbose=False,
                       plot=False,
@@ -516,15 +464,21 @@ def get_transform_fxn(data_beads,
         a 3D scatter plot will be produced, using the first three channels.
     population_stats_func : function, optional
         Function used to calculate the representative fluorescence of each
-        subpopulation. Valid functions should have the form
+        subpopulation. Must have the following signature:
         ``s = population_stats_func(data, **population_stats_params)``,
         where `data` is a 1D FCSData object or 1Dnumpy array, and `s` is a
         float. Statistical functions from numpy, scipy, or fc.stats are
         valid options.
     population_stats_params : dict, optional
         Additional parameters to pass to `population_stats_func`.
-    population_selection_func : {'proximity'}, optional
-        Method to use for bead population selection.
+    population_selection_func : function, optional
+        Function to use for bead population selection. Must have the
+        following signature: ``m = population_selection_func(data_list,
+        **population_selection_params)``, where `data_list` is a list of
+        FCSData objects, each one cotaining the events of one population,
+        and `m` is a boolean array indicating whether the population has
+        been selected (True) or discarded (False). If None, don't use a
+        population selection procedure.
     population_selection_params : dict, optional
         Parameters to pass to the population selection method.
 
@@ -603,7 +557,7 @@ def get_transform_fxn(data_beads,
         print("Number of clusters found: {}".format(n_clusters))
         # Calculate percentage of each cluster
         data_count = np.array([di.shape[0] for di in data_clustered])
-        data_perc = data_count*100.0/data_count.sum()
+        data_perc = data_count * 100.0 / data_count.sum()
         print("Percentage of samples in each cluster:")
         print(data_perc)
 
@@ -706,63 +660,54 @@ def get_transform_fxn(data_beads,
         ###
         # 3. Select populations to be used for fitting
         ###
-        
-        # Print information
-        if verbose:
-            print("- STEP 3. POPULATION SELECTION.")
-            print("MEF values provided:")
-            print(mef_values_channel)
 
-        if population_selection_func == 'proximity':
-            # Get the standard deviation of each population
-            population_std = np.array([np.std(di[:,mef_channel])
-                                       for di in data_clustered])
-            if verbose:
-                print("Standard deviations (channel units):")
-                print(population_std)
-            # Set default limits: throw away 1% of the range
-            if 'fl_channel_min' not in population_selection_params:
-                population_selection_params['fl_channel_min'] = min_fl*0.015
-            if 'fl_channel_max' not in population_selection_params:
-                population_selection_params['fl_channel_max'] = max_fl*0.985
-            # Select populations
-            selected_channel, selected_mef = population_selection_proximity(
-                stats_values,
-                mef_values_channel,
-                fl_channel_std=population_std,
-                **population_selection_params)
+        # Select populations based on population_selection_func
+        if population_selection_func is not None:
+            m = population_selection_func([di[:, mef_channel]
+                                           for di in data_clustered])
         else:
-            raise ValueError("population selection method {} not recognized"
-                .format(population_selection_func))
+            m = np.ones(len(data_clustered), dtype=bool)
+
+        # Discard values specified as nan in mef_values_channel
+        m = np.logical_and(m, ~np.isnan(mef_values_channel))
+
+        # Get selected channel and mef values
+        selected_channel = stats_values[m]
+        selected_mef = mef_values_channel[m]
 
         # Accumulate results
         if full_output:
             selected_channel_all.append(selected_channel)
             selected_mef_all.append(selected_mef)
+
         # Print information
         if verbose:
+            print("- STEP 3. POPULATION SELECTION.")
             print("{} populations retained.".format(len(selected_channel)))
-            print("Selected values (channel):")
+            print("Selected Channel values:")
             print(selected_channel)
-            print("Selected MEF (channel):")
+            print("Selected MEF values:")
             print(selected_mef)
 
         ###
         # 4. Get standard curve
         ###
+
+        # Fit
         sc, sc_beads, sc_params = fit_standard_curve(
             selected_channel,
             selected_mef)
-        if verbose:
-            print("- STEP 4. STANDARD CURVE FITTING.")
-            print("Fitted parameters:")
-            print(sc_params)
-
+        # Accumulate results
         sc_all.append(sc)
         if full_output:
             sc_beads_all.append(sc_beads)
             sc_params_all.append(sc_params)
 
+        # Print information
+        if verbose:
+            print("- STEP 4. STANDARD CURVE FITTING.")
+            print("Fitted parameters:")
+            print(sc_params)
         # Plot
         if plot:
             # Plot standard curve
