@@ -531,20 +531,22 @@ def get_transform_fxn(data_beads,
     ###
     # 1. Clustering
     ###
-    # If clustering channels not specified, use the same channels as the
-    # mef_channels
+    # If clustering channels not specified, use channels in mef_channels
     if clustering_channels is None:
         clustering_channels = mef_channels
 
-    # Call clustering function
+    # Get number of clusters from number of specified MEF values
+    n_clusters = mef_values_all.shape[1]
+
+    # Run clustering function
     labels = clustering_func(data_beads[:, clustering_channels],
-                             n_clusters=mef_values_all.shape[1],
+                             n_clusters,
                              **clustering_params)
 
     # Separate events corresponding to each cluster
     labels_all = np.array(list(set(labels)))
-    n_clusters = len(labels_all)
     data_clustered = [data_beads[labels == i] for i in labels_all]
+
     # Sort clusters based on distance to the origin
     cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
                     for di in data_clustered]
@@ -553,20 +555,20 @@ def get_transform_fxn(data_beads,
 
     # Print information
     if verbose:
-        print("- STEP 1. CLUSTERING.")
-        print("Number of clusters found: {}".format(n_clusters))
+        print("Step 1: Clustering")
+        print("  Number of populations to find: {}".format(n_clusters))
         # Calculate percentage of each cluster
         data_count = np.array([di.shape[0] for di in data_clustered])
         data_perc = data_count * 100.0 / data_count.sum()
-        print("Percentage of samples in each cluster:")
-        print(data_perc)
+        print("  Percentage of events in each population:")
+        print("    " + str(data_perc))
 
     # Plot
     if plot:
         # If used two channels for clustering, make 2D scatter plot
         if len(clustering_channels) == 2:
             if plot_dir is not None:
-                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
+                savefig = '{}/clustering_{}.png'.format(plot_dir, plot_filename)
             else:
                 savefig = None
             # Plot
@@ -581,7 +583,7 @@ def get_transform_fxn(data_beads,
         # with the first three.
         elif len(clustering_channels) >= 3:
             if plot_dir is not None:
-                savefig = '{}/cluster_{}.png'.format(plot_dir, plot_filename)
+                savefig = '{}/clustering_{}.png'.format(plot_dir, plot_filename)
             else:
                 savefig = None
             # Plot
@@ -603,23 +605,13 @@ def get_transform_fxn(data_beads,
 
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
-
-        # Print information
-        if verbose: 
-            print("- MEF transformation for channel {}...".format(mef_channel))
-
         ###
         # 2. Calculate statistics in each subpopulation.
         ###
 
-        # Get channel range
-        min_fl = data_clustered[0].domain(mef_channel)[0]
-        max_fl = data_clustered[0].domain(mef_channel)[-1]
-
         # Calculate statistics
         stats_values = np.array(
-            [population_stats_func(di[:, mef_channel],
-                                   **population_stats_params)
+            [population_stats_func(di[:,mef_channel], **population_stats_params)
              for di in data_clustered])
 
         # Accumulate results
@@ -627,9 +619,9 @@ def get_transform_fxn(data_beads,
             stats_values_all.append(stats_values)
         # Print information
         if verbose:
-            print("- STEP 2. POPULATION STATISTICS CALCULATION.")
-            print("Population statistics values:")
-            print(stats_values)
+            print("({}) Step 2: Population Statistic".format(mef_channel))
+            print("  Fluorescence per population (Channel Units):")
+            print("    " + str(stats_values))
         # Plot
         if plot:
             # Get colors for populations
@@ -666,7 +658,7 @@ def get_transform_fxn(data_beads,
             m = population_selection_func([di[:, mef_channel]
                                            for di in data_clustered])
         else:
-            m = np.ones(len(data_clustered), dtype=bool)
+            m = np.ones(n_clusters, dtype=bool)
 
         # Discard values specified as nan in mef_values_channel
         m = np.logical_and(m, ~np.isnan(mef_values_channel))
@@ -682,12 +674,12 @@ def get_transform_fxn(data_beads,
 
         # Print information
         if verbose:
-            print("- STEP 3. POPULATION SELECTION.")
-            print("{} populations retained.".format(len(selected_channel)))
-            print("Selected Channel values:")
-            print(selected_channel)
-            print("Selected MEF values:")
-            print(selected_mef)
+            print("({}) Step 3: Population Selection".format(mef_channel))
+            print("  {} populations retained.".format(len(selected_channel)))
+            print("  Fluorescence of selected populations (Channel Units):")
+            print("    " + str(selected_channel))
+            print("  Fluorescence of selected populations (MEF Units):")
+            print("    " + str(selected_mef))
 
         ###
         # 4. Get standard curve
@@ -705,11 +697,14 @@ def get_transform_fxn(data_beads,
 
         # Print information
         if verbose:
-            print("- STEP 4. STANDARD CURVE FITTING.")
-            print("Fitted parameters:")
-            print(sc_params)
+            print("({}) Step 4: Standard Curve Fitting".format(mef_channel))
+            print("  Parameters of bead fluorescence model:")
+            print("    " + str(sc_params))
         # Plot
         if plot:
+            # Get channel range
+            min_fl = data_clustered[0].domain(mef_channel)[0]
+            max_fl = data_clustered[0].domain(mef_channel)[-1]
             # Plot standard curve
             plt.figure(figsize=(6,4))
             plot_standard_curve(selected_channel,
