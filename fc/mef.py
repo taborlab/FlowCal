@@ -537,34 +537,40 @@ def get_transform_fxn(data_beads,
 
     # Plot
     if plot:
+        if plot_dir is not None:
+            savefig = '{}/clustering_{}.png'.format(plot_dir, plot_filename)
+        else:
+            savefig = None
+
+        # If used one channel for clustering, make histogram
+        if len(clustering_channels) == 1:
+            # Plot
+            plt.figure(figsize=(8,4))
+            fc.plot.hist1d(data_clustered,
+                           channel=clustering_channels[0],
+                           div=4,
+                           alpha=0.75,
+                           savefig=savefig)
+
         # If used two channels for clustering, make 2D scatter plot
-        if len(clustering_channels) == 2:
-            if plot_dir is not None:
-                savefig = '{}/clustering_{}.png'.format(plot_dir, plot_filename)
-            else:
-                savefig = None
+        elif len(clustering_channels) == 2:
             # Plot
             plt.figure(figsize=(6,4))
             fc.plot.scatter2d(data_clustered,
                               channels=clustering_channels,
                               savefig=savefig)
-            if plot_dir is not None:
-                plt.close()
 
         # If used three channels or more for clustering, make 3D scatter plot
         # with the first three.
         elif len(clustering_channels) >= 3:
-            if plot_dir is not None:
-                savefig = '{}/clustering_{}.png'.format(plot_dir, plot_filename)
-            else:
-                savefig = None
             # Plot
             plt.figure(figsize=(8,6))
             fc.plot.scatter3d_and_projections(data_clustered,
                                               channels=clustering_channels[:3],
                                               savefig=savefig)
-            if plot_dir is not None:
-                plt.close()
+
+        if plot_dir is not None:
+            plt.close()
 
     # Initialize lists to acumulate results
     sc_all = []
