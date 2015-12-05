@@ -26,24 +26,10 @@ else:
 
 def clustering_gmm(data,
                    n_clusters=8,
-                   initialization='distance_sub',
                    tol=1e-7,
                    min_covar=1e-2):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
-
-    The likelihood maximization method used requires an initial parameter
-    choice for the Gaussian pdfs, and the results can be fairly sensitive
-    to it. `clustering_gmm` can perform two types of initialization, which
-    we have found work well with calibration beads data. On the first one,
-    the function group samples in `data` by their Euclidean distance to the
-    origin, Then, the function calculates the Gaussian Mixture parameters,
-    assuming that this clustering is correct. These parameters are used as
-    the initial conditions. The second initialization procedure also starts
-    by clustering based on distance to the origin. Then, for each cluster,
-    the 50% datapoints farther away from the mean are discarded, and the
-    rest are used to calculate the initial parameters. The parameter
-    `initialization` selects any of these two procedures.
 
     Parameters
     ----------
@@ -51,8 +37,6 @@ def clustering_gmm(data,
         NxD array to cluster.
     n_clusters : int, optional
         Number of clusters to find.
-    initialization : {'distance', 'distance_sub'}, optional
-        Initialization method.
     tol : float, optional
         Tolerance for convergence of GMM method. Passed directly to
         ``scikit-learn``'s GMM.
@@ -68,88 +52,76 @@ def clustering_gmm(data,
     Notes
     -----
     GMM finds clusters by fitting a linear combination of `n_clusters`
-    Gaussian probability density functions (pdf) to `data`, by likelihood
-    maximization.
+    Gaussian probability density functions (pdf) to `data` using
+    Expectation Maximization (EM).
+
+    GMM can be fairly sensitive to the initial parameter choice. To
+    generate a reasonable set of initial conditions, `clustering_gmm`
+    first divides all samples in `data` into `n_clusters` groups of the
+    same size based on their Euclidean distance to the origin. Then, for
+    each group, the 50% samples farther away from the mean are discarded.
+    The mean and covariance are calculated from the remaining samples of
+    each group, and used as initial conditions for the GMM EM algorithm.
 
     `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
-    library. For more information, consult their documentation.
+    library, with full covariance matrices for each cluster, and a fixed,
+    uniform set of weights. This means that `clustering_gmm` implicitly
+    assumes that all bead subpopulations have roughly the same amount of
+    events. For more information, consult ``scikit-learn``'s documentation.
 
     """
-    # Initialization method
-    if initialization == 'distance':
-        # Perform distance-based clustering
-        labels = fc.mef.clustering_distance(data, n_clusters)
-        labels_all = list(set(labels))
-        data_clustered = [data[labels == i] for i in labels_all]
-        
-        # Initialize parameters for GMM
-        weights = np.tile(1.0 / n_clusters, n_clusters)
-        means = np.array([np.mean(di, axis=0) for di in data_clustered])
-        
+    ###
+    # Parameter initialization
+    ###
+    weights = np.tile(1.0 / n_clusters, n_clusters)
+    means = []
+    covars = []
+
+    # Get distance and sort based on it
+    dist = np.sum(data**2., axis=1)
+    sorted_i = np.argsort(dist)
+
+    # Expected number of elements per cluster
+    n_per_cluster = data.shape[0]/float(n_clusters)
+
+    # Get means and covariances per cluster
+    # We will just use a fraction of ``1 - 2*discard_frac`` of the data.
+    # Data at the edges that actually corresponds to another cluster can
+    # really mess up the final result.
+    discard_frac = 0.25
+    for i in range(n_clusters):
+        il = int((i + discard_frac)*n_per_cluster)
+        ih = int((i + 1 - discard_frac)*n_per_cluster)
+        sorted_i_i = sorted_i[il:ih]
+        data_i = data[sorted_i_i]
+        means.append(np.mean(data_i, axis=0))
         if data.shape[1] == 1:
-            covars = [np.cov(di.T).reshape(1,1) for di in data_clustered]
+            covars.append(np.cov(data_i.T).reshape(1,1))
         else:
-            covars = [np.cov(di.T) for di in data_clustered]
+            covars.append(np.cov(data_i.T))
+    means = np.array(means)
 
-        # Initialize GMM object
-        gmm = GMM(n_components=n_clusters,
-                  tol=tol,
-                  min_covar=min_covar,
-                  covariance_type='full',
-                  params='mc',
-                  init_params='')
-        gmm.weight_ = weights
-        gmm.means_ = means
-        gmm.covars_ = covars
+    ###
+    # Run Gaussian Mixture Model Clustering
+    ###
 
-    elif initialization == 'distance_sub':
-        # Initialize parameters for GMM
-        weights = np.tile(1.0 / n_clusters, n_clusters)
-        means = []
-        covars = []
+    # Initialize GMM object
+    gmm = GMM(n_components=n_clusters,
+              tol=tol,
+              min_covar=min_covar,
+              covariance_type='full',
+              params='mc',
+              init_params='')
 
-        # Get distance and sort based on it
-        dist = np.sum(data**2., axis=1)
-        sorted_i = np.argsort(dist)
-
-        # Expected number of elements per cluster
-        n_per_cluster = data.shape[0]/float(n_clusters)
-
-        # Get the means and covariances per cluster
-        # We will just use a fraction of ``1 - 2*discard_frac`` of the data.
-        # Data at the edges that actually corresponds to another cluster can
-        # really mess up the final result.
-        discard_frac = 0.25
-        for i in range(n_clusters):
-            il = int((i + discard_frac)*n_per_cluster)
-            ih = int((i + 1 - discard_frac)*n_per_cluster)
-            sorted_i_i = sorted_i[il:ih]
-            data_i = data[sorted_i_i]
-            means.append(np.mean(data_i, axis=0))
-            if data.shape[1] == 1:
-                covars.append(np.cov(data_i.T).reshape(1,1))
-            else:
-                covars.append(np.cov(data_i.T))
-        means = np.array(means)
-
-        # Initialize GMM object
-        gmm = GMM(n_components=n_clusters,
-                  tol=tol,
-                  min_covar=min_covar,
-                  covariance_type='full',
-                  params='mc',
-                  init_params='')
-        gmm.weight_ = weights
-        gmm.means_ = means
-        gmm.covars_ = covars
-
-    else:
-        raise ValueError("initialization method {} not implemented"
-            .format(initialization))
+    # Set initial parameters
+    gmm.weight_ = weights
+    gmm.means_ = means
+    gmm.covars_ = covars
 
     # Fit 
     gmm.fit(data)
-    # Get labels using the responsibilities
+
+    # Get labels by sampling from the responsibilities
     # This avoids the complete elimination of a cluster if two or more clusters
     # have very similar means.
     resp = gmm.predict_proba(data)
