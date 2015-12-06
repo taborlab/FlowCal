@@ -154,7 +154,7 @@ def selection_proximity(populations,
 
     Returns
     -------
-    m : boolean array
+    selected_mask : boolean array
         Set of flags indicating whether a population has been selected.
 
     """
@@ -173,9 +173,9 @@ def selection_proximity(populations,
     pop_std[pop_std < min_std] = min_std
 
     # Return populations that don't cross either threshold
-    m = np.logical_and((pop_mean - std_mult_l*pop_std) > th_l,
-                       (pop_mean - std_mult_r*pop_std) < th_r)
-    return m
+    selected_mask = np.logical_and((pop_mean - std_mult_l*pop_std) > th_l,
+                                   (pop_mean - std_mult_r*pop_std) < th_r)
+    return selected_mask
 
 def fit_standard_curve(fl_channel, fl_mef):
     """
@@ -444,12 +444,12 @@ def get_transform_fxn(data_beads,
         Additional parameters to pass to `statistic_func`.
     selection_func : function, optional
         Function to use for bead population selection. Must have the
-        following signature: ``m = selection_func(data_list,
+        following signature: ``selected_mask = selection_func(data_list,
         **selection_params)``, where `data_list` is a list of FCSData
-        objects, each one cotaining the events of one population, and `m`
-        is a boolean array indicating whether the population has been
-        selected (True) or discarded (False). If None, don't use a
-        population selection procedure.
+        objects, each one cotaining the events of one population, and
+        `selected_mask` is a boolean array indicating whether the
+        population has been selected (True) or discarded (False). If None,
+        don't use a population selection procedure.
     selection_params : dict, optional
         Parameters to pass to the population selection method.
 
@@ -598,50 +598,24 @@ def get_transform_fxn(data_beads,
             print("  Fluorescence per population (Channel Units):")
             print("    " + str(stats_values))
 
-        # Plot
-        if plot:
-            # Get colors for populations
-            colors = [fc.plot.cmap_default(i)
-                      for i in np.linspace(0, 1, n_clusters)]
-            # Plot histograms
-            plt.figure(figsize=(8,4))
-            fc.plot.hist1d(data_clustered,
-                           channel=mef_channel,
-                           div=4,
-                           alpha=0.75)
-            # Plot histograms and populations
-            for c, i in zip(colors, cluster_sorted_ind):
-                # Peak values
-                p = stats_values[i]
-                ylim = plt.ylim()
-                plt.plot([p, p], [ylim[0], ylim[1]], color=c)
-                plt.ylim(ylim)
-            # Save and close
-            if plot_dir is not None:
-                plt.tight_layout()
-                plt.savefig('{}/hist_{}_{}.png'.format(plot_dir,
-                                                       mef_channel,
-                                                       plot_filename),
-                            dpi=fc.plot.savefig_dpi)
-                plt.close()
-
         ###
         # 3. Select populations to be used for fitting
         ###
 
         # Select populations based on selection_func
         if selection_func is not None:
-            m = selection_func([di[:, mef_channel]
+            selected_mask = selection_func([di[:, mef_channel]
                                 for di in data_clustered])
         else:
-            m = np.ones(n_clusters, dtype=bool)
+            selected_mask = np.ones(n_clusters, dtype=bool)
 
         # Discard values specified as nan in mef_values_channel
-        m = np.logical_and(m, ~np.isnan(mef_values_channel))
+        selected_mask = np.logical_and(selected_mask,
+                                       ~np.isnan(mef_values_channel))
 
         # Get selected channel and mef values
-        selected_channel = stats_values[m]
-        selected_mef = mef_values_channel[m]
+        selected_channel = stats_values[selected_mask]
+        selected_mef = mef_values_channel[selected_mask]
 
         # Accumulate results
         if full_output:
@@ -651,11 +625,45 @@ def get_transform_fxn(data_beads,
         # Print information
         if verbose:
             print("({}) Step 3: Population Selection".format(mef_channel))
-            print("  {} populations retained.".format(len(selected_channel)))
+            print("  {} populations selected.".format(len(selected_channel)))
             print("  Fluorescence of selected populations (Channel Units):")
             print("    " + str(selected_channel))
             print("  Fluorescence of selected populations (MEF Units):")
             print("    " + str(selected_mef))
+
+        # Plot
+        if plot:
+            # Get colors for each population. Colors are taken from the default
+            # colormap in fc.plot, if the population has been selected.
+            # Otherwise, the population is displayed in gray.
+            color_levels = np.linspace(0, 1, n_clusters)
+            colors = [fc.plot.cmap_default(level)
+                      if selected else (0.6, 0.6, 0.6)
+                      for selected, level in zip(selected_mask, color_levels)]
+
+            # Plot histograms
+            plt.figure(figsize=(8,4))
+            fc.plot.hist1d(data_clustered,
+                           channel=mef_channel,
+                           div=4,
+                           alpha=0.75,
+                           facecolor=colors)
+
+            # Plot a vertical line for each population, with an x coordinate
+            # corresponding to their statistic value.
+            ylim = plt.ylim()
+            for val, color in zip(stats_values, colors):
+                plt.plot([val, val], [ylim[0], ylim[1]], color=color)
+            plt.ylim(ylim)
+
+            # Save and close
+            if plot_dir is not None:
+                plt.tight_layout()
+                plt.savefig('{}/populations_{}_{}.png'.format(plot_dir,
+                                                              mef_channel,
+                                                              plot_filename),
+                            dpi=fc.plot.savefig_dpi)
+                plt.close()
 
         ###
         # 4. Get standard curve
