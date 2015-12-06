@@ -129,11 +129,11 @@ def clustering_gmm(data,
 
     return labels
 
-def population_selection_proximity(populations,
-                                   th_l=None,
-                                   th_r=None,
-                                   std_mult_l=2.5,
-                                   std_mult_r=2.5):
+def selection_proximity(populations,
+                        th_l=None,
+                        th_r=None,
+                        std_mult_l=2.5,
+                        std_mult_r=2.5):
     """
     Select populations based on proximity to a low and high thresholds.
 
@@ -335,10 +335,10 @@ def get_transform_fxn(data_beads,
                       clustering_func=clustering_gmm,
                       clustering_params={},
                       clustering_channels=None,
-                      population_stats_func=fc.stats.median,
-                      population_stats_params={},
-                      population_selection_func=population_selection_proximity,
-                      population_selection_params={},
+                      statistic_func=fc.stats.median,
+                      statistic_params={},
+                      selection_func=selection_proximity,
+                      selection_params={},
                       verbose=False,
                       plot=False,
                       plot_dir=None,
@@ -391,13 +391,13 @@ def get_transform_fxn(data_beads,
             fields:
             labels : array
                 Labels for each element in `data_beads`.
-        population_stats : dict
+        statistic : dict
             Results of the calculation of bead subpopulations'
             fluorescence, containing the following fields:
             values : list
                 The representative fluorescence values of each
                 subpopulation, for each channel in `mef_channels`.
-        population_selection : dict
+        selection : dict
             Results of the subpopulation selection step, containing the
             following fields:
             channel : list
@@ -434,24 +434,23 @@ def get_transform_fxn(data_beads,
         Channels used for clustering. If not specified, use `mef_channels`.
         If more than three channels are specified, and `plot` is True, only
         a 3D scatter plot will be produced, using the first three channels.
-    population_stats_func : function, optional
+    statistic_func : function, optional
         Function used to calculate the representative fluorescence of each
         subpopulation. Must have the following signature:
-        ``s = population_stats_func(data, **population_stats_params)``,
-        where `data` is a 1D FCSData object or 1Dnumpy array, and `s` is a
-        float. Statistical functions from numpy, scipy, or fc.stats are
-        valid options.
-    population_stats_params : dict, optional
-        Additional parameters to pass to `population_stats_func`.
-    population_selection_func : function, optional
+        ``s = statistic_func(data, **statistic_params)``, where `data` is a
+        1D FCSData object or 1Dnumpy array, and `s` is a float. Statistical
+        functions from numpy, scipy, or fc.stats are valid options.
+    statistic_params : dict, optional
+        Additional parameters to pass to `statistic_func`.
+    selection_func : function, optional
         Function to use for bead population selection. Must have the
-        following signature: ``m = population_selection_func(data_list,
-        **population_selection_params)``, where `data_list` is a list of
-        FCSData objects, each one cotaining the events of one population,
-        and `m` is a boolean array indicating whether the population has
-        been selected (True) or discarded (False). If None, don't use a
+        following signature: ``m = selection_func(data_list,
+        **selection_params)``, where `data_list` is a list of FCSData
+        objects, each one cotaining the events of one population, and `m`
+        is a boolean array indicating whether the population has been
+        selected (True) or discarded (False). If None, don't use a
         population selection procedure.
-    population_selection_params : dict, optional
+    selection_params : dict, optional
         Parameters to pass to the population selection method.
 
     Notes
@@ -544,7 +543,6 @@ def get_transform_fxn(data_beads,
 
         # If used one channel for clustering, make histogram
         if len(clustering_channels) == 1:
-            # Plot
             plt.figure(figsize=(8,4))
             fc.plot.hist1d(data_clustered,
                            channel=clustering_channels[0],
@@ -554,7 +552,6 @@ def get_transform_fxn(data_beads,
 
         # If used two channels for clustering, make 2D scatter plot
         elif len(clustering_channels) == 2:
-            # Plot
             plt.figure(figsize=(6,4))
             fc.plot.scatter2d(data_clustered,
                               channels=clustering_channels,
@@ -563,7 +560,6 @@ def get_transform_fxn(data_beads,
         # If used three channels or more for clustering, make 3D scatter plot
         # with the first three.
         elif len(clustering_channels) >= 3:
-            # Plot
             plt.figure(figsize=(8,6))
             fc.plot.scatter3d_and_projections(data_clustered,
                                               channels=clustering_channels[:3],
@@ -589,17 +585,19 @@ def get_transform_fxn(data_beads,
 
         # Calculate statistics
         stats_values = np.array(
-            [population_stats_func(di[:,mef_channel], **population_stats_params)
+            [statistic_func(di[:,mef_channel], **statistic_params)
              for di in data_clustered])
 
         # Accumulate results
         if full_output:
             stats_values_all.append(stats_values)
+
         # Print information
         if verbose:
             print("({}) Step 2: Population Statistic".format(mef_channel))
             print("  Fluorescence per population (Channel Units):")
             print("    " + str(stats_values))
+
         # Plot
         if plot:
             # Get colors for populations
@@ -631,10 +629,10 @@ def get_transform_fxn(data_beads,
         # 3. Select populations to be used for fitting
         ###
 
-        # Select populations based on population_selection_func
-        if population_selection_func is not None:
-            m = population_selection_func([di[:, mef_channel]
-                                           for di in data_clustered])
+        # Select populations based on selection_func
+        if selection_func is not None:
+            m = selection_func([di[:, mef_channel]
+                                for di in data_clustered])
         else:
             m = np.ones(n_clusters, dtype=bool)
 
@@ -714,12 +712,12 @@ def get_transform_fxn(data_beads,
         clustering_res = {}
         clustering_res['labels'] = labels
         # Population stats results
-        population_stats_res = {}
-        population_stats_res['values'] = stats_values_all
+        statistic_res = {}
+        statistic_res['values'] = stats_values_all
         # Population selection results
-        population_selection_res = {}
-        population_selection_res['channel'] = selected_channel_all
-        population_selection_res['mef'] = selected_mef_all
+        selection_res = {}
+        selection_res['channel'] = selected_channel_all
+        selection_res['mef'] = selected_mef_all
         # Fitting results
         fitting_res = {}
         fitting_res['sc'] = sc_all
@@ -729,14 +727,14 @@ def get_transform_fxn(data_beads,
         # Make namedtuple
         fields = ['transform_fxn',
                   'clustering',
-                  'population_stats',
-                  'population_selection',
+                  'statistic',
+                  'selection',
                   'fitting']
         MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
         out = MEFOutput(transform_fxn=transform_fxn,
                         clustering=clustering_res,
-                        population_stats=population_stats_res,
-                        population_selection=population_selection_res,
+                        statistic=statistic_res,
+                        selection=selection_res,
                         fitting=fitting_res)
         return out
     else:
