@@ -178,9 +178,9 @@ def selection_std(populations,
                                    (pop_mean - n_std_high*pop_std) < high)
     return selected_mask
 
-def fit_standard_curve(fl_channel, fl_mef):
+def fit_beads_autofluorescence(fl_channel, fl_mef):
     """
-    Fit a standard curve to known fluorescence values of calibration beads.
+    Fit a standard curve using a beads model with autofluorescence.
 
     Parameters
     ----------
@@ -191,13 +191,13 @@ def fit_standard_curve(fl_channel, fl_mef):
 
     Returns
     -------
-    sc : function
+    std_crv : function
         Standard curve that transforms fluorescence from channel units to
         MEF units.
-    sc_beads : function
+    beads_model : function
         Bead fluorescence model, mapping bead fluorescence in channel space
         to bead fluorescence in MEF units, without autofluorescence.
-    sc_params : array
+    beads_params : array
         Fitted parameters of the bead fluorescence model: ``[m, b,
         fl_mef_auto]``.
 
@@ -265,20 +265,20 @@ def fit_standard_curve(fl_channel, fl_mef):
     res = minimize(err_par, params, options = {'gtol': 1e-6})
 
     # Separate parameters
-    sc_params = res.x
+    beads_params = res.x
 
     # Beads model function
-    sc_beads = lambda x: fit_fun(sc_params, x)
+    beads_model = lambda x: fit_fun(beads_params, x)
 
     # Standard curve function
-    sc = lambda x: sc_fun(sc_params, x)
+    std_crv = lambda x: sc_fun(beads_params, x)
     
-    return (sc, sc_beads, sc_params)
+    return (std_crv, beads_model, beads_params)
 
 def plot_standard_curve(fl_channel,
                         fl_mef,
-                        sc_beads,
-                        sc_abs,
+                        beads_model,
+                        std_crv,
                         xlim=(0.,1023.),
                         ylim=(1.,1e8)):
     """
@@ -292,9 +292,9 @@ def plot_standard_curve(fl_channel,
     fl_mef : array_like
         Fluorescence of the calibration beads' subpopulations, in MEF
         units.
-    sc_beads : function
+    beads_model : function
         The calibration beads fluorescence model.
-    sc_abs : function
+    std_crv : function
         The standard curve (transformation function from channel number to
         MEF units).
 
@@ -316,11 +316,11 @@ def plot_standard_curve(fl_channel,
              label='Beads',
              color=standard_curve_colors[0])
     plt.plot(xdata,
-             sc_beads(xdata),
+             beads_model(xdata),
              label='Beads model',
              color=standard_curve_colors[1])
     plt.plot(xdata,
-             sc_abs(xdata),
+             std_crv(xdata),
              label='Standard curve',
              color=standard_curve_colors[2])
 
@@ -340,6 +340,8 @@ def get_transform_fxn(data_beads,
                       statistic_params={},
                       selection_func=selection_std,
                       selection_params={},
+                      fitting_func=fit_beads_autofluorescence,
+                      fitting_params={},
                       verbose=False,
                       plot=False,
                       plot_dir=None,
@@ -410,13 +412,13 @@ def get_transform_fxn(data_beads,
         fitting : dict
             Results of the model fitting step, containing the following
             fields:
-            sc : list
+            std_crv : list
                 Functions encoding the standard curves, for each channel in
                 `mef_channels`.
-            sc_beads : list
+            beads_model : list
                 Functions encoding the fluorescence model of the
                 calibration beads, for each channel in `mef_channels`.
-            sc_params : list
+            beads_params : list
                 Fitted parameters of the bead fluorescence model: ``[m, b,
                 fl_mef_auto]``, for each channel in `mef_chanels`.
 
@@ -452,7 +454,20 @@ def get_transform_fxn(data_beads,
         population has been selected (True) or discarded (False). If None,
         don't use a population selection procedure.
     selection_params : dict, optional
-        Parameters to pass to the population selection method.
+        Parameters to pass to the population selection function.
+    fitting_func : function, optional
+        Function used to fit the beads fluorescence model and obtain a
+        standard curve. Must have the following signature: ``std_crv,
+        beads_model, beads_params = fitting_func(fl_channel, fl_mef,
+        **fitting_params)``, where `std_crv` is a function implementing the
+        standard curve, `beads_model` is a function implementing the beads
+        fluorescence model, `beads_params` is an array containing the
+        fitted parameters of the beads model, and `fl_channel` and `fl_mef`
+        are the fluorescence values of the beads in channel units and MEF
+        units, respectively. Note that the standard curve and the fitted
+        beads model are not necessarily the same.
+    fitting_params : dict, optional
+        Parameters to pass to `fitting_func`.
 
     Notes
     -----
@@ -573,13 +588,13 @@ def get_transform_fxn(data_beads,
             plt.close()
 
     # Initialize lists to acumulate results
-    sc_all = []
+    std_crv_all = []
     if full_output:
         stats_values_all = []
         selected_channel_all = []
         selected_mef_all = []
-        sc_beads_all = []
-        sc_params_all =[]
+        beads_model_all = []
+        beads_params_all =[]
 
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
@@ -677,20 +692,21 @@ def get_transform_fxn(data_beads,
         ###
 
         # Fit
-        sc, sc_beads, sc_params = fit_standard_curve(
+        std_crv, beads_model, beads_params = fitting_func(
             selected_channel,
-            selected_mef)
+            selected_mef,
+            **fitting_params)
         # Accumulate results
-        sc_all.append(sc)
+        std_crv_all.append(std_crv)
         if full_output:
-            sc_beads_all.append(sc_beads)
-            sc_params_all.append(sc_params)
+            beads_model_all.append(beads_model)
+            beads_params_all.append(beads_params)
 
         # Print information
         if verbose:
             print("({}) Step 4: Standard Curve Fitting".format(mef_channel))
             print("  Parameters of bead fluorescence model:")
-            print("    " + str(sc_params))
+            print("    " + str(beads_params))
 
         # Plot
         if plot:
@@ -702,8 +718,8 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(6,4))
             plot_standard_curve(selected_channel,
                                 selected_mef,
-                                sc_beads,
-                                sc,
+                                beads_model,
+                                std_crv,
                                 xlim=(min_fl, max_fl))
             plt.xlabel('{} (Channel Units)'.format(mef_channel))
             plt.ylabel('MEF')
@@ -719,7 +735,7 @@ def get_transform_fxn(data_beads,
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
-                                      sc_list=sc_all,
+                                      sc_list=std_crv_all,
                                       sc_channels=mef_channel_all)
 
     if verbose:
@@ -738,9 +754,9 @@ def get_transform_fxn(data_beads,
         selection_res['mef'] = selected_mef_all
         # Fitting results
         fitting_res = {}
-        fitting_res['sc'] = sc_all
-        fitting_res['sc_beads'] = sc_beads_all
-        fitting_res['sc_params'] = sc_params_all
+        fitting_res['std_crv'] = std_crv_all
+        fitting_res['beads_model'] = beads_model_all
+        fitting_res['beads_params'] = beads_params_all
 
         # Make namedtuple
         fields = ['transform_fxn',
