@@ -25,7 +25,7 @@ else:
         palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
 
 def clustering_gmm(data,
-                   n_clusters=8,
+                   n_clusters,
                    tol=1e-7,
                    min_covar=1e-2):
     """
@@ -35,7 +35,7 @@ def clustering_gmm(data,
     ----------
     data : array_like
         NxD array to cluster.
-    n_clusters : int, optional
+    n_clusters : int
         Number of clusters to find.
     tol : float, optional
         Tolerance for convergence of GMM method. Passed directly to
@@ -64,9 +64,9 @@ def clustering_gmm(data,
     each group, and used as initial conditions for the GMM EM algorithm.
 
     `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
-    library, with full covariance matrices for each cluster, and a fixed,
+    library, with full covariance matrices for each cluster and a fixed,
     uniform set of weights. This means that `clustering_gmm` implicitly
-    assumes that all bead subpopulations have roughly the same amount of
+    assumes that all bead subpopulations have roughly the same number of
     events. For more information, consult ``scikit-learn``'s documentation.
 
     """
@@ -135,11 +135,11 @@ def selection_std(populations,
                   n_std_low=2.5,
                   n_std_high=2.5):
     """
-    Select populations whose elements are mostly within two thresholds.
+    Select populations if most of their elements are between two values.
 
     This function selects populations from `populations` if their means are
-    farther than `n_std_low` standard deviations from `low`, or
-    `n_std_high` standard deviations from `high`.
+    more than `n_std_low` standard deviations greater than `low`, and
+    `n_std_high` standard deviations lower than `high`.
 
     Parameters
     ----------
@@ -196,7 +196,7 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
         MEF units.
     beads_model : function
         Bead fluorescence model, mapping bead fluorescence in channel space
-        to bead fluorescence in MEF units, without autofluorescence.
+        to bead fluorescence in MEF units.
     beads_params : array
         Fitted parameters of the bead fluorescence model: ``[m, b,
         fl_mef_auto]``.
@@ -293,10 +293,9 @@ def plot_standard_curve(fl_channel,
         Fluorescence of the calibration beads' subpopulations, in MEF
         units.
     beads_model : function
-        The calibration beads fluorescence model.
+        Fluorescence model of the calibration beads.
     std_crv : function
-        The standard curve (transformation function from channel number to
-        MEF units).
+        The standard curve, mapping channel units to MEF units).
 
     Other parameters:
     -----------------
@@ -419,32 +418,32 @@ def get_transform_fxn(data_beads,
                 Functions encoding the fluorescence model of the
                 calibration beads, for each channel in `mef_channels`.
             beads_params : list
-                Fitted parameters of the bead fluorescence model: ``[m, b,
-                fl_mef_auto]``, for each channel in `mef_chanels`.
+                Fitted parameters of the bead fluorescence model, for each
+                channel in `mef_chanels`.
 
     Other parameters
     ----------------
     clustering_func : function, optional
         Function used for clustering, or identification of subpopulations.
-        The following signature is required: ``labels = clustering_func(
+        Must have the following signature: ``labels = clustering_func(
         data, n_clusters, **clustering_params)``, where `data` is a NxD
         FCSData object or numpy array, `n_clusters` is the expected number
         of bead subpopulations, and `labels` is a 1D numpy array of length
         N, assigning each event in `data` to one subpopulation.
     clustering_params : dict, optional
-        Keyword parameters to pass to clustering_func.
+        Additional keyword parameters to pass to `clustering_func`.
     clustering_channels : list, optional
         Channels used for clustering. If not specified, use `mef_channels`.
-        If more than three channels are specified, and `plot` is True, only
-        a 3D scatter plot will be produced, using the first three channels.
+        If more than three channels are specified and `plot` is True, only
+        a 3D scatter plot will be produced using the first three channels.
     statistic_func : function, optional
         Function used to calculate the representative fluorescence of each
         subpopulation. Must have the following signature:
         ``s = statistic_func(data, **statistic_params)``, where `data` is a
-        1D FCSData object or 1Dnumpy array, and `s` is a float. Statistical
+        1D FCSData object or numpy array, and `s` is a float. Statistical
         functions from numpy, scipy, or fc.stats are valid options.
     statistic_params : dict, optional
-        Additional parameters to pass to `statistic_func`.
+        Additional keyword parameters to pass to `statistic_func`.
     selection_func : function, optional
         Function to use for bead population selection. Must have the
         following signature: ``selected_mask = selection_func(data_list,
@@ -454,7 +453,7 @@ def get_transform_fxn(data_beads,
         population has been selected (True) or discarded (False). If None,
         don't use a population selection procedure.
     selection_params : dict, optional
-        Parameters to pass to the population selection function.
+        Additional keyword parameters to pass to `selection_func`.
     fitting_func : function, optional
         Function used to fit the beads fluorescence model and obtain a
         standard curve. Must have the following signature: ``std_crv,
@@ -467,7 +466,7 @@ def get_transform_fxn(data_beads,
         units, respectively. Note that the standard curve and the fitted
         beads model are not necessarily the same.
     fitting_params : dict, optional
-        Parameters to pass to `fitting_func`.
+        Additional keyword parameters to pass to `fitting_func`.
 
     Notes
     -----
