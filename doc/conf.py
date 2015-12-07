@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.abspath('../fc'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'numpydoc'
 ]
 
