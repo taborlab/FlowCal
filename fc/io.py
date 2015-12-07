@@ -1,5 +1,5 @@
 """
-Classes and utiliy functions for interpreting FCS files.
+Classes and utiliy functions for reading FCS files.
 
 """
 
@@ -43,8 +43,7 @@ def read_fcs_header_segment(buf, begin=0):
     -----
     Blank ANALYSIS segment offsets are converted to zeros.
 
-    OTHER segment offsets are ignored (see FCS standards for more
-    information about OTHER segments).
+    OTHER segment offsets are ignored (see [1]_, [2]_, and [3]_).
 
     References
     ----------
@@ -132,10 +131,10 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     this function can also be used to parse ANALYSIS segments.
 
     This function does not automatically parse supplemental TEXT
-    segments (see FCS3.0 [2]_). Supplemental TEXT segments and regular
-    TEXT segments are parsed the same way, though, so this function
-    can be manually directed to parse a supplemental TEXT segment by
-    providing the appropriate `begin` and `end` values.
+    segments (see FCS3.0 [2] and FCS3.1 [3]). Supplemental TEXT segments
+    and regular TEXT segments are parsed the same way, though, so this
+    function can be manually directed to parse a supplemental TEXT segment
+    by providing the appropriate `begin` and `end` values.
 
     References
     ----------
@@ -538,7 +537,7 @@ class FCSFile(object):
         - One data set per file.
 
     For more information on the TEXT segment keywords (e.g. $MODE,
-    $DATATYPE, etc.), consult the FCS standards.
+    $DATATYPE, etc.), see [1]_, [2]_, and [3]_.
 
     References
     ----------
@@ -787,11 +786,11 @@ class FCSData(np.ndarray):
     infile : str or file-like
         Reference to associated FCS file.
     text : dict
-        Dictionary of keyword-value entries from TEXT segment and optional
-        supplemental TEXT segment of FCS file.
-    analysis : dict
-        Dictionary of keyword-value entries from ANALYSIS segment of FCS
+        Dictionary of keyword-value entries from TEXT segment of the FCS
         file.
+    analysis : dict
+        Dictionary of keyword-value entries from ANALYSIS segment of the
+        FCS file.
     time_step : float
         Time step of the time channel.
     acquisition_start_time : time or datetime
@@ -805,15 +804,15 @@ class FCSData(np.ndarray):
 
     Methods
     -------
-    amplification_type(channels=None)
+    amplification_type
         Get the amplification type used for the specified channel(s).
-    detector_voltage(channels=None)
+    detector_voltage
         Get the detector voltage used for the specified channel(s).
-    amplifier_gain(channels=None)
+    amplifier_gain
         Get the amplifier gain used for the specified channel(s).
-    domain(channels=None)
+    domain
         Get the domain of the specified channel(s).
-    hist_bin_edges(channels=None)
+    hist_bin_edges
         Get histogram bin edges for the specified channel(s).
 
     Notes
@@ -821,6 +820,8 @@ class FCSData(np.ndarray):
     `FCSData` uses `FCSFile` to parse an FCS file. All restrictions on the
     FCS file format and the Exceptions spcecified for FCSFile also apply
     to FCSData.
+
+    Parsing of some non-standard files is supported [4]_.
 
     References
     ----------
@@ -837,7 +838,7 @@ class FCSData(np.ndarray):
     .. [3] J. Spidlen, et al, "Data File Standard for Flow Cytometry,
        version FCS 3.1," Cytometry A vol 77A, pp 97-100, 2009, PMID
        19937951.
-    
+
     .. [4] R. Hicks, "BD$WORD file header fields,"
        https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
 
@@ -896,7 +897,9 @@ class FCSData(np.ndarray):
     @property
     def text(self):
         """
-        Dictionary of key-value entries from TEXT segment and optional
+        Dictionary of key-value entries from the TEXT segment.
+
+        `text` includes items from the TEXT segment and optional
         supplemental TEXT segment.
 
         """
@@ -905,7 +908,7 @@ class FCSData(np.ndarray):
     @property
     def analysis(self):
         """
-        Dictionary of key-value entries from ANALYSIS segment.
+        Dictionary of key-value entries from the ANALYSIS segment.
 
         """
         return self._analysis
