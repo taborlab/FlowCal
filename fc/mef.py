@@ -129,27 +129,28 @@ def clustering_gmm(data,
 
     return labels
 
-def selection_proximity(populations,
-                        th_l=None,
-                        th_r=None,
-                        std_mult_l=2.5,
-                        std_mult_r=2.5):
+def selection_std(populations,
+                  low=None,
+                  high=None,
+                  n_std_low=2.5,
+                  n_std_high=2.5):
     """
-    Select populations based on proximity to a low and high thresholds.
+    Select populations whose elements are mostly within two thresholds.
 
     This function selects populations from `populations` if their means are
-    farther than `std_mult_l` standard deviations to `th_l`, or
-    `std_mult_r` standard deviations to `th_r`.
+    farther than `n_std_low` standard deviations from `low`, or
+    `n_std_high` standard deviations from `high`.
 
     Parameters
     ----------
-    populations : list of FCSData objects
+    populations : list of arrays or FCSData objects
         Populations to select or discard.
-    th_l, th_r : int or float, optional
+    low, high : int or float, optional
         Left and right threshold. If None, use 0.015 of the lowest value
-        and 0.0985 of the highest value in the first population's domain.
-    std_mult_l, std_mult_r : float, optional
-        Number of standard deviations from `th_l` and `th_r`, respectively,
+        and 0.0985 of the highest value in the first population's `domain`,
+        if available.
+    n_std_low, n_std_high : float, optional
+        Number of standard deviations from `low` and `high`, respectively,
         that a population's mean has to be closer than to be discarded.
 
     Returns
@@ -159,10 +160,10 @@ def selection_proximity(populations,
 
     """
     # Default thresholds
-    if th_l is None:
-        th_l = 0.015*populations[0].domain(0)[0]
-    if th_r is None:
-        th_r = 0.985*populations[0].domain(0)[-1]
+    if low is None:
+        low = 0.015*populations[0].domain(0)[0]
+    if high is None:
+        high = 0.985*populations[0].domain(0)[-1]
 
     # Calculate means and standard deviations
     pop_mean = np.array([fc.stats.mean(p) for p in populations])
@@ -173,8 +174,8 @@ def selection_proximity(populations,
     pop_std[pop_std < min_std] = min_std
 
     # Return populations that don't cross either threshold
-    selected_mask = np.logical_and((pop_mean - std_mult_l*pop_std) > th_l,
-                                   (pop_mean - std_mult_r*pop_std) < th_r)
+    selected_mask = np.logical_and((pop_mean - n_std_low*pop_std) > low,
+                                   (pop_mean - n_std_high*pop_std) < high)
     return selected_mask
 
 def fit_standard_curve(fl_channel, fl_mef):
@@ -337,7 +338,7 @@ def get_transform_fxn(data_beads,
                       clustering_channels=None,
                       statistic_func=fc.stats.median,
                       statistic_params={},
-                      selection_func=selection_proximity,
+                      selection_func=selection_std,
                       selection_params={},
                       verbose=False,
                       plot=False,
@@ -502,6 +503,7 @@ def get_transform_fxn(data_beads,
     ###
     # 1. Clustering
     ###
+
     # If clustering channels not specified, use channels in mef_channels
     if clustering_channels is None:
         clustering_channels = mef_channels
@@ -516,21 +518,23 @@ def get_transform_fxn(data_beads,
 
     # Separate events corresponding to each cluster
     labels_all = np.array(list(set(labels)))
-    data_clustered = [data_beads[labels == i] for i in labels_all]
+    populations = [data_beads[labels == i] for i in labels_all]
 
-    # Sort clusters based on distance to the origin
+    # Sort populations based on distance to the origin
     cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
-                    for di in data_clustered]
+                    for di in populations]
     cluster_sorted_ind = np.argsort(cluster_dist)
-    data_clustered = [data_clustered[i] for i in cluster_sorted_ind]
+    populations = [populations[i] for i in cluster_sorted_ind]
 
     # Print information
     if verbose:
+        # Calculate and display percentage of events on each population
+        data_count = np.array([di.shape[0] for di in populations])
+        data_perc = data_count * 100.0 / data_count.sum()
+
+        # Print information
         print("Step 1: Clustering")
         print("  Number of populations to find: {}".format(n_clusters))
-        # Calculate percentage of each cluster
-        data_count = np.array([di.shape[0] for di in data_clustered])
-        data_perc = data_count * 100.0 / data_count.sum()
         print("  Percentage of events in each population:")
         print("    " + str(data_perc))
 
@@ -544,7 +548,7 @@ def get_transform_fxn(data_beads,
         # If used one channel for clustering, make histogram
         if len(clustering_channels) == 1:
             plt.figure(figsize=(8,4))
-            fc.plot.hist1d(data_clustered,
+            fc.plot.hist1d(populations,
                            channel=clustering_channels[0],
                            div=4,
                            alpha=0.75,
@@ -553,7 +557,7 @@ def get_transform_fxn(data_beads,
         # If used two channels for clustering, make 2D scatter plot
         elif len(clustering_channels) == 2:
             plt.figure(figsize=(6,4))
-            fc.plot.scatter2d(data_clustered,
+            fc.plot.scatter2d(populations,
                               channels=clustering_channels,
                               savefig=savefig)
 
@@ -561,7 +565,7 @@ def get_transform_fxn(data_beads,
         # with the first three.
         elif len(clustering_channels) >= 3:
             plt.figure(figsize=(8,6))
-            fc.plot.scatter3d_and_projections(data_clustered,
+            fc.plot.scatter3d_and_projections(populations,
                                               channels=clustering_channels[:3],
                                               savefig=savefig)
 
@@ -579,14 +583,17 @@ def get_transform_fxn(data_beads,
 
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
+
+        populations_channel = [pi[:, mef_channel] for pi in populations]
+
         ###
         # 2. Calculate statistics in each subpopulation.
         ###
 
         # Calculate statistics
-        stats_values = np.array(
-            [statistic_func(di[:,mef_channel], **statistic_params)
-             for di in data_clustered])
+        stats_values = [statistic_func(pi, **statistic_params)
+                        for pi in populations_channel]
+        stats_values = np.array(stats_values)
 
         # Accumulate results
         if full_output:
@@ -604,8 +611,8 @@ def get_transform_fxn(data_beads,
 
         # Select populations based on selection_func
         if selection_func is not None:
-            selected_mask = selection_func([di[:, mef_channel]
-                                for di in data_clustered])
+            selected_mask = selection_func([pi for pi in populations_channel],
+                                           **selection_params)
         else:
             selected_mask = np.ones(n_clusters, dtype=bool)
 
@@ -643,7 +650,7 @@ def get_transform_fxn(data_beads,
 
             # Plot histograms
             plt.figure(figsize=(8,4))
-            fc.plot.hist1d(data_clustered,
+            fc.plot.hist1d(populations,
                            channel=mef_channel,
                            div=4,
                            alpha=0.75,
@@ -684,11 +691,13 @@ def get_transform_fxn(data_beads,
             print("({}) Step 4: Standard Curve Fitting".format(mef_channel))
             print("  Parameters of bead fluorescence model:")
             print("    " + str(sc_params))
+
         # Plot
         if plot:
             # Get channel range
-            min_fl = data_clustered[0].domain(mef_channel)[0]
-            max_fl = data_clustered[0].domain(mef_channel)[-1]
+            min_fl = populations[0].domain(mef_channel)[0]
+            max_fl = populations[0].domain(mef_channel)[-1]
+
             # Plot standard curve
             plt.figure(figsize=(6,4))
             plot_standard_curve(selected_channel,
@@ -698,6 +707,7 @@ def get_transform_fxn(data_beads,
                                 xlim=(min_fl, max_fl))
             plt.xlabel('{} (Channel Units)'.format(mef_channel))
             plt.ylabel('MEF')
+
             # Save if required
             if plot_dir is not None:
                 plt.tight_layout()
