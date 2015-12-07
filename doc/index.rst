@@ -11,7 +11,7 @@ Getting Started
 ---------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation.rst
    tutorial_excel.rst
@@ -20,8 +20,8 @@ Getting Started
 More Information
 ----------------
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   api_reference.rst
+   reference/modules.rst
    contribute.rst
    FlowCal on Github <https://www.github.com/rice-bioe/fc>
