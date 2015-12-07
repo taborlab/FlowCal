@@ -844,28 +844,34 @@ class FCSData(np.ndarray):
     Examples
     --------
     Load an FCS file into an FCSData object
+
     >>> import fc
     >>> d = fc.io.FCSData('test/Data001.fcs')
 
     Check channel names
+
     >>> print d.channels
     ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time')
 
     Check the size of FCSData
+
     >>> print d.shape
     (20949, 6)
 
     Get the first 100 events
+
     >>> d_sub = d[:100]
     >>> print d_sub.shape
     (100, 6)
 
     Retain only fluorescence channels
+
     >>> d_fl = d[:, ['FL1-H', 'FL2-H', 'FL3-H']]
     >>> d_fl.channels
     ('FL1-H', 'FL2-H', 'FL3-H')
 
     Channel slicing can also be done with integer indices
+
     >>> d_fl_2 = d[:, [2, 3, 4]]
     >>> print d_fl_2.channels
     ('FL1-H', 'FL2-H', 'FL3-H')
