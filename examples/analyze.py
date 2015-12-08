@@ -72,8 +72,7 @@ if __name__ == "__main__":
     print("\nCalculating standard curve...")
     peaks_mef = np.array([mef_values[chi] for chi in mef_channels])
     to_mef = fc.mef.get_transform_fxn(gated_beads_data, peaks_mef, 
-                    cluster_method = 'gmm', 
-                    cluster_channels = fl_channels,
+                    clustering_channels = fl_channels,
                     mef_channels = mef_channels, verbose = True, 
                     plot = True, plot_dir = beads_plot_dir)
 
