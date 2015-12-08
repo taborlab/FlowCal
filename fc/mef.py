@@ -352,14 +352,14 @@ def plot_standard_curve(fl_channel,
 def get_transform_fxn(data_beads,
                       mef_values,
                       mef_channels,
-                      clustering_func=clustering_gmm,
+                      clustering_fxn=clustering_gmm,
                       clustering_params={},
                       clustering_channels=None,
-                      statistic_func=fc.stats.median,
+                      statistic_fxn=fc.stats.median,
                       statistic_params={},
-                      selection_func=selection_std,
+                      selection_fxn=selection_std,
                       selection_params={},
-                      fitting_func=fit_beads_autofluorescence,
+                      fitting_fxn=fit_beads_autofluorescence,
                       fitting_params={},
                       verbose=False,
                       plot=False,
@@ -443,41 +443,41 @@ def get_transform_fxn(data_beads,
 
     Other parameters
     ----------------
-    clustering_func : function, optional
+    clustering_fxn : function, optional
         Function used for clustering, or identification of subpopulations.
-        Must have the following signature: ``labels = clustering_func(
+        Must have the following signature: ``labels = clustering_fxn(
         data, n_clusters, **clustering_params)``, where `data` is a NxD
         FCSData object or numpy array, `n_clusters` is the expected number
         of bead subpopulations, and `labels` is a 1D numpy array of length
         N, assigning each event in `data` to one subpopulation.
     clustering_params : dict, optional
-        Additional keyword parameters to pass to `clustering_func`.
+        Additional keyword parameters to pass to `clustering_fxn`.
     clustering_channels : list, optional
         Channels used for clustering. If not specified, use `mef_channels`.
         If more than three channels are specified and `plot` is True, only
         a 3D scatter plot will be produced using the first three channels.
-    statistic_func : function, optional
+    statistic_fxn : function, optional
         Function used to calculate the representative fluorescence of each
         subpopulation. Must have the following signature:
-        ``s = statistic_func(data, **statistic_params)``, where `data` is a
+        ``s = statistic_fxn(data, **statistic_params)``, where `data` is a
         1D FCSData object or numpy array, and `s` is a float. Statistical
         functions from numpy, scipy, or fc.stats are valid options.
     statistic_params : dict, optional
-        Additional keyword parameters to pass to `statistic_func`.
-    selection_func : function, optional
+        Additional keyword parameters to pass to `statistic_fxn`.
+    selection_fxn : function, optional
         Function to use for bead population selection. Must have the
-        following signature: ``selected_mask = selection_func(data_list,
+        following signature: ``selected_mask = selection_fxn(data_list,
         **selection_params)``, where `data_list` is a list of FCSData
         objects, each one cotaining the events of one population, and
         `selected_mask` is a boolean array indicating whether the
         population has been selected (True) or discarded (False). If None,
         don't use a population selection procedure.
     selection_params : dict, optional
-        Additional keyword parameters to pass to `selection_func`.
-    fitting_func : function, optional
+        Additional keyword parameters to pass to `selection_fxn`.
+    fitting_fxn : function, optional
         Function used to fit the beads fluorescence model and obtain a
         standard curve. Must have the following signature: ``std_crv,
-        beads_model, beads_params = fitting_func(fl_channel, fl_mef,
+        beads_model, beads_params = fitting_fxn(fl_channel, fl_mef,
         **fitting_params)``, where `std_crv` is a function implementing the
         standard curve, `beads_model` is a function implementing the beads
         fluorescence model, `beads_params` is an array containing the
@@ -486,7 +486,7 @@ def get_transform_fxn(data_beads,
         units, respectively. Note that the standard curve and the fitted
         beads model are not necessarily the same.
     fitting_params : dict, optional
-        Additional keyword parameters to pass to `fitting_func`.
+        Additional keyword parameters to pass to `fitting_fxn`.
 
     Notes
     -----
@@ -546,9 +546,9 @@ def get_transform_fxn(data_beads,
     n_clusters = mef_values.shape[1]
 
     # Run clustering function
-    labels = clustering_func(data_beads[:, clustering_channels],
-                             n_clusters,
-                             **clustering_params)
+    labels = clustering_fxn(data_beads[:, clustering_channels],
+                            n_clusters,
+                            **clustering_params)
 
     # Separate events corresponding to each cluster
     unique_labels = np.array(list(set(labels)))
@@ -628,7 +628,7 @@ def get_transform_fxn(data_beads,
         ###
 
         # Calculate statistics
-        stats_values = [statistic_func(population, **statistic_params)
+        stats_values = [statistic_fxn(population, **statistic_params)
                         for population in populations_channel]
         stats_values = np.array(stats_values)
 
@@ -646,9 +646,9 @@ def get_transform_fxn(data_beads,
         # 3. Select populations to be used for fitting
         ###
 
-        # Select populations based on selection_func
-        if selection_func is not None:
-            selected_mask = selection_func(
+        # Select populations based on selection_fxn
+        if selection_fxn is not None:
+            selected_mask = selection_fxn(
                 [population for population in populations_channel],
                 **selection_params)
         else:
@@ -715,7 +715,7 @@ def get_transform_fxn(data_beads,
         ###
 
         # Fit
-        std_crv, beads_model, beads_params = fitting_func(
+        std_crv, beads_model, beads_params = fitting_fxn(
             selected_channel,
             selected_mef,
             **fitting_params)
