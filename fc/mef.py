@@ -609,13 +609,13 @@ def get_transform_fxn(data_beads,
             plt.close()
 
     # Initialize lists to acumulate results
-    std_crv_all = []
+    std_crv_out = []
     if full_output:
-        stats_values_all = []
-        selected_channel_all = []
-        selected_mef_all = []
-        beads_model_all = []
-        beads_params_all =[]
+        stats_values_out = []
+        selected_channel_out = []
+        selected_mef_out = []
+        beads_model_out = []
+        beads_params_out =[]
 
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channels, mef_values):
@@ -634,7 +634,7 @@ def get_transform_fxn(data_beads,
 
         # Accumulate results
         if full_output:
-            stats_values_all.append(stats_values)
+            stats_values_out.append(stats_values)
 
         # Print information
         if verbose:
@@ -664,8 +664,8 @@ def get_transform_fxn(data_beads,
 
         # Accumulate results
         if full_output:
-            selected_channel_all.append(selected_channel)
-            selected_mef_all.append(selected_mef)
+            selected_channel_out.append(selected_channel)
+            selected_mef_out.append(selected_mef)
 
         # Print information
         if verbose:
@@ -720,10 +720,10 @@ def get_transform_fxn(data_beads,
             selected_mef,
             **fitting_params)
         # Accumulate results
-        std_crv_all.append(std_crv)
+        std_crv_out.append(std_crv)
         if full_output:
-            beads_model_all.append(beads_model)
-            beads_params_all.append(beads_params)
+            beads_model_out.append(beads_model)
+            beads_params_out.append(beads_params)
 
         # Print information
         if verbose:
@@ -758,7 +758,7 @@ def get_transform_fxn(data_beads,
 
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
-                                      sc_list=std_crv_all,
+                                      sc_list=std_crv_out,
                                       sc_channels=mef_channels)
 
     if verbose:
@@ -770,16 +770,16 @@ def get_transform_fxn(data_beads,
         clustering_res['labels'] = labels
         # Population stats results
         statistic_res = {}
-        statistic_res['values'] = stats_values_all
+        statistic_res['values'] = stats_values_out
         # Population selection results
         selection_res = {}
-        selection_res['channel'] = selected_channel_all
-        selection_res['mef'] = selected_mef_all
+        selection_res['channel'] = selected_channel_out
+        selection_res['mef'] = selected_mef_out
         # Fitting results
         fitting_res = {}
-        fitting_res['std_crv'] = std_crv_all
-        fitting_res['beads_model'] = beads_model_all
-        fitting_res['beads_params'] = beads_params_all
+        fitting_res['std_crv'] = std_crv_out
+        fitting_res['beads_model'] = beads_model_out
+        fitting_res['beads_params'] = beads_params_out
 
         # Make namedtuple
         fields = ['transform_fxn',
