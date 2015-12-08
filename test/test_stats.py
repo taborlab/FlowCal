@@ -8,11 +8,11 @@ import unittest
 import numpy as np
 import scipy
 
-import fc.stats
+import FlowCal.stats
 
 class TestMean(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.mean.
+    Test proper behavior of FlowCal.stats.mean.
 
     """
     def setUp(self):
@@ -20,14 +20,14 @@ class TestMean(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.mean(self.a)
+        s_fc = FlowCal.stats.mean(self.a)
         s_lib = np.mean(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
@@ -38,7 +38,7 @@ class TestMean(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.mean(self.d)
+        s_fc = FlowCal.stats.mean(self.d)
         s_lib = np.mean(self.d.view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
@@ -49,7 +49,7 @@ class TestMean(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.mean(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.mean(self.d[:, 'FL1-H'])
         s_lib = np.mean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -61,7 +61,7 @@ class TestMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.mean(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.mean(self.d, channels='FL1-H')
         s_lib = np.mean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -73,7 +73,8 @@ class TestMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.mean(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.mean(self.d,
+                                  channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = np.mean(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (3,))
@@ -81,7 +82,7 @@ class TestMean(unittest.TestCase):
 
 class TestGeometricMean(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.gmean.
+    Test proper behavior of FlowCal.stats.gmean.
 
     """
     def setUp(self):
@@ -89,14 +90,14 @@ class TestGeometricMean(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.gmean(self.a)
+        s_fc = FlowCal.stats.gmean(self.a)
         s_lib = scipy.stats.gmean(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
@@ -107,7 +108,7 @@ class TestGeometricMean(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.gmean(self.d)
+        s_fc = FlowCal.stats.gmean(self.d)
         s_lib = scipy.stats.gmean(self.d.view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
@@ -118,7 +119,7 @@ class TestGeometricMean(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.gmean(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.gmean(self.d[:, 'FL1-H'])
         s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -130,7 +131,7 @@ class TestGeometricMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.gmean(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.gmean(self.d, channels='FL1-H')
         s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -142,7 +143,7 @@ class TestGeometricMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.gmean(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.gmean(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = scipy.stats.gmean(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (3,))
@@ -150,7 +151,7 @@ class TestGeometricMean(unittest.TestCase):
 
 class TestMedian(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.median.
+    Test proper behavior of FlowCal.stats.median.
 
     """
     def setUp(self):
@@ -158,14 +159,14 @@ class TestMedian(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.median(self.a)
+        s_fc = FlowCal.stats.median(self.a)
         s_lib = np.median(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
@@ -176,7 +177,7 @@ class TestMedian(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.median(self.d)
+        s_fc = FlowCal.stats.median(self.d)
         s_lib = np.median(self.d.view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
@@ -187,7 +188,7 @@ class TestMedian(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.median(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.median(self.d[:, 'FL1-H'])
         s_lib = np.median(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -199,7 +200,7 @@ class TestMedian(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.median(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.median(self.d, channels='FL1-H')
         s_lib = np.median(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -211,7 +212,8 @@ class TestMedian(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.median(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.median(self.d,
+                                    channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = np.median(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (3,))
@@ -219,7 +221,7 @@ class TestMedian(unittest.TestCase):
 
 class TestMode(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.median.
+    Test proper behavior of FlowCal.stats.median.
 
     """
     def setUp(self):
@@ -227,14 +229,14 @@ class TestMode(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.mode(self.a)
+        s_fc = FlowCal.stats.mode(self.a)
         s_lib = scipy.stats.mode(self.a, axis=0)[0][0]
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
@@ -245,7 +247,7 @@ class TestMode(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.mode(self.d)
+        s_fc = FlowCal.stats.mode(self.d)
         s_lib = scipy.stats.mode(self.d.view(np.ndarray), axis=0)[0][0]
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
@@ -256,7 +258,7 @@ class TestMode(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.mode(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.mode(self.d[:, 'FL1-H'])
         s_lib = scipy.stats.mode(self.d[:, 'FL1-H'].view(np.ndarray))[0][0]
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -268,7 +270,7 @@ class TestMode(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.mode(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.mode(self.d, channels='FL1-H')
         s_lib = scipy.stats.mode(self.d[:, 'FL1-H'].view(np.ndarray))[0][0]
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -280,7 +282,7 @@ class TestMode(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.mode(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.mode(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = scipy.stats.mode(self.d[:, [2, 3, 4]].view(np.ndarray),
                                  axis=0)[0][0]
         self.assertIsInstance(s_fc, type(s_lib))
@@ -289,7 +291,7 @@ class TestMode(unittest.TestCase):
 
 class TestStd(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.std.
+    Test proper behavior of FlowCal.stats.std.
 
     """
     def setUp(self):
@@ -297,14 +299,14 @@ class TestStd(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.std(self.a)
+        s_fc = FlowCal.stats.std(self.a)
         s_lib = np.std(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
@@ -315,7 +317,7 @@ class TestStd(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.std(self.d)
+        s_fc = FlowCal.stats.std(self.d)
         s_lib = np.std(self.d.view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
@@ -326,7 +328,7 @@ class TestStd(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.std(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.std(self.d[:, 'FL1-H'])
         s_lib = np.std(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -338,7 +340,7 @@ class TestStd(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.std(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.std(self.d, channels='FL1-H')
         s_lib = np.std(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
@@ -350,7 +352,7 @@ class TestStd(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.std(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.std(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = np.std(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (3,))
@@ -358,7 +360,7 @@ class TestStd(unittest.TestCase):
 
 class TestCv(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.cv.
+    Test proper behavior of FlowCal.stats.cv.
 
     """
     def setUp(self):
@@ -366,14 +368,14 @@ class TestCv(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.cv(self.a)
+        s_fc = FlowCal.stats.cv(self.a)
         s_lib = np.std(self.a, axis=0) \
                     / np.mean(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -385,7 +387,7 @@ class TestCv(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.cv(self.d)
+        s_fc = FlowCal.stats.cv(self.d)
         s_lib = np.std(self.d.view(np.ndarray), axis=0) \
                     / np.mean(self.d.view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -397,7 +399,7 @@ class TestCv(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.cv(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.cv(self.d[:, 'FL1-H'])
         s_lib = np.std(self.d[:, 'FL1-H'].view(np.ndarray)) \
                     / np.mean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
@@ -410,7 +412,7 @@ class TestCv(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.cv(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.cv(self.d, channels='FL1-H')
         s_lib = np.std(self.d[:, 'FL1-H'].view(np.ndarray)) \
                     / np.mean(self.d[:, 'FL1-H'].view(np.ndarray))
         self.assertIsInstance(s_fc, type(s_lib))
@@ -423,7 +425,7 @@ class TestCv(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.cv(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.cv(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = np.std(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0) \
                     / np.mean(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -432,7 +434,7 @@ class TestCv(unittest.TestCase):
 
 class TestIqr(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.iqr.
+    Test proper behavior of FlowCal.stats.iqr.
 
     """
     def setUp(self):
@@ -440,14 +442,14 @@ class TestIqr(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.iqr(self.a)
+        s_fc = FlowCal.stats.iqr(self.a)
         s_lib = np.percentile(self.a, 75, axis=0) \
                     - np.percentile(self.a, 25, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -459,7 +461,7 @@ class TestIqr(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.iqr(self.d)
+        s_fc = FlowCal.stats.iqr(self.d)
         s_lib = np.percentile(self.d.view(np.ndarray), 75, axis=0) \
                     - np.percentile(self.d.view(np.ndarray), 25, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -471,7 +473,7 @@ class TestIqr(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.iqr(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.iqr(self.d[:, 'FL1-H'])
         s_lib = np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 75) \
                     - np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 25)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -484,7 +486,7 @@ class TestIqr(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.iqr(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.iqr(self.d, channels='FL1-H')
         s_lib = np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 75) \
                     - np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 25)
         self.assertIsInstance(s_fc, type(s_lib))
@@ -497,7 +499,7 @@ class TestIqr(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.iqr(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.iqr(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = np.percentile(self.d[:, [2, 3, 4]].view(np.ndarray),
                               75, axis=0) \
                     - np.percentile(self.d[:, [2, 3, 4]].view(np.ndarray),
@@ -508,7 +510,7 @@ class TestIqr(unittest.TestCase):
 
 class TestRcv(unittest.TestCase):
     """
-    Test proper behavior of fc.stats.rcv.
+    Test proper behavior of FlowCal.stats.rcv.
 
     """
     def setUp(self):
@@ -516,14 +518,14 @@ class TestRcv(unittest.TestCase):
         self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
                            [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
         # FCSFile
-        self.d = fc.io.FCSData('test/Data001.fcs')
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
 
     def test_array(self):
         """
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = fc.stats.rcv(self.a)
+        s_fc = FlowCal.stats.rcv(self.a)
         s_lib = (np.percentile(self.a, 75, axis=0) \
                     - np.percentile(self.a, 25, axis=0)) \
                     / np.median(self.a, axis=0)
@@ -536,7 +538,7 @@ class TestRcv(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = fc.stats.rcv(self.d)
+        s_fc = FlowCal.stats.rcv(self.d)
         s_lib = (np.percentile(self.d.view(np.ndarray), 75, axis=0) \
                     - np.percentile(self.d.view(np.ndarray), 25, axis=0)) \
                     / np.median(self.d.view(np.ndarray), axis=0)
@@ -549,7 +551,7 @@ class TestRcv(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = fc.stats.rcv(self.d[:, 'FL1-H'])
+        s_fc = FlowCal.stats.rcv(self.d[:, 'FL1-H'])
         s_lib = (np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 75) \
                     - np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 25)) \
                     / np.median(self.d[:, 'FL1-H'].view(np.ndarray), axis=0)
@@ -563,7 +565,7 @@ class TestRcv(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.rcv(self.d, channels='FL1-H')
+        s_fc = FlowCal.stats.rcv(self.d, channels='FL1-H')
         s_lib = (np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 75) \
                     - np.percentile(self.d[:, 'FL1-H'].view(np.ndarray), 25)) \
                     / np.median(self.d[:, 'FL1-H'].view(np.ndarray), axis=0)
@@ -577,7 +579,7 @@ class TestRcv(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = fc.stats.rcv(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_fc = FlowCal.stats.rcv(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
         s_lib = (np.percentile(self.d[:, [2, 3, 4]].view(np.ndarray),
                               75, axis=0) \
                     - np.percentile(self.d[:, [2, 3, 4]].view(np.ndarray),
