@@ -295,7 +295,7 @@ def plot_standard_curve(fl_channel,
                         fl_mef,
                         beads_model,
                         std_crv,
-                        xlim=(0.,1023.),
+                        xlim=None,
                         ylim=(1.,1e8)):
     """
     Plot a standard curve with fluorescence of calibration beads.
@@ -321,15 +321,19 @@ def plot_standard_curve(fl_channel,
         Limits for the y axis.
 
     """
-    # Generate x data
-    xdata = np.linspace(xlim[0], xlim[1], 200)
-
-    # Plot
+    # Plot fluorescence of beads populations
     plt.plot(fl_channel,
              fl_mef,
              'o',
              label='Beads',
              color=standard_curve_colors[0])
+
+    # Generate points in x axis to plot beads model and standard curve.
+    if xlim is None:
+        xlim = plt.xlim()
+    xdata = np.linspace(xlim[0], xlim[1], 200)
+
+    # Plot beads model and standard curve
     plt.plot(xdata,
              beads_model(xdata),
              label='Beads model',
