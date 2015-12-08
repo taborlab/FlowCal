@@ -1,6 +1,6 @@
 :: Not show commands
 @echo off
-:: Install fc
+:: Install FlowCal
 pip install -r requirements.txt
 python setup.py install
 :: Pause
