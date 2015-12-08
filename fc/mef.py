@@ -528,11 +528,11 @@ def get_transform_fxn(data_beads,
 
     # mef_channels and mef_values should be iterables.
     if hasattr(mef_channels, '__iter__'):
-        mef_channel_all = list(mef_channels)
-        mef_values_all = np.array(mef_values).copy()
+        mef_channels = list(mef_channels)
+        mef_values = np.array(mef_values).copy()
     else:
-        mef_channel_all = [mef_channels]
-        mef_values_all = np.array([mef_values])
+        mef_channels = [mef_channels]
+        mef_values = np.array([mef_values]).copy()
 
     ###
     # 1. Clustering
@@ -543,7 +543,7 @@ def get_transform_fxn(data_beads,
         clustering_channels = mef_channels
 
     # Get number of clusters from number of specified MEF values
-    n_clusters = mef_values_all.shape[1]
+    n_clusters = mef_values.shape[1]
 
     # Run clustering function
     labels = clustering_func(data_beads[:, clustering_channels],
@@ -551,28 +551,28 @@ def get_transform_fxn(data_beads,
                              **clustering_params)
 
     # Separate events corresponding to each cluster
-    labels_all = np.array(list(set(labels)))
-    populations = [data_beads[labels == i] for i in labels_all]
+    unique_labels = np.array(list(set(labels)))
+    populations = [data_beads[labels == i] for i in unique_labels]
 
     # Sort populations based on distance to the origin
-    cluster_dist = [np.sum((np.mean(population[:,clustering_channels],
-                                    axis=0))**2)
-                    for population in populations]
-    cluster_sorted_idx = np.argsort(cluster_dist)
-    populations = [populations[i] for i in cluster_sorted_idx]
+    population_dist = [np.sum((np.mean(population[:,clustering_channels],
+                                       axis=0))**2)
+                       for population in populations]
+    population_sorted_idx = np.argsort(population_dist)
+    populations = [populations[i] for i in population_sorted_idx]
 
     # Print information
     if verbose:
         # Calculate and display percentage of events on each population
-        data_count = np.array([population.shape[0]
-                               for population in populations])
-        data_perc = data_count * 100.0 / data_count.sum()
+        population_count = np.array([population.shape[0]
+                                     for population in populations])
+        population_perc = population_count * 100.0 / population_count.sum()
 
         # Print information
         print("Step 1: Clustering")
         print("  Number of populations to find: {}".format(n_clusters))
         print("  Percentage of events in each population:")
-        print("    " + str(data_perc))
+        print("    " + str(population_perc))
 
     # Plot
     if plot:
@@ -618,7 +618,7 @@ def get_transform_fxn(data_beads,
         beads_params_all =[]
 
     # Iterate through each mef channel
-    for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
+    for mef_channel, mef_values_channel in zip(mef_channels, mef_values):
 
         populations_channel = [population[:, mef_channel]
                                for population in populations]
@@ -759,7 +759,7 @@ def get_transform_fxn(data_beads,
     # Make output transformation function
     transform_fxn = functools.partial(fc.transform.to_mef,
                                       sc_list=std_crv_all,
-                                      sc_channels=mef_channel_all)
+                                      sc_channels=mef_channels)
 
     if verbose:
         np.set_printoptions(precision=prev_precision)
