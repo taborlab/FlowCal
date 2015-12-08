@@ -1,0 +1,1059 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FlowCal.io module &mdash; FlowCal 0.8.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="FlowCal 0.8.1 documentation" href="../index.html"/>
+        <link rel="up" title="FlowCal package" href="FlowCal.html"/>
+        <link rel="prev" title="FlowCal.gate module" href="FlowCal.gate.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> FlowCal
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FlowCal.html">FlowCal package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="FlowCal.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">FlowCal.io module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.html#module-FlowCal">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">FlowCal</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">FlowCal Reference</a> &raquo;</li>
+      
+          <li><a href="FlowCal.html">FlowCal package</a> &raquo;</li>
+      
+    <li>FlowCal.io module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/FlowCal.io.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-FlowCal.io">
+<span id="flowcal-io-module"></span><h1>FlowCal.io module<a class="headerlink" href="#module-FlowCal.io" title="Permalink to this headline">¶</a></h1>
+<p>Classes and utiliy functions for reading FCS files.</p>
+<dl class="class">
+<dt id="FlowCal.io.FCSData">
+<em class="property">class </em><code class="descclassname">FlowCal.io.</code><code class="descname">FCSData</code><a class="headerlink" href="#FlowCal.io.FCSData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></code></p>
+<p>Object containing events data from a flow cytometry sample.</p>
+<p>An <cite>FCSData</cite> object is an NxD numpy array representing N cytometry
+events with D dimensions (channels) extracted from the DATA segment of
+an FCS file. Indexing along the second axis can be performed by channel
+name, which allows to easily select data from one or several channels.
+Otherwise, an <cite>FCSData</cite> object can be treated as a numpy array for most
+purposes.</p>
+<p>Information regarding the acquisition date, time, and information about
+the detector and the amplifiers are parsed from the TEXT segment of the
+FCS file and exposed as attributes. The TEXT and ANALYSIS segments are
+also exposed as attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>infile</strong> : str or file-like</p>
+<blockquote class="last">
+<div><p>Reference to the associated FCS file.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><cite>FCSData</cite> uses <cite>FCSFile</cite> to parse an FCS file. All restrictions on the
+FCS file format and the Exceptions spcecified for FCSFile also apply
+to FCSData.</p>
+<p>Parsing of some non-standard files is supported <a class="reference internal" href="#r4" id="id1">[R4]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R1]</a></td><td>P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+&#8220;Data file standard for flow cytometry. Data File Standards
+Committee of the Society for Analytical Cytology,&#8221; Cytometry vol
+11, pp 323-332, 1990, PMID 2340769.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R2]</a></td><td>L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+J.C. Wood, R.F. Murphy, &#8220;Proposed new data file standard for flow
+cytometry, version FCS 3.0,&#8221; Cytometry vol 28, pp 118-122, 1997,
+PMID 9181300.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R3]</a></td><td>J. Spidlen, et al, &#8220;Data File Standard for Flow Cytometry,
+version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
+19937951.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R4]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> R. Hicks, &#8220;BD$WORD file header fields,&#8221;
+<a class="reference external" href="https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html">https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Load an FCS file into an FCSData object</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;test/Data001.fcs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check channel names</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">channels</span>
+<span class="go">(&#39;FSC-H&#39;, &#39;SSC-H&#39;, &#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;, &#39;Time&#39;)</span>
+</pre></div>
+</div>
+<p>Check the size of FCSData</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(20949, 6)</span>
+</pre></div>
+</div>
+<p>Get the first 100 events</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_sub</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d_sub</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(100, 6)</span>
+</pre></div>
+</div>
+<p>Retain only fluorescence channels</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="s">&#39;FL1-H&#39;</span><span class="p">,</span> <span class="s">&#39;FL2-H&#39;</span><span class="p">,</span> <span class="s">&#39;FL3-H&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl</span><span class="o">.</span><span class="n">channels</span>
+<span class="go">(&#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;)</span>
+</pre></div>
+</div>
+<p>Channel slicing can also be done with integer indices</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl_2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d_fl_2</span><span class="o">.</span><span class="n">channels</span>
+<span class="go">(&#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">d_fl</span> <span class="o">==</span> <span class="n">d_fl_2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.infile" title="FlowCal.io.FCSData.infile"><code class="xref py py-obj docutils literal"><span class="pre">infile</span></code></a></td>
+<td>Reference to the associated FCS file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.text" title="FlowCal.io.FCSData.text"><code class="xref py py-obj docutils literal"><span class="pre">text</span></code></a></td>
+<td>Dictionary of key-value entries from the TEXT segment.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.analysis" title="FlowCal.io.FCSData.analysis"><code class="xref py py-obj docutils literal"><span class="pre">analysis</span></code></a></td>
+<td>Dictionary of key-value entries from the ANALYSIS segment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.time_step" title="FlowCal.io.FCSData.time_step"><code class="xref py py-obj docutils literal"><span class="pre">time_step</span></code></a></td>
+<td>Time step of the time channel.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.acquisition_start_time" title="FlowCal.io.FCSData.acquisition_start_time"><code class="xref py py-obj docutils literal"><span class="pre">acquisition_start_time</span></code></a></td>
+<td>Acquisition start time, as a python time or datetime object.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.acquisition_end_time" title="FlowCal.io.FCSData.acquisition_end_time"><code class="xref py py-obj docutils literal"><span class="pre">acquisition_end_time</span></code></a></td>
+<td>Acquisition end time, as a python time or datetime object.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.acquisition_time" title="FlowCal.io.FCSData.acquisition_time"><code class="xref py py-obj docutils literal"><span class="pre">acquisition_time</span></code></a></td>
+<td>Acquisition time, in seconds.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.channels" title="FlowCal.io.FCSData.channels"><code class="xref py py-obj docutils literal"><span class="pre">channels</span></code></a></td>
+<td>The name of the channels contained in <cite>FCSData</cite>.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.amplification_type" title="FlowCal.io.FCSData.amplification_type"><code class="xref py py-obj docutils literal"><span class="pre">amplification_type</span></code></a>([channels])</td>
+<td>Get the amplification type used for the specified channel(s).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.detector_voltage" title="FlowCal.io.FCSData.detector_voltage"><code class="xref py py-obj docutils literal"><span class="pre">detector_voltage</span></code></a>([channels])</td>
+<td>Get the detector voltage used for the specified channel(s).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.amplifier_gain" title="FlowCal.io.FCSData.amplifier_gain"><code class="xref py py-obj docutils literal"><span class="pre">amplifier_gain</span></code></a>([channels])</td>
+<td>Get the amplifier gain used for the specified channel(s).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSData.domain" title="FlowCal.io.FCSData.domain"><code class="xref py py-obj docutils literal"><span class="pre">domain</span></code></a>([channels])</td>
+<td>Get the domain of the specified channel(s).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSData.hist_bin_edges" title="FlowCal.io.FCSData.hist_bin_edges"><code class="xref py py-obj docutils literal"><span class="pre">hist_bin_edges</span></code></a>([channels])</td>
+<td>Get histogram bin edges for the specified channel(s).</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.acquisition_end_time">
+<code class="descname">acquisition_end_time</code><a class="headerlink" href="#FlowCal.io.FCSData.acquisition_end_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquisition end time, as a python time or datetime object.</p>
+<p><cite>acquisition_end_time</cite> is taken from the $ETIM keyword parameter in
+the TEXT segment of the FCS file. If date information is also
+found, <cite>acquisition_end_time</cite> is a datetime object with the
+acquisition date. If not, <cite>acquisition_end_time</cite> is a datetime.time
+object. If no end time is found in the FCS file, return None.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.acquisition_start_time">
+<code class="descname">acquisition_start_time</code><a class="headerlink" href="#FlowCal.io.FCSData.acquisition_start_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquisition start time, as a python time or datetime object.</p>
+<p><cite>acquisition_start_time</cite> is taken from the $BTIM keyword parameter
+in the TEXT segment of the FCS file. If date information is also
+found, <cite>acquisition_start_time</cite> is a datetime object with the
+acquisition date. If not, <cite>acquisition_start_time</cite> is a
+datetime.time object. If no start time is found in the FCS file,
+return None.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.acquisition_time">
+<code class="descname">acquisition_time</code><a class="headerlink" href="#FlowCal.io.FCSData.acquisition_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquisition time, in seconds.</p>
+<p>The acquisition time is calculated using the &#8216;time&#8217; channel by
+default (channel name is case independent). If the &#8216;time&#8217; channel
+is not available, the acquisition_start_time and
+acquisition_end_time, extracted from the $BTIM and $ETIM keyword
+parameters will be used. If these are not found, None will be
+returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="FlowCal.io.FCSData.amplification_type">
+<code class="descname">amplification_type</code><span class="sig-paren">(</span><em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSData.amplification_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the amplification type used for the specified channel(s).</p>
+<p>Each channel uses one of two amplification types: linear or
+logarithmic. The amplification type for channel &#8220;n&#8221; is extracted
+from the required $PnE parameter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote class="last">
+<div><p>Channel(s) for which to get the amplification type. If None,
+return a list with the amplification type of all channels, in
+the order of the <cite>channels</cite> attribute.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="FlowCal.io.FCSData.amplifier_gain">
+<code class="descname">amplifier_gain</code><span class="sig-paren">(</span><em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSData.amplifier_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the amplifier gain used for the specified channel(s).</p>
+<p>The amplifier gain for channel &#8220;n&#8221; is extracted from the $PnG
+parameter, if available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote class="last">
+<div><p>Channel(s) for which to get the amplifier gain. If None,
+return a list with the amplifier gain of all channels, in the
+order of the <cite>channels</cite> attribute.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.analysis">
+<code class="descname">analysis</code><a class="headerlink" href="#FlowCal.io.FCSData.analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of key-value entries from the ANALYSIS segment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.channels">
+<code class="descname">channels</code><a class="headerlink" href="#FlowCal.io.FCSData.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the channels contained in <cite>FCSData</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="FlowCal.io.FCSData.detector_voltage">
+<code class="descname">detector_voltage</code><span class="sig-paren">(</span><em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSData.detector_voltage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the detector voltage used for the specified channel(s).</p>
+<p>The detector voltage for channel &#8220;n&#8221; is extracted from the $PnV
+parameter, if available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote class="last">
+<div><p>Channel(s) for which to get the detector voltage. If None,
+return a list with the detector voltage of all channels, in the
+order of the <cite>channels</cite> attribute.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="FlowCal.io.FCSData.domain">
+<code class="descname">domain</code><span class="sig-paren">(</span><em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSData.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the domain of the specified channel(s).</p>
+<p>The domain is inferred from the $PnR parameter, as
+<code class="docutils literal"><span class="pre">np.arange($PnR)</span></code>. The domain should be transformed along with
+the data when passed through a transformation function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote class="last">
+<div><p>Channel(s) for which to get the domain. If None, return a list
+with the domain of all channels, in the order of the <cite>channels</cite>
+attribute.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="FlowCal.io.FCSData.hist_bin_edges">
+<code class="descname">hist_bin_edges</code><span class="sig-paren">(</span><em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSData.hist_bin_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get histogram bin edges for the specified channel(s).</p>
+<p>This is a convenient set of histogram bin edges, such that each
+element of the domain is in the center of one bin. More precisely,
+bin edges are inferred from the $PnR parameter, as
+<code class="docutils literal"><span class="pre">np.arange($PnR</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">-</span> <span class="pre">0.5</span></code>. These bin edges should be
+transformed along with the data when passed through a
+transformation function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote class="last">
+<div><p>Channel(s) for which to get the bin edges. If None, return a
+list with bin edges for all channels, in the order of the
+<cite>channels</cite> attribute.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.infile">
+<code class="descname">infile</code><a class="headerlink" href="#FlowCal.io.FCSData.infile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reference to the associated FCS file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.text">
+<code class="descname">text</code><a class="headerlink" href="#FlowCal.io.FCSData.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of key-value entries from the TEXT segment.</p>
+<p><cite>text</cite> includes items from the TEXT segment and optional
+supplemental TEXT segment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSData.time_step">
+<code class="descname">time_step</code><a class="headerlink" href="#FlowCal.io.FCSData.time_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time step of the time channel.</p>
+<p>The time step is such that <code class="docutils literal"><span class="pre">self[:,'Time']*time_step</span></code> is in
+seconds. If no time step was found in the FCS file, <cite>time_step</cite> is
+None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="FlowCal.io.FCSFile">
+<em class="property">class </em><code class="descclassname">FlowCal.io.</code><code class="descname">FCSFile</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.FCSFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class representing an FCS flow cytometry data file.</p>
+<p>This class parses a binary FCS file and exposes a read-only view
+of the HEADER, TEXT, DATA, and ANALYSIS segments via Python-friendly
+data structures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>infile</strong> : str or file-like</p>
+<blockquote>
+<div><p>Reference to the associated FCS file.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If $MODE is not &#8216;L&#8217;.</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If $DATATYPE is not &#8216;I&#8217;, &#8216;F&#8217;, or &#8216;D&#8217;.</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If $DATATYPE is &#8216;I&#8217; but data is not byte aligned.</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If $BYTEORD is not big endian (&#8216;4,3,2,1&#8217; or &#8216;2,1&#8217;) or little
+endian (&#8216;1,2,3,4&#8217;, &#8216;1,2&#8217;).</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If TEXT-like segment does not start and end with delimiter.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If TEXT-like segment has odd number of total extracted keys and
+values (indicating an unpaired key or value).</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If the TEXT segment delimiter is used in a TEXT-like segment
+keyword or value.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If calculated DATA segment size (as determined from the number
+of events, the number of parameters, and the number of bytes per
+data point) does not match size specified in HEADER segment
+offsets.</p>
+</div></blockquote>
+<p><strong>Warning</strong></p>
+<blockquote class="last">
+<div><p>If more than one data set is detected in the same file.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The Flow Cytometry Standard (FCS) describes the de facto standard
+file format used by flow cytometry acquisition and analysis software
+to record flow cytometry data to and load flow cytometry data from a
+file. The standard dictates that each file must have the following
+segments: HEADER, TEXT, and DATA. The HEADER segment contains
+version information and byte offset values of other segments, the
+TEXT segment contains delimited key-value pairs containing
+acquisition information, and the DATA segment contains the recorded
+flow cytometry data. The file may optionally have an ANALYSIS
+segment (structurally identicaly to the TEXT segment), a
+supplemental TEXT segment (according to more recent versions of the
+standard), and user-defined OTHER segments.</p>
+<p>This class supports a subset of the FCS3.1 standard which should be
+backwards compatible with FCS3.0 and FCS2.0. The FCS file must be
+of the following form:</p>
+<blockquote>
+<div><ul class="simple">
+<li>$MODE = &#8216;L&#8217; (list mode; histogram mode is not supported).</li>
+<li>$DATATYPE = &#8216;I&#8217; (unsigned binary integers), &#8216;F&#8217; (single
+precision floating point), or &#8216;D&#8217; (double precision floating
+point). &#8216;A&#8217; (ASCII) is not supported.</li>
+<li>If $DATATYPE = &#8216;I&#8217;, $PnB % 8 = 0 (byte aligned) for all
+parameters (aka channels).</li>
+<li>$BYTEORD = &#8216;4,3,2,1&#8217; (big endian) or &#8216;1,2,3,4&#8217; (little
+endian).</li>
+<li>One data set per file.</li>
+</ul>
+</div></blockquote>
+<p>For more information on the TEXT segment keywords (e.g. $MODE,
+$DATATYPE, etc.), see <a class="reference internal" href="#r5" id="id6">[R5]</a>, <a class="reference internal" href="#r6" id="id7">[R6]</a>, and <a class="reference internal" href="#r7" id="id8">[R7]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R5]</td><td><em>(<a class="fn-backref" href="#id6">1</a>, <a class="fn-backref" href="#id9">2</a>)</em> P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+&#8220;Data file standard for flow cytometry. Data File Standards
+Committee of the Society for Analytical Cytology,&#8221; Cytometry vol
+11, pp 323-332, 1990, PMID 2340769.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R6]</td><td><em>(<a class="fn-backref" href="#id7">1</a>, <a class="fn-backref" href="#id10">2</a>)</em> L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+J.C. Wood, R.F. Murphy, &#8220;Proposed new data file standard for flow
+cytometry, version FCS 3.0,&#8221; Cytometry vol 28, pp 118-122, 1997,
+PMID 9181300.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R7]</td><td><em>(<a class="fn-backref" href="#id8">1</a>, <a class="fn-backref" href="#id11">2</a>)</em> J. Spidlen, et al, &#8220;Data File Standard for Flow Cytometry,
+version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
+19937951.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSFile.infile" title="FlowCal.io.FCSFile.infile"><code class="xref py py-obj docutils literal"><span class="pre">infile</span></code></a></td>
+<td>Reference to the associated FCS file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSFile.header" title="FlowCal.io.FCSFile.header"><code class="xref py py-obj docutils literal"><span class="pre">header</span></code></a></td>
+<td><code class="docutils literal"><span class="pre">namedtuple</span></code> containing version information and byte offset</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSFile.text" title="FlowCal.io.FCSFile.text"><code class="xref py py-obj docutils literal"><span class="pre">text</span></code></a></td>
+<td>Dictionary of key-value entries from TEXT segment and optional supplemental TEXT segment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#FlowCal.io.FCSFile.data" title="FlowCal.io.FCSFile.data"><code class="xref py py-obj docutils literal"><span class="pre">data</span></code></a></td>
+<td>Unwriteable NxD numpy array describing N cytometry events observing D data dimensions.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#FlowCal.io.FCSFile.analysis" title="FlowCal.io.FCSFile.analysis"><code class="xref py py-obj docutils literal"><span class="pre">analysis</span></code></a></td>
+<td>Dictionary of key-value entries from ANALYSIS segment.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="FlowCal.io.FCSFile.analysis">
+<code class="descname">analysis</code><a class="headerlink" href="#FlowCal.io.FCSFile.analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of key-value entries from ANALYSIS segment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSFile.data">
+<code class="descname">data</code><a class="headerlink" href="#FlowCal.io.FCSFile.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unwriteable NxD numpy array describing N cytometry events
+observing D data dimensions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSFile.header">
+<code class="descname">header</code><a class="headerlink" href="#FlowCal.io.FCSFile.header" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal"><span class="pre">namedtuple</span></code> containing version information and byte offset
+values of other FCS segments in the following order:</p>
+<blockquote>
+<div><ul class="simple">
+<li>version : str</li>
+<li>text_begin : int</li>
+<li>text_end : int</li>
+<li>data_begin : int</li>
+<li>data_end : int</li>
+<li>analysis_begin : int</li>
+<li>analysis_end : int</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSFile.infile">
+<code class="descname">infile</code><a class="headerlink" href="#FlowCal.io.FCSFile.infile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reference to the associated FCS file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="FlowCal.io.FCSFile.text">
+<code class="descname">text</code><a class="headerlink" href="#FlowCal.io.FCSFile.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of key-value entries from TEXT segment and optional
+supplemental TEXT segment.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.io.read_fcs_data_segment">
+<code class="descclassname">FlowCal.io.</code><code class="descname">read_fcs_data_segment</code><span class="sig-paren">(</span><em>buf</em>, <em>begin</em>, <em>end</em>, <em>datatype</em>, <em>num_events</em>, <em>param_bit_widths</em>, <em>big_endian</em>, <em>param_ranges=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.read_fcs_data_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read DATA segment of FCS file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>buf</strong> : file-like object</p>
+<blockquote>
+<div><p>Buffer containing data to interpret as DATA segment.</p>
+</div></blockquote>
+<p><strong>begin</strong> : int</p>
+<blockquote>
+<div><p>Offset (in bytes) to first byte of DATA segment in <cite>buf</cite>.</p>
+</div></blockquote>
+<p><strong>end</strong> : int</p>
+<blockquote>
+<div><p>Offset (in bytes) to last byte of DATA segment in <cite>buf</cite>.</p>
+</div></blockquote>
+<p><strong>datatype</strong> : {&#8216;I&#8217;, &#8216;F&#8217;, &#8216;D&#8217;, &#8216;A&#8217;}</p>
+<blockquote>
+<div><p>String specifying FCS file datatype (see $DATATYPE keyword from
+FCS standards). Supported datatypes include &#8216;I&#8217; (unsigned
+binary integer), &#8216;F&#8217; (single precision floating point), and &#8216;D&#8217;
+(double precision floating point). &#8216;A&#8217; (ASCII) is recognized
+but not supported.</p>
+</div></blockquote>
+<p><strong>num_events</strong> : int</p>
+<blockquote>
+<div><p>Total number of events (see $TOT keyword from FCS standards).</p>
+</div></blockquote>
+<p><strong>param_bit_widths</strong> : array-like</p>
+<blockquote>
+<div><p>Array specifying parameter (aka channel) bit width for each
+parameter (see $PnB keywords from FCS standards). The length of
+<cite>param_bit_widths</cite> should match the $PAR keyword value from the
+FCS standards (which indicates the total number of parameters).
+If <cite>datatype</cite> is &#8216;I&#8217;, data must be byte aligned (i.e. all
+parameter bit widths should be divisible by 8), and data are
+upcast to the nearest uint8, uint16, uint32, or uint64 data
+type. Bit widths larger than 64 bits are not supported.</p>
+</div></blockquote>
+<p><strong>big_endian</strong> : bool</p>
+<blockquote>
+<div><p>Endianness of computer used to acquire data (see $BYTEORD
+keyword from FCS standards). True implies big endian; False
+implies little endian.</p>
+</div></blockquote>
+<p><strong>param_ranges</strong> : array-like, optional</p>
+<blockquote>
+<div><p>Array specifying parameter (aka channel) range for each
+parameter (see $PnR keywords from FCS standards). Used to
+ensure erroneous values are not read from DATA segment by
+applying a bit mask to remove unused bits. The length of
+<cite>param_ranges</cite> should match the $PAR keyword value from the FCS
+standards (which indicates the total number of parameters). If
+None, no masking is performed.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> : numpy array</p>
+<blockquote>
+<div><p>NxD numpy array describing N cytometry events observing D data
+dimensions.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If lengths of <cite>param_bit_widths</cite> and <cite>param_ranges</cite> don&#8217;t match.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If calculated DATA segment size (as determined from the number
+of events, the number of parameters, and the number of bytes per
+data point) does not match size specified by <cite>begin</cite> and <cite>end</cite>.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <cite>param_bit_widths</cite> doesn&#8217;t agree with <cite>datatype</cite> for single
+precision or double precision floating point (i.e. they should
+all be 32 or 64, respectively).</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <cite>datatype</cite> is unrecognized.</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote>
+<div><p>If <cite>datatype</cite> is &#8216;A&#8217;.</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote class="last">
+<div><p>If <cite>datatype</cite> is &#8216;I&#8217; but data is not byte aligned.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[R8]</a></td><td>P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+&#8220;Data file standard for flow cytometry. Data File Standards
+Committee of the Society for Analytical Cytology,&#8221; Cytometry vol
+11, pp 323-332, 1990, PMID 2340769.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id13">[R9]</a></td><td>L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+J.C. Wood, R.F. Murphy, &#8220;Proposed new data file standard for flow
+cytometry, version FCS 3.0,&#8221; Cytometry vol 28, pp 118-122, 1997,
+PMID 9181300.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id14">[R10]</a></td><td>J. Spidlen, et al, &#8220;Data File Standard for Flow Cytometry,
+version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
+19937951.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.io.read_fcs_header_segment">
+<code class="descclassname">FlowCal.io.</code><code class="descname">read_fcs_header_segment</code><span class="sig-paren">(</span><em>buf</em>, <em>begin=0</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.read_fcs_header_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read HEADER segment of FCS file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>buf</strong> : file-like object</p>
+<blockquote>
+<div><p>Buffer containing data to interpret as HEADER segment.</p>
+</div></blockquote>
+<p><strong>begin</strong> : int</p>
+<blockquote>
+<div><p>Offset (in bytes) to first byte of HEADER segment in <cite>buf</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>header</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>Version information and byte offset values of other FCS segments
+(see FCS standards for more information) in the following order:</p>
+<blockquote>
+<div><ul class="simple">
+<li>version : str</li>
+<li>text_begin : int</li>
+<li>text_end : int</li>
+<li>data_begin : int</li>
+<li>data_end : int</li>
+<li>analysis_begin : int</li>
+<li>analysis_end : int</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Blank ANALYSIS segment offsets are converted to zeros.</p>
+<p>OTHER segment offsets are ignored (see <a class="reference internal" href="#r11" id="id15">[R11]</a>, <a class="reference internal" href="#r12" id="id16">[R12]</a>, and <a class="reference internal" href="#r13" id="id17">[R13]</a>).</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R11]</td><td><em>(<a class="fn-backref" href="#id15">1</a>, <a class="fn-backref" href="#id18">2</a>)</em> P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+&#8220;Data file standard for flow cytometry. Data File Standards
+Committee of the Society for Analytical Cytology,&#8221; Cytometry vol
+11, pp 323-332, 1990, PMID 2340769.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R12]</td><td><em>(<a class="fn-backref" href="#id16">1</a>, <a class="fn-backref" href="#id19">2</a>)</em> L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+J.C. Wood, R.F. Murphy, &#8220;Proposed new data file standard for flow
+cytometry, version FCS 3.0,&#8221; Cytometry vol 28, pp 118-122, 1997,
+PMID 9181300.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R13]</td><td><em>(<a class="fn-backref" href="#id17">1</a>, <a class="fn-backref" href="#id20">2</a>)</em> J. Spidlen, et al, &#8220;Data File Standard for Flow Cytometry,
+version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
+19937951.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.io.read_fcs_text_segment">
+<code class="descclassname">FlowCal.io.</code><code class="descname">read_fcs_text_segment</code><span class="sig-paren">(</span><em>buf</em>, <em>begin</em>, <em>end</em>, <em>delim=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.io.read_fcs_text_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read TEXT segment of FCS file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>buf</strong> : file-like object</p>
+<blockquote>
+<div><p>Buffer containing data to interpret as TEXT segment.</p>
+</div></blockquote>
+<p><strong>begin</strong> : int</p>
+<blockquote>
+<div><p>Offset (in bytes) to first byte of TEXT segment in <cite>buf</cite>.</p>
+</div></blockquote>
+<p><strong>end</strong> : int</p>
+<blockquote>
+<div><p>Offset (in bytes) to last byte of TEXT segment in <cite>buf</cite>.</p>
+</div></blockquote>
+<p><strong>delim</strong> : str, optional</p>
+<blockquote>
+<div><p>1-byte delimiter character which delimits key-value entries of
+TEXT segment. If None, will extract delimter as first byte
+of TEXT segment.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>text</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary of key-value entries extracted from TEXT segment.</p>
+</div></blockquote>
+<p><strong>delim</strong> : str</p>
+<blockquote>
+<div><p>String containing delimiter character.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If TEXT segment does not start and end with delimiter.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If function detects odd number of total extracted keys and
+values (indicating an unpaired key or value).</p>
+</div></blockquote>
+<p><strong>NotImplementedError</strong></p>
+<blockquote class="last">
+<div><p>If delimiter is used in a keyword or value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>ANALYSIS segments and TEXT segments are parsed the same way, so
+this function can also be used to parse ANALYSIS segments.</p>
+<p>This function does not automatically parse supplemental TEXT
+segments (see FCS3.0 [2] and FCS3.1 [3]). Supplemental TEXT segments
+and regular TEXT segments are parsed the same way, though, so this
+function can be manually directed to parse a supplemental TEXT segment
+by providing the appropriate <cite>begin</cite> and <cite>end</cite> values.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id21">[R14]</a></td><td>P.N. Dean, C.B. Bagwell, T. Lindmo, R.F. Murphy, G.C. Salzman,
+&#8220;Data file standard for flow cytometry. Data File Standards
+Committee of the Society for Analytical Cytology,&#8221; Cytometry vol
+11, pp 323-332, 1990, PMID 2340769.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r15" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id22">[R15]</a></td><td>L.C. Seamer, C.B. Bagwell, L. Barden, D. Redelman, G.C. Salzman,
+J.C. Wood, R.F. Murphy, &#8220;Proposed new data file standard for flow
+cytometry, version FCS 3.0,&#8221; Cytometry vol 28, pp 118-122, 1997,
+PMID 9181300.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r16" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id23">[R16]</a></td><td>J. Spidlen, et al, &#8220;Data File Standard for Flow Cytometry,
+version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
+19937951.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="FlowCal.gate.html" class="btn btn-neutral" title="FlowCal.gate module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.8.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FlowCal.gate module &mdash; FlowCal 0.8.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="FlowCal 0.8.1 documentation" href="../index.html"/>
+        <link rel="up" title="FlowCal package" href="FlowCal.html"/>
+        <link rel="next" title="FlowCal.io module" href="FlowCal.io.html"/>
+        <link rel="prev" title="FlowCal.excel_ui module" href="FlowCal.excel_ui.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> FlowCal
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FlowCal.html">FlowCal package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="FlowCal.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">FlowCal.gate module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.html#module-FlowCal">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">FlowCal</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">FlowCal Reference</a> &raquo;</li>
+      
+          <li><a href="FlowCal.html">FlowCal package</a> &raquo;</li>
+      
+    <li>FlowCal.gate module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/FlowCal.gate.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-FlowCal.gate">
+<span id="flowcal-gate-module"></span><h1>FlowCal.gate module<a class="headerlink" href="#module-FlowCal.gate" title="Permalink to this headline">¶</a></h1>
+<p>Functions for gating flow cytometry data.</p>
+<p>All gate functions are of the following form:</p>
+<div class="highlight-python"><div class="highlight"><pre>gated_data = gate(data, channels, *args, **kwargs)
+
+(gated_data, mask, contour, ...) = gate(data, channels, *args,
+                                        **kwargs, full_output=True)
+</pre></div>
+</div>
+<p>where <cite>data</cite> is a NxD FCSData object or numpy array describing N cytometry
+events with D channels, <cite>channels</cite> specifies the channels in which to
+perform gating, and <cite>args</cite> and <cite>kwargs</cite> are gate-specific parameters.
+<cite>gated_data</cite> is the gated result, as an FCSData object or numpy array,
+<cite>mask</cite> is a bool array specifying the gate mask, and <cite>contour</cite> is an
+optional list of 2D numpy arrays containing the x-y coordinates of the
+contour surrounding the gated region, which can be used when plotting a 2D
+density diagram or scatter plot.</p>
+<dl class="function">
+<dt id="FlowCal.gate.density2d">
+<code class="descclassname">FlowCal.gate.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], bins=None, gate_fraction=0.65, sigma=10.0, full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.density2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gate that preserves events in the region with highest density.</p>
+<p>Gate out all events in <cite>data</cite> but those near regions of highest
+density for the two specified channels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : list of int, list of str, optional</p>
+<blockquote>
+<div><p>Two channels on which to perform gating.</p>
+</div></blockquote>
+<p><strong>bins</strong> : int or array_like or [int, int] or [array, array], optional</p>
+<blockquote>
+<div><p><cite>bins</cite> argument passed to <cite>np.histogram2d</cite>. If <cite>None</cite>, extracted
+from <cite>FCSData</cite> if possible. <cite>bins</cite> parameter supercedes <cite>FCSData</cite>
+attribute.</p>
+</div></blockquote>
+<p><strong>gate_fraction</strong> : float, optional</p>
+<blockquote>
+<div><p>Fraction of events to retain after gating.</p>
+</div></blockquote>
+<p><strong>sigma</strong> : scalar or sequence of scalars, optional</p>
+<blockquote>
+<div><p>Standard deviation for Gaussian kernel used by
+<cite>scipy.ndimage.filters.gaussian_filter</cite> to smooth 2D histogram
+into a density.</p>
+</div></blockquote>
+<p><strong>full_output</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying to return additional outputs. If true, the outputs
+are given as a namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gated_data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>Gated flow cytometry data of the same format as <cite>data</cite>.</p>
+</div></blockquote>
+<p><strong>mask</strong> : numpy array of bool, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote>
+<div><p>Boolean gate mask used to gate data such that <code class="docutils literal"><span class="pre">gated_data</span> <span class="pre">=</span>
+<span class="pre">data[mask]</span></code>.</p>
+</div></blockquote>
+<p><strong>contour</strong> : list of 2D numpy arrays, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote>
+<div><p>List of 2D numpy array(s) of x-y coordinates tracing out
+the edge of the gated region.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If more or less than 2 channels are specified.</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>If <cite>data</cite> has less than 2 dimensions or less than 2 events.</p>
+</div></blockquote>
+<p><strong>Exception</strong></p>
+<blockquote class="last">
+<div><p>If an unrecognized matplotlib Path code is encountered when
+attempting to generate contours.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The algorithm for gating based on density works as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Calculate 2D histogram of <cite>data</cite> in the specified channels.</li>
+<li>Map each event from <cite>data</cite> to its histogram bin (implicitly
+gating out any events which exist outside specified <cite>bins</cite>).</li>
+<li>Use <cite>gate_fraction</cite> to determine number of events to retain
+(rounded up). Only events which are not implicitly gated out
+are considered.</li>
+<li>Smooth 2D histogram using a 2D Gaussian filter.</li>
+<li>Normalize smoothed histogram to obtain valid probability mass
+function (PMF).</li>
+<li>Sort bins by probability.</li>
+<li>Accumulate events (starting with events belonging to bin with
+highest probability (&#8220;densest&#8221;) and proceeding to events
+belonging to bins with lowest probability) until at least the
+desired number of events is achieved. While the algorithm
+attempts to get as close to <cite>gate_fraction</cite> fraction of events
+as possible, more events may be retained based on how many
+events fall into each histogram bin (since entire bins are
+retained at a time, not individual events).</li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.gate.ellipse">
+<code class="descclassname">FlowCal.gate.</code><code class="descname">ellipse</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>center</em>, <em>a</em>, <em>b</em>, <em>theta=0</em>, <em>log=False</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gate that preserves events inside an ellipse-shaped region.</p>
+<p>Events are kept if they satisfy the following relationship:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>where <cite>x</cite> and <cite>y</cite> are the coordinates of the event list, after
+substracting <cite>center</cite> and rotating by -<cite>theta</cite>. This is mathematically
+equivalent to maintaining the events inside an ellipse with major
+axis <cite>a</cite>, minor axis <cite>b</cite>, center at <cite>center</cite>, and tilted by <cite>theta</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : list of int, list of str</p>
+<blockquote>
+<div><p>Two channels on which to perform gating.</p>
+</div></blockquote>
+<p><strong>center, a, b, theta (optional)</strong> : float</p>
+<blockquote>
+<div><p>Ellipse parameters. <cite>a</cite> is the major axis, <cite>b</cite> is the minor axis.</p>
+</div></blockquote>
+<p><strong>log</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying that log10 transformation should be applied to
+<cite>data</cite> before gating.</p>
+</div></blockquote>
+<p><strong>full_output</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying to return additional outputs. If true, the outputs
+are given as a namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gated_data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>Gated flow cytometry data of the same format as <cite>data</cite>.</p>
+</div></blockquote>
+<p><strong>mask</strong> : numpy array of bool, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote>
+<div><p>Boolean gate mask used to gate data such that <code class="docutils literal"><span class="pre">gated_data</span> <span class="pre">=</span>
+<span class="pre">data[mask]</span></code>.</p>
+</div></blockquote>
+<p><strong>contour</strong> : list of 2D numpy arrays, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote>
+<div><p>List of 2D numpy array(s) of x-y coordinates tracing out
+the edge of the gated region.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If more or less than 2 channels are specified.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.gate.high_low">
+<code class="descclassname">FlowCal.gate.</code><code class="descname">high_low</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em>, <em>high=None</em>, <em>low=None</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.high_low" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gate out high and low values across all specified channels.</p>
+<p>Gate out events in <cite>data</cite> with values in the specified channels which
+are larger than or equal to <cite>high</cite> or less than or equal to <cite>low</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
+<blockquote>
+<div><p>Channels on which to perform gating. If None, use all channels.</p>
+</div></blockquote>
+<p><strong>high, low</strong> : int, float, optional</p>
+<blockquote>
+<div><p>High and low threshold values. If None, <cite>high</cite> and <cite>low</cite> will be
+taken from <code class="docutils literal"><span class="pre">data.domain</span></code> if available, otherwise
+<code class="docutils literal"><span class="pre">np.Inf</span></code> and <code class="docutils literal"><span class="pre">-np.Inf</span></code> will be used.</p>
+</div></blockquote>
+<p><strong>full_output</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying to return additional outputs. If true, the outputs
+are given as a namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gated_data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>Gated flow cytometry data of the same format as <cite>data</cite>.</p>
+</div></blockquote>
+<p><strong>mask</strong> : numpy array of bool, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote class="last">
+<div><p>Boolean gate mask used to gate data such that <code class="docutils literal"><span class="pre">gated_data</span> <span class="pre">=</span>
+<span class="pre">data[mask]</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.gate.start_end">
+<code class="descclassname">FlowCal.gate.</code><code class="descname">start_end</code><span class="sig-paren">(</span><em>data</em>, <em>num_start=250</em>, <em>num_end=100</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.start_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gate out first and last events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>num_start, num_end</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of events to gate out from beginning and end of <cite>data</cite>.</p>
+</div></blockquote>
+<p><strong>full_output</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying to return additional outputs. If true, the outputs
+are given as a namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gated_data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>Gated flow cytometry data of the same format as <cite>data</cite>.</p>
+</div></blockquote>
+<p><strong>mask</strong> : numpy array of bool, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
+<blockquote>
+<div><p>Boolean gate mask used to gate data such that <code class="docutils literal"><span class="pre">gated_data</span> <span class="pre">=</span>
+<span class="pre">data[mask]</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If the number of events to discard is greater than the total
+number of events in <cite>data</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="FlowCal.io.html" class="btn btn-neutral float-right" title="FlowCal.io module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="FlowCal.excel_ui.html" class="btn btn-neutral" title="FlowCal.excel_ui module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.8.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
