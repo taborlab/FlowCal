@@ -1,7 +1,7 @@
-fc.excel_ui module
+FlowCal.mef module
 ==================
 
-.. automodule:: fc.excel_ui
+.. automodule:: FlowCal.mef
     :members:
     :undoc-members:
     :show-inheritance:

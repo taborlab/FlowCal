@@ -1,7 +1,7 @@
-fc.transform module
+FlowCal.gate module
 ===================
 
-.. automodule:: fc.transform
+.. automodule:: FlowCal.gate
     :members:
     :undoc-members:
     :show-inheritance:
