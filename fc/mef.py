@@ -204,11 +204,15 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
     Returns
     -------
     std_crv : function
-        Standard curve that transforms fluorescence from channel units to
-        MEF units.
+        Standard curve that transforms arbitrary fluorescence values from
+        channel units to MEF units. This function has the signature ``y =
+        std_crv(x)``, where `x` is some fluorescence value in channel units
+        and `y` is the same fluorescence expressed in MEF units.
     beads_model : function
-        Bead fluorescence model, mapping bead fluorescence in channel space
-        to bead fluorescence in MEF units.
+        Fluorescence model of calibration beads. This function has the
+        signature ``y = beads_model(x)``, where `x` is the fluorescence of
+        some bead population in channel units and `y` is the same
+        fluorescence expressed in MEF units, without autofluorescence.
     beads_params : array
         Fitted parameters of the bead fluorescence model: ``[m, b,
         fl_mef_auto]``.
@@ -217,12 +221,12 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
     -----
     The following model is used to describe bead fluorescence:
 
-        m*fl_ch[i] + b = log(fl_mef_auto + fl_mef[i])
+        m*fl_channel[i] + b = log(fl_mef_auto + fl_mef[i])
 
-    where fl_ch[i] is the fluorescence of bead subpopulation i in channel
-    units and fl_mef[i] is the corresponding fluorescence in MEF units. The
-    model includes 3 parameters: m (slope), b (intercept), and fl_mef_auto
-    (bead autofluorescence).
+    where fl_channel[i] is the fluorescence of bead subpopulation i in
+    channel units and fl_mef[i] is the corresponding fluorescence in MEF
+    units. The model includes 3 parameters: m (slope), b (intercept), and
+    fl_mef_auto (bead autofluorescence).
 
     The bead fluorescence model is fit in a log-MEF space using nonlinear
     least squares regression (as opposed to fitting an exponential model in
@@ -238,7 +242,7 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
     mapping fluorescence in channel units to MEF units is thus of the
     following form:
 
-        fl_mef = exp(m*fl_ch + b)
+        fl_mef = exp(m*fl_channel + b)
 
     """
     # Check that the input data has consistent dimensions
