@@ -555,15 +555,17 @@ def get_transform_fxn(data_beads,
     populations = [data_beads[labels == i] for i in labels_all]
 
     # Sort populations based on distance to the origin
-    cluster_dist = [np.sum((np.mean(di[:,clustering_channels], axis=0))**2)
-                    for di in populations]
-    cluster_sorted_ind = np.argsort(cluster_dist)
-    populations = [populations[i] for i in cluster_sorted_ind]
+    cluster_dist = [np.sum((np.mean(population[:,clustering_channels],
+                                    axis=0))**2)
+                    for population in populations]
+    cluster_sorted_idx = np.argsort(cluster_dist)
+    populations = [populations[i] for i in cluster_sorted_idx]
 
     # Print information
     if verbose:
         # Calculate and display percentage of events on each population
-        data_count = np.array([di.shape[0] for di in populations])
+        data_count = np.array([population.shape[0]
+                               for population in populations])
         data_perc = data_count * 100.0 / data_count.sum()
 
         # Print information
@@ -618,15 +620,16 @@ def get_transform_fxn(data_beads,
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channel_all, mef_values_all):
 
-        populations_channel = [pi[:, mef_channel] for pi in populations]
+        populations_channel = [population[:, mef_channel]
+                               for population in populations]
 
         ###
         # 2. Calculate statistics in each subpopulation.
         ###
 
         # Calculate statistics
-        stats_values = [statistic_func(pi, **statistic_params)
-                        for pi in populations_channel]
+        stats_values = [statistic_func(population, **statistic_params)
+                        for population in populations_channel]
         stats_values = np.array(stats_values)
 
         # Accumulate results
@@ -645,8 +648,9 @@ def get_transform_fxn(data_beads,
 
         # Select populations based on selection_func
         if selection_func is not None:
-            selected_mask = selection_func([pi for pi in populations_channel],
-                                           **selection_params)
+            selected_mask = selection_func(
+                [population for population in populations_channel],
+                **selection_params)
         else:
             selected_mask = np.ones(n_clusters, dtype=bool)
 
