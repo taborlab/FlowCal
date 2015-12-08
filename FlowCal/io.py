@@ -844,8 +844,8 @@ class FCSData(np.ndarray):
     Examples
     --------
     Load an FCS file into an FCSData object
-    >>> import fc
-    >>> d = fc.io.FCSData('test/Data001.fcs')
+    >>> import FlowCal
+    >>> d = FlowCal.io.FCSData('test/Data001.fcs')
 
     Check channel names
     >>> print d.channels

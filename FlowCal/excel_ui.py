@@ -23,12 +23,12 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 
-import fc.io
-import fc.plot
-import fc.gate
-import fc.transform
-import fc.stats
-import fc.mef
+import FlowCal.io
+import FlowCal.plot
+import FlowCal.gate
+import FlowCal.transform
+import FlowCal.stats
+import FlowCal.mef
 
 def read_table(filename, sheetname, index_col=None):
     """
@@ -234,7 +234,7 @@ def process_beads_table(beads_table,
             print("Loading file \"{}\"...".format(beads_row['File Path']))
 
         filename = os.path.join(base_dir, beads_row['File Path'])
-        beads_sample = fc.io.FCSData(filename)
+        beads_sample = FlowCal.io.FCSData(filename)
 
         # Parse clustering channels data
         cluster_channels = beads_row['Clustering Channels'].split(',')
@@ -247,16 +247,16 @@ def process_beads_table(beads_table,
             print("Performing gating...")
         # Remove first and last events. Transients in fluidics can make the
         # first few and last events slightly different from the rest.
-        beads_sample_gated = fc.gate.start_end(beads_sample,
-                                               num_start=250,
-                                               num_end=100)
+        beads_sample_gated = FlowCal.gate.start_end(beads_sample,
+                                                    num_start=250,
+                                                    num_end=100)
         # Remove saturating events in forward/side scatter. The value of a
         # saturating event is taken automatically from
         # `beads_sample_gated.domain`.
-        beads_sample_gated = fc.gate.high_low(beads_sample_gated,
-                                              channels=sc_channels)
+        beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
+                                                   channels=sc_channels)
         # Density gating
-        beads_sample_gated, __, gate_contour = fc.gate.density2d(
+        beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
             data=beads_sample_gated,
             channels=sc_channels,
             gate_fraction=beads_row['Gate Fraction'],
@@ -270,7 +270,7 @@ def process_beads_table(beads_table,
                                    plot_dir,
                                    "density_hist_{}.png".format(beads_id))
             plt.figure(figsize = (6,4))
-            fc.plot.density_and_hist(
+            FlowCal.plot.density_and_hist(
                 beads_sample,
                 beads_sample_gated, 
                 density_channels=sc_channels,
@@ -321,7 +321,7 @@ def process_beads_table(beads_table,
                     print("Calculating standard curve for channels {}..." \
                         .format(", ".join(mef_channels)))
 
-            mef_output = fc.mef.get_transform_fxn(
+            mef_output = FlowCal.mef.get_transform_fxn(
                 beads_sample_gated,
                 mef_values,
                 mef_channels=mef_channels,
@@ -449,7 +449,7 @@ def process_samples_table(samples_table,
             print("Loading file \"{}\"...".format(sample_row['File Path']))
 
         filename = os.path.join(base_dir, sample_row['File Path'])
-        sample = fc.io.FCSData(filename)
+        sample = FlowCal.io.FCSData(filename)
 
         ###
         # Transform
@@ -457,7 +457,7 @@ def process_samples_table(samples_table,
         if verbose:
             print("Performing data transformation...")
         # Transform FSC/SSC to relative units
-        sample = fc.transform.exponentiate(sample, sc_channels)
+        sample = FlowCal.transform.exponentiate(sample, sc_channels)
 
         # Parse fluorescence channels in which to transform
         report_channels = []
@@ -477,10 +477,10 @@ def process_samples_table(samples_table,
                     units_label = "Channel Number"
                 elif units.lower() == 'rfi':
                     units_label = "Relative Fluorescence Intensity, RFI"
-                    sample = fc.transform.exponentiate(sample, fl_channel)
+                    sample = FlowCal.transform.exponentiate(sample, fl_channel)
                 elif units.lower() == 'a.u.' or units.lower() == 'au':
                     units_label = "Arbitrary Units, a.u."
-                    sample = fc.transform.exponentiate(sample, fl_channel)
+                    sample = FlowCal.transform.exponentiate(sample, fl_channel)
                 elif units.lower() == 'mef':
                     units_label = "Molecules of Equivalent Fluorophore, MEF"
                     sample = mef_transform_fxns[sample_row['Beads ID']](
@@ -501,14 +501,16 @@ def process_samples_table(samples_table,
             print("Performing gating...")
         # Remove first and last events. Transients in fluidics can make the
         # first few and last events slightly different from the rest.
-        sample_gated = fc.gate.start_end(sample, num_start=250, num_end=100)
+        sample_gated = FlowCal.gate.start_end(sample,
+                                              num_start=250,
+                                              num_end=100)
         # Remove saturating events in forward/side scatter, and fluorescent
         # channels to report. The value of a saturating event is taken
         # automatically from `sample_gated.domain`.
-        sample_gated = fc.gate.high_low(sample_gated,
-                                        sc_channels + report_channels)
+        sample_gated = FlowCal.gate.high_low(sample_gated,
+                                             sc_channels + report_channels)
         # Density gating
-        sample_gated, __, gate_contour = fc.gate.density2d(
+        sample_gated, __, gate_contour = FlowCal.gate.density2d(
             data=sample_gated,
             channels=sc_channels,
             gate_fraction=sample_row['Gate Fraction'],
@@ -538,7 +540,7 @@ def process_samples_table(samples_table,
             figname = os.path.join(base_dir,
                                    plot_dir,
                                    "{}.png".format(sample_id))
-            fc.plot.density_and_hist(
+            FlowCal.plot.density_and_hist(
                 sample,
                 sample_gated,
                 gate_contour=gate_contour,
@@ -612,28 +614,28 @@ def add_stats(samples_table, samples):
                                         sample.detector_voltage(channel))
                 samples_table.set_value(row_id,
                                         channel + ' Mean',
-                                        fc.stats.mean(sample, channel))
+                                        FlowCal.stats.mean(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' Geom. Mean',
-                                        fc.stats.gmean(sample, channel))
+                                        FlowCal.stats.gmean(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' Median',
-                                        fc.stats.median(sample, channel))
+                                        FlowCal.stats.median(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' Mode',
-                                        fc.stats.mode(sample, channel))
+                                        FlowCal.stats.mode(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' Std',
-                                        fc.stats.std(sample, channel))
+                                        FlowCal.stats.std(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' CV',
-                                        fc.stats.cv(sample, channel))
+                                        FlowCal.stats.cv(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' IQR',
-                                        fc.stats.iqr(sample, channel))
+                                        FlowCal.stats.iqr(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' RCV',
-                                        fc.stats.rcv(sample, channel))
+                                        FlowCal.stats.rcv(sample, channel))
 
 def generate_histograms_table(samples_table, samples):
     """
