@@ -35,8 +35,8 @@ Windows and MacOSX
 ~~~~~~~~~~~~~~~~~~
 We recommend the Anaconda Python distribution from Continuum Analytics (https://store.continuum.io/cshop/anaconda/). Anaconda simplifies the installation of python and the required packages.
 
-To install ``FlowCal``, download the repo and double click on ``Install fc (Windows).bat``
-or ``Install fc (OSX)`` on Windows and Linux, respectively.
+To install ``FlowCal``, download the repo and double click on ``Install FlowCal (Windows).bat``
+or ``Install FlowCal (OSX)`` on Windows and Linux, respectively.
 
 Ubuntu/Mint
 ~~~~~~~~~~~
@@ -52,7 +52,7 @@ The Excel UI
 ============
 The Excel UI simplifies the analysis of flow cytometry samples to be gated and calibrated using calibration beads. The samples to be processed are specified in an input Excel file. Refer to the "Examples" section for more information on the format of this file.
 
-To run the Excel UI, double click on ``Run fc (Windows).bat`` or ``Run fc (OSX)`` on Windows or OSX, respectively, and select the appropriate input Excel file.
+To run the Excel UI, double click on ``Run FlowCal (Windows).bat`` or ``Run FlowCal (OSX)`` on Windows or OSX, respectively, and select the appropriate input Excel file.
 
 Examples
 ========
@@ -65,7 +65,7 @@ In addition, ``experiment.xlsx`` is an example of an input file that specifies s
 
 Report Bugs
 ===========
-The official way to report a bug is through the issue tracker on github (https://github.com/castillohair/fc/issues). Try to be as explicit as possible when describing your issue. Ideally, a set of instructions to reproduce the error should be provided, together with the version of all the relevant packages you are using.
+The official way to report a bug is through the issue tracker on github (https://github.com/taborlab/FlowCal/issues). Try to be as explicit as possible when describing your issue. Ideally, a set of instructions to reproduce the error should be provided, together with the version of all the relevant packages you are using.
 
 Request Features
 ================

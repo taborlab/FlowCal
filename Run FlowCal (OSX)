@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Run fc
-python -m fc.excel_ui
+# Run FlowCal
+python -m FlowCal.excel_ui
 # Pause
 read -p "Press [Enter] to finish..."
