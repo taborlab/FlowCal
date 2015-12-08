@@ -12,8 +12,8 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from sklearn.mixture import GMM 
 
-import fc.plot
-import fc.transform
+import FlowCal.plot
+import FlowCal.transform
 
 # Use default colors from palettable if available
 try:
@@ -173,8 +173,8 @@ def selection_std(populations,
             raise TypeError("argument 'high' not specified")
 
     # Calculate means and standard deviations
-    pop_mean = np.array([fc.stats.mean(p) for p in populations])
-    pop_std = np.array([fc.stats.std(p) for p in populations])
+    pop_mean = np.array([FlowCal.stats.mean(p) for p in populations])
+    pop_std = np.array([FlowCal.stats.std(p) for p in populations])
 
     # Some populations, especially the highest ones when they are near
     # saturation, tend to aggregate mostly on one bin and give a standard
@@ -355,7 +355,7 @@ def get_transform_fxn(data_beads,
                       clustering_fxn=clustering_gmm,
                       clustering_params={},
                       clustering_channels=None,
-                      statistic_fxn=fc.stats.median,
+                      statistic_fxn=FlowCal.stats.median,
                       statistic_params={},
                       selection_fxn=selection_std,
                       selection_params={},
@@ -400,14 +400,14 @@ def get_transform_fxn(data_beads,
     transform_fxn : function, if ``full_output==False``
         Transformation function to convert flow cytometry data from channel
         units to MEF. This function has the same basic signature as the
-        general transformation function specified in ``fc.transform``.
+        general transformation function specified in ``FlowCal.transform``.
     namedtuple, if ``full_output==True``
         ``namedtuple``, containing the following fields in this order:
         transform_fxn : function
             Transformation function to convert flow cytometry data from
             channel units to MEF. This function has the same basic
             signature as the general transformation function specified in
-            ``fc.transform``.
+            ``FlowCal.transform``.
         clustering : dict
             Results of the clustering step, containing the following
             fields:
@@ -461,7 +461,7 @@ def get_transform_fxn(data_beads,
         subpopulation. Must have the following signature:
         ``s = statistic_fxn(data, **statistic_params)``, where `data` is a
         1D FCSData object or numpy array, and `s` is a float. Statistical
-        functions from numpy, scipy, or fc.stats are valid options.
+        functions from numpy, scipy, or FlowCal.stats are valid options.
     statistic_params : dict, optional
         Additional keyword parameters to pass to `statistic_fxn`.
     selection_fxn : function, optional
@@ -505,7 +505,7 @@ def get_transform_fxn(data_beads,
        is generated using the appropriate MEF model.
 
     At the end, a transformation function is generated using the calculated
-    standard curves, `mef_channels`, and ``fc.transform.to_mef()``.
+    standard curves, `mef_channels`, and ``FlowCal.transform.to_mef()``.
 
     Note that applying the resulting transformation function to other
     flow cytometry samples only yields correct results if they have been
@@ -584,26 +584,27 @@ def get_transform_fxn(data_beads,
         # If used one channel for clustering, make histogram
         if len(clustering_channels) == 1:
             plt.figure(figsize=(8,4))
-            fc.plot.hist1d(populations,
-                           channel=clustering_channels[0],
-                           div=4,
-                           alpha=0.75,
-                           savefig=savefig)
+            FlowCal.plot.hist1d(populations,
+                                channel=clustering_channels[0],
+                                div=4,
+                                alpha=0.75,
+                                savefig=savefig)
 
         # If used two channels for clustering, make 2D scatter plot
         elif len(clustering_channels) == 2:
             plt.figure(figsize=(6,4))
-            fc.plot.scatter2d(populations,
-                              channels=clustering_channels,
-                              savefig=savefig)
+            FlowCal.plot.scatter2d(populations,
+                                   channels=clustering_channels,
+                                   savefig=savefig)
 
         # If used three channels or more for clustering, make 3D scatter plot
         # with the first three.
         elif len(clustering_channels) >= 3:
             plt.figure(figsize=(8,6))
-            fc.plot.scatter3d_and_projections(populations,
-                                              channels=clustering_channels[:3],
-                                              savefig=savefig)
+            FlowCal.plot.scatter3d_and_projections(
+                populations,
+                channels=clustering_channels[:3],
+                savefig=savefig)
 
         if plot_dir is not None:
             plt.close()
@@ -679,20 +680,20 @@ def get_transform_fxn(data_beads,
         # Plot
         if plot:
             # Get colors for each population. Colors are taken from the default
-            # colormap in fc.plot, if the population has been selected.
+            # colormap in FlowCal.plot, if the population has been selected.
             # Otherwise, the population is displayed in gray.
             color_levels = np.linspace(0, 1, n_clusters)
-            colors = [fc.plot.cmap_default(level)
-                      if selected else (0.6, 0.6, 0.6)
+            colors = [FlowCal.plot.cmap_default(level)
+                          if selected else (0.6, 0.6, 0.6)
                       for selected, level in zip(selected_mask, color_levels)]
 
             # Plot histograms
             plt.figure(figsize=(8,4))
-            fc.plot.hist1d(populations,
-                           channel=mef_channel,
-                           div=4,
-                           alpha=0.75,
-                           facecolor=colors)
+            FlowCal.plot.hist1d(populations,
+                                channel=mef_channel,
+                                div=4,
+                                alpha=0.75,
+                                facecolor=colors)
 
             # Plot a vertical line for each population, with an x coordinate
             # corresponding to their statistic value.
@@ -707,7 +708,7 @@ def get_transform_fxn(data_beads,
                 plt.savefig('{}/populations_{}_{}.png'.format(plot_dir,
                                                               mef_channel,
                                                               plot_filename),
-                            dpi=fc.plot.savefig_dpi)
+                            dpi=FlowCal.plot.savefig_dpi)
                 plt.close()
 
         ###
@@ -753,11 +754,11 @@ def get_transform_fxn(data_beads,
                 plt.savefig('{}/std_crv_{}_{}.png'.format(plot_dir,
                                                           mef_channel,
                                                           plot_filename),
-                            dpi=fc.plot.savefig_dpi)
+                            dpi=FlowCal.plot.savefig_dpi)
                 plt.close()
 
     # Make output transformation function
-    transform_fxn = functools.partial(fc.transform.to_mef,
+    transform_fxn = functools.partial(FlowCal.transform.to_mef,
                                       sc_list=std_crv_res,
                                       sc_channels=mef_channels)
 

@@ -32,18 +32,18 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='fc',
+    name='FlowCal',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=find_version(path.join(here, 'fc', '__init__.py')),
+    version=find_version(path.join(here, 'FlowCal', '__init__.py')),
 
     description='Flow cytometry library',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/castillohair/fc',
+    url='https://github.com/taborlab/FlowCal',
 
     # Author details
     author='Sebastian Castillo-Hair',
@@ -77,7 +77,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['fc'],
+    packages=['FlowCal'],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -106,7 +106,7 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         '.': ['CONTRIBUTE.rst'],
-        'fc': [],
+        'FlowCal': [],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
