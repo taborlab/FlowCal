@@ -7,7 +7,7 @@ import scipy
 import matplotlib.pyplot as plt
 import palettable
 
-import fc
+import FlowCal
 
 # Directories
 directory = 'FCFiles'
@@ -47,54 +47,68 @@ if __name__ == "__main__":
 
     # Process beads data
     print("\nProcessing beads...")
-    beads_data = fc.io.FCSData('{}/{}'.format(directory, beads_file))
+    beads_data = FlowCal.io.FCSData('{}/{}'.format(directory, beads_file))
     print("Beads file contains {} events.".format(beads_data.shape[0]))
+
     # Trim
-    beads_data = fc.gate.start_end(beads_data, num_start=250, num_end=100)
-    beads_data = fc.gate.high_low(beads_data, sc_channels)
+    beads_data = FlowCal.gate.start_end(beads_data, num_start=250, num_end=100)
+    beads_data = FlowCal.gate.high_low(beads_data, sc_channels)
+
     # Density gate
     print("\nRunning density gate on beads data...")
-    gated_beads_data, __, gate_contour = fc.gate.density2d(
-        data=beads_data, channels=sc_channels, gate_fraction=0.3,
+    gated_beads_data, __, gate_contour = FlowCal.gate.density2d(
+        data=beads_data,
+        channels=sc_channels,
+        gate_fraction=0.3,
         full_output=True)
     # Plot
     plt.figure(figsize = (6,4))
-    fc.plot.density_and_hist(beads_data, gated_beads_data, 
-        density_channels = sc_channels,
-        hist_channels = fl_channels,
-        gate_contour = gate_contour, 
-        density_params = {'mode': 'scatter'}, 
-        hist_params = {'ylim': (0, 1000), 'div': 4},
-        savefig = '{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
+    FlowCal.plot.density_and_hist(
+        beads_data,
+        gated_beads_data, 
+        density_channels=sc_channels,
+        hist_channels=fl_channels,
+        gate_contour=gate_contour, 
+        density_params={'mode': 'scatter'}, 
+        hist_params={'ylim': (0, 1000), 'div': 4},
+        savefig='{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
     plt.close()
 
     # Obtain standard curve transformation
     print("\nCalculating standard curve...")
     peaks_mef = np.array([mef_values[chi] for chi in mef_channels])
-    to_mef = fc.mef.get_transform_fxn(gated_beads_data, peaks_mef, 
-                    clustering_channels = fl_channels,
-                    mef_channels = mef_channels, verbose = True, 
-                    plot = True, plot_dir = beads_plot_dir)
+    to_mef = FlowCal.mef.get_transform_fxn(
+        gated_beads_data,
+        peaks_mef,
+        clustering_channels = fl_channels,
+        mef_channels = mef_channels,
+        verbose = True,
+        plot = True,
+        plot_dir = beads_plot_dir)
 
 
     # Process data files
     print("\nLoading data...")
     data = []
     for df in data_files:
-        di = fc.io.FCSData('{}/{}'.format(directory, df))
+        di = FlowCal.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         dv = di.detector_voltage('FL1')
-        print("{} ({} events, FL1 voltage = {}).".format(str(di),
-            di.shape[0], dv))
+        print("{} ({} events, FL1 voltage = {}).".format(
+            str(di),
+            di.shape[0],
+            dv))
 
     # Basic gating/trimming
-    data = [fc.gate.start_end(di, num_start=250, num_end=100) for di in data]
-    data = [fc.gate.high_low(di, sc_channels) for di in data]
+    data = [FlowCal.gate.start_end(di, num_start=250, num_end=100)
+            for di in data]
+    data = [FlowCal.gate.high_low(di, sc_channels) for di in data]
     # Gating of fluorescence channels
-    data = [fc.gate.high_low(di, mef_channels) for di in data]
+    data = [FlowCal.gate.high_low(di, mef_channels) for di in data]
     # Exponential transformation
-    data_transf = [fc.transform.exponentiate(di, sc_channels) for di in data]
+    data_transf = [FlowCal.transform.exponentiate(di, sc_channels)
+                   for di in data]
 
     # Transform to MEF
     print("\nTransforming to MEF...")
@@ -106,8 +120,10 @@ if __name__ == "__main__":
     data_gated_contour = []
     for di in data_transf:
         print("{}...".format(str(di)))
-        di_gated, __, gate_contour = fc.gate.density2d(
-            data=di, channels=sc_channels, gate_fraction=0.2,
+        di_gated, __, gate_contour = FlowCal.gate.density2d(
+            data=di,
+            channels=sc_channels,
+            gate_fraction=0.2,
             full_output=True)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
@@ -128,12 +144,15 @@ if __name__ == "__main__":
                 param['log'] = True
                 hist_params.append(param)
             # Plot
-            fc.plot.density_and_hist(di, gated_data = dig, figsize = (7,7),
-                density_channels = sc_channels,
-                hist_channels = mef_channels, gate_contour = dgc, 
-                density_params = {'mode': 'scatter', 'log': True}, 
-                hist_params = hist_params,
-                savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
+            FlowCal.plot.density_and_hist(di,
+                gated_data=dig,
+                figsize=(7,7),
+                density_channels=sc_channels,
+                hist_channels=mef_channels,
+                gate_contour=dgc, 
+                density_params={'mode': 'scatter', 'log': True}, 
+                hist_params=hist_params,
+                savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
 
     print("\nDone.")
