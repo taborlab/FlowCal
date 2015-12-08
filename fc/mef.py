@@ -138,17 +138,18 @@ def selection_std(populations,
     Select populations if most of their elements are between two values.
 
     This function selects populations from `populations` if their means are
-    more than `n_std_low` standard deviations greater than `low`, and
+    more than `n_std_low` standard deviations greater than `low` and
     `n_std_high` standard deviations lower than `high`.
 
     Parameters
     ----------
-    populations : list of arrays or FCSData objects
+    populations : list of 1D arrays or FCSData objects
         Populations to select or discard.
-    low, high : int or float, optional
-        Left and right threshold. If None, use 0.015 of the lowest value
-        and 0.0985 of the highest value in the first population's `domain`,
-        if available.
+    low, high : int or float
+        Low and high thresholds. Required if the elements in `populations`
+        are numpy arrays. If not specified, and the elements in
+        `populations` are FCSData objects, use 0.015 of the lowest value
+        and 0.0985 of the highest value in ``populations[0].domain``.
     n_std_low, n_std_high : float, optional
         Number of standard deviations from `low` and `high`, respectively,
         that a population's mean has to be closer than to be discarded.
@@ -156,20 +157,31 @@ def selection_std(populations,
     Returns
     -------
     selected_mask : boolean array
-        Set of flags indicating whether a population has been selected.
+        Flags indicating whether a population has been selected.
 
     """
     # Default thresholds
     if low is None:
-        low = 0.015*populations[0].domain(0)[0]
+        if hasattr(populations[0], 'domain'):
+            low = 0.015*populations[0].domain(0)[0]
+        else:
+            raise TypeError("argument 'low' not specified")
     if high is None:
-        high = 0.985*populations[0].domain(0)[-1]
+        if hasattr(populations[0], 'domain'):
+            high = 0.985*populations[0].domain(0)[-1]
+        else:
+            raise TypeError("argument 'high' not specified")
 
     # Calculate means and standard deviations
     pop_mean = np.array([fc.stats.mean(p) for p in populations])
     pop_std = np.array([fc.stats.std(p) for p in populations])
 
-    # Set minimum standard deviation to one.
+    # Some populations, especially the highest ones when they are near
+    # saturation, tend to aggregate mostly on one bin and give a standard
+    # deviation of almost zero. This is an effect of the finite bin resolution
+    # and probably gives a bad estimate of the standard deviation. We choose
+    # to be conservative and overestimate the standard deviation in these
+    # cases. Therefore, we set the minimum standard deviation to one.
     min_std = 1.0
     pop_std[pop_std < min_std] = min_std
 
