@@ -79,26 +79,26 @@ def clustering_gmm(data,
 
     # Get distance and sort based on it
     dist = np.sum(data**2., axis=1)
-    sorted_i = np.argsort(dist)
+    sorted_idx = np.argsort(dist)
 
     # Expected number of elements per cluster
     n_per_cluster = data.shape[0]/float(n_clusters)
 
     # Get means and covariances per cluster
-    # We will just use a fraction of ``1 - 2*discard_frac`` of the data.
+    # We will just use a fraction of ``1 - discard_frac`` of the data.
     # Data at the edges that actually corresponds to another cluster can
     # really mess up the final result.
-    discard_frac = 0.25
+    discard_frac = 0.5
     for i in range(n_clusters):
-        il = int((i + discard_frac)*n_per_cluster)
-        ih = int((i + 1 - discard_frac)*n_per_cluster)
-        sorted_i_i = sorted_i[il:ih]
-        data_i = data[sorted_i_i]
-        means.append(np.mean(data_i, axis=0))
+        il = int((i + discard_frac/2)*n_per_cluster)
+        ih = int((i + 1 - discard_frac/2)*n_per_cluster)
+        sorted_idx_cluster = sorted_idx[il:ih]
+        data_cluster = data[sorted_idx_cluster]
+        means.append(np.mean(data_cluster, axis=0))
         if data.shape[1] == 1:
-            covars.append(np.cov(data_i.T).reshape(1,1))
+            covars.append(np.cov(data_cluster.T).reshape(1,1))
         else:
-            covars.append(np.cov(data_i.T))
+            covars.append(np.cov(data_cluster.T))
     means = np.array(means)
 
     ###
