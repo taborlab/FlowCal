@@ -412,7 +412,7 @@ def get_transform_fxn(data_beads,
             Results of the clustering step, containing the following
             fields:
             labels : array
-                Labels for each element in `data_beads`.
+                Labels for each event in `data_beads`.
         statistic : dict
             Results of the calculation of bead subpopulations'
             fluorescence, containing the following fields:
@@ -494,8 +494,8 @@ def get_transform_fxn(data_beads,
 
     1. The individual subpopulations of beads are first identified using a
        clustering method of choice.
-    2. The fluorescence of each subpopulation is calculated for each
-       cluster, for each channel in `mef_channels`.
+    2. The fluorescence of each subpopulation is calculated, for each
+       channel in `mef_channels`.
     3. Some subpopulations are then discarded if they are close to either
        the minimum or the maximum channel value. In addition, if the MEF
        value of some subpopulation is unknown (represented as a ``NaN`` in
