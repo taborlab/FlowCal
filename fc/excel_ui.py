@@ -82,9 +82,9 @@ def write_workbook(filename, table_list):
 
     Parameters
     ----------
-    filename: str
+    filename : str
         Name of the Excel file to write.
-    table_list: list of ``(str, DataFrame)`` tuples
+    table_list : list of ``(str, DataFrame)`` tuples
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
@@ -557,11 +557,13 @@ def add_stats(samples_table, samples):
     Add stats fields to samples table.
 
     The following numbers are added to each row:
+
         - Number of Events
         - Acquisition Time (s)
     
     The following stats are added for each row, for each channel in which
     fluorescence units have been specified:
+
         - Gain
         - Mean
         - Geometric Mean
@@ -653,7 +655,7 @@ def generate_histograms_table(samples_table, samples):
     
     Returns
     -------
-    hist_table: DataFrame
+    hist_table : DataFrame
         A multi-indexed DataFrame. Rows cotain the histogram bins and
         counts for every sample and channel specified in samples_table.
         `hist_table` is indexed by the sample's ID, the channel name,
@@ -717,7 +719,7 @@ def show_open_file_dialog(filetypes):
 
     Returns
     -------
-    filename: str
+    filename : str
         The path of the filename selected, or an empty string if no file
         was chosen.
 
@@ -748,7 +750,7 @@ def run(verbose=True, plot=True):
 
     Parameters
     ----------
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
