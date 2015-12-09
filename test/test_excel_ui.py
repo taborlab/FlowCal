@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pandas.util.testing as tm
 
-import fc
+import FlowCal
 
 class TestReadTable(unittest.TestCase):
     """
@@ -60,9 +60,9 @@ class TestReadTable(unittest.TestCase):
                                        columns=expected_columns)
 
         # Read table
-        table = fc.excel_ui.read_table(self.filename,
-                                       sheetname=sheetname,
-                                       index_col=index_col)
+        table = FlowCal.excel_ui.read_table(self.filename,
+                                            sheetname=sheetname,
+                                            index_col=index_col)
 
         # Compare
         tm.assert_frame_equal(table, expected_output)
@@ -104,8 +104,8 @@ class TestReadTable(unittest.TestCase):
                                        columns=expected_columns)
 
         # Read table
-        table = fc.excel_ui.read_table(self.filename,
-                                       sheetname=sheetname)
+        table = FlowCal.excel_ui.read_table(self.filename,
+                                            sheetname=sheetname)
 
         # Compare
         tm.assert_frame_equal(table, expected_output)
@@ -155,9 +155,9 @@ class TestReadTable(unittest.TestCase):
                                        columns=expected_columns)
 
         # Read table
-        table = fc.excel_ui.read_table(self.filename,
-                                       sheetname=sheetname,
-                                       index_col=index_col)
+        table = FlowCal.excel_ui.read_table(self.filename,
+                                            sheetname=sheetname,
+                                            index_col=index_col)
 
         # Compare
         tm.assert_frame_equal(table, expected_output)
@@ -174,7 +174,7 @@ class TestReadTable(unittest.TestCase):
 
         # Call function
         self.assertRaises(ValueError,
-                          fc.excel_ui.read_table,
+                          FlowCal.excel_ui.read_table,
                           self.filename,
                           sheetname,
                           index_col)
@@ -191,7 +191,7 @@ class TestReadTable(unittest.TestCase):
 
         # Call function
         self.assertRaises(TypeError,
-                          fc.excel_ui.read_table,
+                          FlowCal.excel_ui.read_table,
                           self.filename,
                           sheetname,
                           index_col)
@@ -208,7 +208,7 @@ class TestReadTable(unittest.TestCase):
 
         # Call function
         self.assertRaises(TypeError,
-                          fc.excel_ui.read_table,
+                          FlowCal.excel_ui.read_table,
                           self.filename,
                           sheetname,
                           index_col)

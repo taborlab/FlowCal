@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-import fc
+import FlowCal
 
 # Directories
 directory = 'FCFiles'
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     print("\nLoading data...")
     data = []
     for df in data_files:
-        di = fc.io.FCSData('{}/{}'.format(directory, df))
+        di = FlowCal.io.FCSData('{}/{}'.format(directory, df))
         data.append(di)
 
         dv = di.detector_voltage('FL1-H')
@@ -36,10 +36,12 @@ if __name__ == "__main__":
 
     # Basic gating/trimming
     ch_all = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']
-    data = [fc.gate.start_end(di, num_start=250, num_end=100) for di in data]
-    data = [fc.gate.high_low(di, ch_all) for di in data]
+    data = [FlowCal.gate.start_end(di, num_start=250, num_end=100)
+            for di in data]
+    data = [FlowCal.gate.high_low(di, ch_all) for di in data]
+
     # Exponential transformation
-    data_transf = [fc.transform.exponentiate(di, ch_all) for di in data]
+    data_transf = [FlowCal.transform.exponentiate(di, ch_all) for di in data]
 
     # Ellipse gate
     print("\nRunning ellipse gate on data files...")
@@ -47,9 +49,15 @@ if __name__ == "__main__":
     data_gated_contour = []
     for di in data_transf:
         print("{}...".format(str(di)))
-        di_gated, __, gate_contour = fc.gate.ellipse(data = di,
-            channels = ['FSC-H', 'SSC-H'], center = np.log10([200, 70]),
-            a = 0.15, b = 0.10, theta = np.pi/4, log = True, full_output=True)
+        di_gated, __, gate_contour = FlowCal.gate.ellipse(
+            data=di,
+            channels=['FSC-H', 'SSC-H'],
+            center=np.log10([200, 70]),
+            a=0.15,
+            b=0.10,
+            theta=np.pi/4,
+            log=True,
+            full_output=True)
         data_gated.append(di_gated)
         data_gated_contour.append(gate_contour)
 
@@ -59,22 +67,16 @@ if __name__ == "__main__":
         for di, dig, dgc in zip(data_transf, data_gated, data_gated_contour):
             print("{}...".format(str(di)))
             # Plot
-            fc.plot.density_and_hist(di, gated_data = dig, figsize = (7,7),
-                density_channels = ['FSC-H', 'SSC-H'], 
-                hist_channels = ['FL1-H'], gate_contour = dgc, 
-                density_params = {'mode': 'scatter', 'log': True}, 
-                hist_params = {'div': 4, 'log': True},
-                savefig = '{}/{}.png'.format(gated_plot_dir, str(di)))
+            FlowCal.plot.density_and_hist(
+                di,
+                gated_data=dig,
+                figsize=(7,7),
+                density_channels=['FSC-H', 'SSC-H'], 
+                hist_channels=['FL1-H'],
+                gate_contour=dgc, 
+                density_params={'mode': 'scatter', 'log': True}, 
+                hist_params={'div': 4, 'log': True},
+                savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
-
-    # Generate bar plot
-    print("\nGenerating bar plot...")
-
-    labels = ['Sample {}'.format(i + 1) for i in range(len(data))]
-    fc.plot.hist_and_bar(data_gated, channel = 'FL1-H', labels = labels,
-        hist_params = {'log': True, 'div': 4,
-                'xlabel': 'GFP (A.U.)', 'ylim': (0, 400)},
-        bar_params = {'ylabel': 'GFP (A.U.)', 'ylim': (0, 600)},
-        bar_stats_func = np.median, savefig = 'hist_bar.png')
 
     print("\nDone.")

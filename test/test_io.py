@@ -8,7 +8,7 @@ import unittest
 
 import numpy as np
 
-import fc.io
+import FlowCal.io
 
 """
 Files to test:
@@ -33,7 +33,7 @@ class TestFCSDataLoading(unittest.TestCase):
         Testing proper loading from FCS file (2.0, CellQuest Pro).
 
         """
-        d = fc.io.FCSData(filenames[0])
+        d = FlowCal.io.FCSData(filenames[0])
         self.assertEqual(d.shape, (20949, 6))
         self.assertEqual(d.channels,
             ('FSC-H',
@@ -48,7 +48,7 @@ class TestFCSDataLoading(unittest.TestCase):
         Testing proper loading from FCS file (2.0, FACSDiva).
 
         """
-        d = fc.io.FCSData(filenames[1])
+        d = FlowCal.io.FCSData(filenames[1])
         self.assertEqual(d.shape, (20000, 9))
         self.assertEqual(d.channels,
             ('FSC-A',
@@ -67,7 +67,7 @@ class TestFCSDataLoading(unittest.TestCase):
         Testing proper loading from FCS file (3.0, FlowJo).
 
         """
-        d = fc.io.FCSData(filenames[2])
+        d = FlowCal.io.FCSData(filenames[2])
         self.assertEqual(d.shape, (25000, 8))
         self.assertEqual(d.channels,
             ('TIME',
@@ -85,7 +85,7 @@ class TestFCSDataLoading(unittest.TestCase):
         Testing proper loading from FCS file (3.0, Floating-point).
 
         """
-        d = fc.io.FCSData(filenames[3])
+        d = FlowCal.io.FCSData(filenames[3])
         self.assertEqual(d.shape, (50000, 14))
         self.assertEqual(d.channels,
             ('FSC-A',
@@ -110,7 +110,7 @@ class TestFCSParseTimeString(unittest.TestCase):
         Test that _parse_time_string() returns None when the input is None.
 
         """
-        t = fc.io.FCSData._parse_time_string(None)
+        t = FlowCal.io.FCSData._parse_time_string(None)
         self.assertEqual(t, None)
 
     def test_parse_fcs2(self):
@@ -118,7 +118,7 @@ class TestFCSParseTimeString(unittest.TestCase):
         Test that _parse_time_string() interprets the FCS2.0 time format.
 
         """
-        t = fc.io.FCSData._parse_time_string("20:15:43")
+        t = FlowCal.io.FCSData._parse_time_string("20:15:43")
         self.assertEqual(t, datetime.time(20, 15, 43))
 
     def test_parse_fcs3(self):
@@ -126,7 +126,7 @@ class TestFCSParseTimeString(unittest.TestCase):
         Test that _parse_time_string() interprets the FCS3.0 time format.
 
         """
-        t = fc.io.FCSData._parse_time_string("20:15:43:20")
+        t = FlowCal.io.FCSData._parse_time_string("20:15:43:20")
         self.assertEqual(t, datetime.time(20, 15, 43, 333333))
 
     def test_parse_fcs3_1(self):
@@ -134,7 +134,7 @@ class TestFCSParseTimeString(unittest.TestCase):
         Test that _parse_time_string() interprets the FCS3.1 time format.
 
         """
-        t = fc.io.FCSData._parse_time_string("20:15:43.27")
+        t = FlowCal.io.FCSData._parse_time_string("20:15:43.27")
         self.assertEqual(t, datetime.time(20, 15, 43, 270000))
 
     def test_parse_undefined(self):
@@ -142,7 +142,7 @@ class TestFCSParseTimeString(unittest.TestCase):
         Test that _parse_time_string() returns None for undefined inputs.
 
         """
-        t = fc.io.FCSData._parse_time_string("i'm undefined")
+        t = FlowCal.io.FCSData._parse_time_string("i'm undefined")
         self.assertEqual(t, None)
 
 class TestFCSAttributesAmplificationType(unittest.TestCase):
@@ -161,7 +161,7 @@ class TestFCSAttributesAmplificationType(unittest.TestCase):
 
     """
     def setUp(self):
-        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
 
     def test_attribute(self):
         """
@@ -259,7 +259,7 @@ class TestFCSAttributesDetectorVoltage(unittest.TestCase):
 
     """
     def setUp(self):
-        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
 
     def test_attribute(self):
         """
@@ -356,7 +356,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
 
     """
     def setUp(self):
-        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
 
     def test_attribute(self):
         """
@@ -461,7 +461,7 @@ class TestFCSAttributesDomain(unittest.TestCase):
 
     """
     def setUp(self):
-        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
 
     def assert_list_of_arrays_equal(self, l1, l2):
         self.assertEqual(len(l1), len(l2))
@@ -568,7 +568,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
 
     """
     def setUp(self):
-        self.d = [fc.io.FCSData(filenames[i]) for i in range(4)]
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
 
     def assert_list_of_arrays_equal(self, l1, l2):
         self.assertEqual(len(l1), len(l2))
@@ -710,7 +710,7 @@ class TestFCSAttributesHistBinEdges(unittest.TestCase):
 
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filenames[0])
+        self.d = FlowCal.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
 
     def test_str(self):
@@ -775,7 +775,7 @@ class TestFCSAttributes(unittest.TestCase):
 
 class TestFCSAttributes3(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filenames[2])
+        self.d = FlowCal.io.FCSData(filenames[2])
         self.n_samples = self.d.shape[0]
 
     def test_str(self):
@@ -840,7 +840,7 @@ class TestFCSAttributes3(unittest.TestCase):
 
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filenames[0])
+        self.d = FlowCal.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
 
     def test_1d_slicing_with_scalar(self):
@@ -849,7 +849,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[1]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (6,))
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
@@ -860,7 +860,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[range(10)]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
@@ -871,7 +871,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[:,2]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
         self.assertEqual(ds.channels, ('FL1-H',))
 
@@ -881,7 +881,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[:,'SSC-H']
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,))
         self.assertEqual(ds.channels, ('SSC-H', ))
 
@@ -891,7 +891,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         object.
         """
         ds = self.d[:,[1,3]]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
         self.assertEqual(ds.channels, ('SSC-H', 'FL2-H'))
 
@@ -902,7 +902,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[:,['FSC-H', 'FL3-H']]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (self.n_samples,2))
         self.assertEqual(ds.channels, ('FSC-H', 'FL3-H'))
 
@@ -912,7 +912,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[:1000]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (1000,6))
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
@@ -923,7 +923,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
         """
         ds = self.d[:1000,['SSC-H', 'FL3-H']]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (1000,2))
         self.assertEqual(ds.channels, ('SSC-H', 'FL3-H'))
 
@@ -934,7 +934,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         """
         m = self.d[:,1]>500
         ds = self.d[m,:]
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
 
@@ -963,7 +963,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         """
         ds = self.d.copy()
         ds[:,[1,2]] = 5
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
@@ -979,7 +979,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         """
         ds = self.d.copy()
         ds[:,['SSC-H', 'FL1-H']] = 5
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.channels,
             ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time'))
         np.testing.assert_array_equal(ds[:,0], self.d[:,0])
@@ -991,7 +991,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
 class TestFCSDataOperations(unittest.TestCase):
     def setUp(self):
-        self.d = fc.io.FCSData(filenames[0])
+        self.d = FlowCal.io.FCSData(filenames[0])
         self.n_samples = self.d.shape[0]
 
     def test_sum_integer(self):
@@ -1001,7 +1001,7 @@ class TestFCSDataOperations(unittest.TestCase):
         """
         ds = self.d + 3
         ds_array = self.d.view(np.ndarray) + 3
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         np.testing.assert_array_equal(ds, ds_array)
         
     def test_sqrt(self):
@@ -1011,7 +1011,7 @@ class TestFCSDataOperations(unittest.TestCase):
         """
         ds = np.sqrt(self.d)
         ds_array = np.sqrt(self.d.view(np.ndarray))
-        self.assertIsInstance(ds, fc.io.FCSData)
+        self.assertIsInstance(ds, FlowCal.io.FCSData)
         np.testing.assert_array_equal(ds, ds_array)
 
     def test_sum(self):
@@ -1062,7 +1062,7 @@ class TestFCSDataOperations(unittest.TestCase):
         """
         m = np.mean(self.d, axis = 0)
         m_array = np.mean(self.d.view(np.ndarray), axis = 0)
-        self.assertIsInstance(m, fc.io.FCSData)
+        self.assertIsInstance(m, FlowCal.io.FCSData)
         self.assertEqual(m.shape, m_array.shape)
         np.testing.assert_array_equal(m, m_array)
         

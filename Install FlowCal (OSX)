@@ -2,8 +2,8 @@
 
 # Change current working directory
 cd -- "$(dirname "$BASH_SOURCE")"
-# Install fc
-pip install -r requirements.txt
-python setup.py install
+# Install FlowCal
+sudo pip install -r requirements.txt --no-cache-dir
+sudo python setup.py install
 # Pause
 read -p "Press [Enter] to finish..."
