@@ -83,11 +83,8 @@
             
                 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#pre-requisites">Pre-requisites</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#windows-and-macosx">Windows and MacOSX</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ubuntu-mint">Ubuntu/Mint</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-flowcal-with-anaconda">Installing <code class="docutils literal"><span class="pre">FlowCal</span></code> with Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-flowcal-in-barebones-python">Installing <code class="docutils literal"><span class="pre">FlowCal</span></code> in (barebones) Python</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
@@ -145,34 +142,33 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="pre-requisites">
-<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline">¶</a></h2>
-<p>Python 2.7 is required. The following Python packages should also be present:</p>
+<div class="section" id="installing-flowcal-with-anaconda">
+<h2>Installing <code class="docutils literal"><span class="pre">FlowCal</span></code> with Anaconda<a class="headerlink" href="#installing-flowcal-with-anaconda" title="Permalink to this headline">¶</a></h2>
+<p>to do.</p>
+</div>
+<div class="section" id="installing-flowcal-in-barebones-python">
+<h2>Installing <code class="docutils literal"><span class="pre">FlowCal</span></code> in (barebones) Python<a class="headerlink" href="#installing-flowcal-in-barebones-python" title="Permalink to this headline">¶</a></h2>
+<p>Python 2.7 is required, along with <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">setuptools</span></code>. The following Python packages should also be present:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">numpy</span></code> (1.9.2)</li>
-<li><code class="docutils literal"><span class="pre">scipy</span></code> (0.15.1)</li>
-<li><code class="docutils literal"><span class="pre">matplotlib</span></code> (1.4.3)</li>
-<li><code class="docutils literal"><span class="pre">palettable</span></code> (2.1.1)</li>
-<li><code class="docutils literal"><span class="pre">scikit-learn</span></code> (0.16.1)</li>
-<li><code class="docutils literal"><span class="pre">pandas</span></code> (0.16.2)</li>
-<li><code class="docutils literal"><span class="pre">xlrd</span></code> (0.9.3)</li>
-<li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (0.7.3)</li>
+<li><code class="docutils literal"><span class="pre">numpy</span></code> (&gt;=1.9.2)</li>
+<li><code class="docutils literal"><span class="pre">scipy</span></code> (&gt;=0.15.1)</li>
+<li><code class="docutils literal"><span class="pre">matplotlib</span></code> (&gt;=1.4.3)</li>
+<li><code class="docutils literal"><span class="pre">palettable</span></code> (&gt;=2.1.1)</li>
+<li><code class="docutils literal"><span class="pre">scikit-learn</span></code> (&gt;=0.16.1)</li>
+<li><code class="docutils literal"><span class="pre">pandas</span></code> (&gt;=0.16.2)</li>
+<li><code class="docutils literal"><span class="pre">xlrd</span></code> (&gt;=0.9.3)</li>
+<li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (&gt;=0.7.3)</li>
 </ul>
-<p>If <code class="docutils literal"><span class="pre">FlowCal</span></code> is installed through <code class="docutils literal"><span class="pre">pip</span></code> or <code class="docutils literal"><span class="pre">setuptools</span></code>, prerequisites should be taken care of automatically.</p>
-<p>OS-specific recommendations are given below.</p>
-<div class="section" id="windows-and-macosx">
-<h3>Windows and MacOSX<a class="headerlink" href="#windows-and-macosx" title="Permalink to this headline">¶</a></h3>
-<p>We recommend the Anaconda Python distribution from Continuum Analytics (<a class="reference external" href="https://store.continuum.io/cshop/anaconda/">https://store.continuum.io/cshop/anaconda/</a>). Anaconda simplifies the installation of python and the required packages.</p>
-<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, download the repo and double click on <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(Windows).bat</span></code>
-or <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code> on Windows and Linux, respectively.</p>
+<p>If you have <code class="docutils literal"><span class="pre">pip</span></code>, a <code class="docutils literal"><span class="pre">requirements.txt</span></code> file is provided, such that the required packages can be installed by running:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install -r requirements.txt
+</pre></div>
 </div>
-<div class="section" id="ubuntu-mint">
-<h3>Ubuntu/Mint<a class="headerlink" href="#ubuntu-mint" title="Permalink to this headline">¶</a></h3>
-<p>Python is installed by default in Ubuntu and Linux Mint. We recommend managing packages through <cite>pip</cite> to get the appropriate versions.</p>
-<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, download the repo and run:</p>
-<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p>
-<p>You may need to request administrative permissions by using the <code class="docutils literal"><span class="pre">sudo</span></code> command.</p>
+<p>Linux and Mac OSX users may need to request administrative permissions by preceding this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
+<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, run the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>python setup.py install
+</pre></div>
 </div>
+<p>Again, some users may need to precede this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
 </div>
 </div>
 
