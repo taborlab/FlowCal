@@ -1,5 +1,5 @@
-FlowCal Reference
-=================
+FlowCal (Python API) Reference
+==============================
 
 .. toctree::
    :maxdepth: 4
