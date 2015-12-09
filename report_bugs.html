@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; FlowCal 1.0.0b1 documentation</title>
+  <title>Report Bugs &mdash; FlowCal 1.0.0b1 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="FlowCal 1.0.0b1 documentation" href="index.html"/>
-        <link rel="next" title="FlowCal’s Excel UI Tutorial" href="tutorial_excel.html"/>
-        <link rel="prev" title="FlowCal" href="index.html"/> 
+        <link rel="next" title="Request Features" href="request_features.html"/>
+        <link rel="prev" title="FlowCal.transform module" href="reference/FlowCal.transform.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,21 +81,14 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#pre-requisites">Pre-requisites</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#windows-and-macosx">Windows and MacOSX</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ubuntu-mint">Ubuntu/Mint</a></li>
-</ul>
-</li>
-</ul>
-</li>
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_python.html">FlowCal Tutorial in Python</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="reference/modules.html">FlowCal (Python API) Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="report_bugs.html">Report Bugs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Report Bugs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="request_features.html">Request Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contribute.html">How to Contribute</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
@@ -129,11 +122,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Installation</li>
+    <li>Report Bugs</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/report_bugs.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -143,37 +136,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="pre-requisites">
-<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline">¶</a></h2>
-<p>Python 2.7 is required. The following Python packages should also be present:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">numpy</span></code> (1.9.2)</li>
-<li><code class="docutils literal"><span class="pre">scipy</span></code> (0.15.1)</li>
-<li><code class="docutils literal"><span class="pre">matplotlib</span></code> (1.4.3)</li>
-<li><code class="docutils literal"><span class="pre">palettable</span></code> (2.1.1)</li>
-<li><code class="docutils literal"><span class="pre">scikit-learn</span></code> (0.16.1)</li>
-<li><code class="docutils literal"><span class="pre">pandas</span></code> (0.16.2)</li>
-<li><code class="docutils literal"><span class="pre">xlrd</span></code> (0.9.3)</li>
-<li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (0.7.3)</li>
-</ul>
-<p>If <code class="docutils literal"><span class="pre">FlowCal</span></code> is installed through <code class="docutils literal"><span class="pre">pip</span></code> or <code class="docutils literal"><span class="pre">setuptools</span></code>, prerequisites should be taken care of automatically.</p>
-<p>OS-specific recommendations are given below.</p>
-<div class="section" id="windows-and-macosx">
-<h3>Windows and MacOSX<a class="headerlink" href="#windows-and-macosx" title="Permalink to this headline">¶</a></h3>
-<p>We recommend the Anaconda Python distribution from Continuum Analytics (<a class="reference external" href="https://store.continuum.io/cshop/anaconda/">https://store.continuum.io/cshop/anaconda/</a>). Anaconda simplifies the installation of python and the required packages.</p>
-<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, download the repo and double click on <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(Windows).bat</span></code>
-or <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code> on Windows and Linux, respectively.</p>
-</div>
-<div class="section" id="ubuntu-mint">
-<h3>Ubuntu/Mint<a class="headerlink" href="#ubuntu-mint" title="Permalink to this headline">¶</a></h3>
-<p>Python is installed by default in Ubuntu and Linux Mint. We recommend managing packages through <cite>pip</cite> to get the appropriate versions.</p>
-<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, download the repo and run:</p>
-<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p>
-<p>You may need to request administrative permissions by using the <code class="docutils literal"><span class="pre">sudo</span></code> command.</p>
-</div>
-</div>
+  <div class="section" id="report-bugs">
+<h1>Report Bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h1>
+<p>The official way to report a bug is through the issue tracker on github (<a class="reference external" href="https://github.com/taborlab/FlowCal/issues">https://github.com/taborlab/FlowCal/issues</a>). Try to be as explicit as possible when describing your issue. Ideally, a set of instructions to reproduce the error should be provided, together with the version of all the relevant packages you are using.</p>
+<p>If you are interested in writing the code necessary to solve a bug, please visit <a class="reference internal" href="contribute.html"><em>How to Contribute</em></a> first.</p>
 </div>
 
 
@@ -183,10 +149,10 @@ or <code class="docutils literal"><span class="pre">Install</span> <span class="
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tutorial_excel.html" class="btn btn-neutral float-right" title="FlowCal’s Excel UI Tutorial" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="request_features.html" class="btn btn-neutral float-right" title="Request Features" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="FlowCal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="reference/FlowCal.transform.html" class="btn btn-neutral" title="FlowCal.transform module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
