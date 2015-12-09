@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FlowCal.transform module &mdash; FlowCal 0.8.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="FlowCal 0.8.1 documentation" href="../index.html"/>
+        <link rel="up" title="FlowCal package" href="FlowCal.html"/>
+        <link rel="next" title="How to Contribute" href="../contribute.html"/>
+        <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> FlowCal
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FlowCal.html">FlowCal package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="FlowCal.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="">FlowCal.transform module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.html#module-FlowCal">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">FlowCal</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">FlowCal Reference</a> &raquo;</li>
+      
+          <li><a href="FlowCal.html">FlowCal package</a> &raquo;</li>
+      
+    <li>FlowCal.transform module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/FlowCal.transform.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-FlowCal.transform">
+<span id="flowcal-transform-module"></span><h1>FlowCal.transform module<a class="headerlink" href="#module-FlowCal.transform" title="Permalink to this headline">¶</a></h1>
+<p>Functions for transforming flow cytometry data</p>
+<p>All transformations are of the following form:</p>
+<div class="highlight-python"><div class="highlight"><pre>data_t = transform(data, channels, *args, **kwargs):
+</pre></div>
+</div>
+<p>where <cite>data</cite> and <cite>data_t</cite> are NxD FCSData objects or numpy arrays,
+representing N events with D channels, <cite>channels</cite> indicate the channels in
+which to apply the transformation, and <cite>args</cite> and <cite>kwargs</cite> are
+transformation-specific parameters. Each transformation function can apply
+its own restrictions or defaults on <cite>channels</cite>.</p>
+<p>If <cite>data</cite> is an FCSData object, <cite>transform</cite> should rescale <code class="docutils literal"><span class="pre">data.domain</span></code>
+and <code class="docutils literal"><span class="pre">data.hist_bin_edges</span></code> if necessary.</p>
+<dl class="function">
+<dt id="FlowCal.transform.exponentiate">
+<code class="descclassname">FlowCal.transform.</code><code class="descname">exponentiate</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.exponentiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponentiate flow cytometry data.</p>
+<p>This function applies the following transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This spaces out 10-bit data across 4 logs from 1 to 1e4, which rescales
+the fluorecence units to those observed in most flow cytometry
+aquisition software, if a log amplifier has been used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
+<blockquote>
+<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+None, perform transformation in all channels.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
+<blockquote class="last">
+<div><p>NxD transformed flow cytometry data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.transform.to_mef">
+<code class="descclassname">FlowCal.transform.</code><code class="descname">to_mef</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>sc_list</em>, <em>sc_channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_mef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform flow cytometry data using a standard curve function.</p>
+<p>This function accepts a list of standard curves (<cite>sc_list</cite>) and a list
+of channels to which those standard curves should be applied
+(<cite>sc_channels</cite>). <cite>to_mef</cite> automatically checks whether a standard curve
+is available for each channel specified in <cite>channels</cite>, and throws an
+error otherwise.</p>
+<p>This function is intended to be reduced to the following signature:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">to_mef_reduced</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>by using <code class="docutils literal"><span class="pre">functools.partial</span></code> once a list of standard curves and their
+respective channels is available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : int, str, list of int, list of str</p>
+<blockquote>
+<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+None, perform transformation in all channels specified on
+<cite>sc_channels</cite>.</p>
+</div></blockquote>
+<p><strong>sc_list</strong> : list of functions</p>
+<blockquote>
+<div><p>Functions implementing the standard curves for each channel in
+<cite>sc_channels</cite>.</p>
+</div></blockquote>
+<p><strong>sc_channels</strong> : list of int or list of str, optional</p>
+<blockquote>
+<div><p>List of channels corresponding to each function in <cite>sc_list</cite>. If
+None, use all channels in <cite>data</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD transformed flow cytometry data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If any channel specified in <cite>channels</cite> is not in <cite>sc_channels</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.transform.transform">
+<code class="descclassname">FlowCal.transform.</code><code class="descname">transform</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>transform_fxn</em>, <em>def_channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply some transformation function to flow cytometry data.</p>
+<p>This function is a template transformation function, intended to be
+used by other specific transformation functions. It performs basic
+checks on <cite>channels</cite> and <cite>data</cite>. It then applies <cite>transform_fxn</cite> to the
+specified channels. Finally, it rescales  <code class="docutils literal"><span class="pre">data.domain</span></code> and
+<code class="docutils literal"><span class="pre">data.hist_bin_edges</span></code> if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
+<blockquote>
+<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+None, use def_channels.</p>
+</div></blockquote>
+<p><strong>transform_fxn</strong> : function</p>
+<blockquote>
+<div><p>Function that performs the actual transformation.</p>
+</div></blockquote>
+<p><strong>def_channels</strong> : int, str, list of int, list of str, optional</p>
+<blockquote>
+<div><p>Default set of channels in which to perform the transformation.
+If <cite>def_channels</cite> is None, use all channels.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data_t</strong> : FCSData or numpy array</p>
+<blockquote class="last">
+<div><p>NxD transformed flow cytometry data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../contribute.html" class="btn btn-neutral float-right" title="How to Contribute" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="FlowCal.stats.html" class="btn btn-neutral" title="FlowCal.stats module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.8.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
