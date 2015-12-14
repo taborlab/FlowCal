@@ -14,7 +14,7 @@ It features:
 * Traditional transformation functions, such as exponentiation.
 * Analysis of calibration beads data, standard curve generation, and transformation to absolute units (Molecules of Equivalent Fluorophore, MEF).
 * Plotting, including generation of histograms, density plots and scatter plots.
-* A user-fiendly Excel UI to gate, transform, plot, and generate statistics from a list of flow cytometry samples in a simple fashion.
+* A user-fiendly Excel UI to gate, transform, calibrate, plot, and generate statistics from a list of flow cytometry samples in a simple fashion.
 
 Getting Started
 ---------------
