@@ -13,7 +13,9 @@ To install Anaconda, do the following:
 
 3. Download FlowCal from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. A file called ``FlowCal-master.zip`` will be downloaded. Unzip this file.
 
-4. Inside the unzipped folder, double click on ``Install FlowCal (Windows).bat`` or ``Install FlowCal (OSX)`` if you are using Windows or OS X, respectively. This will open a terminal window and install ``FlowCal``. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. Press Enter to close the terminal window.
+4. Inside the unzipped folder, double click on ``Install FlowCal (Windows).bat`` or ``Install FlowCal (OSX)`` if you are using Windows or OS X, respectively. This will open a terminal window and install ``FlowCal``. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. If the installation was successful, your terminal should look like the figure below. Press Enter to close the terminal window.
+
+.. image:: _static/installation_completed.png
 
 *Mac OS X only*: If the following error message appears after double clicking ``Install FlowCal (OSX)``: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -> Security and Privacy -> General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.
 
