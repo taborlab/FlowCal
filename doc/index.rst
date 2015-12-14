@@ -22,16 +22,32 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
+   Download FlowCal! <https://github.com/taborlab/FlowCal/archive/master.zip>
    installation.rst
+
+Using FlowCal's Excel UI
+------------------------
+
+.. toctree::
+   :maxdepth: 1
+
    tutorial_excel.rst
+   format_excel.rst
+
+Using FlowCal from Python
+-------------------------
+
+.. toctree::
+   :maxdepth: 1
+
    tutorial_python.rst
+   reference/modules.rst
 
 More Information
 ----------------
 .. toctree::
    :maxdepth: 1
 
-   reference/modules.rst
    report_bugs.rst
    request_features.rst
    contribute.rst

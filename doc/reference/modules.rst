@@ -1,7 +1,23 @@
 FlowCal (Python API) Reference
 ==============================
 
-.. toctree::
-   :maxdepth: 4
+Submodules
+----------
 
-   FlowCal
+.. toctree::
+
+   FlowCal.excel_ui
+   FlowCal.gate
+   FlowCal.io
+   FlowCal.mef
+   FlowCal.plot
+   FlowCal.stats
+   FlowCal.transform
+
+Module contents
+---------------
+
+.. automodule:: FlowCal
+    :members:
+    :undoc-members:
+    :show-inheritance:
