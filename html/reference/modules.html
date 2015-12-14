@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal package &mdash; FlowCal 1.0.0b1 documentation</title>
+  <title>FlowCal (Python API) Reference &mdash; FlowCal 1.0.0b1 documentation</title>
   
 
   
@@ -31,9 +31,8 @@
 
   
     <link rel="top" title="FlowCal 1.0.0b1 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.excel_ui module" href="FlowCal.excel_ui.html"/>
-        <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html"/> 
+        <link rel="prev" title="FlowCal Tutorial in Python" href="../tutorial_python.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -83,28 +82,32 @@
             
             
                 <ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html"><code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../format_excel.html">Format of the Excel File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output_excel.html">Outputs of the Excel UI</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">FlowCal (Python API) Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#module-FlowCal">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FlowCal">Module contents</a></li>
 </ul>
 </li>
 </ul>
-</li>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../report_bugs.html">Report Bugs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../request_features.html">Request Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
@@ -139,13 +142,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">FlowCal (Python API) Reference</a> &raquo;</li>
-      
-    <li>FlowCal package</li>
+    <li>FlowCal (Python API) Reference</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/reference/FlowCal.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/reference/modules.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -155,8 +156,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="flowcal-package">
-<h1>FlowCal package<a class="headerlink" href="#flowcal-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="flowcal-python-api-reference">
+<h1>FlowCal (Python API) Reference<a class="headerlink" href="#flowcal-python-api-reference" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -189,7 +190,7 @@
         <a href="FlowCal.excel_ui.html" class="btn btn-neutral float-right" title="FlowCal.excel_ui module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="modules.html" class="btn btn-neutral" title="FlowCal (Python API) Reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../tutorial_python.html" class="btn btn-neutral" title="FlowCal Tutorial in Python" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

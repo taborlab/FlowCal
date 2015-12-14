@@ -1,5 +1,5 @@
-FlowCal package
-===============
+FlowCal (Python API) Reference
+==============================
 
 Submodules
 ----------
