@@ -6,7 +6,7 @@
 =======
 FlowCal
 =======
-``FlowCal`` is a library for processing and analyzing flow cytometry data in Python.
+``FlowCal`` is a library for processing, calibrating, and analyzing flow cytometry data in Python.
 It features:
 
 * Extraction of Flow Cytometry Standard (FCS) files into numpy array-like structures
