@@ -1,5 +1,5 @@
-``FlowCal``'s Excel UI Tutorial
-===============================
+FlowCal's Excel UI Tutorial
+===========================
 
 To use the ``FlowCal``’s Excel UI, follow these steps:
 

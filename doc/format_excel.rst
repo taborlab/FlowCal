@@ -10,9 +10,9 @@ An example of a properly formatted Excel input file is provided in the ``example
 Instruments sheet
 -----------------
 
-.. image:: _static/spreadsheet_instruments.png
+This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument; however ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an **Instruments** sheet.
 
-This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument; however ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure above shows an example of an **Instruments** sheet.
+.. image:: _static/spreadsheet_instruments.png
 
 For each row, the following columns must be filled.
 
@@ -26,9 +26,9 @@ Additional columns, like **Description** (B in the figure above), can be added i
 Beads sheet
 -----------
 
-.. image:: _static/spreadsheet_beads.png
+This sheet contains details about calibration microbeads and how to process them. Each row represents a different sample of beads. The figure below shows an example of an **Beads** sheet.
 
-This sheet contains details about calibration microbeads and how to process them. Each row represents a different sample of beads. The figure above shows an example of an **Beads** sheet.
+.. image:: _static/spreadsheet_beads.png
 
 For each row, the following columns must be filled:
 
@@ -44,9 +44,9 @@ Additional columns, like **Lot** (column D), can be added in any place for the u
 Samples sheet
 -------------
 
-.. image:: _static/spreadsheet_samples.png
+In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. Several analyses can be performed on the same file (e.g. rows 10 and 12 in the figure below, in which the gating fraction is varied). The figure below shows an example of an **Samples** sheet.
 
-In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. Several analyses can be performed on the same file (e.g. rows 10 and 12 in the figure above, in which the gating fraction is varied). The figure above shows an example of an **Samples** sheet.
+.. image:: _static/spreadsheet_samples.png
 
 For each row, the following columns must be filled:
 

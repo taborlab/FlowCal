@@ -33,6 +33,7 @@ Using FlowCal's Excel UI
 
    tutorial_excel.rst
    format_excel.rst
+   output_excel.rst
 
 Using FlowCal from Python
 -------------------------
