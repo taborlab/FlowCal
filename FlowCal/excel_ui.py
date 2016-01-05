@@ -527,8 +527,9 @@ def process_samples_table(samples_table,
             density_params = {}
             density_params['mode'] = 'scatter'
             density_params['log'] = True
-            ret = sample_gated.shape[0] * 100. / sample.shape[0]
-            density_params["title"] = "{} ({:.1f}% retained)".format(sample_id, ret)
+            density_params["title"] = "{} ({:.1f}% retained)".format(
+                sample_id,
+                sample_gated.shape[0] * 100. / sample.shape[0])
             # Define histogram plot parameters
             hist_params = []
             for rc, ru in zip(report_channels, report_units):
