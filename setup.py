@@ -83,14 +83,14 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.9.2',
-                      'scipy>=0.15.1',
-                      'matplotlib>=1.4.3',
+    install_requires=['numpy>=1.8.2',
+                      'scipy>=0.14.0',
+                      'matplotlib>=1.3.1',
                       'palettable>=2.1.1',
-                      'scikit-learn>=0.16.1',
-                      'pandas>=0.16.2',
-                      'xlrd>=0.9.3',
-                      'XlsxWriter>=0.7.3'],
+                      'scikit-learn>=0.16.0',
+                      'pandas>=0.16.1',
+                      'xlrd>=0.9.2',
+                      'XlsxWriter>=0.5.2'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

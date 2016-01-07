@@ -266,6 +266,13 @@ def process_beads_table(beads_table,
         if plot:
             if verbose:
                 print("Plotting density plot and histogram...")
+            # Define density plot parameters
+            density_params = {}
+            density_params['mode'] = 'scatter'
+            density_params["title"] = "{} ({:.1f}% retained)".format(
+                beads_id,
+                beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
+            # Plot
             figname = os.path.join(base_dir,
                                    plot_dir,
                                    "density_hist_{}.png".format(beads_id))
@@ -276,7 +283,7 @@ def process_beads_table(beads_table,
                 density_channels=sc_channels,
                 hist_channels=cluster_channels,
                 gate_contour=gate_contour, 
-                density_params={'mode': 'scatter'}, 
+                density_params=density_params,
                 hist_params={'div': 4},
                 savefig=figname)
 
@@ -527,6 +534,9 @@ def process_samples_table(samples_table,
             density_params = {}
             density_params['mode'] = 'scatter'
             density_params['log'] = True
+            density_params["title"] = "{} ({:.1f}% retained)".format(
+                sample_id,
+                sample_gated.shape[0] * 100. / sample.shape[0])
             # Define histogram plot parameters
             hist_params = []
             for rc, ru in zip(report_channels, report_units):

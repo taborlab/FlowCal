@@ -14,6 +14,7 @@ from sklearn.mixture import GMM
 
 import FlowCal.plot
 import FlowCal.transform
+import FlowCal.stats
 
 # Use default colors from palettable if available
 try:
