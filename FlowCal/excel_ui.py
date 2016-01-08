@@ -748,7 +748,7 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(verbose=True, plot=True):
+def run(input_path=None, verbose=True, plot=True):
     """
     Run the MS Excel User Interface.
 
@@ -758,6 +758,9 @@ def run(verbose=True, plot=True):
 
     Parameters
     ----------
+    input_path: str
+        Path to the Excel file to use as input. If None, show a dialog to
+        select an input file.
     verbose: bool, optional
         Whether to print information messages during the execution of this
         function.
@@ -766,12 +769,15 @@ def run(verbose=True, plot=True):
         sample, and each beads sample.
 
     """
-    # Open input workbook
-    input_path = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
-    if not input_path:
-        if verbose:
-            print("No input file selected.")
-        return
+
+    # If input file has not been specified, show open file dialog
+    if input_path is None:
+        input_path = show_open_file_dialog(filetypes=[('Excel files',
+                                                       '*.xlsx')])
+        if not input_path:
+            if verbose:
+                print("No input file selected.")
+            return
     # Extract directory, filename, and filename with no extension from path
     input_dir, input_filename = os.path.split(input_path)
     input_filename_no_ext, __ = os.path.splitext(input_filename)
@@ -837,4 +843,26 @@ def run(verbose=True, plot=True):
         print("\nDone.")
 
 if __name__ == '__main__':
-    run(verbose=True, plot=True)
+    # Read command line arguments
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="process flow cytometry files with FlowCal's Excel UI.")
+    parser.add_argument(
+        "filepath",
+        type=str,
+        nargs='?',
+        help="input Excel file name. If not specified, show open file window")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="print information about individual processing steps")
+    parser.add_argument(
+        "-p",
+        "--plot",
+        action="store_true",
+        help="generate and save density plots/histograms of beads and samples")
+    args = parser.parse_args()
+
+    # Run Excel UI
+    run(args.filepath, verbose=args.verbose, plot=args.plot)
