@@ -562,6 +562,53 @@ def process_samples_table(samples_table,
 
     return samples
 
+def add_beads_stats(beads_table, beads_samples):
+    """
+    Add stats fields to beads table.
+
+    The following numbers are added to each row:
+        - Number of Events
+        - Acquisition Time (s)
+
+    The following stats are added for each row, for each channel in which
+    MEF values have been specified:
+        - Detector voltage (gain)
+
+    Parameters
+    ----------
+    beads_table : DataFrame
+        Table specifying bead samples to analyze. For more information
+        about the fields required in this table, please consult the
+        module's documentation.
+    beads_samples : list
+        FCSData objects from which to calculate statistics.
+        ``beads_samples[i]`` should correspond to
+        ``beads_table.values()[i]``.
+
+    """
+    # Add per-row stats
+    beads_table['Number of Events'] = [sample.shape[0]
+                                       for sample in beads_samples]
+    beads_table['Acquisition Time (s)'] = [sample.acquisition_time
+                                           for sample in beads_samples]
+
+    # List of channels that require stats columns
+    r = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
+    headers = list(beads_table.columns)
+    stats_headers = [h for h in headers if r.match(h)]
+    stats_channels = [r.search(h).group(1) for h in stats_headers]
+
+    # Iterate through channels
+    for header, channel in zip(stats_headers, stats_channels):
+        # Add empty columns to table
+        beads_table[channel + ' Detector Volt.'] = np.nan
+        for row_id, sample in zip(beads_table.index, beads_samples):
+            # If MEF values are specified, calculate stats. If not, leave empty.
+            if pd.notnull(beads_table[header][row_id]):
+                beads_table.set_value(row_id,
+                                      channel + ' Detector Volt.',
+                                      sample.detector_voltage(channel))
+
 def add_stats(samples_table, samples):
     """
     Add stats fields to samples table.
@@ -808,9 +855,14 @@ def run(verbose=True, plot=True):
         plot=plot,
         plot_dir='plot_samples')
 
-    # Add stats to samples table
+    # Add stats to beads table
     if verbose:
         print ""
+        print("Calculating statistics for beads...")
+    add_beads_stats(beads_table, beads_samples)
+
+    # Add stats to samples table
+    if verbose:
         print("Calculating statistics for all samples...")
     add_stats(samples_table, samples)
 
