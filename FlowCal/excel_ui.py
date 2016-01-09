@@ -714,6 +714,29 @@ def generate_histograms_table(samples_table, samples):
 
     return hist_table
 
+def generate_about_table():
+    """
+    Generate a table of information about FlowCal.
+
+    Returns
+    -------
+    about_table: DataFrame
+        Table with information about FlowCal, as keyword:value pairs.
+
+    """
+    # Make keyword and value arrays
+    keywords = ['FlowCal version']
+    values = [FlowCal.__version__]
+
+    # Make table as data frame
+    about_table = pd.DataFrame(values, index=keywords)
+
+    # Set column names
+    about_table.columns = ['Value']
+    about_table.index.name = 'Keyword'
+
+    return about_table
+
 def show_open_file_dialog(filetypes):
     """
     Show an open file dialog and return the path of the file selected.
@@ -819,12 +842,16 @@ def run(verbose=True, plot=True):
         print("Generating histograms table...")
     histograms_table = generate_histograms_table(samples_table, samples)
 
+    # Generate about table
+    about_table = generate_about_table()
+
     # Generate list of tables to save
     table_list = []
     table_list.append(('Instruments', instruments_table))
     table_list.append(('Beads', beads_table))
     table_list.append(('Samples', samples_table))
     table_list.append(('Histograms', histograms_table))
+    table_list.append(('About FlowCal', about_table))
 
     # Write output excel file
     if verbose:
