@@ -150,7 +150,7 @@ if __name__ == "__main__":
                 density_channels=sc_channels,
                 hist_channels=mef_channels,
                 gate_contour=dgc, 
-                density_params={'mode': 'scatter', 'log': True}, 
+                density_params={'mode': 'scatter', 'xlog': True, 'ylog': True}, 
                 hist_params=hist_params,
                 savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()

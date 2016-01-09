@@ -533,7 +533,8 @@ def process_samples_table(samples_table,
             # Define density plot parameters
             density_params = {}
             density_params['mode'] = 'scatter'
-            density_params['log'] = True
+            density_params['xlog'] = True
+            density_params['ylog'] = True
             density_params["title"] = "{} ({:.1f}% retained)".format(
                 sample_id,
                 sample_gated.shape[0] * 100. / sample.shape[0])

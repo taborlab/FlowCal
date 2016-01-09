@@ -266,7 +266,6 @@ def hist1d(data_list,
 
 def density2d(data, 
               channels=[0,1],
-              log=False,
               div=1,
               bins=None,
               mode='mesh',
@@ -274,6 +273,8 @@ def density2d(data,
               smooth=True,
               sigma=10.0,
               colorbar=False,
+              xlog=False,
+              ylog=False,
               xlabel=None,
               ylabel=None,
               xlim=None,
@@ -304,8 +305,6 @@ def density2d(data,
         Flow cytometry data to plot.
     channels : list of int, list of str, optional
         Two channels to use for the plot.
-    log : bool, optional
-        Flag specifying whether the axes should be in log scale.
     div : int or float, optional
         Downscaling factor for the default number of bins. If `bins` is not
         specified, the default set of bins extracted from `data` contains
@@ -333,6 +332,10 @@ def density2d(data,
     ----------------
     sigma : float, optional
         The sigma parameter for the Gaussian kernel to use when smoothing.
+    xlog : bool, optional
+        Flag specifying whether the x axis should be in log scale.
+    ylog : bool, optional
+        Flag specifying whether the y axis should be in log scale.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from `data`.
@@ -434,8 +437,9 @@ def density2d(data,
             cbar.ax.set_ylabel('Counts')
 
     # Make axes log if necessary
-    if log:
+    if xlog:
         plt.gca().set_xscale('log')
+    if ylog:
         plt.gca().set_yscale('log')
 
     # x and y limits
