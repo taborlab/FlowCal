@@ -510,10 +510,14 @@ def process_samples_table(samples_table,
                     units_label = "Channel Number"
                 elif units.lower() == 'rfi':
                     units_label = "Relative Fluorescence Intensity, RFI"
-                    sample = FlowCal.transform.exponentiate(sample, fl_channel)
+                    if sample.amplification_type(fl_channel)[0]:
+                        sample = FlowCal.transform.exponentiate(sample,
+                                                                fl_channel)
                 elif units.lower() == 'a.u.' or units.lower() == 'au':
                     units_label = "Arbitrary Units, a.u."
-                    sample = FlowCal.transform.exponentiate(sample, fl_channel)
+                    if sample.amplification_type(fl_channel)[0]:
+                        sample = FlowCal.transform.exponentiate(sample,
+                                                                fl_channel)
                 elif units.lower() == 'mef':
                     units_label = "Molecules of Equivalent Fluorophore, MEF"
                     sample = mef_transform_fxns[sample_row['Beads ID']](
@@ -572,7 +576,8 @@ def process_samples_table(samples_table,
                 param = {}
                 param['div'] = 4
                 param['xlabel'] = '{} ({})'.format(rc, ru)
-                param['log'] = ru != 'Channel Number'
+                param['log'] = (ru != 'Channel Number') and \
+                    bool(sample_gated.amplification_type(rc)[0])
                 hist_params.append(param)
                 
             # Plot
