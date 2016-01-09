@@ -236,6 +236,22 @@ def process_beads_table(beads_table,
         filename = os.path.join(base_dir, beads_row['File Path'])
         beads_sample = FlowCal.io.FCSData(filename)
 
+        ###
+        # Transform
+        ###
+        if verbose:
+            print("Performing data transformation...")
+        # Exponentiate FSC/SSC if necessary
+        # The amplification type of a channel is a tuple, from which the first
+        # element contains the number of decades that the logarithmic amplifier
+        # covers. This element is zero if a linear amplifier was used.
+        if beads_sample.amplification_type(sc_channels[0])[0]:
+            beads_sample = FlowCal.transform.exponentiate(beads_sample,
+                                                          sc_channels[0])
+        if beads_sample.amplification_type(sc_channels[1])[0]:
+            beads_sample = FlowCal.transform.exponentiate(beads_sample,
+                                                          sc_channels[1])
+
         # Parse clustering channels data
         cluster_channels = beads_row['Clustering Channels'].split(',')
         cluster_channels = [cc.strip() for cc in cluster_channels]
@@ -269,6 +285,10 @@ def process_beads_table(beads_table,
             # Define density plot parameters
             density_params = {}
             density_params['mode'] = 'scatter'
+            density_params['xlog'] = bool(
+                beads_sample_gated.amplification_type(sc_channels[0])[0])
+            density_params['ylog'] = bool(
+                beads_sample_gated.amplification_type(sc_channels[1])[0])
             density_params["title"] = "{} ({:.1f}% retained)".format(
                 beads_id,
                 beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
@@ -463,8 +483,14 @@ def process_samples_table(samples_table,
         ###
         if verbose:
             print("Performing data transformation...")
-        # Transform FSC/SSC to relative units
-        sample = FlowCal.transform.exponentiate(sample, sc_channels)
+        # Exponentiate FSC/SSC if necessary
+        # The amplification type of a channel is a tuple, from which the first
+        # element contains the number of decades that the logarithmic amplifier
+        # covers. This element is zero if a linear amplifier was used.
+        if sample.amplification_type(sc_channels[0])[0]:
+            sample = FlowCal.transform.exponentiate(sample, sc_channels[0])
+        if sample.amplification_type(sc_channels[1])[0]:
+            sample = FlowCal.transform.exponentiate(sample, sc_channels[1])
 
         # Parse fluorescence channels in which to transform
         report_channels = []
@@ -533,8 +559,10 @@ def process_samples_table(samples_table,
             # Define density plot parameters
             density_params = {}
             density_params['mode'] = 'scatter'
-            density_params['xlog'] = True
-            density_params['ylog'] = True
+            density_params['xlog'] = bool(
+                sample_gated.amplification_type(sc_channels[0])[0])
+            density_params['ylog'] = bool(
+                sample_gated.amplification_type(sc_channels[1])[0])
             density_params["title"] = "{} ({:.1f}% retained)".format(
                 sample_id,
                 sample_gated.shape[0] * 100. / sample.shape[0])
