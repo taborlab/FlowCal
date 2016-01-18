@@ -776,7 +776,7 @@ def generate_about_table(extra_info={}):
 
     Returns
     -------
-    about_table: DataFrame
+    about_table : DataFrame
         Table with information about FlowCal and the current analysis, as
         keyword:value pairs. The following keywords are included: FlowCal
         version, and date and time of analysis. Keywords and values from
