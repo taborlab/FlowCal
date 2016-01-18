@@ -857,7 +857,7 @@ def run(verbose=True, plot=True):
 
     # Add stats to beads table
     if verbose:
-        print ""
+        print("")
         print("Calculating statistics for beads...")
     add_beads_stats(beads_table, beads_samples)
 
