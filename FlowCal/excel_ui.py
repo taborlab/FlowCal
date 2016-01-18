@@ -872,7 +872,7 @@ def run(verbose=True, plot=True):
     table_list.append(('Beads', beads_table))
     table_list.append(('Samples', samples_table))
     table_list.append(('Histograms', histograms_table))
-    table_list.append(('About FlowCal', about_table))
+    table_list.append(('About Analysis', about_table))
 
     # Write output excel file
     if verbose:
