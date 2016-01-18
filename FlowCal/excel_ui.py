@@ -16,6 +16,7 @@ import os.path
 import platform
 import re
 import subprocess
+import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
@@ -762,6 +763,49 @@ def generate_histograms_table(samples_table, samples):
 
     return hist_table
 
+def generate_about_table(extra_info={}):
+    """
+    Make a table with information about FlowCal and the current analysis.
+
+    Parameters
+    ----------
+    extra_info : dict, optional
+        Additional keyword:value pairs to include in the table.
+
+    Returns
+    -------
+    about_table: DataFrame
+        Table with information about FlowCal and the current analysis, as
+        keyword:value pairs. The following keywords are included: FlowCal
+        version, and date and time of analysis. Keywords and values from
+        `extra_info` are also included.
+
+    """
+    # Make keyword and value arrays
+    keywords = []
+    values = []
+    # FlowCal version
+    keywords.append('FlowCal version')
+    values.append(FlowCal.__version__)
+    # Analysis date and time
+    keywords.append('Date of analysis')
+    values.append(time.strftime("%Y/%m/%d"))
+    keywords.append('Time of analysis')
+    values.append(time.strftime("%I:%M:%S%p"))
+    # Add additional keyword:value pairs
+    for k, v in extra_info.items():
+        keywords.append(k)
+        values.append(v)
+
+    # Make table as data frame
+    about_table = pd.DataFrame(values, index=keywords)
+
+    # Set column names
+    about_table.columns = ['Value']
+    about_table.index.name = 'Keyword'
+
+    return about_table
+
 def show_open_file_dialog(filetypes):
     """
     Show an open file dialog and return the path of the file selected.
@@ -881,12 +925,16 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
         print("Generating histograms table...")
     histograms_table = generate_histograms_table(samples_table, samples)
 
+    # Generate about table
+    about_table = generate_about_table({'Input file path': input_path})
+
     # Generate list of tables to save
     table_list = []
     table_list.append(('Instruments', instruments_table))
     table_list.append(('Beads', beads_table))
     table_list.append(('Samples', samples_table))
     table_list.append(('Histograms', histograms_table))
+    table_list.append(('About Analysis', about_table))
 
     # Write output excel file
     if verbose:
