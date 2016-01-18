@@ -609,7 +609,7 @@ def add_beads_stats(beads_table, beads_samples):
                                       channel + ' Detector Volt.',
                                       sample.detector_voltage(channel))
 
-def add_stats(samples_table, samples):
+def add_samples_stats(samples_table, samples):
     """
     Add stats fields to samples table.
 
@@ -864,7 +864,7 @@ def run(verbose=True, plot=True):
     # Add stats to samples table
     if verbose:
         print("Calculating statistics for all samples...")
-    add_stats(samples_table, samples)
+    add_samples_stats(samples_table, samples)
 
     # Generate histograms
     if verbose:
