@@ -572,11 +572,13 @@ def add_beads_stats(beads_table, beads_samples):
     Add stats fields to beads table.
 
     The following numbers are added to each row:
+
         - Number of Events
         - Acquisition Time (s)
 
     The following stats are added for each row, for each channel in which
     MEF values have been specified:
+
         - Detector voltage (gain)
 
     Parameters
