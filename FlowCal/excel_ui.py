@@ -717,7 +717,7 @@ def generate_histograms_table(samples_table, samples):
 
 def generate_about_table(extra_info={}):
     """
-    Generate a table with information about FlowCal.
+    Make a table with information about FlowCal and the current analysis.
 
     Parameters
     ----------
@@ -727,10 +727,10 @@ def generate_about_table(extra_info={}):
     Returns
     -------
     about_table: DataFrame
-        Table with information about FlowCal, as keyword:value pairs.
-        The following keywords are included: FlowCal version, and date and
-        time of analysis. Keywords and values from `extra_info` are also
-        included.
+        Table with information about FlowCal and the current analysis, as
+        keyword:value pairs. The following keywords are included: FlowCal
+        version, and date and time of analysis. Keywords and values from
+        `extra_info` are also included.
 
     """
     # Make keyword and value arrays
