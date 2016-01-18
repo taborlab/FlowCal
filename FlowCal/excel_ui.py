@@ -715,14 +715,22 @@ def generate_histograms_table(samples_table, samples):
 
     return hist_table
 
-def generate_about_table():
+def generate_about_table(extra_info={}):
     """
     Generate a table with information about FlowCal.
+
+    Parameters
+    ----------
+    extra_info : dict, optional
+        Additional keyword:value pairs to include in the table.
 
     Returns
     -------
     about_table: DataFrame
         Table with information about FlowCal, as keyword:value pairs.
+        The following keywords are included: FlowCal version, and date and
+        time of analysis. Keywords and values from `extra_info` are also
+        included.
 
     """
     # Make keyword and value arrays
@@ -736,6 +744,10 @@ def generate_about_table():
     values.append(time.strftime("%Y/%m/%d"))
     keywords.append('Time of analysis')
     values.append(time.strftime("%I:%M:%S%p"))
+    # Add additional keyword:value pairs
+    for k, v in extra_info.items():
+        keywords.append(k)
+        values.append(v)
 
     # Make table as data frame
     about_table = pd.DataFrame(values, index=keywords)
@@ -852,7 +864,7 @@ def run(verbose=True, plot=True):
     histograms_table = generate_histograms_table(samples_table, samples)
 
     # Generate about table
-    about_table = generate_about_table()
+    about_table = generate_about_table({'Input file path': input_path})
 
     # Generate list of tables to save
     table_list = []
