@@ -4,6 +4,6 @@
 # This is necessary so that the open file dialog is shown properly
 export MPLBACKEND="TkAgg"
 # Run FlowCal
-python -m FlowCal.excel_ui
+python -m FlowCal.excel_ui -v -p
 # Pause
 read -p "Press [Enter] to finish..."
