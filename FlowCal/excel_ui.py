@@ -748,7 +748,7 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(verbose=True, plot=True):
+def run(input_path=None, output_path=None, verbose=True, plot=True):
     """
     Run the MS Excel User Interface.
 
@@ -758,6 +758,12 @@ def run(verbose=True, plot=True):
 
     Parameters
     ----------
+    input_path: str
+        Path to the Excel file to use as input. If None, show a dialog to
+        select an input file.
+    output_path: str
+        Path to which to save the output Excel file. If None, use
+        "`input_path`_output".
     verbose: bool, optional
         Whether to print information messages during the execution of this
         function.
@@ -766,12 +772,15 @@ def run(verbose=True, plot=True):
         sample, and each beads sample.
 
     """
-    # Open input workbook
-    input_path = show_open_file_dialog(filetypes=[('Excel files', '*.xlsx')])
-    if not input_path:
-        if verbose:
-            print("No input file selected.")
-        return
+
+    # If input file has not been specified, show open file dialog
+    if input_path is None:
+        input_path = show_open_file_dialog(filetypes=[('Excel files',
+                                                       '*.xlsx')])
+        if not input_path:
+            if verbose:
+                print("No input file selected.")
+            return
     # Extract directory, filename, and filename with no extension from path
     input_dir, input_filename = os.path.split(input_path)
     input_filename_no_ext, __ = os.path.splitext(input_filename)
@@ -829,12 +838,45 @@ def run(verbose=True, plot=True):
     # Write output excel file
     if verbose:
         print("Saving output Excel file...")
-    output_filename = "{}_output.xlsx".format(input_filename_no_ext)
-    output_path = os.path.join(input_dir, output_filename)
+    if output_path is None:
+        output_filename = "{}_output.xlsx".format(input_filename_no_ext)
+        output_path = os.path.join(input_dir, output_filename)
     write_workbook(output_path, table_list)
 
     if verbose:
         print("\nDone.")
 
 if __name__ == '__main__':
-    run(verbose=True, plot=True)
+    # Read command line arguments
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="process flow cytometry files with FlowCal's Excel UI.")
+    parser.add_argument(
+        "-i",
+        "--inputpath",
+        type=str,
+        nargs='?',
+        help="input Excel file name. If not specified, show open file window")
+    parser.add_argument(
+        "-o",
+        "--outputpath",
+        type=str,
+        nargs='?',
+        help="output Excel file name. If not specified, use [INPUTPATH]_output")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="print information about individual processing steps")
+    parser.add_argument(
+        "-p",
+        "--plot",
+        action="store_true",
+        help="generate and save density plots/histograms of beads and samples")
+    args = parser.parse_args()
+
+    # Run Excel UI
+    run(input_path=args.inputpath,
+        output_path=args.outputpath,
+        verbose=args.verbose,
+        plot=args.plot)
