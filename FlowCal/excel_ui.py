@@ -16,6 +16,7 @@ import os.path
 import platform
 import re
 import subprocess
+import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 
@@ -716,7 +717,7 @@ def generate_histograms_table(samples_table, samples):
 
 def generate_about_table():
     """
-    Generate a table of information about FlowCal.
+    Generate a table with information about FlowCal.
 
     Returns
     -------
@@ -725,8 +726,16 @@ def generate_about_table():
 
     """
     # Make keyword and value arrays
-    keywords = ['FlowCal version']
-    values = [FlowCal.__version__]
+    keywords = []
+    values = []
+    # FlowCal version
+    keywords.append('FlowCal version')
+    values.append(FlowCal.__version__)
+    # Analysis date and time
+    keywords.append('Date of analysis')
+    values.append(time.strftime("%Y/%m/%d"))
+    keywords.append('Time of analysis')
+    values.append(time.strftime("%I:%M:%S%p"))
 
     # Make table as data frame
     about_table = pd.DataFrame(values, index=keywords)
