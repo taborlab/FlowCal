@@ -748,7 +748,7 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(input_path=None, verbose=True, plot=True):
+def run(input_path=None, output_path=None, verbose=True, plot=True):
     """
     Run the MS Excel User Interface.
 
@@ -761,6 +761,9 @@ def run(input_path=None, verbose=True, plot=True):
     input_path: str
         Path to the Excel file to use as input. If None, show a dialog to
         select an input file.
+    output_path: str
+        Path to which to save the output Excel file. If None, use
+        "`input_path`_output".
     verbose: bool, optional
         Whether to print information messages during the execution of this
         function.
@@ -835,8 +838,9 @@ def run(input_path=None, verbose=True, plot=True):
     # Write output excel file
     if verbose:
         print("Saving output Excel file...")
-    output_filename = "{}_output.xlsx".format(input_filename_no_ext)
-    output_path = os.path.join(input_dir, output_filename)
+    if output_path is None:
+        output_filename = "{}_output.xlsx".format(input_filename_no_ext)
+        output_path = os.path.join(input_dir, output_filename)
     write_workbook(output_path, table_list)
 
     if verbose:
@@ -848,10 +852,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="process flow cytometry files with FlowCal's Excel UI.")
     parser.add_argument(
-        "filepath",
+        "-i",
+        "--inputpath",
         type=str,
         nargs='?',
         help="input Excel file name. If not specified, show open file window")
+    parser.add_argument(
+        "-o",
+        "--outputpath",
+        type=str,
+        nargs='?',
+        help="output Excel file name. If not specified, use [INPUTPATH]_output")
     parser.add_argument(
         "-v",
         "--verbose",
@@ -865,4 +876,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Run Excel UI
-    run(args.filepath, verbose=args.verbose, plot=args.plot)
+    run(input_path=args.inputpath,
+        output_path=args.outputpath,
+        verbose=args.verbose,
+        plot=args.plot)
