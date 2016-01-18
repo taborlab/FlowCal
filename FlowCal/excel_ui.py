@@ -30,6 +30,10 @@ import FlowCal.transform
 import FlowCal.stats
 import FlowCal.mef
 
+# Regular expressions for headers that specify some fluorescence channel
+re_mef_values = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
+re_units = re.compile(r'^\s*(\S*)\s*Units\s*$')
+
 def read_table(filename, sheetname, index_col=None):
     """
     Return the contents of an Excel table as a pandas DataFrame.
@@ -205,10 +209,10 @@ def process_beads_table(beads_table,
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which MEF values are specified.
-    r = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
     headers = list(beads_table.columns)
-    mef_headers_all = [h for h in headers if r.match(h)]
-    mef_channels_all = [r.search(h).group(1) for h in mef_headers_all]
+    mef_headers_all = [h for h in headers if re_mef_values.match(h)]
+    mef_channels_all = [re_mef_values.search(h).group(1)
+                        for h in mef_headers_all]
 
     # Iterate through table
     for beads_id, beads_row in beads_table.iterrows():
@@ -427,10 +431,10 @@ def process_samples_table(samples_table,
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which units are specified.
-    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
     headers = list(samples_table.columns)
-    report_headers_all = [h for h in headers if r.match(h)]
-    report_channels_all = [r.search(h).group(1) for h in report_headers_all]
+    report_headers_all = [h for h in headers if re_units.match(h)]
+    report_channels_all = [re_units.search(h).group(1)
+                           for h in report_headers_all]
 
     # Iterate through table
     for sample_id, sample_row in samples_table.iterrows():
@@ -562,7 +566,53 @@ def process_samples_table(samples_table,
 
     return samples
 
-def add_stats(samples_table, samples):
+def add_beads_stats(beads_table, beads_samples):
+    """
+    Add stats fields to beads table.
+
+    The following numbers are added to each row:
+        - Number of Events
+        - Acquisition Time (s)
+
+    The following stats are added for each row, for each channel in which
+    MEF values have been specified:
+        - Detector voltage (gain)
+
+    Parameters
+    ----------
+    beads_table : DataFrame
+        Table specifying bead samples to analyze. For more information
+        about the fields required in this table, please consult the
+        module's documentation.
+    beads_samples : list
+        FCSData objects from which to calculate statistics.
+        ``beads_samples[i]`` should correspond to
+        ``beads_table.values()[i]``.
+
+    """
+    # Add per-row stats
+    beads_table['Number of Events'] = [sample.shape[0]
+                                       for sample in beads_samples]
+    beads_table['Acquisition Time (s)'] = [sample.acquisition_time
+                                           for sample in beads_samples]
+
+    # List of channels that require stats columns
+    headers = list(beads_table.columns)
+    stats_headers = [h for h in headers if re_mef_values.match(h)]
+    stats_channels = [re_mef_values.search(h).group(1) for h in stats_headers]
+
+    # Iterate through channels
+    for header, channel in zip(stats_headers, stats_channels):
+        # Add empty columns to table
+        beads_table[channel + ' Detector Volt.'] = np.nan
+        for row_id, sample in zip(beads_table.index, beads_samples):
+            # If MEF values are specified, calculate stats. If not, leave empty.
+            if pd.notnull(beads_table[header][row_id]):
+                beads_table.set_value(row_id,
+                                      channel + ' Detector Volt.',
+                                      sample.detector_voltage(channel))
+
+def add_samples_stats(samples_table, samples):
     """
     Add stats fields to samples table.
 
@@ -599,10 +649,9 @@ def add_stats(samples_table, samples):
                                              for sample in samples]
 
     # List of channels that require stats columns
-    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
     headers = list(samples_table.columns)
-    stats_headers = [h for h in headers if r.match(h)]
-    stats_channels = [r.search(h).group(1) for h in stats_headers]
+    stats_headers = [h for h in headers if re_units.match(h)]
+    stats_channels = [re_units.search(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -671,10 +720,9 @@ def generate_histograms_table(samples_table, samples):
 
     """
     # Extract channels that require stats histograms
-    r = re.compile(r'^\s*(\S*)\s*Units\s*$')
     headers = list(samples_table.columns)
-    hist_headers = [h for h in headers if r.match(h)]
-    hist_channels = [r.search(h).group(1) for h in hist_headers]
+    hist_headers = [h for h in headers if re_units.match(h)]
+    hist_channels = [re_units.search(h).group(1) for h in hist_headers]
 
     # The number of columns in the DataFrame has to be set to the maximum
     # number of bins of any of the histograms about to be generated.
@@ -817,11 +865,16 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
         plot=plot,
         plot_dir='plot_samples')
 
+    # Add stats to beads table
+    if verbose:
+        print("")
+        print("Calculating statistics for beads...")
+    add_beads_stats(beads_table, beads_samples)
+
     # Add stats to samples table
     if verbose:
-        print ""
         print("Calculating statistics for all samples...")
-    add_stats(samples_table, samples)
+    add_samples_stats(samples_table, samples)
 
     # Generate histograms
     if verbose:
