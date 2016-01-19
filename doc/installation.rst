@@ -17,9 +17,9 @@ To install Anaconda, do the following:
 
 .. image:: _static/installation_completed.png
 
-*Mac OS X only*: If the following error message appears after double clicking ``Install FlowCal (OSX)``: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -> Security and Privacy -> General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.
+.. note:: **Mac OS X**: If the following error message appears after double clicking ``Install FlowCal (OSX)``: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -> Security and Privacy -> General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.
 
-To see ``FlowCal`` in action, head to the :doc:`How to use the Excel UI</excel_ui/howto>` section. The ``FlowCal`` zip file includes an ``examples`` folder with files that you can use while following the tutorial.
+To see ``FlowCal`` in action, head to the :doc:`How to use the Excel UI</excel_ui/howto>` section. The ``FlowCal`` zip file includes an ``examples`` folder with files that you can use while following the instructions.
 
 Installing ``FlowCal`` in (barebones) Python
 --------------------------------------------
@@ -46,20 +46,21 @@ To install ``FlowCal``, run the following in ``FlowCal``'s root directory::
 
 Again, some users may need to precede this command with ``sudo``.
 
-*Ubuntu/Linux Mint*: ``FlowCal`` might need more recent versions of some python packages than the ones provided via ``apt``. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed: 
+.. note:: 
+	**Ubuntu/Linux Mint**: ``FlowCal`` might need more recent versions of some python packages than the ones provided via ``apt``. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed: 
 
-* ``gcc``
-* ``g++``
-* ``gfortran``
-* ``libblas-dev``
-* ``liblapack-dev``
-* ``libfreetype6-dev``
-* ``python-dev``
-* ``python-tk``
-* ``python-pip``
+	* ``gcc``
+	* ``g++``
+	* ``gfortran``
+	* ``libblas-dev``
+	* ``liblapack-dev``
+	* ``libfreetype6-dev``
+	* ``python-dev``
+	* ``python-tk``
+	* ``python-pip``
 
-All of these can be installed using::
+	All of these can be installed using::
 
-	sudo apt-get install <package-name>
+		sudo apt-get install <package-name>
 
-After this, you may upgrade the requirements using ``pip`` and then install ``FlowCal``.
+	After this, you may upgrade the requirements using ``pip`` and then install ``FlowCal``.
