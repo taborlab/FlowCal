@@ -34,6 +34,7 @@ Using FlowCal's Excel UI
    excel_ui/howto.rst
    excel_ui/format.rst
    excel_ui/output.rst
+   excel_ui/cmd.rst
 
 Using FlowCal in Python
 -----------------------
