@@ -1,5 +1,5 @@
-Format of the Excel File
-========================
+Format of the Input Excel File
+==============================
 
 ``FlowCal``'s Excel interface requires a properly formatted Excel file that depicts the samples to be analyzed and the data processing parameters. The Excel input file must have at least three sheets, named **Instruments**, **Beads**, and **Samples**. Other sheets may be present, but ``FlowCal`` will ignore them.
 

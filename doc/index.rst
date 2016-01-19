@@ -31,7 +31,7 @@ Using FlowCal's Excel UI
 .. toctree::
    :maxdepth: 1
 
-   tutorial_excel.rst
+   howto_excel.rst
    format_excel.rst
    output_excel.rst
 
