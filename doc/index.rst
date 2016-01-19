@@ -35,13 +35,13 @@ Using FlowCal's Excel UI
    excel_format.rst
    excel_output.rst
 
-Using FlowCal from Python
--------------------------
+Using FlowCal in Python
+-----------------------
 
 .. toctree::
    :maxdepth: 1
 
-   tutorial_python.rst
+   python_tutorials/index.rst
    reference/modules.rst
 
 More Information
