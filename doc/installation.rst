@@ -19,7 +19,7 @@ To install Anaconda, do the following:
 
 *Mac OS X only*: If the following error message appears after double clicking ``Install FlowCal (OSX)``: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -> Security and Privacy -> General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.
 
-To see ``FlowCal`` in action, head to the :doc:`Excel UI tutorial</tutorial_excel>` section. The ``FlowCal`` zip file includes an ``examples`` folder with files that you can use while following the tutorial.
+To see ``FlowCal`` in action, head to the :doc:`How to use the Excel UI</excel_howto>` section. The ``FlowCal`` zip file includes an ``examples`` folder with files that you can use while following the tutorial.
 
 Installing ``FlowCal`` in (barebones) Python
 --------------------------------------------
