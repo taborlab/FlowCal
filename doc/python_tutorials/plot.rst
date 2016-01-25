@@ -34,7 +34,7 @@ By default, :func:`FlowCal.plot.hist1d` uses the same bins as the FCS file itsel
 
 .. image:: /_static/python_tutorial_plot_2.png
 
-One of the most convenient features of :func:`FlowCal.plot.hist1d` is that it can figure out the appropriate bins to use, even after the data has been transformed. This only works if using ``FCSData`` objects and transformation functions from the :mod:`FlowCal.transform` module. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
+One of the most convenient features of :func:`FlowCal.plot.hist1d` is the ability to figure out the appropriate bins to use, even after the data has been transformed. This only works if using ``FCSData`` objects and transformation functions from the :mod:`FlowCal.transform` module. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
 
 >>> s_fl1 = FlowCal.transform.exponentiate(s, channels='FL1')
 >>> FlowCal.plot.hist1d(s_fl1, channel='FL1', div=4, log=True)
@@ -42,7 +42,7 @@ One of the most convenient features of :func:`FlowCal.plot.hist1d` is that it ca
 
 .. image:: /_static/python_tutorial_plot_3.png
 
-Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the same time. Let's now load 3 FCSData objects, transform the 'FL1' channel to a.u., and plot them with transparency.
+Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the same time. Let's now load 3 FCSData objects, transform the ``FL1`` channel to a.u., and plot them with transparency.
 
 >>> filenames = ['data_{:03d}.fcs'.format(i + 2) for i in range(3)]
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]

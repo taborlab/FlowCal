@@ -22,7 +22,7 @@ Let's now visualize the contents of the ``FL1`` channel. We will explore ``FlowC
 
 .. image:: /_static/python_tutorial_transform_1.png
 
-Note that the range of the x axis is from 0 to 1024. We know that this sample was acquired with a logarithmic amplifier, and fluorescence should cover values from 1 to 10000. However, data from an FCS file is normally stored in "channel units" or "channel numbers", which are essentially numbers as they come from the flow cytometry's detectors. To convert this data to arbitrary fluorescence units (a.u.), we use :func:`FlowCal.transform.exponentiate`.
+Note that the range of the x axis is from 0 to 1024. We know that this sample was acquired with a logarithmic amplifier, and fluorescence should cover values from 1 to 10000. However, data from an FCS file is normally stored in "channel units" or "channel numbers", which are essentially numbers as they come from the flow cytometer's detectors. To convert this data to arbitrary fluorescence units (a.u.), we use :func:`FlowCal.transform.exponentiate`.
 
 >>> s_transformed = FlowCal.transform.exponentiate(s, channels='FL1')
 

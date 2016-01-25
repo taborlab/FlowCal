@@ -45,7 +45,7 @@ One of the most practical features of an ``FCSData`` object is the ability to sl
 >>> print s_sub_ch_2.channels
 ('FL1', 'FL2', 'FL3')
 
-This is totally equivalent to indexing with integers.
+This is completely equivalent to indexing with integers.
 
 >>> import numpy as np
 >>> np.all(s_sub_ch == s_sub_ch_2)
