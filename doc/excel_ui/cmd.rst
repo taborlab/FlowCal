@@ -1,7 +1,7 @@
-Excel UI and the Command Line (Advanced)
-========================================
+Command Line Interface (Advanced)
+=================================
 
-The Excel UI can be run from the command line with the following statement::
+The Excel UI can be run from a command line interpreter with the following statement::
 
 	python -m FlowCal.excel_ui [-h] [-i [INPUTPATH]] [-o [OUTPUTPATH]] [-v] [-p]
 
