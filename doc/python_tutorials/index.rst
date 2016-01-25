@@ -9,7 +9,8 @@ The ``FlowCal``'s Python API tutorials are listed below in order of increasing c
    :maxdepth: 1
 
    read.rst
+   transform.rst
    plot.rst
-   gate_transform.rst
+   gate.rst
    mef.rst
    excel_ui.rst
