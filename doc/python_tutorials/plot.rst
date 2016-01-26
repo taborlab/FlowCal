@@ -55,10 +55,10 @@ Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the sam
 
 Note that all of these plots show bimodal fluorescence distributions.
 
-Density plots
+Density Plots
 -------------
 
-Another important application is to look at the forward scatter and side scatter values in a 2D histogram, scatter plot, or density diagram. From those, the user can extract size and shape information that would allow him to differentiate between cells and debris. ``FlowCal`` incorporates the function :func:`FlowCal.plot.density2d` for this purpose.
+Another important application is to look at the forward scatter and side scatter values in a 2D histogram, scatter plot, or density diagram. From those, the user can extract size and shape information that would allow him to differentiate between cells and debris. ``FlowCal`` includes the function :func:`FlowCal.plot.density2d` for this purpose.
 
 Let's look at the ``FSC`` and ``SSC`` channels in our sample ``s``. We know that these channels were acquired with logarithmic amplifiers, so we need to apply the exponential transformation first.
 
@@ -79,7 +79,7 @@ The color indicates the number of events in the region, with red indicating a bi
 
 Both plots show events concentrated in the same four regions: two, at the left, with events saturating at the lowest detectable value of the ``FSC`` channel, one at the middle-low portion of the plot, and one at the middle-high. By looking at the shape of the different populations we know that only events in the last region are cells. We will learn how to "gate", or select only one population, in the :doc:`gating tutorial </python_tutorials/gate>`
 
-Combined histogram and density plots
+Combined Histogram and Density Plots
 ------------------------------------
 
 FlowCal also includes "complex plot" functions, which produce their own figure and a set of axes, and use simple ``matplotlib`` or ``FlowCal`` plotting functions to populate them.
@@ -88,17 +88,17 @@ In particular, :func:`FlowCal.plot.density_and_hist` uses :func:`FlowCal.plot.hi
 
 >>> s_t = FlowCal.transform.exponentiate(s, channels=['FSC', 'SSC', 'FL1'])
 >>> FlowCal.plot.density_and_hist(s_t,
-                                  density_channels=['FSC', 'SSC'],
-                                  density_params={'log':True, 'mode':'scatter'},
-                                  hist_channels=['FL1'],
-                                  hist_params={'div':4, 'log':True})
+...                               density_channels=['FSC', 'SSC'],
+...                               density_params={'log':True, 'mode':'scatter'},
+...                               hist_channels=['FL1'],
+...                               hist_params={'div':4, 'log':True})
 >>> plt.tight_layout()
 >>> plt.show()
 
 .. image:: /_static/python_tutorial_plot_7.png
 
-We will see in the :doc:`gating tutorial </python_tutorials/gate>` that :func:`FlowCal.plot.density_and_hist` has one more useful feature.
+We will see another convenient feature of :func:`FlowCal.plot.density_and_hist` in the :doc:`gating tutorial </python_tutorials/gate>`.
 
-Other plotting functions
+Other Plotting Functions
 ------------------------
-:mod:`FlowCal.plot` contains more plotting functions. For more information, consult the documentation.
+These are not the only functions in :mod:`FlowCal.plot`. For more information, consult the API reference.

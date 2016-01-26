@@ -7,7 +7,7 @@ To start, navigate to the ``examples/FCFiles`` directory included with FlowCal, 
 
 >>> import FlowCal
 
-Exponential transformation
+Exponential Transformation
 --------------------------
 
 Start by loading file ``data_001.fcs`` into an ``FCSData`` object called ``s``.
@@ -42,7 +42,7 @@ We will explore a more convenient way to plot transformed data in the :doc:`plot
 
 >>> s_transformed = FlowCal.transform.exponentiate(s, channels=['FSC', 'SSC'])
 
-Other transformations
+Other Transformations
 ---------------------
 
 ``FlowCal`` includes the ability to transform flow cytometry data to Molecules of Equivalent Fluorophore (MEF), a unit independent of the acquisition settings. However, doing so is slightly more complex. For more information, consult the :doc:`MEF tutorial </python_tutorials/mef>`.
