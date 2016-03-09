@@ -110,11 +110,13 @@ def hist1d(data_list,
         Histogram type. Directly passed to ``plt.hist``.
     normed_area : bool, optional
         Flag indicating whether to normalize the histogram such that the
-        area under the curve is equal to one.
+        area under the curve is equal to one. The resulting plot is
+        equivalent to a probability density function.
     normed_height : bool, optional
         Flag indicating whether to normalize the histogram such that the
-        sum of all bins' heights is equal to one. Ignored if `normed_area`
-        is True.
+        sum of all bins' heights is equal to one. The resulting plot is
+        equivalent to a probability mass function. `normed_height` is
+        ignored if `normed_area` is True.
     savefig : str, optional
         The name of the file to save the figure to. If None, do not save.
 
