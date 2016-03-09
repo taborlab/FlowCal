@@ -67,7 +67,8 @@ def hist1d(data_list,
            div=1,
            bins=None,
            histtype='stepfilled',
-           normed=False,
+           normed_area=False,
+           normed_height=False,
            xlabel=None,
            ylabel=None,
            xlim=None,
@@ -107,9 +108,15 @@ def hist1d(data_list,
         attempts to extract bins from ``data_list[i].domain``.
     histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, str, optional
         Histogram type. Directly passed to ``plt.hist``.
-    normed : bool, optional
+    normed_area : bool, optional
         Flag indicating whether to normalize the histogram such that the
-        area under the curve is equal to one.
+        area under the curve is equal to one. The resulting plot is
+        equivalent to a probability density function.
+    normed_height : bool, optional
+        Flag indicating whether to normalize the histogram such that the
+        sum of all bins' heights is equal to one. The resulting plot is
+        equivalent to a probability mass function. `normed_height` is
+        ignored if `normed_area` is True.
     savefig : str, optional
         The name of the file to save the figure to. If None, do not save.
 
@@ -195,19 +202,27 @@ def hist1d(data_list,
             # Generate sub-sampled bins
             bins = np.interp(xs, xd, bd)
 
+        # Decide whether to normalize
+        if normed_height:
+            weights = np.ones_like(y)/float(len(y))
+        else:
+            weights = None
+
         # Actually plot
         if bins is not None:
             n, edges, patches = plt.hist(y,
                                          bins,
+                                         weights=weights,
+                                         normed=normed_area,
                                          histtype=histtype,
-                                         normed=normed,
                                          edgecolor=edgecolor[i],
                                          facecolor=facecolor[i],
                                          **kwargs)
         else:
             n, edges, patches = plt.hist(y,
+                                         weights=weights,
+                                         normed=normed_area,
                                          histtype=histtype,
-                                         normed=normed,
                                          edgecolor=edgecolor[i],
                                          facecolor=facecolor[i],
                                          **kwargs)
@@ -229,8 +244,10 @@ def hist1d(data_list,
     if ylabel is not None:
         # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    elif normed:
+    elif normed_area:
         plt.ylabel('Probability')
+    elif normed_height:
+        plt.ylabel('Counts (normalized)')
     else:
         # Default is "Counts"
         plt.ylabel('Counts')
