@@ -83,18 +83,21 @@ def transform(data, channels, transform_fxn, def_channels = None):
 
     return data_t
 
-
-def exponentiate(data, channels = None):
+def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     """
-    Exponentiate flow cytometry data.
+    Transform flow cytometry data to Relative Fluorescence Units (RFI).
 
     This function applies the following transformation:
 
-        y = 10^(x/256)
+        y = a[1]*10^(a[0] * (x/r))
 
-    This spaces out 10-bit data across 4 logs from 1 to 1e4, which rescales
-    the fluorecence units to those observed in most flow cytometry
-    aquisition software, if a log amplifier has been used.
+    Where ``x`` and ``y`` are the original and transformed data,
+    respectively; ``a`` is the amplification type argument, and ``r`` is
+    the max range argument. This will transform flow cytometry data taken
+    with a log amplifier and an ADC of range ``r`` to linear scale, such
+    that it covers ``a[0]`` decades of signal with a minimum value of
+    ``a[1]``. If ``a[0]==0``, however, data is already in linear scale and
+    no transformation is applied.
 
     Parameters
     ----------
@@ -104,6 +107,17 @@ def exponentiate(data, channels = None):
     channels : int, str, list of int, list of str, optional
         Channels on which to perform the transformation. If `channels` is
         None, perform transformation in all channels.
+    max_range : int, float, or list of int or float
+        Maximum range, for each specified channel. If None, take
+        `max_range` from ``len(data.domain(channel))``.
+    amplification_type : tuple or list of tuple
+        The amplification type of the specified channel(s). This should be
+        reported as a tuple, in which the first element indicates how many
+        decades the logarithmic amplifier covers, and the second indicates
+        the linear value that corresponds to a channel value of zero. If
+        the first element is zero, the amplification type is linear. If
+        None, take `amplification_type` from
+        ``data.amplification_type(channel)``.
 
     Returns
     -------
@@ -111,9 +125,68 @@ def exponentiate(data, channels = None):
         NxD transformed flow cytometry data.
 
     """
-    # Transform and return
-    def transform_fxn(x): return 10**(x/256.0)
-    return transform(data, channels, transform_fxn)
+    # Default: all channels
+    if channels is None:
+        channels = range(data.shape[1])
+
+    # Convert channels, max_range and amplification_type to iterables
+    if not hasattr(channels, '__iter__'):
+        channels = [channels]
+        if max_range is not None:
+            max_range = [max_range]
+        if amplification_type is not None:
+            amplification_type = [amplification_type]
+
+    # Convert channels to integers
+    if hasattr(data, '_name_to_index'):
+        channels = data._name_to_index(channels)
+    else:
+        channels = channels
+
+    # If max_range is not specified, take it from data.domain
+    if max_range is None:
+        if hasattr(data, 'domain'):
+            max_range = [len(data.domain(channel)) for channel in channels]
+        else:
+            raise ValueError('max_range should be specified')
+    
+    # If amplification_type is not specified, take it from
+    # data.amplification_type
+    if amplification_type is None:
+        if hasattr(data, 'domain'):
+            amplification_type = data.amplification_type(channels)
+        else:
+            raise ValueError('amplification_type should be specified')
+
+    # Check that channels, max_range, and amplification_type have the same
+    # length
+    if len(channels) != len(max_range):
+        raise ValueError("channels and max_range should have the same length")
+    if len(channels) != len(amplification_type):
+        raise ValueError("channels and amplification_type should have the same"
+            " length")
+
+    # Copy data array
+    data_t = data.copy().astype(np.float64)
+
+    # Iterate over channels
+    for channel, r, at in zip(channels, max_range, amplification_type):
+        # Don't do anything if data is in linear scale
+        if at[0]==0:
+            continue
+        # Define transformation
+        tf = lambda x: at[1] * 10**(at[0]/float(r) * x)
+        # Apply transformation to event list
+        data_t[:,channel] = tf(data_t[:,channel])
+        # Apply transformation to domain and hist_bin_edges
+        if hasattr(data_t, '_domain') and data_t._domain[channel] is not None:
+            data_t._domain[channel] = tf(data_t._domain[channel])
+        if (hasattr(data_t, '_hist_bin_edges')
+                and data_t._hist_bin_edges[channel] is not None):
+            data_t._hist_bin_edges[channel] = \
+                tf(data_t._hist_bin_edges[channel])
+
+    return data_t
 
 
 def to_mef(data, channels, sc_list, sc_channels = None):
