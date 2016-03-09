@@ -1524,10 +1524,10 @@ class FCSData(np.ndarray):
                     [new_arr._detector_voltage[kc] for kc in key_channel])
                 new_arr._amplifier_gain = tuple(
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
-                new_arr._domain = tuple(
-                    [new_arr._domain[kc] for kc in key_channel])
-                new_arr._hist_bin_edges = tuple(
-                    [new_arr._hist_bin_edges[kc] for kc in key_channel])
+                new_arr._domain = \
+                    [new_arr._domain[kc] for kc in key_channel]
+                new_arr._hist_bin_edges = \
+                    [new_arr._hist_bin_edges[kc] for kc in key_channel]
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._amplification_type = \
@@ -1549,9 +1549,9 @@ class FCSData(np.ndarray):
                 new_arr._amplifier_gain = \
                     tuple([new_arr._amplifier_gain[key_channel]])
                 new_arr._domain = \
-                    tuple([new_arr._domain[key_channel]])
+                    [new_arr._domain[key_channel]]
                 new_arr._hist_bin_edges = \
-                    tuple([new_arr._hist_bin_edges[key_channel]])
+                    [new_arr._hist_bin_edges[key_channel]]
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
