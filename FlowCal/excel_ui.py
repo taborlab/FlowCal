@@ -241,16 +241,8 @@ def process_beads_table(beads_table,
         ###
         if verbose:
             print("Performing data transformation...")
-        # Exponentiate FSC/SSC if necessary
-        # The amplification type of a channel is a tuple, from which the first
-        # element contains the number of decades that the logarithmic amplifier
-        # covers. This element is zero if a linear amplifier was used.
-        if beads_sample.amplification_type(sc_channels[0])[0]:
-            beads_sample = FlowCal.transform.exponentiate(beads_sample,
-                                                          sc_channels[0])
-        if beads_sample.amplification_type(sc_channels[1])[0]:
-            beads_sample = FlowCal.transform.exponentiate(beads_sample,
-                                                          sc_channels[1])
+        # Transform FSC/SSC to linear scale
+        beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
 
         # Parse clustering channels data
         cluster_channels = beads_row['Clustering Channels'].split(',')
@@ -483,14 +475,8 @@ def process_samples_table(samples_table,
         ###
         if verbose:
             print("Performing data transformation...")
-        # Exponentiate FSC/SSC if necessary
-        # The amplification type of a channel is a tuple, from which the first
-        # element contains the number of decades that the logarithmic amplifier
-        # covers. This element is zero if a linear amplifier was used.
-        if sample.amplification_type(sc_channels[0])[0]:
-            sample = FlowCal.transform.exponentiate(sample, sc_channels[0])
-        if sample.amplification_type(sc_channels[1])[0]:
-            sample = FlowCal.transform.exponentiate(sample, sc_channels[1])
+        # Transform FSC/SSC to linear scale
+        sample = FlowCal.transform.to_rfi(sample, sc_channels)
 
         # Parse fluorescence channels in which to transform
         report_channels = []
@@ -510,14 +496,10 @@ def process_samples_table(samples_table,
                     units_label = "Channel Number"
                 elif units.lower() == 'rfi':
                     units_label = "Relative Fluorescence Intensity, RFI"
-                    if sample.amplification_type(fl_channel)[0]:
-                        sample = FlowCal.transform.exponentiate(sample,
-                                                                fl_channel)
+                    sample = FlowCal.transform.to_rfi(sample, fl_channel)
                 elif units.lower() == 'a.u.' or units.lower() == 'au':
                     units_label = "Arbitrary Units, a.u."
-                    if sample.amplification_type(fl_channel)[0]:
-                        sample = FlowCal.transform.exponentiate(sample,
-                                                                fl_channel)
+                    sample = FlowCal.transform.to_rfi(sample, fl_channel)
                 elif units.lower() == 'mef':
                     units_label = "Molecules of Equivalent Fluorophore, MEF"
                     sample = mef_transform_fxns[sample_row['Beads ID']](
