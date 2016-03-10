@@ -153,7 +153,7 @@ def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     # If amplification_type is not specified, take it from
     # data.amplification_type
     if amplification_type is None:
-        if hasattr(data, 'domain'):
+        if hasattr(data, 'amplification_type'):
             amplification_type = data.amplification_type(channels)
         else:
             raise ValueError('amplification_type should be specified')
