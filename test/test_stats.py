@@ -444,7 +444,7 @@ class TestGeomStd(unittest.TestCase):
         # FCSFile
         self.d = FlowCal.io.FCSData('test/Data001.fcs')
         # Transform fluorescence data to a.u. so that there are no zeros
-        self.d = FlowCal.transform.exponentiate(
+        self.d = FlowCal.transform.to_rfi(
             self.d,
             channels=['FL1-H', 'FL2-H', 'FL3-H'])
 
@@ -520,7 +520,7 @@ class TestGeomCv(unittest.TestCase):
         # FCSFile
         self.d = FlowCal.io.FCSData('test/Data001.fcs')
         # Transform fluorescence data to a.u. so that there are no zeros
-        self.d = FlowCal.transform.exponentiate(
+        self.d = FlowCal.transform.to_rfi(
             self.d,
             channels=['FL1-H', 'FL2-H', 'FL3-H'])
 
