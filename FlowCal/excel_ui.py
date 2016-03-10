@@ -665,6 +665,7 @@ def add_samples_stats(samples_table, samples):
         samples_table[channel + ' Std'] = np.nan
         samples_table[channel + ' CV'] = np.nan
         samples_table[channel + ' Geom. Std'] = np.nan
+        samples_table[channel + ' Geom. CV'] = np.nan
         samples_table[channel + ' IQR'] = np.nan
         samples_table[channel + ' RCV'] = np.nan
         for row_id, sample in zip(samples_table.index, samples):
@@ -694,6 +695,9 @@ def add_samples_stats(samples_table, samples):
                 samples_table.set_value(row_id,
                                         channel + ' Geom. Std',
                                         FlowCal.stats.gstd(sample, channel))
+                samples_table.set_value(row_id,
+                                        channel + ' Geom. CV',
+                                        FlowCal.stats.gcv(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' IQR',
                                         FlowCal.stats.iqr(sample, channel))
