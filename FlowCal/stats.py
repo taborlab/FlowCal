@@ -216,6 +216,35 @@ def gstd(data, channels=None):
     # Calculate and return statistic
     return np.exp(np.std(np.log(data_stats), axis=0))
 
+def gcv(data, channels=None):
+    """
+    Calculate the geometric CV of the events in an FCSData object.
+
+    Parameters
+    ----------
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int or str or list of int or list of str, optional
+        Channels on which to calculate the statistic. If None, use all
+        channels.
+
+    Returns
+    -------
+    float or numpy array
+        The geometric coefficient of variation of the events in the
+        specified channels of `data`.
+
+    """
+    # Slice data to take statistics from
+    if channels is None:
+        data_stats = data
+    else:
+        data_stats = data[:, channels]
+
+    # Calculate and return statistic
+    return np.sqrt(np.exp(np.std(np.log(data_stats), axis=0)**2) - 1)
+
 def iqr(data, channels=None):
     """
     Calculate the Interquartile Range of the events in an FCSData object.

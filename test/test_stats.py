@@ -508,6 +508,83 @@ class TestGeomStd(unittest.TestCase):
         self.assertEqual(s_fc.shape, (3,))
         np.testing.assert_array_equal(s_fc, s_lib)
 
+class TestGeomCv(unittest.TestCase):
+    """
+    Test proper behavior of FlowCal.stats.gcv.
+
+    """
+    def setUp(self):
+        # 10x2 array
+        self.a = np.array([[1, 8, 6, 1, 1, 6, 5, 9, 2, 2],
+                           [9, 9, 2, 1, 2, 1, 8, 8, 4, 7]]).T
+        # FCSFile
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
+        # Transform fluorescence data to a.u. so that there are no zeros
+        self.d = FlowCal.transform.exponentiate(
+            self.d,
+            channels=['FL1-H', 'FL2-H', 'FL3-H'])
+
+    def test_array(self):
+        """
+        Test size, type, and values when using a 2D numpy array.
+
+        """
+        s_fc = FlowCal.stats.gcv(self.a)
+        s_lib = np.sqrt(np.exp(np.std(np.log(self.a), axis=0)**2) - 1)
+        self.assertIsInstance(s_fc, type(s_lib))
+        self.assertEqual(s_fc.shape, (2,))
+        np.testing.assert_array_equal(s_fc, s_lib)
+
+    def test_fcs_data(self):
+        """
+        Test size, type, and values when using an FCSData object.
+
+        """
+        s_fc = FlowCal.stats.gcv(self.d)
+        s_lib = np.sqrt(np.exp(np.std(np.log(
+            self.d.view(np.ndarray)), axis=0)**2) - 1)
+        self.assertIsInstance(s_fc, type(s_lib))
+        self.assertEqual(s_fc.shape, (6,))
+        np.testing.assert_array_equal(s_fc, s_lib)
+
+    def test_fcs_data_slice_1d(self):
+        """
+        Test size, type, and values when using a 1D sliced FCSData object.
+
+        """
+        s_fc = FlowCal.stats.gcv(self.d[:,'FL1-H'])
+        s_lib = np.sqrt(np.exp(np.std(np.log(
+            self.d[:,'FL1-H'].view(np.ndarray)), axis=0)**2) - 1)
+        self.assertIsInstance(s_fc, type(s_lib))
+        self.assertEqual(s_fc.shape, ())
+        np.testing.assert_array_equal(s_fc, s_lib)
+
+    def test_fcs_data_argument_one_channel(self):
+        """
+        Test size, type, and values when specifying one channel via the
+        `channels` argument.
+
+        """
+        s_fc = FlowCal.stats.gcv(self.d, channels='FL1-H')
+        s_lib = np.sqrt(np.exp(np.std(np.log(
+            self.d[:, 'FL1-H'].view(np.ndarray)), axis=0)**2) - 1)
+        self.assertIsInstance(s_fc, type(s_lib))
+        self.assertEqual(s_fc.shape, ())
+        np.testing.assert_array_equal(s_fc, s_lib)
+
+    def test_fcs_data_argument_many_channels(self):
+        """
+        Test size, type, and values when specifying many channels via the
+        `channels` argument.
+
+        """
+        s_fc = FlowCal.stats.gcv(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+        s_lib = np.sqrt(np.exp(np.std(np.log(
+            self.d[:, [2, 3, 4]].view(np.ndarray)), axis=0)**2) - 1)
+        self.assertIsInstance(s_fc, type(s_lib))
+        self.assertEqual(s_fc.shape, (3,))
+        np.testing.assert_array_equal(s_fc, s_lib)
+
 class TestIqr(unittest.TestCase):
     """
     Test proper behavior of FlowCal.stats.iqr.
