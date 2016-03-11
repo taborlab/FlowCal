@@ -583,7 +583,7 @@ def process_samples_table(samples_table,
 
     return samples
 
-def add_beads_stats(beads_table, beads_samples):
+def add_beads_stats(beads_table, beads_samples, mef_outputs):
     """
     Add stats fields to beads table.
 
@@ -594,6 +594,7 @@ def add_beads_stats(beads_table, beads_samples):
     The following stats are added for each row, for each channel in which
     MEF values have been specified:
         - Detector voltage (gain)
+        - Bead model fitted parameters
 
     Parameters
     ----------
@@ -605,6 +606,9 @@ def add_beads_stats(beads_table, beads_samples):
         FCSData objects from which to calculate statistics.
         ``beads_samples[i]`` should correspond to
         ``beads_table.values()[i]``.
+    mef_outputs : dictionary
+        A dictionary with the intermediate results of the generation of the
+        MEF transformation functions, indexed by ``beads_table.index``.
 
     """
     # Add per-row stats
@@ -625,9 +629,26 @@ def add_beads_stats(beads_table, beads_samples):
         for row_id, sample in zip(beads_table.index, beads_samples):
             # If MEF values are specified, calculate stats. If not, leave empty.
             if pd.notnull(beads_table[header][row_id]):
+                # Detector voltage
                 beads_table.set_value(row_id,
                                       channel + ' Detector Volt.',
                                       sample.detector_voltage(channel))
+                # Bead model parameters
+                # Try to find the current channel among the mef'd channels. If
+                # successful, extract bead fitted parameters. If not, print
+                # blank text.
+                try:
+                    mef_channel_index = mef_outputs[row_id]. \
+                        mef_channels.index(channel)
+                except ValueError:
+                    model_params_str = ""
+                else:
+                    model_params = mef_outputs[row_id]. \
+                        fitting['beads_params'][mef_channel_index]
+                    model_params_str = ", ".join([str(p) for p in model_params])
+                beads_table.set_value(row_id,
+                                      channel + ' Bead Model Params.',
+                                      model_params_str)
 
 def add_samples_stats(samples_table, samples):
     """
@@ -915,13 +936,14 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
                                index_col='ID')
 
     # Process beads samples
-    beads_samples, mef_transform_fxns = process_beads_table(
+    beads_samples, mef_transform_fxns, mef_outputs = process_beads_table(
         beads_table,
         instruments_table,
         base_dir=input_dir,
         verbose=verbose,
         plot=plot,
-        plot_dir='plot_beads')
+        plot_dir='plot_beads',
+        full_output=True)
 
     # Process samples
     samples = process_samples_table(
@@ -937,7 +959,7 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     if verbose:
         print("")
         print("Calculating statistics for beads...")
-    add_beads_stats(beads_table, beads_samples)
+    add_beads_stats(beads_table, beads_samples, mef_outputs)
 
     # Add stats to samples table
     if verbose:
