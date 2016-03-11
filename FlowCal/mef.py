@@ -404,6 +404,9 @@ def get_transform_fxn(data_beads,
         general transformation function specified in ``FlowCal.transform``.
     namedtuple, if ``full_output==True``
         ``namedtuple``, containing the following fields in this order:
+        mef_channels : int, or str, or list of int, or list of str
+            Channels on which transformation functions have been generated.
+            Directly copied from the `mef_channels` argument.
         transform_fxn : function
             Transformation function to convert flow cytometry data from
             channel units to MEF. This function has the same basic
@@ -784,13 +787,15 @@ def get_transform_fxn(data_beads,
         fitting_res['beads_params'] = beads_params_res
 
         # Make namedtuple
-        fields = ['transform_fxn',
+        fields = ['mef_channels',
+                  'transform_fxn',
                   'clustering',
                   'statistic',
                   'selection',
                   'fitting']
         MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
-        out = MEFOutput(transform_fxn=transform_fxn,
+        out = MEFOutput(mef_channels=mef_channels,
+                        transform_fxn=transform_fxn,
                         clustering=clustering_res,
                         statistic=statistic_res,
                         selection=selection_res,
