@@ -181,16 +181,16 @@ def process_beads_table(beads_table,
     mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
         ``beads_table.index``.
-    mef_outputs : OrderedDict
-        A dictionary with the intermediate results of the generation of the
-        MEF transformation functions, indexed by ``beads_table.index``.
-        Only included if `full_output` is True.
+    mef_outputs : list
+        A list with intermediate results of the generation of the MEF
+        transformation functions, indexed by ``beads_table.index``. Only
+        included if `full_output` is True.
 
     """
     # Initialize output variables
     beads_samples = []
     mef_transform_fxns = collections.OrderedDict()
-    mef_outputs = collections.OrderedDict()
+    mef_outputs = []
 
     # Return empty structures if beads table is empty
     if beads_table.empty:
@@ -356,7 +356,7 @@ def process_beads_table(beads_table,
                 plot_dir=os.path.join(base_dir, plot_dir),
                 full_output=full_output)
             if full_output:
-                mef_outputs[beads_id] = mef_output
+                mef_outputs.append(mef_output)
                 mef_transform_fxns[beads_id] = mef_output.transform_fxn
             else:
                 mef_transform_fxns[beads_id] = mef_output
