@@ -247,12 +247,16 @@ def process_beads_table(beads_table,
                 print("\nBeads ID {}...".format(beads_id))
                 print("Loading file \"{}\"...".format(beads_row['File Path']))
 
+            # Attempt to open file
             filename = os.path.join(base_dir, beads_row['File Path'])
             try:
                 beads_sample = FlowCal.io.FCSData(filename)
             except:
                 raise ExcelUIException("file \"{}\" not found".format(
                     beads_row['File Path']))
+            # Check that the number of events is greater than 500
+            if beads_sample.shape[0] < 500:
+                raise ExcelUIException("number of events is lower than 500")
 
             ###
             # Transform
@@ -508,12 +512,16 @@ def process_samples_table(samples_table,
                 print("\nSample ID {}...".format(sample_id))
                 print("Loading file \"{}\"...".format(sample_row['File Path']))
 
+            # Attempt to open file
             filename = os.path.join(base_dir, sample_row['File Path'])
             try:
                 sample = FlowCal.io.FCSData(filename)
             except:
                 raise ExcelUIException("file \"{}\" not found".format(
                     sample_row['File Path']))
+            # Check that the number of events is greater than 500
+            if sample.shape[0] < 500:
+                raise ExcelUIException("number of events is lower than 500")
 
             ###
             # Transform
