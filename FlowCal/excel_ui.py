@@ -35,6 +35,13 @@ import FlowCal.mef
 re_mef_values = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
 re_units = re.compile(r'^\s*(\S*)\s*Units\s*$')
 
+class ExcelUIException(Exception):
+    """
+    FlowCal Excel UI Error.
+
+    """
+    pass
+
 def read_table(filename, sheetname, index_col=None):
     """
     Return the contents of an Excel table as a pandas DataFrame.
