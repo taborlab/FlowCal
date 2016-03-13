@@ -248,7 +248,11 @@ def process_beads_table(beads_table,
                 print("Loading file \"{}\"...".format(beads_row['File Path']))
 
             filename = os.path.join(base_dir, beads_row['File Path'])
-            beads_sample = FlowCal.io.FCSData(filename)
+            try:
+                beads_sample = FlowCal.io.FCSData(filename)
+            except:
+                raise ExcelUIException("file \"{}\" not found".format(
+                    beads_row['File Path']))
 
             ###
             # Transform
@@ -505,7 +509,11 @@ def process_samples_table(samples_table,
                 print("Loading file \"{}\"...".format(sample_row['File Path']))
 
             filename = os.path.join(base_dir, sample_row['File Path'])
-            sample = FlowCal.io.FCSData(filename)
+            try:
+                sample = FlowCal.io.FCSData(filename)
+            except:
+                raise ExcelUIException("file \"{}\" not found".format(
+                    sample_row['File Path']))
 
             ###
             # Transform
@@ -889,6 +897,8 @@ def generate_histograms_table(samples_table, samples):
     # largest.
     n_columns = 0
     for sample_id, sample in zip(samples_table.index, samples):
+        if isinstance(sample, ExcelUIException):
+            continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
                 bins = sample.domain(channel)
@@ -903,6 +913,8 @@ def generate_histograms_table(samples_table, samples):
 
     # Generate histograms
     for sample_id, sample in zip(samples_table.index, samples):
+        if isinstance(sample, ExcelUIException):
+            continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
                 # Get units in which bins are being reported
