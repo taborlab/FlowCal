@@ -555,12 +555,23 @@ def process_samples_table(samples_table,
                         sample = FlowCal.transform.to_rfi(sample, fl_channel)
                     elif units.lower() == 'mef':
                         units_label = "Molecules of Equivalent Fluorophore, MEF"
-                        sample = mef_transform_fxns[sample_row['Beads ID']](
-                            sample,
-                            fl_channel)
+                        # Check if function is available
+                        if mef_transform_fxns[sample_row['Beads ID']] is None:
+                            raise ExcelUIException("MEF transformation "
+                                "function not available")
+                        # Attempt to transform
+                        # Transformation function raises a ValueError if a
+                        # standard curve does not exist for a channel
+                        try:
+                            sample = mef_transform_fxns[sample_row['Beads ID']](
+                                sample,
+                                fl_channel)
+                        except ValueError:
+                            raise ExcelUIException("no standard curve for "
+                                "channel {}".format(fl_channel))
                     else:
-                        raise ValueError("units {} not recognized for sample "
-                            "{}".format(units, sample_id))
+                        raise ExcelUIException("units \"{}\" not recognized". \
+                            format(units, sample_id))
 
                     # Register that reporting in this channel must be done
                     report_channels.append(fl_channel)
