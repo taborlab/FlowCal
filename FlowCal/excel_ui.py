@@ -223,150 +223,170 @@ def process_beads_table(beads_table,
                         for h in mef_headers_all]
 
     # Iterate through table
+    # We will look for a ExcelUIException on each iteration. If an exception
+    # is caught, it will be stored in beads_samples.
     for beads_id, beads_row in beads_table.iterrows():
+        try:
+            ###
+            # Instrument Data
+            ###
+            # Get the appropriate row in the instrument table
+            instruments_row = instruments_table.loc[beads_row['Instrument ID']]
+            # Scatter channels: Foward Scatter, Side Scatter
+            sc_channels = [instruments_row['Forward Scatter Channel'],
+                           instruments_row['Side Scatter Channel'],
+                           ]
+            # Fluorescence channels is a comma-separated list
+            fl_channels = instruments_row['Fluorescence Channels'].split(',')
+            fl_channels = [s.strip() for s in fl_channels]
 
-        ###
-        # Instrument Data
-        ###
-        # Get the appropriate row in the instrument table
-        instruments_row = instruments_table.loc[beads_row['Instrument ID']]
-        # Scatter channels: Foward Scatter, Side Scatter
-        sc_channels = [instruments_row['Forward Scatter Channel'],
-                       instruments_row['Side Scatter Channel'],
-                       ]
-        # Fluorescence channels is a comma-separated list
-        fl_channels = instruments_row['Fluorescence Channels'].split(',')
-        fl_channels = [s.strip() for s in fl_channels]
-
-        ###
-        # Beads Data
-        ###
-        if verbose:
-            print("\nBeads ID {}...".format(beads_id))
-            print("Loading file \"{}\"...".format(beads_row['File Path']))
-
-        filename = os.path.join(base_dir, beads_row['File Path'])
-        beads_sample = FlowCal.io.FCSData(filename)
-
-        ###
-        # Transform
-        ###
-        if verbose:
-            print("Performing data transformation...")
-        # Transform FSC/SSC to linear scale
-        beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
-
-        # Parse clustering channels data
-        cluster_channels = beads_row['Clustering Channels'].split(',')
-        cluster_channels = [cc.strip() for cc in cluster_channels]
-
-        ###
-        # Gate
-        ###
-        if verbose:
-            print("Performing gating...")
-        # Remove first and last events. Transients in fluidics can make the
-        # first few and last events slightly different from the rest.
-        beads_sample_gated = FlowCal.gate.start_end(beads_sample,
-                                                    num_start=250,
-                                                    num_end=100)
-        # Remove saturating events in forward/side scatter. The value of a
-        # saturating event is taken automatically from
-        # `beads_sample_gated.domain`.
-        beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
-                                                   channels=sc_channels)
-        # Density gating
-        beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-            data=beads_sample_gated,
-            channels=sc_channels,
-            gate_fraction=beads_row['Gate Fraction'],
-            full_output=True)
-
-        # Plot forward/side scatter density plot and fluorescence histograms
-        if plot:
+            ###
+            # Beads Data
+            ###
             if verbose:
-                print("Plotting density plot and histogram...")
-            # Define density plot parameters
-            density_params = {}
-            density_params['mode'] = 'scatter'
-            density_params['xlog'] = bool(
-                beads_sample_gated.amplification_type(sc_channels[0])[0])
-            density_params['ylog'] = bool(
-                beads_sample_gated.amplification_type(sc_channels[1])[0])
-            density_params["title"] = "{} ({:.1f}% retained)".format(
-                beads_id,
-                beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
-            # Plot
-            figname = os.path.join(base_dir,
-                                   plot_dir,
-                                   "density_hist_{}.png".format(beads_id))
-            plt.figure(figsize = (6,4))
-            FlowCal.plot.density_and_hist(
-                beads_sample,
-                beads_sample_gated, 
-                density_channels=sc_channels,
-                hist_channels=cluster_channels,
-                gate_contour=gate_contour, 
-                density_params=density_params,
-                hist_params={'div': 4},
-                savefig=figname)
+                print("\nBeads ID {}...".format(beads_id))
+                print("Loading file \"{}\"...".format(beads_row['File Path']))
 
-        # Save sample
-        beads_samples.append(beads_sample_gated)
+            filename = os.path.join(base_dir, beads_row['File Path'])
+            beads_sample = FlowCal.io.FCSData(filename)
 
-        ###
-        # Process MEF values
-        ###
-        # For each fluorescence channel, check whether a list of known MEF
-        # values of the bead subpopulations is provided in `beads_row`. This
-        # involves checking that a column named "[channel] MEF Values" exists
-        # and is not empty. If so, store the name of the channel in
-        # `mef_channels`, and the specified MEF values in `mef_values`.
-        ###
-        mef_values = []
-        mef_channels = []
-        for fl_channel in fl_channels:
-            if fl_channel in mef_channels_all:
-                # Get header from channel name
-                mef_header = mef_headers_all[mef_channels_all.index(fl_channel)]
-                # Extract text. If empty, ignore.
-                mef_str = beads_row[mef_header]
-                if pd.isnull(mef_str):
-                    continue
-                # Save channel name
-                mef_channels.append(fl_channel)
-                # Parse list of values
-                mef = mef_str.split(',')
-                mef = [int(e) if e.strip().isdigit() else np.nan
-                       for e in mef]
-                mef_values.append(mef)
-        mef_values = np.array(mef_values)
-
-        # Obtain standard curve transformation
-        if mef_channels:
+            ###
+            # Transform
+            ###
             if verbose:
-                if len(mef_channels) == 1:
-                    print("Calculating standard curve for channel {}..." \
-                        .format(mef_channels[0]))
+                print("Performing data transformation...")
+            # Transform FSC/SSC to linear scale
+            beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
+
+            # Parse clustering channels data
+            cluster_channels = beads_row['Clustering Channels'].split(',')
+            cluster_channels = [cc.strip() for cc in cluster_channels]
+
+            ###
+            # Gate
+            ###
+            if verbose:
+                print("Performing gating...")
+            # Remove first and last events. Transients in fluidics can make the
+            # first few and last events slightly different from the rest.
+            beads_sample_gated = FlowCal.gate.start_end(beads_sample,
+                                                        num_start=250,
+                                                        num_end=100)
+            # Remove saturating events in forward/side scatter. The value of a
+            # saturating event is taken automatically from
+            # `beads_sample_gated.domain`.
+            beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
+                                                       channels=sc_channels)
+            # Density gating
+            beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                data=beads_sample_gated,
+                channels=sc_channels,
+                gate_fraction=beads_row['Gate Fraction'],
+                full_output=True)
+
+            # Plot forward/side scatter density plot and fluorescence histograms
+            if plot:
+                if verbose:
+                    print("Plotting density plot and histogram...")
+                # Define density plot parameters
+                density_params = {}
+                density_params['mode'] = 'scatter'
+                density_params['xlog'] = bool(
+                    beads_sample_gated.amplification_type(sc_channels[0])[0])
+                density_params['ylog'] = bool(
+                    beads_sample_gated.amplification_type(sc_channels[1])[0])
+                density_params["title"] = "{} ({:.1f}% retained)".format(
+                    beads_id,
+                    beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
+                # Plot
+                figname = os.path.join(base_dir,
+                                       plot_dir,
+                                       "density_hist_{}.png".format(beads_id))
+                plt.figure(figsize = (6,4))
+                FlowCal.plot.density_and_hist(
+                    beads_sample,
+                    beads_sample_gated,
+                    density_channels=sc_channels,
+                    hist_channels=cluster_channels,
+                    gate_contour=gate_contour,
+                    density_params=density_params,
+                    hist_params={'div': 4},
+                    savefig=figname)
+
+            ###
+            # Process MEF values
+            ###
+            # For each fluorescence channel, check whether a list of known MEF
+            # values of the bead subpopulations is provided in `beads_row`. This
+            # involves checking that a column named "[channel] MEF Values"
+            # exists and is not empty. If so, store the name of the channel in
+            # `mef_channels`, and the specified MEF values in `mef_values`.
+            ###
+            mef_values = []
+            mef_channels = []
+            for fl_channel in fl_channels:
+                if fl_channel in mef_channels_all:
+                    # Get header from channel name
+                    mef_header = \
+                        mef_headers_all[mef_channels_all.index(fl_channel)]
+                    # Extract text. If empty, ignore.
+                    mef_str = beads_row[mef_header]
+                    if pd.isnull(mef_str):
+                        continue
+                    # Save channel name
+                    mef_channels.append(fl_channel)
+                    # Parse list of values
+                    mef = mef_str.split(',')
+                    mef = [int(e) if e.strip().isdigit() else np.nan
+                           for e in mef]
+                    mef_values.append(mef)
+            mef_values = np.array(mef_values)
+
+            # Obtain standard curve transformation
+            if mef_channels:
+                if verbose:
+                    if len(mef_channels) == 1:
+                        print("Calculating standard curve for channel {}..." \
+                            .format(mef_channels[0]))
+                    else:
+                        print("Calculating standard curve for channels {}..." \
+                            .format(", ".join(mef_channels)))
+
+                mef_output = FlowCal.mef.get_transform_fxn(
+                    beads_sample_gated,
+                    mef_values,
+                    mef_channels=mef_channels,
+                    clustering_channels=cluster_channels,
+                    verbose=False,
+                    plot=plot,
+                    plot_filename=beads_id,
+                    plot_dir=os.path.join(base_dir, plot_dir),
+                    full_output=full_output)
+
+                if full_output:
+                    mef_transform_fxn = mef_output.transform_fxn
                 else:
-                    print("Calculating standard curve for channels {}..." \
-                        .format(", ".join(mef_channels)))
+                    mef_transform_fxn = mef_output
 
-            mef_output = FlowCal.mef.get_transform_fxn(
-                beads_sample_gated,
-                mef_values,
-                mef_channels=mef_channels,
-                clustering_channels=cluster_channels,
-                verbose=False,
-                plot=plot,
-                plot_filename=beads_id,
-                plot_dir=os.path.join(base_dir, plot_dir),
-                full_output=full_output)
+            else:
+                mef_transform_fxn = None
+                mef_output = None
+
+        except ExcelUIException as e:
+            # Append exception to beads_samples array, and None to everything
+            # else
+            beads_samples.append(e)
+            mef_transform_fxns[beads_id] = None
+            if full_output:
+                mef_outputs.append(None)
+
+        else:
+            # If no errors were found, store results
+            beads_samples.append(beads_sample_gated)
+            mef_transform_fxns[beads_id] = mef_transform_fxn
             if full_output:
                 mef_outputs.append(mef_output)
-                mef_transform_fxns[beads_id] = mef_output.transform_fxn
-            else:
-                mef_transform_fxns[beads_id] = mef_output
+
 
     if full_output:
         return beads_samples, mef_transform_fxns, mef_outputs
@@ -457,136 +477,143 @@ def process_samples_table(samples_table,
                            for h in report_headers_all]
 
     # Iterate through table
+    # We will look for a ExcelUIException on each iteration. If an exception
+    # is caught, it will be stored in beads_samples.
     for sample_id, sample_row in samples_table.iterrows():
+        try:
+            ###
+            # Instrument Data
+            ###
+            # Get the appropriate row in the instrument table
+            instruments_row = instruments_table.loc[sample_row['Instrument ID']]
+            # Scatter channels: Foward Scatter, Side Scatter
+            sc_channels = [instruments_row['Forward Scatter Channel'],
+                           instruments_row['Side Scatter Channel'],
+                           ]
+            # Fluorescence channels is a comma-separated list
+            fl_channels = instruments_row['Fluorescence Channels'].split(',')
+            fl_channels = [s.strip() for s in fl_channels]
 
-        ###
-        # Instrument Data
-        ###
-        # Get the appropriate row in the instrument table
-        instruments_row = instruments_table.loc[sample_row['Instrument ID']]
-        # Scatter channels: Foward Scatter, Side Scatter
-        sc_channels = [instruments_row['Forward Scatter Channel'],
-                       instruments_row['Side Scatter Channel'],
-                       ]
-        # Fluorescence channels is a comma-separated list
-        fl_channels = instruments_row['Fluorescence Channels'].split(',')
-        fl_channels = [s.strip() for s in fl_channels]
-
-        ###
-        # Sample Data
-        ###
-        if verbose:
-            print("\nSample ID {}...".format(sample_id))
-            print("Loading file \"{}\"...".format(sample_row['File Path']))
-
-        filename = os.path.join(base_dir, sample_row['File Path'])
-        sample = FlowCal.io.FCSData(filename)
-
-        ###
-        # Transform
-        ###
-        if verbose:
-            print("Performing data transformation...")
-        # Transform FSC/SSC to linear scale
-        sample = FlowCal.transform.to_rfi(sample, sc_channels)
-
-        # Parse fluorescence channels in which to transform
-        report_channels = []
-        report_units = []
-        for fl_channel in fl_channels:
-            if fl_channel in report_channels_all:
-                # Get header from channel name
-                report_header = report_headers_all[report_channels_all.index(
-                    fl_channel)]
-                # Extract text. If empty, ignore.
-                units_str = sample_row[report_header]
-                if pd.isnull(units_str):
-                    continue
-                # Decide what transformation to perform
-                units = units_str.strip()
-                if units.lower() == 'channel':
-                    units_label = "Channel Number"
-                elif units.lower() == 'rfi':
-                    units_label = "Relative Fluorescence Intensity, RFI"
-                    sample = FlowCal.transform.to_rfi(sample, fl_channel)
-                elif units.lower() == 'a.u.' or units.lower() == 'au':
-                    units_label = "Arbitrary Units, a.u."
-                    sample = FlowCal.transform.to_rfi(sample, fl_channel)
-                elif units.lower() == 'mef':
-                    units_label = "Molecules of Equivalent Fluorophore, MEF"
-                    sample = mef_transform_fxns[sample_row['Beads ID']](
-                        sample,
-                        fl_channel)
-                else:
-                    raise ValueError("units {} not recognized for sample {}".
-                        format(units, sample_id))
-
-                # Register that reporting in this channel must be done
-                report_channels.append(fl_channel)
-                report_units.append(units_label)
-
-        ###
-        # Gate
-        ###
-        if verbose:
-            print("Performing gating...")
-        # Remove first and last events. Transients in fluidics can make the
-        # first few and last events slightly different from the rest.
-        sample_gated = FlowCal.gate.start_end(sample,
-                                              num_start=250,
-                                              num_end=100)
-        # Remove saturating events in forward/side scatter, and fluorescent
-        # channels to report. The value of a saturating event is taken
-        # automatically from `sample_gated.domain`.
-        sample_gated = FlowCal.gate.high_low(sample_gated,
-                                             sc_channels + report_channels)
-        # Density gating
-        sample_gated, __, gate_contour = FlowCal.gate.density2d(
-            data=sample_gated,
-            channels=sc_channels,
-            gate_fraction=sample_row['Gate Fraction'],
-            full_output=True)
-
-        # Accumulate
-        samples.append(sample_gated)
-
-        # Plot forward/side scatter density plot and fluorescence histograms
-        if plot:
+            ###
+            # Sample Data
+            ###
             if verbose:
-                print("Plotting density plot and histogram...")
-            # Define density plot parameters
-            density_params = {}
-            density_params['mode'] = 'scatter'
-            density_params['xlog'] = bool(
-                sample_gated.amplification_type(sc_channels[0])[0])
-            density_params['ylog'] = bool(
-                sample_gated.amplification_type(sc_channels[1])[0])
-            density_params["title"] = "{} ({:.1f}% retained)".format(
-                sample_id,
-                sample_gated.shape[0] * 100. / sample.shape[0])
-            # Define histogram plot parameters
-            hist_params = []
-            for rc, ru in zip(report_channels, report_units):
-                param = {}
-                param['div'] = 4
-                param['xlabel'] = '{} ({})'.format(rc, ru)
-                param['log'] = (ru != 'Channel Number') and \
-                    bool(sample_gated.amplification_type(rc)[0])
-                hist_params.append(param)
-                
-            # Plot
-            figname = os.path.join(base_dir,
-                                   plot_dir,
-                                   "{}.png".format(sample_id))
-            FlowCal.plot.density_and_hist(
-                sample,
-                sample_gated,
-                gate_contour=gate_contour,
-                density_channels=sc_channels,
-                density_params=density_params,
-                hist_channels=report_channels,
-                hist_params=hist_params,
-                savefig=figname)
+                print("\nSample ID {}...".format(sample_id))
+                print("Loading file \"{}\"...".format(sample_row['File Path']))
+
+            filename = os.path.join(base_dir, sample_row['File Path'])
+            sample = FlowCal.io.FCSData(filename)
+
+            ###
+            # Transform
+            ###
+            if verbose:
+                print("Performing data transformation...")
+            # Transform FSC/SSC to linear scale
+            sample = FlowCal.transform.to_rfi(sample, sc_channels)
+
+            # Parse fluorescence channels in which to transform
+            report_channels = []
+            report_units = []
+            for fl_channel in fl_channels:
+                if fl_channel in report_channels_all:
+                    # Get header from channel name
+                    report_header = report_headers_all[
+                        report_channels_all.index(fl_channel)]
+                    # Extract text. If empty, ignore.
+                    units_str = sample_row[report_header]
+                    if pd.isnull(units_str):
+                        continue
+                    # Decide what transformation to perform
+                    units = units_str.strip()
+                    if units.lower() == 'channel':
+                        units_label = "Channel Number"
+                    elif units.lower() == 'rfi':
+                        units_label = "Relative Fluorescence Intensity, RFI"
+                        sample = FlowCal.transform.to_rfi(sample, fl_channel)
+                    elif units.lower() == 'a.u.' or units.lower() == 'au':
+                        units_label = "Arbitrary Units, a.u."
+                        sample = FlowCal.transform.to_rfi(sample, fl_channel)
+                    elif units.lower() == 'mef':
+                        units_label = "Molecules of Equivalent Fluorophore, MEF"
+                        sample = mef_transform_fxns[sample_row['Beads ID']](
+                            sample,
+                            fl_channel)
+                    else:
+                        raise ValueError("units {} not recognized for sample "
+                            "{}".format(units, sample_id))
+
+                    # Register that reporting in this channel must be done
+                    report_channels.append(fl_channel)
+                    report_units.append(units_label)
+
+            ###
+            # Gate
+            ###
+            if verbose:
+                print("Performing gating...")
+            # Remove first and last events. Transients in fluidics can make the
+            # first few and last events slightly different from the rest.
+            sample_gated = FlowCal.gate.start_end(sample,
+                                                  num_start=250,
+                                                  num_end=100)
+            # Remove saturating events in forward/side scatter, and fluorescent
+            # channels to report. The value of a saturating event is taken
+            # automatically from `sample_gated.domain`.
+            sample_gated = FlowCal.gate.high_low(sample_gated,
+                                                 sc_channels + report_channels)
+            # Density gating
+            sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                data=sample_gated,
+                channels=sc_channels,
+                gate_fraction=sample_row['Gate Fraction'],
+                full_output=True)
+
+            # Plot forward/side scatter density plot and fluorescence histograms
+            if plot:
+                if verbose:
+                    print("Plotting density plot and histogram...")
+                # Define density plot parameters
+                density_params = {}
+                density_params['mode'] = 'scatter'
+                density_params['xlog'] = bool(
+                    sample_gated.amplification_type(sc_channels[0])[0])
+                density_params['ylog'] = bool(
+                    sample_gated.amplification_type(sc_channels[1])[0])
+                density_params["title"] = "{} ({:.1f}% retained)".format(
+                    sample_id,
+                    sample_gated.shape[0] * 100. / sample.shape[0])
+                # Define histogram plot parameters
+                hist_params = []
+                for rc, ru in zip(report_channels, report_units):
+                    param = {}
+                    param['div'] = 4
+                    param['xlabel'] = '{} ({})'.format(rc, ru)
+                    param['log'] = (ru != 'Channel Number') and \
+                        bool(sample_gated.amplification_type(rc)[0])
+                    hist_params.append(param)
+                    
+                # Plot
+                figname = os.path.join(base_dir,
+                                       plot_dir,
+                                       "{}.png".format(sample_id))
+                FlowCal.plot.density_and_hist(
+                    sample,
+                    sample_gated,
+                    gate_contour=gate_contour,
+                    density_channels=sc_channels,
+                    density_params=density_params,
+                    hist_channels=report_channels,
+                    hist_params=hist_params,
+                    savefig=figname)
+
+        except ExcelUIException as e:
+            # Append exception to samples array
+            samples.append(e)
+
+        else:
+            # If no errors were found, store results
+            samples.append(sample_gated)
 
     return samples
 
