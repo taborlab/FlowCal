@@ -373,6 +373,9 @@ def process_beads_table(beads_table,
                 mef_output = None
 
         except ExcelUIException as e:
+            # Print Exception message
+            if verbose:
+                print("ERROR: {}".format(str(e)))
             # Append exception to beads_samples array, and None to everything
             # else
             beads_samples.append(e)
@@ -608,6 +611,9 @@ def process_samples_table(samples_table,
                     savefig=figname)
 
         except ExcelUIException as e:
+            # Print Exception message
+            if verbose:
+                print("ERROR: {}".format(str(e)))
             # Append exception to samples array
             samples.append(e)
 
@@ -621,12 +627,13 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     """
     Add stats fields to beads table.
 
-    The following numbers are added to each row:
+    The following information is added to each row:
+        - Whether analysis was successful
         - Number of Events
         - Acquisition Time (s)
 
-    The following stats are added for each row, for each channel in which
-    MEF values have been specified:
+    The following information is added for each row, for each channel in
+    which MEF values have been specified:
         - Detector voltage (gain)
         - Amplification type
         - Bead model fitted parameters
@@ -648,11 +655,25 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         ``beads_table.values()[i]``.
 
     """
-    # Add per-row stats
-    beads_table['Number of Events'] = [sample.shape[0]
-                                       for sample in beads_samples]
-    beads_table['Acquisition Time (s)'] = [sample.acquisition_time
-                                           for sample in beads_samples]
+    # Add per-row info
+    success = []
+    n_events = []
+    acq_time = []
+    for beads_sample in beads_samples:
+        # Check if sample is an exception, otherwise assume it's an FCSData
+        if isinstance(beads_sample, ExcelUIException):
+            # Print error message
+            success.append("ERROR: {}".format(str(beads_sample)))
+            n_events.append(np.nan)
+            acq_time.append(np.nan)
+        else:
+            success.append('Yes')
+            n_events.append(beads_sample.shape[0])
+            acq_time.append(beads_sample.acquisition_time)
+
+    beads_table['Successful?'] = success
+    beads_table['Number of Events'] = n_events
+    beads_table['Acquisition Time (s)'] = acq_time
 
     # List of channels that require stats columns
     headers = list(beads_table.columns)
@@ -669,6 +690,9 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
 
         # Iterate
         for i, row_id in enumerate(beads_table.index):
+            # If error, skip
+            if isinstance(beads_samples[i], ExcelUIException):
+                continue
             # If MEF values are specified, calculate stats. If not, leave empty.
             if pd.notnull(beads_table[header][row_id]):
 
@@ -710,12 +734,13 @@ def add_samples_stats(samples_table, samples):
     """
     Add stats fields to samples table.
 
-    The following numbers are added to each row:
+    The following information is added to each row:
+        - Whether analysis was successful
         - Number of Events
         - Acquisition Time (s)
     
-    The following stats are added for each row, for each channel in which
-    fluorescence units have been specified:
+    The following information is added for each row, for each channel in
+    which fluorescence units have been specified:
         - Detector voltage (gain)
         - Amplification type
         - Mean
@@ -738,10 +763,25 @@ def add_samples_stats(samples_table, samples):
         should correspond to ``samples_table.values()[i]``
 
     """
-    # Add per-row stats
-    samples_table['Number of Events'] = [sample.shape[0] for sample in samples]
-    samples_table['Acquisition Time (s)'] = [sample.acquisition_time
-                                             for sample in samples]
+    # Add per-row info
+    success = []
+    n_events = []
+    acq_time = []
+    for sample in samples:
+        # Check if sample is an exception, otherwise assume it's an FCSData
+        if isinstance(sample, ExcelUIException):
+            # Print error message
+            success.append("ERROR: {}".format(str(sample)))
+            n_events.append(np.nan)
+            acq_time.append(np.nan)
+        else:
+            success.append('Yes')
+            n_events.append(sample.shape[0])
+            acq_time.append(sample.acquisition_time)
+
+    samples_table['Successful?'] = success
+    samples_table['Number of Events'] = n_events
+    samples_table['Acquisition Time (s)'] = acq_time
 
     # List of channels that require stats columns
     headers = list(samples_table.columns)
@@ -764,6 +804,9 @@ def add_samples_stats(samples_table, samples):
         samples_table[channel + ' IQR'] = np.nan
         samples_table[channel + ' RCV'] = np.nan
         for row_id, sample in zip(samples_table.index, samples):
+            # If error, skip
+            if isinstance(sample, ExcelUIException):
+                continue
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
                 # Acquisition settings
