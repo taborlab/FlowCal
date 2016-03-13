@@ -594,6 +594,7 @@ def add_beads_stats(beads_table, beads_samples):
     The following stats are added for each row, for each channel in which
     MEF values have been specified:
         - Detector voltage (gain)
+        - Amplification type
 
     Parameters
     ----------
@@ -625,9 +626,18 @@ def add_beads_stats(beads_table, beads_samples):
         for row_id, sample in zip(beads_table.index, beads_samples):
             # If MEF values are specified, calculate stats. If not, leave empty.
             if pd.notnull(beads_table[header][row_id]):
+                # Detector voltage
                 beads_table.set_value(row_id,
                                       channel + ' Detector Volt.',
                                       sample.detector_voltage(channel))
+                # Amplification type
+                if sample.amplification_type(channel)[0]:
+                    amplification_type = "Log"
+                else:
+                    amplification_type = "Linear"
+                beads_table.set_value(row_id,
+                                      channel + ' Amp. Type',
+                                      amplification_type)
 
 def add_samples_stats(samples_table, samples):
     """
@@ -639,7 +649,8 @@ def add_samples_stats(samples_table, samples):
     
     The following stats are added for each row, for each channel in which
     fluorescence units have been specified:
-        - Gain
+        - Detector voltage (gain)
+        - Amplification type
         - Mean
         - Geometric Mean
         - Media
@@ -674,6 +685,7 @@ def add_samples_stats(samples_table, samples):
     for header, channel in zip(stats_headers, stats_channels):
         # Add empty columns to table
         samples_table[channel + ' Detector Volt.'] = np.nan
+        samples_table[channel + ' Amp. Type'] = ""
         samples_table[channel + ' Mean'] = np.nan
         samples_table[channel + ' Geom. Mean'] = np.nan
         samples_table[channel + ' Median'] = np.nan
@@ -687,9 +699,21 @@ def add_samples_stats(samples_table, samples):
         for row_id, sample in zip(samples_table.index, samples):
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
+                # Acquisition settings
+                # Detector voltage
                 samples_table.set_value(row_id,
                                         channel + ' Detector Volt.',
                                         sample.detector_voltage(channel))
+                # Amplification type
+                if sample.amplification_type(channel)[0]:
+                    amplification_type = "Log"
+                else:
+                    amplification_type = "Linear"
+                samples_table.set_value(row_id,
+                                        channel + ' Amp. Type',
+                                        amplification_type)
+
+                # Statistics from event list
                 samples_table.set_value(row_id,
                                         channel + ' Mean',
                                         FlowCal.stats.mean(sample, channel))
