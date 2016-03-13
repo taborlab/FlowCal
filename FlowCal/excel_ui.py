@@ -407,6 +407,7 @@ def process_beads_table(beads_table,
 def process_samples_table(samples_table,
                           instruments_table,
                           mef_transform_fxns=None,
+                          beads_table=None,
                           base_dir="",
                           verbose=False,
                           plot=False,
@@ -445,6 +446,15 @@ def process_samples_table(samples_table,
         in `samples_table` requires transformation to MEF, a key: value
         pair must exist in mef_transform_fxns, with the key being equal to
         the contents of field "Beads ID".
+    beads_table : DataFrame
+        Table specifying beads samples used to generate
+        `mef_transform_fxns`. This is used to check if a beads sample was
+        taken at the same acquisition settings as a sample to be
+        transformed to MEF. For any beads sample and channel for which a
+        MEF transformation function has been generated, the following
+        fields should be populated: ``<channel> Amp. Type`` and
+        ``<channel> Detector Volt``. If `beads_table` is not specified, no
+        checking will be performed.
     base_dir : str, optional
         Directory from where all the other paths are specified.
     verbose: bool, optional
@@ -547,18 +557,67 @@ def process_samples_table(samples_table,
                     units = units_str.strip()
                     if units.lower() == 'channel':
                         units_label = "Channel Number"
+
                     elif units.lower() == 'rfi':
                         units_label = "Relative Fluorescence Intensity, RFI"
                         sample = FlowCal.transform.to_rfi(sample, fl_channel)
                     elif units.lower() == 'a.u.' or units.lower() == 'au':
                         units_label = "Arbitrary Units, a.u."
                         sample = FlowCal.transform.to_rfi(sample, fl_channel)
+
                     elif units.lower() == 'mef':
                         units_label = "Molecules of Equivalent Fluorophore, MEF"
-                        # Check if function is available
+                        # Check if transformation function is available
                         if mef_transform_fxns[sample_row['Beads ID']] is None:
                             raise ExcelUIException("MEF transformation "
                                 "function not available")
+
+                        # If beads_table is available, check if the same
+                        # settings have been used to acquire the corresponding
+                        # beads sample
+                        if beads_table is not None:
+                            beads_row = beads_table.loc[sample_row['Beads ID']]
+                            # Instrument
+                            beads_iid = beads_row['Instrument ID']
+                            if beads_iid != sample_row['Instrument ID']:
+                                raise ExcelUIException("Instruments for "
+                                    "acquisition of beads and samples are not "
+                                    "the same (beads {}'s instrument: {}, "
+                                    "sample's instrument: {})".format(
+                                        sample_row['Beads ID'],
+                                        beads_iid,
+                                        sample_row['Instrument ID']))
+                            # Amplification type
+                            beads_at = beads_row['{} Amp. Type'. \
+                                format(fl_channel)]
+                            if sample.amplification_type(fl_channel)[0]:
+                                sample_at = "Log"
+                            else:
+                                sample_at = "Linear"
+                            if beads_at != sample_at:
+                                raise ExcelUIException("Amplification type for "
+                                    "acquisition of beads and samples in "
+                                    "channel {} are not the same (beads {}'s "
+                                    "amplification: {}, sample's "
+                                    "amplification: {})".format(
+                                        fl_channel,
+                                        sample_row['Beads ID'],
+                                        beads_at,
+                                        sample_at))
+                            # Detector voltage
+                            beads_dv = beads_row['{} Detector Volt.'. \
+                                format(fl_channel)]
+                            if beads_dv != sample.detector_voltage(fl_channel):
+                                raise ExcelUIException("Detector voltage for "
+                                    "acquisition of beads and samples in "
+                                    "channel {} are not the same (beads {}'s "
+                                    "detector voltage: {}, sample's "
+                                    "detector voltage: {})".format(
+                                        fl_channel,
+                                        sample_row['Beads ID'],
+                                        beads_dv,
+                                        sample.detector_voltage(fl_channel)))
+
                         # Attempt to transform
                         # Transformation function raises a ValueError if a
                         # standard curve does not exist for a channel
@@ -1089,24 +1148,26 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
         plot_dir='plot_beads',
         full_output=True)
 
-    # Process samples
-    samples = process_samples_table(
-        samples_table,
-        instruments_table,
-        mef_transform_fxns=mef_transform_fxns,
-        base_dir=input_dir,
-        verbose=verbose,
-        plot=plot,
-        plot_dir='plot_samples')
-
     # Add stats to beads table
     if verbose:
         print("")
         print("Calculating statistics for beads...")
     add_beads_stats(beads_table, beads_samples, mef_outputs)
 
+    # Process samples
+    samples = process_samples_table(
+        samples_table,
+        instruments_table,
+        mef_transform_fxns=mef_transform_fxns,
+        beads_table=beads_table,
+        base_dir=input_dir,
+        verbose=verbose,
+        plot=plot,
+        plot_dir='plot_samples')
+
     # Add stats to samples table
     if verbose:
+        print("")
         print("Calculating statistics for all samples...")
     add_samples_stats(samples_table, samples)
 
