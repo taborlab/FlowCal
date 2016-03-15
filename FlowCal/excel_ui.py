@@ -446,7 +446,7 @@ def process_samples_table(samples_table,
         in `samples_table` requires transformation to MEF, a key: value
         pair must exist in mef_transform_fxns, with the key being equal to
         the contents of field "Beads ID".
-    beads_table : DataFrame
+    beads_table : DataFrame, optional
         Table specifying beads samples used to generate
         `mef_transform_fxns`. This is used to check if a beads sample was
         taken at the same acquisition settings as a sample to be
