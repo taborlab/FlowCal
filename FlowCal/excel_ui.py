@@ -737,6 +737,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     mef_outputs : list, optional
         A list with the intermediate results of the generation of the MEF
         transformation functions, as given by ``mef.get_transform_fxn()``.
+        This is used to populate the field ``<channel> Bead Model Params``.
         If specified, ``mef_outputs[i]`` should correspond to
         ``beads_table.values()[i]``.
 
