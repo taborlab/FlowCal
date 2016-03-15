@@ -251,7 +251,7 @@ def process_beads_table(beads_table,
             filename = os.path.join(base_dir, beads_row['File Path'])
             try:
                 beads_sample = FlowCal.io.FCSData(filename)
-            except:
+            except IOError:
                 raise ExcelUIException("file \"{}\" not found".format(
                     beads_row['File Path']))
             # Check that the number of events is greater than 500
@@ -526,7 +526,7 @@ def process_samples_table(samples_table,
             filename = os.path.join(base_dir, sample_row['File Path'])
             try:
                 sample = FlowCal.io.FCSData(filename)
-            except:
+            except IOError:
                 raise ExcelUIException("file \"{}\" not found".format(
                     sample_row['File Path']))
             # Check that the number of events is greater than 500
