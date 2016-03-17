@@ -23,7 +23,13 @@ To see ``FlowCal`` in action, head to the :doc:`How to use the Excel UI</excel_u
 
 Installing ``FlowCal`` in (barebones) Python
 --------------------------------------------
-Python 2.7 is required, along with ``pip`` and ``setuptools``. The following Python packages should also be present:
+Python 2.7 is required, along with ``pip`` and ``setuptools``. The easiest way is to install ``FlowCal`` is to use ``pip``::
+
+	pip install FlowCal
+
+This should take care of all the requirements automatically. Linux and Mac OSX users may need to request administrative permissions by preceding this command with ``sudo``.
+
+Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. Next, make sure that the following Python packages are present:
 
 * ``numpy`` (>=1.8.2)
 * ``scipy`` (>=0.14.0)
@@ -38,15 +44,13 @@ If you have ``pip``, a ``requirements.txt`` file is provided, such that the requ
 
 	pip install -r requirements.txt
 
-Linux and Mac OSX users may need to request administrative permissions by preceding this command with ``sudo``.
-
 To install ``FlowCal``, run the following in ``FlowCal``'s root directory::
 
 	python setup.py install
 
-Again, some users may need to precede this command with ``sudo``.
+Again, some users may need to precede the previous commands with ``sudo``.
 
-.. note:: 
+.. note::
 	**Ubuntu/Linux Mint**: ``FlowCal`` might need more recent versions of some python packages than the ones provided via ``apt``. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed: 
 
 	* ``gcc``
@@ -63,4 +67,4 @@ Again, some users may need to precede this command with ``sudo``.
 
 		sudo apt-get install <package-name>
 
-	After this, you may upgrade the requirements using ``pip`` and then install ``FlowCal``.
+	After this, you may install ``FlowCal`` by following the steps above.
