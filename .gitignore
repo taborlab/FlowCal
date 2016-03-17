@@ -1,3 +1,4 @@
+dist
 FlowCal.egg-info
 *.pyc
 *.ipynb_checkpoints
