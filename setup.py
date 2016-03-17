@@ -39,7 +39,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=find_version(path.join(here, 'FlowCal', '__init__.py')),
 
-    description='Flow cytometry library',
+    description='Flow Cytometry Calibration Library',
     long_description=long_description,
 
     # The project's main homepage.
