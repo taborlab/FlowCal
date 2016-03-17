@@ -156,36 +156,63 @@
 <ol class="arabic simple">
 <li>Navigate to <a class="reference external" href="https://www.continuum.io/downloads">https://www.continuum.io/downloads</a>. If you are using Windows, click on “Windows 64-bit Graphical Installer” or “Windows 32-bit Graphical Installer” under the “Python 2.7” column, depending on whether your computer is 32-bit or 64-bit. The 64-bit version is strongly recommended. Similarly, if you are using OS X, click on “Mac OS X 64-bit Graphical Installer” under the “Python 2.7” column. This will download the installer.</li>
 <li>Double click the installer (.exe in Windows, .pkg in OS X) and follow the instructions on screen.</li>
-<li>Download FlowCal from <a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">here</a>. A file called <code class="docutils literal"><span class="pre">FlowCal-master.zip</span></code> will be downloaded. Unzip this file.</li>
+<li>Download <code class="docutils literal"><span class="pre">FlowCal</span></code> from <a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">here</a>. A file called <code class="docutils literal"><span class="pre">FlowCal-master.zip</span></code> will be downloaded. Unzip this file.</li>
 <li>Inside the unzipped folder, double click on <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(Windows).bat</span></code> or <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code> if you are using Windows or OS X, respectively. This will open a terminal window and install <code class="docutils literal"><span class="pre">FlowCal</span></code>. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. If the installation was successful, your terminal should look like the figure below. Press Enter to close the terminal window.</li>
 </ol>
 <img alt="_images/installation_completed.png" src="_images/installation_completed.png" />
-<p><em>Mac OS X only</em>: If the following error message appears after double clicking <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code>: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -&gt; Security and Privacy -&gt; General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Mac OS X</strong>: If the following error message appears after double clicking <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code>: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -&gt; Security and Privacy -&gt; General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.</p>
+</div>
+<p>To see <code class="docutils literal"><span class="pre">FlowCal</span></code> in action, head to the <a class="reference internal" href="tutorial_excel.html"><em>Excel UI tutorial</em></a> section. The <code class="docutils literal"><span class="pre">FlowCal</span></code> zip file includes an <code class="docutils literal"><span class="pre">examples</span></code> folder with files that you can use while following the instructions.</p>
 </div>
 <div class="section" id="installing-flowcal-in-barebones-python">
 <h2>Installing <code class="docutils literal"><span class="pre">FlowCal</span></code> in (barebones) Python<a class="headerlink" href="#installing-flowcal-in-barebones-python" title="Permalink to this headline">¶</a></h2>
-<p>Python 2.7 is required, along with <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">setuptools</span></code>. The following Python packages should also be present:</p>
+<p>Python 2.7 is required, along with <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">setuptools</span></code>. The easiest way is to install <code class="docutils literal"><span class="pre">FlowCal</span></code> is to use <code class="docutils literal"><span class="pre">pip</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install FlowCal
+</pre></div>
+</div>
+<p>This should take care of all the requirements automatically. Linux and Mac OSX users may need to request administrative permissions by preceding this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
+<p>Alternatively, download <code class="docutils literal"><span class="pre">FlowCal</span></code> from <a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">here</a>. Next, make sure that the following Python packages are present:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">numpy</span></code> (&gt;=1.9.2)</li>
-<li><code class="docutils literal"><span class="pre">scipy</span></code> (&gt;=0.15.1)</li>
-<li><code class="docutils literal"><span class="pre">matplotlib</span></code> (&gt;=1.4.3)</li>
+<li><code class="docutils literal"><span class="pre">numpy</span></code> (&gt;=1.8.2)</li>
+<li><code class="docutils literal"><span class="pre">scipy</span></code> (&gt;=0.14.0)</li>
+<li><code class="docutils literal"><span class="pre">matplotlib</span></code> (&gt;=1.3.1)</li>
 <li><code class="docutils literal"><span class="pre">palettable</span></code> (&gt;=2.1.1)</li>
-<li><code class="docutils literal"><span class="pre">scikit-learn</span></code> (&gt;=0.16.1)</li>
-<li><code class="docutils literal"><span class="pre">pandas</span></code> (&gt;=0.16.2)</li>
-<li><code class="docutils literal"><span class="pre">xlrd</span></code> (&gt;=0.9.3)</li>
-<li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (&gt;=0.7.3)</li>
+<li><code class="docutils literal"><span class="pre">scikit-learn</span></code> (&gt;=0.16.0)</li>
+<li><code class="docutils literal"><span class="pre">pandas</span></code> (&gt;=0.16.1)</li>
+<li><code class="docutils literal"><span class="pre">xlrd</span></code> (&gt;=0.9.2)</li>
+<li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (&gt;=0.5.2)</li>
 </ul>
 <p>If you have <code class="docutils literal"><span class="pre">pip</span></code>, a <code class="docutils literal"><span class="pre">requirements.txt</span></code> file is provided, such that the required packages can be installed by running:</p>
 <div class="highlight-python"><div class="highlight"><pre>pip install -r requirements.txt
 </pre></div>
 </div>
-<p>Linux and Mac OSX users may need to request administrative permissions by preceding this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
-<p>If you need to upgrade <code class="docutils literal"><span class="pre">scipy</span></code>, you might need to have the following (non-python) packages present in your system: <code class="docutils literal"><span class="pre">gcc</span></code>, <code class="docutils literal"><span class="pre">g++</span></code>, <code class="docutils literal"><span class="pre">gfortran</span></code>, <code class="docutils literal"><span class="pre">libblas-dev</span></code>, and <code class="docutils literal"><span class="pre">liblapack-dev</span></code>, and the python-related <code class="docutils literal"><span class="pre">python-dev</span></code>. For more information, consult your OS&#8217; documentation.</p>
-<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, run the following in FlowCal&#8217;s root directory:</p>
+<p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, run the following in <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s root directory:</p>
 <div class="highlight-python"><div class="highlight"><pre>python setup.py install
 </pre></div>
 </div>
-<p>Again, some users may need to precede this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
+<p>Again, some users may need to precede the previous commands with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>Ubuntu/Linux Mint</strong>: <code class="docutils literal"><span class="pre">FlowCal</span></code> might need more recent versions of some python packages than the ones provided via <code class="docutils literal"><span class="pre">apt</span></code>. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">gcc</span></code></li>
+<li><code class="docutils literal"><span class="pre">g++</span></code></li>
+<li><code class="docutils literal"><span class="pre">gfortran</span></code></li>
+<li><code class="docutils literal"><span class="pre">libblas-dev</span></code></li>
+<li><code class="docutils literal"><span class="pre">liblapack-dev</span></code></li>
+<li><code class="docutils literal"><span class="pre">libfreetype6-dev</span></code></li>
+<li><code class="docutils literal"><span class="pre">python-dev</span></code></li>
+<li><code class="docutils literal"><span class="pre">python-tk</span></code></li>
+<li><code class="docutils literal"><span class="pre">python-pip</span></code></li>
+</ul>
+<p>All of these can be installed using:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo apt-get install &lt;package-name&gt;
+</pre></div>
+</div>
+<p class="last">After this, you may install <code class="docutils literal"><span class="pre">FlowCal</span></code> by following the steps above.</p>
+</div>
 </div>
 </div>
 
