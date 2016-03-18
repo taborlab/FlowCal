@@ -51,7 +51,7 @@ To install ``FlowCal``, run the following in ``FlowCal``'s root directory::
 Again, some users may need to precede the previous commands with ``sudo``.
 
 .. note::
-	**Ubuntu/Linux Mint**: ``FlowCal`` might need more recent versions of some python packages than the ones provided via ``apt``. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed: 
+	**Ubuntu/Linux Mint**: ``FlowCal`` might need more recent versions of some python packages than the ones provided via ``apt``. To upgrade these, some non-python packages need to be installed in your system. On freshly installed systems with Ubuntu 14.04, Ubuntu 15.10, or Linux Mint 17.3, the following packages need to be manually installed: 
 
 	* ``gcc``
 	* ``g++``
@@ -66,5 +66,9 @@ Again, some users may need to precede the previous commands with ``sudo``.
 	All of these can be installed using::
 
 		sudo apt-get install <package-name>
+
+	Next, ``pip`` should be upgraded by using::
+
+		sudo pip install --upgrade pip
 
 	After this, you may install ``FlowCal`` by following the steps above.

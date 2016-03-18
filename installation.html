@@ -195,7 +195,7 @@
 <p>Again, some users may need to precede the previous commands with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p><strong>Ubuntu/Linux Mint</strong>: <code class="docutils literal"><span class="pre">FlowCal</span></code> might need more recent versions of some python packages than the ones provided via <code class="docutils literal"><span class="pre">apt</span></code>. To upgrade these, some non-python packages need to be installed in your system. On a freshly installed Linux Mint 17.3 system, the following packages need to be manually installed:</p>
+<p><strong>Ubuntu/Linux Mint</strong>: <code class="docutils literal"><span class="pre">FlowCal</span></code> might need more recent versions of some python packages than the ones provided via <code class="docutils literal"><span class="pre">apt</span></code>. To upgrade these, some non-python packages need to be installed in your system. On freshly installed systems with Ubuntu 14.04, Ubuntu 15.10, or Linux Mint 17.3, the following packages need to be manually installed:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">gcc</span></code></li>
 <li><code class="docutils literal"><span class="pre">g++</span></code></li>
@@ -209,6 +209,10 @@
 </ul>
 <p>All of these can be installed using:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo apt-get install &lt;package-name&gt;
+</pre></div>
+</div>
+<p>Next, <code class="docutils literal"><span class="pre">pip</span></code> should be upgraded by using:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo pip install --upgrade pip
 </pre></div>
 </div>
 <p class="last">After this, you may install <code class="docutils literal"><span class="pre">FlowCal</span></code> by following the steps above.</p>
