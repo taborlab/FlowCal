@@ -811,10 +811,10 @@ class FCSData(np.ndarray):
         Get the detector voltage used for the specified channel(s).
     amplifier_gain(channels=None)
         Get the amplifier gain used for the specified channel(s).
-    domain(channels=None)
-        Get the domain of the specified channel(s).
-    hist_bin_edges(channels=None)
-        Get histogram bin edges for the specified channel(s).
+    range(channels=None)
+        Get the range of the specified channel(s).
+    resolution(channels=None)
+        Get the resolution of the specified channel(s).
 
     Notes
     -----
@@ -1095,25 +1095,30 @@ class FCSData(np.ndarray):
         else:
             return self._amplifier_gain[channels]
 
-    def domain(self, channels=None):
+    def range(self, channels=None):
         """
-        Get the domain of the specified channel(s).
+        Get the range of the specified channel(s).
 
-        The domain is inferred from the $PnR parameter, as
-        ``np.arange($PnR)``. The domain should be transformed along with
-        the data when passed through a transformation function.
+        The range is inferred from the $PnR parameter. If $DATATYPE is 'I',
+        the range is ``[0, $PnR - 1]``. IF $DATATYPE is 'F' or 'D', the
+        range is ``[0, $PnR]``. Note that with floating points, there could
+        be some events with values outside the range in either direction
+        due to instrument compensation.
+
+        The range should be transformed along with the data when passed
+        through a transformation function.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the domain. If None, return a list
-            with the domain of all channels, in the order of the `channels`
+            Channel(s) for which to get the range. If None, return a list
+            with the range of all channels, in the order of the `channels`
             attribute.
 
         Return
         ------
         array or list of arrays
-            The domain of the specified channel(s).
+            The range of the specified channel(s).
 
         """
         # Check default
@@ -1123,34 +1128,31 @@ class FCSData(np.ndarray):
         # Get numerical indices of channels
         channels = self._name_to_index(channels)
 
-        # Get detector type of the specified channels
+        # Get the range of the specified channels
         if hasattr(channels, '__iter__'):
-            return [self._domain[ch] for ch in channels]
+            return [self._range[ch] for ch in channels]
         else:
-            return self._domain[channels]
+            return self._range[channels]
 
-    def hist_bin_edges(self, channels=None):
+    def resolution(self, channels=None):
         """
-        Get histogram bin edges for the specified channel(s).
+        Get the resolution of the specified channel(s).
 
-        This is a convenient set of histogram bin edges, such that each
-        element of the domain is in the center of one bin. More precisely,
-        bin edges are inferred from the $PnR parameter, as
-        ``np.arange($PnR + 1) - 0.5``. These bin edges should be
-        transformed along with the data when passed through a
-        transformation function.
+        The resolution specifies the number of different values that the
+        events can take. The resolution is directly obtained from the $PnR
+        parameter.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the bin edges. If None, return a
-            list with bin edges for all channels, in the order of the
+            Channel(s) for which to get the resolution. If None, return a
+            list with the resolution of all channels, in the order of the
             `channels` attribute.
 
         Return
         ------
         array or list of arrays
-            Bin edges for the specified channel(s).
+            Resolution of the specified channel(s).
 
         """
         # Check default
@@ -1162,9 +1164,9 @@ class FCSData(np.ndarray):
 
         # Get detector type of the specified channels
         if hasattr(channels, '__iter__'):
-            return [self._hist_bin_edges[ch] for ch in channels]
+            return [self._resolution[ch] for ch in channels]
         else:
-            return self._hist_bin_edges[channels]
+            return self._resolution[channels]
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -1253,21 +1255,20 @@ class FCSData(np.ndarray):
             amplification_type.append(ati)
         amplification_type = tuple(amplification_type)
 
-        # Domain and hist_bin_edges: These are extracted from the requried $PnR
-        # keyword parameter, and are assumed to be np.arange($PnR) and 
-        # np.arange($PnR + 1) - 0.5, respectively.
-        r = []
+        # range and resolution: These are extracted from the required $PnR
+        # keyword parameter. `range` is assumed to be [0, $PnR-1] if the event
+        # list consists of integers, and [0, $PnR] if the event list contains
+        # floating points or doubles. `resolution` is always equal to $PnR.
+        data_range = []
+        resolution = []
         for ch_idx, ch in enumerate(channels):
-            if ch.lower() == 'time':
-                r.append(None)
+            PnR = float(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
+            if fcs_file.text['$DATATYPE'] == 'I':
+                data_range.append([0., PnR - 1])
             else:
-                r.append(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
-        domain = [np.arange(float(ri))
-                  if ri is not None else None
-                  for ri in r]
-        hist_bin_edges = [np.arange(float(ri) + 1) - 0.5
-                          if ri is not None else None
-                          for ri in r]
+                data_range.append([0., PnR])
+            resolution.append(PnR)
+        resolution = tuple(resolution)
 
         # Detector voltage: Stored in the keyword parameter $PnV for channel n.
         # The CellQuest Pro software saves the detector voltage in keyword
@@ -1311,8 +1312,8 @@ class FCSData(np.ndarray):
         obj._amplification_type = amplification_type
         obj._detector_voltage = detector_voltage
         obj._amplifier_gain = amplifier_gain
-        obj._domain = domain
-        obj._hist_bin_edges = hist_bin_edges
+        obj._range = data_range
+        obj._resolution = resolution
 
         return obj
 
@@ -1351,10 +1352,10 @@ class FCSData(np.ndarray):
             self._detector_voltage = copy.deepcopy(obj._detector_voltage)
         if hasattr(obj, '_amplifier_gain'):
             self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
-        if hasattr(obj, '_domain'):
-            self._domain = copy.deepcopy(obj._domain)
-        if hasattr(obj, '_hist_bin_edges'):
-            self._hist_bin_edges = copy.deepcopy(obj._hist_bin_edges)
+        if hasattr(obj, '_range'):
+            self._range = copy.deepcopy(obj._range)
+        if hasattr(obj, '_resolution'):
+            self._resolution = copy.deepcopy(obj._resolution)
 
     # Helper functions
     @staticmethod
@@ -1564,10 +1565,10 @@ class FCSData(np.ndarray):
                     [new_arr._detector_voltage[kc] for kc in key_channel])
                 new_arr._amplifier_gain = tuple(
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
-                new_arr._domain = \
-                    [new_arr._domain[kc] for kc in key_channel]
-                new_arr._hist_bin_edges = \
-                    [new_arr._hist_bin_edges[kc] for kc in key_channel]
+                new_arr._range = \
+                    [new_arr._range[kc] for kc in key_channel]
+                new_arr._resolution = tuple(\
+                    [new_arr._resolution[kc] for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._amplification_type = \
@@ -1576,10 +1577,10 @@ class FCSData(np.ndarray):
                     new_arr._detector_voltage[key_channel]
                 new_arr._amplifier_gain = \
                     new_arr._amplifier_gain[key_channel]
-                new_arr._domain = \
-                    new_arr._domain[key_channel]
-                new_arr._hist_bin_edges = \
-                    new_arr._hist_bin_edges[key_channel]
+                new_arr._range = \
+                    new_arr._range[key_channel]
+                new_arr._resolution = \
+                    new_arr._resolution[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
                 new_arr._amplification_type = \
@@ -1588,10 +1589,10 @@ class FCSData(np.ndarray):
                     tuple([new_arr._detector_voltage[key_channel]])
                 new_arr._amplifier_gain = \
                     tuple([new_arr._amplifier_gain[key_channel]])
-                new_arr._domain = \
-                    [new_arr._domain[key_channel]]
-                new_arr._hist_bin_edges = \
-                    [new_arr._hist_bin_edges[key_channel]]
+                new_arr._range = \
+                    [new_arr._range[key_channel]]
+                new_arr._resolution = \
+                    tuple([new_arr._resolution[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):
