@@ -815,6 +815,8 @@ class FCSData(np.ndarray):
         Get the range of the specified channel(s).
     resolution(channels=None)
         Get the resolution of the specified channel(s).
+    hist_bins(channels=None, nbins=None, log=False)
+        Obtain a set of bins for the specified channel(s).
 
     Notes
     -----
@@ -1099,11 +1101,10 @@ class FCSData(np.ndarray):
         """
         Get the range of the specified channel(s).
 
-        The range is inferred from the $PnR parameter. If $DATATYPE is 'I',
-        the range is ``[0, $PnR - 1]``. IF $DATATYPE is 'F' or 'D', the
-        range is ``[0, $PnR]``. Note that with floating points, there could
-        be some events with values outside the range in either direction
-        due to instrument compensation.
+        The range is inferred from the $PnR parameter as ``[0, $PnR - 1]``.
+        Note that with floating points, there could be some events with
+        values outside the range in either direction due to instrument
+        compensation.
 
         The range should be transformed along with the data when passed
         through a transformation function.
@@ -1151,7 +1152,7 @@ class FCSData(np.ndarray):
 
         Return
         ------
-        array or list of arrays
+        int or list of ints
             Resolution of the specified channel(s).
 
         """
@@ -1162,11 +1163,88 @@ class FCSData(np.ndarray):
         # Get numerical indices of channels
         channels = self._name_to_index(channels)
 
-        # Get detector type of the specified channels
+        # Get resolution of the specified channels
         if hasattr(channels, '__iter__'):
             return [self._resolution[ch] for ch in channels]
         else:
             return self._resolution[channels]
+
+    def hist_bins(self, channels=None, nbins=None, log=False):
+        """
+        Get a set of histogram bins the specified channel(s).
+
+        These cover the range specified in ``FCSData.range(channels)`` with
+        a number of bins `nbins`, either linearly or logarithmically
+        spaced.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the histogram bins. If None, return
+            a list with bins for all channels, in the order of the
+            `channels` attribute.
+        nbins : int or list of ints, optional
+            The number of bins to calculate. If `channels` specified a list
+            of channels, `nbins` should be a list of integers. If `nbins`
+            is None, use ``FCSData.resolution(channel)``.
+        log : bool, optional
+            Whether to generate bins uniformly spaced in linear or
+            logarithmic scale.
+
+        Return
+        ------
+        array or list of arrays
+            Histogram bins for the specified channel(s).
+
+        """
+        # Default: all channels
+        if channels is None:
+            channels = list(self._channels)
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Convert to list if necessary
+        channel_list = channels
+        if not isinstance(channel_list, list):
+            channel_list = [channel_list]
+        if not isinstance(nbins, list):
+            nbins = [nbins]*len(channel_list)
+        if not isinstance(log, list):
+            log = [log]*len(channel_list)
+
+        # Iterate
+        bins = []
+        for channel, nbins_channel, log_channel in \
+                zip(channel_list, nbins, log):
+            # Get channel resolution
+            res_channel = self.resolution(channel)
+            # Get default nbins
+            if nbins_channel is None:
+                nbins_channel = res_channel
+            # Get range of channel, log if necessary
+            range_channel = self.range(channel)
+            if log_channel:
+                range_channel = [np.log10(range_channel[0]),
+                                 np.log10(range_channel[1])]
+            # We will now generate ``nbins`` uniformly spaced bins centered at
+            # ``linspace(range_channel[0], range_channel[1], nbins)``. To do so,
+            # we need to generate ``nbins + 1`` uniformly spaced points.
+            delta_res = (range_channel[1] - range_channel[0])/(res_channel - 1)
+            bins_channel = np.linspace(range_channel[0] - delta_res/2,
+                                       range_channel[1] + delta_res/2,
+                                       nbins_channel + 1)
+            # Exponentiate if necessary
+            if log_channel:
+                bins_channel = 10**(bins_channel)
+            # Accumulate
+            bins.append(bins_channel)
+
+        # Extract from list if channels was not a list
+        if not isinstance(channels, list):
+            bins = bins[0]
+
+        return bins
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -1263,10 +1341,7 @@ class FCSData(np.ndarray):
         resolution = []
         for ch_idx, ch in enumerate(channels):
             PnR = float(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
-            if fcs_file.text['$DATATYPE'] == 'I':
-                data_range.append([0., PnR - 1])
-            else:
-                data_range.append([0., PnR])
+            data_range.append([0., PnR - 1])
             resolution.append(PnR)
         resolution = tuple(resolution)
 

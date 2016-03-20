@@ -450,10 +450,10 @@ class TestFCSAttributesRange(unittest.TestCase):
                         [0, 1023]]
         - Data003.fcs: [[0, 262143], [0, 1023], [0, 1023], [0, 1023],
                         [0, 1023], [0, 1023], [0, 1023], [0, 1023]]
-        - Data004.fcs: [[0, 262144], [0, 262144], [0, 262144], [0, 262144],
-                        [0, 262144], [0, 262144], [0, 262144], [0, 262144],
-                        [0, 262144], [0, 262144], [0, 262144], [0, 262144],
-                        [0, 262144], [0, 262144]]
+        - Data004.fcs: [[0, 262143], [0, 262143], [0, 262143], [0, 262143],
+                        [0, 262143], [0, 262143], [0, 262143], [0, 262143],
+                        [0, 262143], [0, 262143], [0, 262143], [0, 262143],
+                        [0, 262143], [0, 262143]]
 
     """
     def setUp(self):
@@ -482,9 +482,9 @@ class TestFCSAttributesRange(unittest.TestCase):
                                           [0, 1023],   [0, 1023], [0, 1023],
                                           [0, 1023],   [0, 1023]])
         self.assert_list_of_arrays_equal(self.d[3].range(),
-            [[0, 262144], [0, 262144], [0, 262144], [0, 262144], [0, 262144],
-             [0, 262144], [0, 262144], [0, 262144], [0, 262144], [0, 262144],
-             [0, 262144], [0, 262144], [0, 262144], [0, 262144]])
+            [[0, 262143], [0, 262143], [0, 262143], [0, 262143], [0, 262143],
+             [0, 262143], [0, 262143], [0, 262143], [0, 262143], [0, 262143],
+             [0, 262143], [0, 262143], [0, 262143], [0, 262143]])
 
     def test_attribute_single(self):
         """
@@ -494,7 +494,7 @@ class TestFCSAttributesRange(unittest.TestCase):
         np.testing.assert_array_equal(self.d[0].range('FSC-H'), [0, 1023])
         np.testing.assert_array_equal(self.d[1].range('FITC-A'), [0, 1023])
         np.testing.assert_array_equal(self.d[2].range('SSC'), [0, 1023])
-        np.testing.assert_array_equal(self.d[3].range('GFP-A'), [0, 262144])
+        np.testing.assert_array_equal(self.d[3].range('GFP-A'), [0, 262143])
 
     def test_attribute_many(self):
         """
@@ -522,9 +522,9 @@ class TestFCSAttributesRange(unittest.TestCase):
         self.assert_list_of_arrays_equal(self.d[3].range(['FSC PMT-A',
                                                           'FSC PMT-H',
                                                           'FSC PMT-W']),
-                                         [[0, 262144],
-                                          [0, 262144],
-                                          [0, 262144]])
+                                         [[0, 262143],
+                                          [0, 262143],
+                                          [0, 262143]])
 
 class TestFCSAttributesResolution(unittest.TestCase):
     """
@@ -624,6 +624,257 @@ class TestFCSAttributesResolution(unittest.TestCase):
         self.assertListEqual(
             self.d[3][:,['FSC PMT-A', 'FSC PMT-H', 'FSC PMT-W']].resolution(),
             [262144, 262144, 262144])
+
+class TestFCSHistBins(unittest.TestCase):
+    """
+    Test correct generation, functioning, and slicing of histogram bins.
+    We have previously looked at the contents of the $PnR attribute for
+    the test files and identified the correct default histogram bin edges:
+        - Data001.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data002.fcs: [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5]
+        - Data003.fcs: [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+                        np.arange(1025) - 0.5, np.arange(1025) - 0.5]
+        - Data004.fcs: [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+                        np.arange(262145) - 0.5, np.arange(262145) - 0.5]
+    """
+    def setUp(self):
+        self.d = [FlowCal.io.FCSData(filenames[i]) for i in range(4)]
+
+    def assert_list_of_arrays_equal(self, l1, l2):
+        self.assertEqual(len(l1), len(l2))
+        for a1, a2 in zip(l1, l2):
+            np.testing.assert_array_equal(a1, a2)
+
+    def test_attribute(self):
+        """
+        Testing correct reporting of hist_bins.
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bins(),
+            [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1].hist_bins(),
+            [np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bins(),
+            [np.arange(262145) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5, np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3].hist_bins(),
+            [np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5, np.arange(262145) - 0.5])
+
+    def test_attribute_single(self):
+        """
+        Testing correct reporting of hist_bins for a single channel.
+        """
+        np.testing.assert_array_equal(self.d[0].hist_bins('FSC-H'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[1].hist_bins('FITC-A'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[2].hist_bins('SSC'),
+                                      np.arange(1025) - 0.5)
+        np.testing.assert_array_equal(self.d[3].hist_bins('GFP-A'),
+                                      np.arange(262145) - 0.5)
+
+    def test_attribute_many(self):
+        """
+        Testing correct reporting of hist_bins for many channels.
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bins(['SSC-H',
+                                 'FL2-H',
+                                 'FL3-H']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1].hist_bins(['FITC-A',
+                                 'PE-A',
+                                 'PE-Cy7-A']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bins(['FSC',
+                                 'SSC',
+                                 'TIME']),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3].hist_bins(['FSC PMT-A',
+                                 'FSC PMT-H',
+                                 'FSC PMT-W']),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
+
+    def test_slice_single_str(self):
+        """
+        Testing correct reporting of hist_bins after slicing.
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, 'FSC-H'].hist_bins(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, 'FITC-A'].hist_bins(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, 'SSC'].hist_bins(),
+            [np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:, 'GFP-A'].hist_bins(),
+            [np.arange(262145) - 0.5])
+
+    def test_slice_many_str(self):
+        """
+        Testing correct reporting of hist_bins after slicing.
+        """
+        self.assert_list_of_arrays_equal(
+            self.d[0][:, ['SSC-H',
+                          'FL2-H',
+                          'FL3-H']].hist_bins(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[1][:, ['FITC-A',
+                          'PE-A',
+                          'PE-Cy7-A']].hist_bins(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[2][:, ['FSC',
+                          'SSC',
+                          'TIME']].hist_bins(),
+            [np.arange(1025) - 0.5,
+             np.arange(1025) - 0.5,
+             np.arange(262145) - 0.5])
+        self.assert_list_of_arrays_equal(
+            self.d[3][:,['FSC PMT-A',
+                         'FSC PMT-H',
+                         'FSC PMT-W']].hist_bins(),
+            [np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5,
+             np.arange(262145) - 0.5])
+
+    def test_nondefault_nbins(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        for nbins in [128, 256, 512]:
+            # Generate proper bins with the method previously used in plot.hist
+            bd = np.arange(1025) - 0.5
+            xd = np.linspace(0, 1, len(bd))
+            xs = np.linspace(0, 1, nbins + 1)
+            bins = np.interp(xs, xd, bd)
+            # Generate with FCSData.hist_bins and compare
+            np.testing.assert_array_equal(
+                self.d[0].hist_bins('FSC-H', nbins=nbins), bins)
+
+    def test_nondefault_nbins_many_1(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        # Generate proper bins with the method previously used in plot.hist
+        bd = np.arange(1025) - 0.5
+        xd = np.linspace(0, 1, len(bd))
+        xs = np.linspace(0, 1, 256 + 1)
+        bins1 = np.interp(xs, xd, bd)
+        # Generate with FCSData.hist_bins and compare
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bins(['FL1-H', 'FL2-H'], nbins=256),
+            [bins1, bins1])
+
+    def test_nondefault_nbins_many_2(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        # Generate proper bins with the method previously used in plot.hist
+        bd = np.arange(1025) - 0.5
+        xd = np.linspace(0, 1, len(bd))
+        xs = np.linspace(0, 1, 256 + 1)
+        bins1 = np.interp(xs, xd, bd)
+        xs = np.linspace(0, 1, 512 + 1)
+        bins2 = np.interp(xs, xd, bd)
+        # Generate with FCSData.hist_bins and compare
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bins(['FL1-H', 'FL2-H'], nbins=[256, 512]),
+            [bins1, bins2])
+
+    def test_nondefault_nbins_many_3(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        # Generate proper bins with the method previously used in plot.hist
+        bd = np.arange(1025) - 0.5
+        xd = np.linspace(0, 1, len(bd))
+        xs = np.linspace(0, 1, 256 + 1)
+        bins1 = np.interp(xs, xd, bd)
+        # Generate with FCSData.hist_bins and compare
+        self.assert_list_of_arrays_equal(
+            self.d[0].hist_bins(['FL1-H', 'FL2-H'], nbins=[256, None]),
+            [bins1, bd])
+
+    def test_nondefault_nbins_many_4(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        # Generate proper bins with the method previously used in plot.hist
+        bd = np.arange(1025) - 0.5
+        xd = np.linspace(0, 1, len(bd))
+        xs = np.linspace(0, 1, 256 + 1)
+        bins1 = np.interp(xs, xd, bd)
+        xs = np.linspace(0, 1, 512 + 1)
+        bins2 = np.interp(xs, xd, bd)
+        # Generate with FCSData.hist_bins and compare
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bins(['FL1', 'FL2', 'FL3'], nbins=[256, None, 512]),
+            [bins1, bd, bins2])
+
+    def test_nondefault_nbins_many_5(self):
+        """
+        Testing correct generation of hist_bins with a non-default nbins
+        """
+        # Generate proper bins with the method previously used in plot.hist
+        bd = np.arange(1025) - 0.5
+        xd = np.linspace(0, 1, len(bd))
+        xs = np.linspace(0, 1, 256 + 1)
+        bins1 = np.interp(xs, xd, bd)
+        xs = np.linspace(0, 1, 512 + 1)
+        bins2 = np.interp(xs, xd, bd)
+        # Generate with FCSData.hist_bins and compare
+        self.assert_list_of_arrays_equal(
+            self.d[2].hist_bins(['FL1', 'TIME', 'FL3'], nbins=[256, None, 512]),
+            [bins1, np.arange(262145) - 0.5, bins2])
 
 class TestFCSAttributes(unittest.TestCase):
     def setUp(self):
