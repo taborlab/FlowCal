@@ -106,7 +106,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
         Channels on which to perform gating. If None, use all channels.
     high, low : int, float, optional
         High and low threshold values. If None, `high` and `low` will be
-        taken from ``data.domain`` if available, otherwise
+        taken from ``data.range`` if available, otherwise
         ``np.Inf`` and ``-np.Inf`` will be used.
     full_output : bool, optional
         Flag specifying to return ``namedtuple`` with additional outputs.
@@ -134,14 +134,14 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
 
     # Default values for high and low
     if high is None:
-        if hasattr(data_ch, 'domain'):
-            high = [np.Inf if di is None else di[-1] for di in data_ch.domain()]
+        if hasattr(data_ch, 'range'):
+            high = [np.Inf if di is None else di[1] for di in data_ch.range()]
             high = np.array(high)
         else:
             high = np.Inf
     if low is None:
-        if hasattr(data_ch, 'domain'):
-            low = [-np.Inf if di is None else di[0] for di in data_ch.domain()]
+        if hasattr(data_ch, 'range'):
+            low = [-np.Inf if di is None else di[0] for di in data_ch.range()]
             low = np.array(low)
         else:
             low = -np.Inf
