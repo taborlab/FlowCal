@@ -244,8 +244,13 @@ def ellipse(data, channels,
     else:
         return data_gated
 
-def density2d(data, channels=[0,1],
-              bins=None, gate_fraction=0.65, sigma=10.0,
+def density2d(data,
+              channels=[0,1],
+              bins=None,
+              gate_fraction=0.65,
+              xlog=False,
+              ylog=False,
+              sigma=10.0,
               full_output=False):
     """
     Gate that preserves events in the region with highest density.
@@ -261,11 +266,24 @@ def density2d(data, channels=[0,1],
     channels : list of int, list of str, optional
         Two channels on which to perform gating.
     bins : int or array_like or [int, int] or [array, array], optional
-        `bins` argument passed to `np.histogram2d`. If `None`, extracted
-        from `FCSData` if possible. `bins` parameter supercedes `FCSData`
-        attribute.
+        If `bins` is an integer, it specifies the number of bins to use for
+        both axes. If `bins` is a list of two integers, it specifies the
+        number of bins to use for each axis. If `bins` is an array, it
+        specifies the bin edges to use for both or each axes. If `bins` is
+        a list of two arrays, it specifies the bin edges to use for each
+        axis. If `bins` is None, an integer or a list of two integers,
+        `density2d` will attempt to use ``data.hist_bins`` to generate
+        the bins automatically.
     gate_fraction : float, optional
         Fraction of events to retain after gating.
+    xlog : bool, optional
+        Flag specifying whether to generate bins in linear or log scale for
+        the x axis. `xlog` is ignored if `bins` is an array or a list of
+        arrays.
+    ylog : bool, optional
+        Flag specifying whether to generate bins in linear or log scale for
+        the y axis. `ylog` is ignored if `bins` is an array or a list of
+        arrays.
     sigma : scalar or sequence of scalars, optional
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
@@ -334,11 +352,19 @@ def density2d(data, channels=[0,1],
     if data_ch.shape[0] <= 1:
         raise ValueError('data should have more than one event')
 
-    # Extract default bins if necessary
-    if (bins is None and hasattr(data_ch, 'hist_bins')
+    # If bins are not specified, try to get bins from data object
+    if (hasattr(data_ch, 'hist_bins')
             and data_ch.hist_bins(0) is not None
             and data_ch.hist_bins(1) is not None):
-        bins = np.array(data_ch.hist_bins())
+        # Duplicate bins into a two-element list if necessary
+        if not isinstance(bins, list):
+            bins = [bins, bins]
+        # X Axis
+        if bins[0] is None or isinstance(bins[0], int):
+            bins[0] = data_ch.hist_bins(0, nbins=bins[0], log=xlog)
+        # Y axis
+        if bins[1] is None or isinstance(bins[1], int):
+            bins[1] = data_ch.hist_bins(1, nbins=bins[1], log=ylog)
 
     # Make 2D histogram
     if bins is not None:
