@@ -773,7 +773,9 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         beads_table[channel + ' Detector Volt.'] = np.nan
         beads_table[channel + ' Amp. Type'] = ""
         if mef_outputs:
-            beads_table[channel + ' Bead Model Params.'] = ""
+            beads_table[channel + ' Beads Model'] = ""
+            beads_table[channel + ' Beads Params. Names'] = ""
+            beads_table[channel + ' Beads Params. Values'] = ""
 
         # Iterate
         for i, row_id in enumerate(beads_table.index):
@@ -798,7 +800,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                                       channel + ' Amp. Type',
                                       amplification_type)
 
-                # Bead model parameters
+                # Bead model and parameters
                 # Only populate if mef_outputs has been provided
                 if mef_outputs:
                     # Try to find the current channel among the mef'd channels.
@@ -809,11 +811,26 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                     except ValueError:
                         pass
                     else:
+                        # Bead model
+                        beads_model_str = mef_outputs[i]. \
+                            fitting['beads_model_str'][mef_channel_index]
+                        beads_table.set_value(row_id,
+                                              channel + ' Beads Model',
+                                              beads_model_str)
+                        # Bead parameter names
+                        params_names = mef_outputs[i]. \
+                            fitting['beads_params_names'][mef_channel_index]
+                        params_names_str = ", ".join([str(p)
+                                                      for p in params_names])
+                        beads_table.set_value(row_id,
+                                              channel + ' Beads Params. Names',
+                                              params_names_str)
+                        # Bead parameter values
                         params = mef_outputs[i]. \
                             fitting['beads_params'][mef_channel_index]
                         params_str = ", ".join([str(p) for p in params])
                         beads_table.set_value(row_id,
-                                              channel + ' Bead Model Params.',
+                                              channel + ' Beads Params. Values',
                                               params_str)
 
 
