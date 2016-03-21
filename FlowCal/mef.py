@@ -150,7 +150,7 @@ def selection_std(populations,
         Low and high thresholds. Required if the elements in `populations`
         are numpy arrays. If not specified, and the elements in
         `populations` are FCSData objects, use 0.015 of the lowest value
-        and 0.0985 of the highest value in ``populations[0].domain``.
+        and 0.0985 of the highest value in ``populations[0].range``.
     n_std_low, n_std_high : float, optional
         Number of standard deviations from `low` and `high`, respectively,
         that a population's mean has to be closer than to be discarded.
@@ -163,13 +163,13 @@ def selection_std(populations,
     """
     # Default thresholds
     if low is None:
-        if hasattr(populations[0], 'domain'):
-            low = 0.015*populations[0].domain(0)[0]
+        if hasattr(populations[0], 'range'):
+            low = 0.015*populations[0].range(0)[0]
         else:
             raise TypeError("argument 'low' not specified")
     if high is None:
-        if hasattr(populations[0], 'domain'):
-            high = 0.985*populations[0].domain(0)[-1]
+        if hasattr(populations[0], 'range'):
+            high = 0.985*populations[0].range(0)[-1]
         else:
             raise TypeError("argument 'high' not specified")
 
@@ -587,7 +587,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=clustering_channels[0],
-                                div=4,
+                                bins=256,
                                 alpha=0.75,
                                 savefig=savefig)
 
@@ -692,7 +692,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=mef_channel,
-                                div=4,
+                                bins=256,
                                 alpha=0.75,
                                 facecolor=colors)
 
@@ -736,8 +736,8 @@ def get_transform_fxn(data_beads,
         # Plot
         if plot:
             # Get channel range
-            min_fl = populations[0].domain(mef_channel)[0]
-            max_fl = populations[0].domain(mef_channel)[-1]
+            min_fl = populations[0].range(mef_channel)[0]
+            max_fl = populations[0].range(mef_channel)[-1]
 
             # Plot standard curve
             plt.figure(figsize=(6,4))
