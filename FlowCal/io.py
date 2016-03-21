@@ -1342,7 +1342,7 @@ class FCSData(np.ndarray):
         for ch_idx, ch in enumerate(channels):
             PnR = float(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
             data_range.append([0., PnR - 1])
-            resolution.append(PnR)
+            resolution.append(int(PnR))
         resolution = tuple(resolution)
 
         # Detector voltage: Stored in the keyword parameter $PnV for channel n.
