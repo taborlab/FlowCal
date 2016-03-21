@@ -64,7 +64,6 @@ savefig_dpi = 250
 def hist1d(data_list,
            channel=0,
            log=False,
-           div=1,
            bins=None,
            histtype='stepfilled',
            normed_area=False,
@@ -96,16 +95,11 @@ def hist1d(data_list,
         (e.g. FCSData).
     log : bool, optional
         Flag specifying whether the x axis should be in log scale.
-    div : int or float, optional
-        Downscaling factor for the default number of bins. If `bins` is not
-        specified, the default set of bins extracted from
-        ``data_list[i].domain`` contains ``n`` bins, and ``div != 1``,
-        `hist1d` will actually use ``n/div`` bins, covering the same range
-        as ``data_list[i].domain``. `div` is ignored if `bins` is
-        specified.
-    bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, `hist1d`
-        attempts to extract bins from ``data_list[i].domain``.
+    bins : int or array_like, optional
+        If `bins` is an integer, it specifies the number of bins to use.
+        If `bins` is an array, it specifies the bin edges to use. If `bins`
+        is None or an integer, `hist1d` will attempt to use
+        ``data.hist_bins`` to generate the bins automatically.
     histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, str, optional
         Histogram type. Directly passed to ``plt.hist``.
     normed_area : bool, optional
@@ -191,16 +185,11 @@ def hist1d(data_list,
             y = data[:, channel]
         else:
             y = data
-        # If bins are not specified, try to get bins from data object
-        if (bins is None and hasattr(y, 'hist_bin_edges')
-                and y.hist_bin_edges(0) is not None):
-            # Get bin information
-            bd = y.hist_bin_edges(0)
-            # Get bin scaled indices
-            xd = np.linspace(0, 1, len(bd))
-            xs = np.linspace(0, 1, (len(bd) - 1)/div + 1)
-            # Generate sub-sampled bins
-            bins = np.interp(xs, xd, bd)
+        # If bins are not specified or are specified as an integer, try to get
+        # bins from data object
+        if ((bins is None or isinstance(bins, int))
+                and hasattr(y, 'hist_bins') and y.hist_bins(0) is not None):
+            bins = y.hist_bins(0, nbins=bins, log=log)
 
         # Decide whether to normalize
         if normed_height:
@@ -283,7 +272,6 @@ def hist1d(data_list,
 
 def density2d(data, 
               channels=[0,1],
-              div=1,
               bins=None,
               mode='mesh',
               normed=False,
@@ -322,15 +310,15 @@ def density2d(data,
         Flow cytometry data to plot.
     channels : list of int, list of str, optional
         Two channels to use for the plot.
-    div : int or float, optional
-        Downscaling factor for the default number of bins. If `bins` is not
-        specified, the default set of bins extracted from `data` contains
-        ``n*m`` bins, and ``div != 1``, `density2d` will actually use
-        ``n/div * m/div`` bins that cover the same range as the default
-        bins. `div` is ignored if `bins` is specified.
-    bins : array_like, optional
-        bins argument to pass to plt.hist. If not specified, attempts to 
-        extract bins from `data`.
+    bins : int or array_like or [int, int] or [array, array], optional
+        If `bins` is an integer, it specifies the number of bins to use for
+        both axes. If `bins` is a list of two integers, it specifies the
+        number of bins to use for each axis. If `bins` is an array, it
+        specifies the bin edges to use for both or each axes. If `bins` is
+        a list of two arrays, it specifies the bin edges to use for each
+        axis. If `bins` is None, an integer or a list of two integers,
+        `density2d` will attempt to use ``data.hist_bins`` to generate
+        the bins automatically.
     mode : {'mesh', 'scatter'}, str, optional
         Plotting mode. 'mesh' produces a 2D-histogram whereas 'scatter'
         produces a scatterplot colored by histogram bin value.
@@ -379,20 +367,18 @@ def density2d(data,
     data_plot = data[:, channels]
 
     # If bins are not specified, try to get bins from data object
-    if (bins is None and hasattr(data_plot, 'hist_bin_edges')
-            and data_plot.hist_bin_edges(0) is not None
-            and data_plot.hist_bin_edges(1) is not None):
-        # Get bin information
-        bdx = data_plot.hist_bin_edges(0)
-        bdy = data_plot.hist_bin_edges(1)
-        # Get bin scaled indices
-        xdx = np.linspace(0, 1, len(bdx))
-        xsx = np.linspace(0, 1, (len(bdx) - 1)/div + 1)
-        xdy = np.linspace(0, 1, len(bdy))
-        xsy = np.linspace(0, 1, (len(bdy) - 1)/div + 1)
-        # Generate sub-sampled bins
-        bins = np.array([np.interp(xsx, xdx, bdx), 
-                            np.interp(xsy, xdy, bdy)])
+    if (hasattr(data_plot, 'hist_bins')
+            and data_plot.hist_bins(0) is not None
+            and data_plot.hist_bins(1) is not None):
+        # Duplicate bins into a two-element list if necessary
+        if not isinstance(bins, list):
+            bins = [bins, bins]
+        # X Axis
+        if bins[0] is None or isinstance(bins[0], int):
+            bins[0] = data_plot.hist_bins(0, nbins=bins[0], log=xlog)
+        # Y axis
+        if bins[1] is None or isinstance(bins[1], int):
+            bins[1] = data_plot.hist_bins(1, nbins=bins[1], log=ylog)
 
     # If colormap is not specified, use the default of this module
     if 'cmap' not in kwargs:
@@ -531,10 +517,10 @@ def scatter2d(data_list,
         name from last data object.
     xlim : tuple, optional
         Limits for the x axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     ylim : tuple, optional
         Limits for the y axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     title : str, optional
         Plot title.
     color : matplotlib color or list of matplotlib colors, optional
@@ -590,15 +576,15 @@ def scatter2d(data_list,
     elif hasattr(data_plot, 'channels'):
         plt.ylabel(data_plot.channels[1])
 
-    # Set plot limits if specified, else extract range from domain
+    # Set plot limits if specified, else extract range from range
     if xlim is not None:
         plt.xlim(xlim)
-    elif hasattr(data_plot, 'domain') and data_plot.domain(0) is not None:
-        plt.xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
+        plt.xlim(data_plot.range(0)[0], data_plot.range(0)[1])
     if ylim is not None:
         plt.ylim(ylim)
-    elif hasattr(data_plot, 'domain') and data_plot.domain(1) is not None:
-        plt.ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
+        plt.ylim(data_plot.range(1)[0], data_plot.range(1)[1])
 
     # Title
     if title is not None:
@@ -647,13 +633,13 @@ def scatter3d(data_list,
         name from last data object.
     xlim : tuple, optional
         Limits for the x axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     ylim : tuple, optional
         Limits for the y axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     zlim : tuple, optional
         Limits for the z axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     title : str, optional
         Plot title.
     color : matplotlib color or list of matplotlib colors, optional
@@ -723,19 +709,19 @@ def scatter3d(data_list,
     elif hasattr(data_plot, 'channels'):
         ax_3d.set_zlabel(data_plot.channels[2])
 
-    # Set plot limits if specified, else extract range from domain
+    # Set plot limits if specified, else extract range from range
     if xlim is not None:
         ax_3d.set_xlim(xlim)
-    elif hasattr(data_plot, 'domain') and data_plot.domain(0) is not None:
-        ax_3d.set_xlim(data_plot.domain(0)[0], data_plot.domain(0)[-1])
+    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
+        ax_3d.set_xlim(data_plot.range(0)[0], data_plot.range(0)[-1])
     if ylim is not None:
         ax_3d.set_ylim(ylim)
-    elif hasattr(data_plot, 'domain') and data_plot.domain(1) is not None:
-        ax_3d.set_ylim(data_plot.domain(1)[0], data_plot.domain(1)[-1])
+    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
+        ax_3d.set_ylim(data_plot.range(1)[0], data_plot.range(1)[-1])
     if zlim is not None:
         ax_3d.set_zlim(zlim)
-    elif hasattr(data_plot, 'domain') and data_plot.domain(2) is not None:
-        ax_3d.set_zlim(data_plot.domain(2)[0], data_plot.domain(2)[-1])
+    elif hasattr(data_plot, 'range') and data_plot.range(2) is not None:
+        ax_3d.set_zlim(data_plot.range(2)[0], data_plot.range(2)[-1])
 
     # Title
     if title is not None:
@@ -928,13 +914,13 @@ def scatter3d_and_projections(data_list,
         name from last data object.
     xlim : tuple, optional
         Limits for the x axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     ylim : tuple, optional
         Limits for the y axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     zlim : tuple, optional
         Limits for the z axis. If None, attempts to extract limits from the
-        domain of the last data object.
+        range of the last data object.
     color : matplotlib color or list of matplotlib colors, optional
         Color for the scatter plot. It can be a list with the same length
         as `data_list`. If `color` is not specified, elements from
