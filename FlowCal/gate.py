@@ -335,10 +335,10 @@ def density2d(data, channels=[0,1],
         raise ValueError('data should have more than one event')
 
     # Extract default bins if necessary
-    if (bins is None and hasattr(data_ch, 'hist_bin_edges')
-            and data_ch.hist_bin_edges(0) is not None
-            and data_ch.hist_bin_edges(1) is not None):
-        bins = np.array(data_ch.hist_bin_edges())
+    if (bins is None and hasattr(data_ch, 'hist_bins')
+            and data_ch.hist_bins(0) is not None
+            and data_ch.hist_bins(1) is not None):
+        bins = np.array(data_ch.hist_bins())
 
     # Make 2D histogram
     if bins is not None:
