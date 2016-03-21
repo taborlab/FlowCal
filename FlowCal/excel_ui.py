@@ -254,9 +254,9 @@ def process_beads_table(beads_table,
             except IOError:
                 raise ExcelUIException("file \"{}\" not found".format(
                     beads_row['File Path']))
-            # Check that the number of events is greater than 500
-            if beads_sample.shape[0] < 500:
-                raise ExcelUIException("number of events is lower than 500")
+            # Check that the number of events is greater than 400
+            if beads_sample.shape[0] < 400:
+                raise ExcelUIException("number of events is lower than 400")
 
             ###
             # Transform
@@ -529,9 +529,9 @@ def process_samples_table(samples_table,
             except IOError:
                 raise ExcelUIException("file \"{}\" not found".format(
                     sample_row['File Path']))
-            # Check that the number of events is greater than 500
-            if sample.shape[0] < 500:
-                raise ExcelUIException("number of events is lower than 500")
+            # Check that the number of events is greater than 400
+            if sample.shape[0] < 400:
+                raise ExcelUIException("number of events is lower than 400")
 
             ###
             # Transform
