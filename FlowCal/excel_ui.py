@@ -714,7 +714,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     Add stats fields to beads table.
 
     The following information is added to each row:
-        - Whether analysis was successful
+        - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
 
@@ -743,22 +743,22 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
 
     """
     # Add per-row info
-    success = []
+    notes = []
     n_events = []
     acq_time = []
     for beads_sample in beads_samples:
         # Check if sample is an exception, otherwise assume it's an FCSData
         if isinstance(beads_sample, ExcelUIException):
             # Print error message
-            success.append("ERROR: {}".format(str(beads_sample)))
+            notes.append("ERROR: {}".format(str(beads_sample)))
             n_events.append(np.nan)
             acq_time.append(np.nan)
         else:
-            success.append('Yes')
+            notes.append('')
             n_events.append(beads_sample.shape[0])
             acq_time.append(beads_sample.acquisition_time)
 
-    beads_table['Successful?'] = success
+    beads_table['Analysis Notes'] = notes
     beads_table['Number of Events'] = n_events
     beads_table['Acquisition Time (s)'] = acq_time
 
@@ -822,7 +822,7 @@ def add_samples_stats(samples_table, samples):
     Add stats fields to samples table.
 
     The following information is added to each row:
-        - Whether analysis was successful
+        - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
     
@@ -851,22 +851,22 @@ def add_samples_stats(samples_table, samples):
 
     """
     # Add per-row info
-    success = []
+    notes = []
     n_events = []
     acq_time = []
     for sample in samples:
         # Check if sample is an exception, otherwise assume it's an FCSData
         if isinstance(sample, ExcelUIException):
             # Print error message
-            success.append("ERROR: {}".format(str(sample)))
+            notes.append("ERROR: {}".format(str(sample)))
             n_events.append(np.nan)
             acq_time.append(np.nan)
         else:
-            success.append('Yes')
+            notes.append('')
             n_events.append(sample.shape[0])
             acq_time.append(sample.acquisition_time)
 
-    samples_table['Successful?'] = success
+    samples_table['Analysis Notes'] = notes
     samples_table['Number of Events'] = n_events
     samples_table['Acquisition Time (s)'] = acq_time
 
