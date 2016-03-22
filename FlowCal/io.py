@@ -816,7 +816,7 @@ class FCSData(np.ndarray):
     resolution(channels=None)
         Get the resolution of the specified channel(s).
     hist_bins(channels=None, nbins=None, log=False)
-        Obtain a set of bins for the specified channel(s).
+        Get histogram bin edges for the specified channel(s).
 
     Notes
     -----
@@ -1171,7 +1171,7 @@ class FCSData(np.ndarray):
 
     def hist_bins(self, channels=None, nbins=None, log=False):
         """
-        Get a set of histogram bins the specified channel(s).
+        Get histogram bin edges for the specified channel(s).
 
         These cover the range specified in ``FCSData.range(channels)`` with
         a number of bins `nbins`, either linearly or logarithmically
@@ -1194,7 +1194,7 @@ class FCSData(np.ndarray):
         Return
         ------
         array or list of arrays
-            Histogram bins for the specified channel(s).
+            Histogram bin edges for the specified channel(s).
 
         """
         # Default: all channels
