@@ -217,6 +217,11 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
     beads_params : array
         Fitted parameters of the bead fluorescence model: ``[m, b,
         fl_mef_auto]``.
+    beads_model_str : str
+        String representation of the beads model used.
+    beads_params_names : list of str
+        Names of the parameters in a list, in the same order as they are
+        given in `beads_params`.
 
     Notes
     -----
@@ -289,8 +294,18 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
 
     # Standard curve function
     std_crv = lambda x: sc_fun(beads_params, x)
+
+    # Model string representation
+    beads_model_str = 'm*fl_ch + b = log(fl_mef_auto + fl_mef)'
+
+    # Parameter names
+    beads_params_names = ['m', 'b', 'fl_mef_auto']
     
-    return (std_crv, beads_model, beads_params)
+    return (std_crv,
+            beads_model,
+            beads_params,
+            beads_model_str,
+            beads_params_names)
 
 def plot_standard_curve(fl_channel,
                         fl_mef,
@@ -404,6 +419,9 @@ def get_transform_fxn(data_beads,
         general transformation function specified in ``FlowCal.transform``.
     namedtuple, if ``full_output==True``
         ``namedtuple``, containing the following fields in this order:
+        mef_channels : int, or str, or list of int, or list of str
+            Channels on which transformation functions have been generated.
+            Directly copied from the `mef_channels` argument.
         transform_fxn : function
             Transformation function to convert flow cytometry data from
             channel units to MEF. This function has the same basic
@@ -478,14 +496,18 @@ def get_transform_fxn(data_beads,
     fitting_fxn : function, optional
         Function used to fit the beads fluorescence model and obtain a
         standard curve. Must have the following signature: ``std_crv,
-        beads_model, beads_params = fitting_fxn(fl_channel, fl_mef,
-        **fitting_params)``, where `std_crv` is a function implementing the
-        standard curve, `beads_model` is a function implementing the beads
-        fluorescence model, `beads_params` is an array containing the
-        fitted parameters of the beads model, and `fl_channel` and `fl_mef`
-        are the fluorescence values of the beads in channel units and MEF
-        units, respectively. Note that the standard curve and the fitted
-        beads model are not necessarily the same.
+        beads_model, beads_params, beads_model_str, beads_params_names =
+        fitting_fxn(fl_channel, fl_mef, **fitting_params)``, where
+        `std_crv` is a function implementing the standard curve,
+        `beads_model` is a function implementing the beads fluorescence
+        model, `beads_params` is an array containing the fitted parameters
+        of the beads model, `beads_model_str` is a string representation
+        of the beads model used, `beads_params_names` is a list with the
+        parameter names in the same order as they are given in
+        `beads_params`, and `fl_channel` and `fl_mef` are the fluorescence
+        values of the beads in channel units and MEF units, respectively.
+        Note that the standard curve and the fitted beads model are not
+        necessarily the same.
     fitting_params : dict, optional
         Additional keyword parameters to pass to `fitting_fxn`.
 
@@ -618,6 +640,8 @@ def get_transform_fxn(data_beads,
         selected_mef_res = []
         beads_model_res = []
         beads_params_res =[]
+        beads_model_str_res =[]
+        beads_params_names_res =[]
 
     # Iterate through each mef channel
     for mef_channel, mef_values_channel in zip(mef_channels, mef_values):
@@ -717,15 +741,21 @@ def get_transform_fxn(data_beads,
         ###
 
         # Fit
-        std_crv, beads_model, beads_params = fitting_fxn(
-            selected_channel,
-            selected_mef,
-            **fitting_params)
+        fitting_output = fitting_fxn(selected_channel,
+                                     selected_mef,
+                                     **fitting_params)
+        std_crv = fitting_output[0]
+        beads_model = fitting_output[1]
+        beads_params = fitting_output[2]
+        beads_model_str = fitting_output[3]
+        beads_params_names = fitting_output[4]
         # Accumulate results
         std_crv_res.append(std_crv)
         if full_output:
             beads_model_res.append(beads_model)
             beads_params_res.append(beads_params)
+            beads_model_str_res.append(beads_model_str)
+            beads_params_names_res.append(beads_params_names)
 
         # Print information
         if verbose:
@@ -782,15 +812,19 @@ def get_transform_fxn(data_beads,
         fitting_res['std_crv'] = std_crv_res
         fitting_res['beads_model'] = beads_model_res
         fitting_res['beads_params'] = beads_params_res
+        fitting_res['beads_model_str'] = beads_model_str_res
+        fitting_res['beads_params_names'] = beads_params_names_res
 
         # Make namedtuple
-        fields = ['transform_fxn',
+        fields = ['mef_channels',
+                  'transform_fxn',
                   'clustering',
                   'statistic',
                   'selection',
                   'fitting']
         MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
-        out = MEFOutput(transform_fxn=transform_fxn,
+        out = MEFOutput(mef_channels=mef_channels,
+                        transform_fxn=transform_fxn,
                         clustering=clustering_res,
                         statistic=statistic_res,
                         selection=selection_res,
