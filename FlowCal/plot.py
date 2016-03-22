@@ -185,11 +185,14 @@ def hist1d(data_list,
             y = data[:, channel]
         else:
             y = data
-        # If bins are not specified or are specified as an integer, try to get
-        # bins from data object
-        if ((bins is None or isinstance(bins, int))
-                and hasattr(y, 'hist_bins') and y.hist_bins(0) is not None):
-            bins = y.hist_bins(0, nbins=bins, log=log)
+
+        # If ``data_plot.hist_bins()`` exists, obtain bin edges from it if
+        # necessary. If it does not exist, do not modify ``bins``.
+        if hasattr(y, 'hist_bins'):
+            # If bins is None or an integer, get bin edges from
+            # ``data_plot.hist_bins()``.
+            if bins is None or isinstance(bins, int):
+                bins = y.hist_bins(channels=0, nbins=bins, log=log)
 
         # Decide whether to normalize
         if normed_height:
@@ -366,19 +369,21 @@ def density2d(data,
         raise ValueError('two channels need to be specified')
     data_plot = data[:, channels]
 
-    # If bins are not specified, try to get bins from data object
-    if (hasattr(data_plot, 'hist_bins')
-            and data_plot.hist_bins(0) is not None
-            and data_plot.hist_bins(1) is not None):
-        # Duplicate bins into a two-element list if necessary
+    # If ``data_plot.hist_bins()`` exists, obtain bin edges from it if
+    # necessary. If it does not exist, do not modify ``bins``.
+    if hasattr(data_plot, 'hist_bins'):
+        # ``bins`` should be a list of two elements, one per axis. If not,
+        # duplicate.
         if not isinstance(bins, list):
             bins = [bins, bins]
-        # X Axis
+        # If bins for the X axis is None or an integer, get bin edges from
+        # ``data_plot.hist_bins()``.
         if bins[0] is None or isinstance(bins[0], int):
-            bins[0] = data_plot.hist_bins(0, nbins=bins[0], log=xlog)
-        # Y axis
+            bins[0] = data_plot.hist_bins(channels=0, nbins=bins[0], log=xlog)
+        # If bins for the Y axis is None or an integer, get bin edges from
+        # ``data_plot.hist_bins()``.
         if bins[1] is None or isinstance(bins[1], int):
-            bins[1] = data_plot.hist_bins(1, nbins=bins[1], log=ylog)
+            bins[1] = data_plot.hist_bins(channels=1, nbins=bins[1], log=ylog)
 
     # If colormap is not specified, use the default of this module
     if 'cmap' not in kwargs:
