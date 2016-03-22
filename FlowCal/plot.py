@@ -576,7 +576,7 @@ def scatter2d(data_list,
     elif hasattr(data_plot, 'channels'):
         plt.ylabel(data_plot.channels[1])
 
-    # Set plot limits if specified, else extract range from range
+    # Set plot limits if specified, else extract range from data_plot
     if xlim is not None:
         plt.xlim(xlim)
     elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
@@ -709,7 +709,7 @@ def scatter3d(data_list,
     elif hasattr(data_plot, 'channels'):
         ax_3d.set_zlabel(data_plot.channels[2])
 
-    # Set plot limits if specified, else extract range from range
+    # Set plot limits if specified, else extract range from data_plot
     if xlim is not None:
         ax_3d.set_xlim(xlim)
     elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
