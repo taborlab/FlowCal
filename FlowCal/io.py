@@ -1101,13 +1101,16 @@ class FCSData(np.ndarray):
         """
         Get the range of the specified channel(s).
 
-        The range is inferred from the $PnR parameter as ``[0, $PnR - 1]``.
-        Note that with floating points, there could be some events with
-        values outside the range in either direction due to instrument
-        compensation.
+        The range is a two-element list specifying the smallest and largest
+        values that an event in a channel should have. Note that with
+        floating point data, some events could have values outside the
+        range in either direction due to instrument compensation.
 
         The range should be transformed along with the data when passed
         through a transformation function.
+
+        The range of channel "n" is extracted from the $PnR parameter as
+        ``[0, $PnR - 1]``.
 
         Parameters
         ----------
