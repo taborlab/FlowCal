@@ -1195,22 +1195,8 @@ class FCSData(np.ndarray):
         else:
             time_step = None
 
-        # Extract the acquisition date. The FCS standard includes an optional
-        # keyword parameter $DATE in which the acquistion date is stored. In
-        # FCS 2.0, the date is saved as 'dd-mmm-yy', whereas in FCS 3.0 and 3.1
-        # the date is saved as 'dd-mmm-yyyy'.
-        if '$DATE' in fcs_file.text:
-            try:
-                acquisition_date = datetime.datetime.strptime(
-                    fcs_file.text['$DATE'],
-                    '%d-%b-%y')
-            except ValueError:
-                acquisition_date = datetime.datetime.strptime(
-                    fcs_file.text['$DATE'],
-                    '%d-%b-%Y')
-            acquisition_date = acquisition_date.date()
-        else:
-            acquisition_date = None
+        # Extract the acquisition date.
+        acquisition_date = cls._parse_date_string(fcs_file.text.get('$DATE'))
 
         # Extract the times of start and end of acquisition time.
         acquisition_start_time = cls._parse_time_string(
@@ -1287,7 +1273,8 @@ class FCSData(np.ndarray):
         # The CellQuest Pro software saves the detector voltage in keyword
         # parameters BD$WORD13, BD$WORD14, BD$WORD15... for channels 1, 2,
         # 3...
-        if 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+        if 'CREATOR' in fcs_file.text and \
+                'CellQuest Pro' in fcs_file.text.get('CREATOR'):
             detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
                                 for i in range(1, num_channels + 1)]
         else:
@@ -1424,6 +1411,59 @@ class FCSData(np.ndarray):
 
         return t
 
+    @staticmethod
+    def _parse_date_string(date_str):
+        """
+        Get a datetime.date object from a string date representation.
+
+        The FCS standard includes an optional keyword parameter $DATE in
+        which the acquistion date is stored. In FCS 2.0, the date is saved
+        as 'dd-mmm-yy', whereas in FCS 3.0 and 3.1 the date is saved as
+        'dd-mmm-yyyy'.
+
+        This function attempts to parse these formats, along with a couple
+        of nonstandard ones, using the datetime module.
+
+        Parameters:
+        -----------
+        date_str : str, or None
+            String representation of date, or None.
+
+        Returns:
+        --------
+        t : datetime.datetime, or None
+            Date parsed from `date_str`. If parsing was not possible,
+            return None. If `date_str` is None, return None
+
+        """
+        # If input is None, return None
+        if date_str is None:
+            return None
+
+        # Standard format for FCS2.0
+        try:
+            return datetime.datetime.strptime(date_str, '%d-%b-%y')
+        except ValueError:
+            pass
+        # Standard format for FCS3.0
+        try:
+            return datetime.datetime.strptime(date_str, '%d-%b-%Y')
+        except ValueError:
+            pass
+        # Nonstandard format 1
+        try:
+            return datetime.datetime.strptime(date_str, '%y-%b-%d')
+        except ValueError:
+            pass
+        # Nonstandard format 2
+        try:
+            return datetime.datetime.strptime(date_str, '%Y-%b-%d')
+        except ValueError:
+            pass
+
+        # If none of these formats work, return None
+        return None
+
 
     def _name_to_index(self, channels):
         """
@@ -1524,10 +1564,10 @@ class FCSData(np.ndarray):
                     [new_arr._detector_voltage[kc] for kc in key_channel])
                 new_arr._amplifier_gain = tuple(
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
-                new_arr._domain = tuple(
-                    [new_arr._domain[kc] for kc in key_channel])
-                new_arr._hist_bin_edges = tuple(
-                    [new_arr._hist_bin_edges[kc] for kc in key_channel])
+                new_arr._domain = \
+                    [new_arr._domain[kc] for kc in key_channel]
+                new_arr._hist_bin_edges = \
+                    [new_arr._hist_bin_edges[kc] for kc in key_channel]
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._amplification_type = \
@@ -1549,9 +1589,9 @@ class FCSData(np.ndarray):
                 new_arr._amplifier_gain = \
                     tuple([new_arr._amplifier_gain[key_channel]])
                 new_arr._domain = \
-                    tuple([new_arr._domain[key_channel]])
+                    [new_arr._domain[key_channel]]
                 new_arr._hist_bin_edges = \
-                    tuple([new_arr._hist_bin_edges[key_channel]])
+                    [new_arr._hist_bin_edges[key_channel]]
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):

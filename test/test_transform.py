@@ -16,7 +16,7 @@ import FlowCal.transform
 import numpy as np
 import unittest
 
-class TestExponentiateArray(unittest.TestCase):
+class TestRFIArray(unittest.TestCase):
     def setUp(self):
         self.d = np.array([
             [1, 7, 2],
@@ -31,129 +31,223 @@ class TestExponentiateArray(unittest.TestCase):
             [10, 6, 1],
             ])
 
-    def test_transform_original_integrity(self):
+    def test_rfi_original_integrity(self):
         db = self.d.copy()
-        dt = FlowCal.transform.exponentiate(self.d)
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=[0,1],
+                                      max_range=[1024, 1024],
+                                      amplification_type=[(0,0), (0,0)])
         np.testing.assert_array_equal(self.d, db)
 
-    def test_transform_all(self):
-        dt = FlowCal.transform.exponentiate(self.d)
-        np.testing.assert_array_equal(dt, 10**(self.d/256.0))
+    def test_rfi_arg_error_max_range(self):
+        self.assertRaises(ValueError, FlowCal.transform.to_rfi, 
+                          self.d, [0,1], None, [(0,0), (0,0)])
 
-    def test_transform_channel(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = 1)
+    def test_rfi_arg_error_amplification_type(self):
+        self.assertRaises(ValueError, FlowCal.transform.to_rfi, 
+                          self.d, [0,1], [1024, 1024], None)
+
+    def test_rfi_length_error_max_range(self):
+        self.assertRaises(ValueError, FlowCal.transform.to_rfi, 
+                          self.d, [0,1], [1024], [(0,0), (0,0)])
+
+    def test_rfi_length_error_amplification_type(self):
+        self.assertRaises(ValueError, FlowCal.transform.to_rfi, 
+                          self.d, [0,1], [1024, 1024], [(0,0), (0,0), (4,1)])
+
+    def test_rfi_1d_1(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=1,
+                                      max_range=1024,
+                                      amplification_type=(4, 1))
         np.testing.assert_array_equal(dt[:,0], self.d[:,0])
         np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
         np.testing.assert_array_equal(dt[:,2], self.d[:,2])
 
-    def test_transform_channels(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = [1,2])
+    def test_rfi_1d_2(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=2,
+                                      max_range=256,
+                                      amplification_type=(2, 0.01))
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], self.d[:,1])
+        np.testing.assert_array_equal(dt[:,2], 0.01*10**(self.d[:,2]/128.0))
+
+    def test_rfi_2d_1(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=[1,2],
+                                      max_range=[1024, 256],
+                                      amplification_type=[(4, 1), (2, 0.01)])
         np.testing.assert_array_equal(dt[:,0], self.d[:,0])
         np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
+        np.testing.assert_array_equal(dt[:,2], 0.01*10**(self.d[:,2]/128.0))
 
-class TestExponentiateFCS(unittest.TestCase):
+    def test_rfi_2d_2(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=[1,2],
+                                      max_range=[1024, 1024],
+                                      amplification_type=[(4, 1), (0, 0)])
+        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
+        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
+        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
+
+    def test_rfi_default_channel(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      max_range=[1024]*3,
+                                      amplification_type=[(4,1)]*3)
+        np.testing.assert_array_equal(dt, 10**(self.d/256.0))
+
+class TestRFIFCS(unittest.TestCase):
     def setUp(self):
         self.channel_names = ['FSC-H', 'SSC-H', 'FL1-H', 
                                 'FL2-H', 'FL3-H', 'Time']
-        self.filename = 'test/Data001.fcs'
-        self.d = FlowCal.io.FCSData(self.filename)
+        self.d = FlowCal.io.FCSData('test/Data001.fcs')
         self.n_samples = self.d.shape[0]
 
-    def test_transform_original_integrity(self):
+    def test_rfi_original_integrity(self):
         db = self.d.copy()
-        dt = FlowCal.transform.exponentiate(self.d)
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=['FSC-H', 'SSC-H'],
+                                      max_range=[1024, 1024],
+                                      amplification_type=[(4,1), (4,1)])
         np.testing.assert_array_equal(self.d, db)
 
-    def test_transform_all(self):
-        dt = FlowCal.transform.exponentiate(self.d)
-        np.testing.assert_array_equal(dt, 10**(self.d/256.0))
+    def test_rfi_length_error_max_range(self):
+        self.assertRaises(ValueError,
+                          FlowCal.transform.to_rfi, 
+                          self.d,
+                          ['FSC-H', 'SSC-H'],
+                          [1024],
+                          [(4,1), (4,1)])
 
-    def test_transform_channel(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = 1)
-        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        np.testing.assert_array_equal(dt[:,2], self.d[:,2])
-        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        np.testing.assert_array_equal(dt[:,4], self.d[:,4])
-        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
+    def test_rfi_length_error_amplification_type(self):
+        self.assertRaises(ValueError,
+                          FlowCal.transform.to_rfi, 
+                          self.d,
+                          ['FSC-H', 'SSC-H'],
+                          [1024, 1024],
+                          [(4,1), (4,1), (0,0)])
 
-    def test_transform_channels(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = [1,2,4])
-        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
-        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        np.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
-        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
+    def test_rfi_1d_1(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels='FL1-H',
+                                      max_range=512,
+                                      amplification_type=(4, 0.01))
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      0.01*10**(self.d[:,'FL1-H']/128.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'], self.d[:,'FL3-H'])
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_transform_bins_original_integrity(self):
-        dt = FlowCal.transform.exponentiate(self.d)
-        vi = [self.d.domain(i) for i in range(5)]
-        ei = [self.d.hist_bin_edges(i) for i in range(5)]
-        vo = [range(1024)]*5
-        eo = [np.arange(-0.5, 1024.5, 1.0)]*5
-        np.testing.assert_array_equal(vi, vo)
-        np.testing.assert_array_equal(ei, eo)
+    def test_rfi_1d_2(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=2,
+                                      max_range=512,
+                                      amplification_type=(2, 0.01))
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      0.01*10**(self.d[:,'FL1-H']/256.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'], self.d[:,'FL3-H'])
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_transform_bins_all(self):
-        dt = FlowCal.transform.exponentiate(self.d)
-        vit = [dt.domain(i) for i in range(5)]
-        eit = [dt.hist_bin_edges(i) for i in range(5)]
-        vo = [np.logspace(0., 1023/256., 1024)]*5
-        eo = [np.logspace(-0.5/256., 1023.5/256., 1025)]*5
-        np.testing.assert_array_equal(vit, vo)
-        np.testing.assert_array_equal(eit, eo)
+    def test_rfi_1d_defaults(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels='FL1-H')
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      10**(self.d[:,'FL1-H']/256.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'], self.d[:,'FL3-H'])
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_transform_bins_channel(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = 1)
-        vit = [dt.domain(i) for i in range(5)]
-        eit = [dt.hist_bin_edges(i) for i in range(5)]
-        vo = [np.arange(1024),
-              np.logspace(0., 1023/256., 1024),
-              np.arange(1024),
-              np.arange(1024),
-              np.arange(1024),
-              ]
-        eo = [np.arange(-0.5, 1024.5, 1.0),
-              np.logspace(-0.5/256., 1023.5/256., 1025),
-              np.arange(-0.5, 1024.5, 1.0),
-              np.arange(-0.5, 1024.5, 1.0),
-              np.arange(-0.5, 1024.5, 1.0),
-              ]
-        np.testing.assert_array_equal(vit, vo)
-        np.testing.assert_array_equal(eit, eo)
+    def test_rfi_2d_1(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=['FL1-H', 'FL3-H'],
+                                      max_range=[512, 2048],
+                                      amplification_type=[(4, 0.01), (2, 1)])
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      0.01*10**(self.d[:,'FL1-H']/128.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'],
+                                      10**(self.d[:,'FL3-H']/1024.))
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_transform_bins_channels(self):
-        dt = FlowCal.transform.exponentiate(self.d, channels = [1,2,4])
-        vit = [dt.domain(i) for i in range(5)]
-        eit = [dt.hist_bin_edges(i) for i in range(5)]
-        vo = [np.arange(1024),
-              np.logspace(0., 1023/256., 1024),
-              np.logspace(0., 1023/256., 1024),
-              np.arange(1024),
-              np.logspace(0., 1023/256., 1024),
-              ]
-        eo = [np.arange(-0.5, 1024.5, 1.0),
-              np.logspace(-0.5/256., 1023.5/256., 1025),
-              np.logspace(-0.5/256., 1023.5/256., 1025),
-              np.arange(-0.5, 1024.5, 1.0),
-              np.logspace(-0.5/256., 1023.5/256., 1025),
-              ]
-        np.testing.assert_array_equal(vit, vo)
-        np.testing.assert_array_equal(eit, eo)
-        pass
+    def test_rfi_2d_2(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=[2, 4],
+                                      max_range=[512, 1024],
+                                      amplification_type=[(4, 0.01), (0, 0)])
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      0.01*10**(self.d[:,'FL1-H']/128.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'], self.d[:,'FL3-H'])
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_transform_channels_str(self):
-        dt = FlowCal.transform.exponentiate(
-            self.d,
-            channels = ['SSC-H', 'FL1-H', 'FL3-H'])
-        np.testing.assert_array_equal(dt[:,0], self.d[:,0])
-        np.testing.assert_array_equal(dt[:,1], 10**(self.d[:,1]/256.0))
-        np.testing.assert_array_equal(dt[:,2], 10**(self.d[:,2]/256.0))
-        np.testing.assert_array_equal(dt[:,3], self.d[:,3])
-        np.testing.assert_array_equal(dt[:,4], 10**(self.d[:,4]/256.0))
-        np.testing.assert_array_equal(dt[:,5], self.d[:,5])
+    def test_rfi_2d_defaults(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=['FL1-H', 'FL3-H'])
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      10**(self.d[:,'FL1-H']/256.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'], self.d[:,'FL2-H'])
+        np.testing.assert_array_equal(dt[:,'FL3-H'],
+                                      10**(self.d[:,'FL3-H']/256.))
+        np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
+
+    def test_rfi_2d_domain(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=['FL1-H', 'FL3-H'],
+                                      max_range=[512, 2048],
+                                      amplification_type=[(4, 0.01), (2, 1)])
+        np.testing.assert_array_equal(dt.domain('FSC-H'),
+                                      self.d.domain('FSC-H'))
+        np.testing.assert_array_equal(dt.domain('SSC-H'),
+                                      self.d.domain('SSC-H'))
+        np.testing.assert_array_equal(dt.domain('FL1-H'),
+                                      0.01*10**(self.d.domain('FL1-H')/128.0))
+        np.testing.assert_array_equal(dt.domain('FL2-H'),
+                                      self.d.domain('FL2-H'))
+        np.testing.assert_array_equal(dt.domain('FL3-H'),
+                                      10**(self.d.domain('FL3-H')/1024.0))
+
+    def test_rfi_2d_bin_edges(self):
+        dt = FlowCal.transform.to_rfi(self.d,
+                                      channels=['FL1-H', 'FL3-H'],
+                                      max_range=[512, 2048],
+                                      amplification_type=[(4, 0.01), (2, 1)])
+        np.testing.assert_array_equal(dt.hist_bin_edges('FSC-H'),
+                                      self.d.hist_bin_edges('FSC-H'))
+        np.testing.assert_array_equal(dt.hist_bin_edges('SSC-H'),
+                                      self.d.hist_bin_edges('SSC-H'))
+        np.testing.assert_array_equal(dt.hist_bin_edges('FL1-H'),
+                                      0.01*10**(self.d.hist_bin_edges('FL1-H')/128.0))
+        np.testing.assert_array_equal(dt.hist_bin_edges('FL2-H'),
+                                      self.d.hist_bin_edges('FL2-H'))
+        np.testing.assert_array_equal(dt.hist_bin_edges('FL3-H'),
+                                      10**(self.d.hist_bin_edges('FL3-H')/1024.0))
+
+    def test_rfi_default_channel(self):
+        # Leave time channel out
+        channels = ['FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H']
+        dt = FlowCal.transform.to_rfi(self.d[:, channels])
+        np.testing.assert_array_equal(dt[:,'FSC-H'], self.d[:,'FSC-H'])
+        np.testing.assert_array_equal(dt[:,'SSC-H'], self.d[:,'SSC-H'])
+        np.testing.assert_array_equal(dt[:,'FL1-H'],
+                                      10**(self.d[:,'FL1-H']/256.0))
+        np.testing.assert_array_equal(dt[:,'FL2-H'],
+                                      10**(self.d[:,'FL2-H']/256.0))
+        np.testing.assert_array_equal(dt[:,'FL3-H'],
+                                      10**(self.d[:,'FL3-H']/256.0))
 
 class TestMefArray(unittest.TestCase):
     def setUp(self):
