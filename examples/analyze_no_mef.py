@@ -40,8 +40,9 @@ if __name__ == "__main__":
             for di in data]
     data = [FlowCal.gate.high_low(di, ch_all) for di in data]
 
-    # Exponential transformation
-    data_transf = [FlowCal.transform.exponentiate(di, ch_all) for di in data]
+    # Transform to Relative Fluorescence Units (rfi), commonly known as
+    # arbitrary units (a.u.)
+    data_transf = [FlowCal.transform.to_rfi(di, ch_all) for di in data]
 
     # Ellipse gate
     print("\nRunning ellipse gate on data files...")
