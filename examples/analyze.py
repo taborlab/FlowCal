@@ -106,8 +106,9 @@ if __name__ == "__main__":
     data = [FlowCal.gate.high_low(di, sc_channels) for di in data]
     # Gating of fluorescence channels
     data = [FlowCal.gate.high_low(di, mef_channels) for di in data]
-    # Exponential transformation
-    data_transf = [FlowCal.transform.exponentiate(di, sc_channels)
+    # Transform to Relative Fluorescence Units (rfi), commonly known as
+    # arbitrary units (a.u.)
+    data_transf = [FlowCal.transform.to_rfi(di, sc_channels)
                    for di in data]
 
     # Transform to MEF
@@ -150,7 +151,7 @@ if __name__ == "__main__":
                 density_channels=sc_channels,
                 hist_channels=mef_channels,
                 gate_contour=dgc, 
-                density_params={'mode': 'scatter', 'log': True}, 
+                density_params={'mode': 'scatter', 'xlog': True, 'ylog': True}, 
                 hist_params=hist_params,
                 savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
