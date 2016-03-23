@@ -460,6 +460,12 @@ def get_transform_fxn(data_beads,
         beads_params : list
             Fitted parameters of the bead fluorescence model, for each
             channel in `mef_chanels`.
+        beads_model_str : list
+            String representation of the bead models used, for each channel
+            in `mef_channels`.
+        beads_params_names : list
+            Names of the parameters given in `beads_params`, for each
+            channel in `mef_channels`.
 
     Other parameters
     ----------------
