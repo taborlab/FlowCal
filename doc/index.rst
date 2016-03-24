@@ -16,41 +16,25 @@ It features:
 * Plotting, including generation of histograms, density plots and scatter plots.
 * A user-fiendly Excel UI to gate, transform, calibrate, plot, and generate statistics from a list of flow cytometry samples in a simple fashion.
 
-Getting Started
----------------
+Table of Contents
+=================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   Download FlowCal! <https://github.com/taborlab/FlowCal/archive/master.zip>
-   installation.rst
-
-Using FlowCal's Excel UI
-------------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   excel_ui/howto.rst
-   excel_ui/format.rst
-   excel_ui/output.rst
-   excel_ui/cmd.rst
-
-Using FlowCal in Python
------------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   python_tutorials/index.rst
+   getting_started/index.rst
+   excel_ui/index.rst
+   python_tutorial/index.rst
    reference/modules.rst
+   theory/index.rst
+   contribute/index.rst
 
-More Information
-----------------
-.. toctree::
-   :maxdepth: 1
 
-   report_bugs.rst
-   request_features.rst
-   contribute.rst
-   FlowCal on Github <https://www.github.com/rice-bioe/fc>
+.. Getting Started
+.. ---------------
+
+.. .. toctree::
+..    :maxdepth: 1
+
+..    Download FlowCal! <https://github.com/taborlab/FlowCal/archive/master.zip>
+..    installation.rst

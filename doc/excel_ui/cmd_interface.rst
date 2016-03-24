@@ -18,7 +18,7 @@ Where the flags are::
 	-h, --help
 		show this help message and exit
 
-Running ``FlowCal``'s Excel UI without any flags will show the open file dialog to select an :doc:`input Excel file <format>`. Once a file is selected, FlowCal will generate an :doc:`output Excel file <output>`. In contrast to using ``Run FlowCal (OSX)`` or ``Run FlowCal (Windows).bat``, the statement above with no flags will not display any messages during processing or generate any plots. To display messages and generate plots, use::
+Running ``FlowCal``'s Excel UI without any flags will show the open file dialog to select an :doc:`input Excel file <input_format>`. Once a file is selected, FlowCal will generate an :doc:`output Excel file <outputs>`. In contrast to using ``Run FlowCal (OSX)`` or ``Run FlowCal (Windows).bat``, the statement above with no flags will not display any messages during processing or generate any plots. To display messages and generate plots, use::
 
 	python -m FlowCal.excel_ui -v -p
 

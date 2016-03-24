@@ -1,7 +1,7 @@
 Processing FCS Files with the Excel UI
 ======================================
 
-This tutorial focuses on how to obtain processed flow cytometry data from ``FlowCal``'s Excel UI into python. This document assumes that the reader is familiar with ``FlowCal``'s Excel UI. For more information, please refer to the :doc:`Excel UI tutorial </excel_ui/howto>.
+This tutorial focuses on how to obtain processed flow cytometry data from ``FlowCal``'s Excel UI into python. This document assumes that the reader is familiar with ``FlowCal``'s Excel UI. For more information, please refer to the :doc:`Excel UI documentation </excel_ui/index>`.
 
 To start, navigate to the ``examples`` directory included with FlowCal, and open a ``python`` session therein. Then, import ``FlowCal`` as with any other python module.
 
@@ -10,7 +10,7 @@ To start, navigate to the ``examples`` directory included with FlowCal, and open
 Introduction
 ------------
 
-``FlowCal`` is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the :doc:`MEF tutorial </python_tutorials/mef>`, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might want to follow a procedure similar to this:
+``FlowCal`` is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the :doc:`MEF tutorial </python_tutorial/mef>`, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might want to follow a procedure similar to this:
 
 1. Open calibration beads files
 2. Perform density gating in forward/side scatter to eliminate bead aggregates
@@ -26,7 +26,7 @@ However, some applications demand more complicated downstream processing, such a
 Processing samples with the Excel UI
 ------------------------------------
 
-For this tutorial, we will analyze all the data in the ``examples/FCFiles`` folder using the input Excel file, ``examples.experiment.xlsx``. This is the same file described in the :doc:`Excel UI tutorial </excel_ui/format>.
+For this tutorial, we will analyze all the data in the ``examples/FCFiles`` folder using the input Excel file, ``examples/experiment.xlsx``. This is the same file described in the :doc:`Excel UI documentation </excel_ui/index>.
 
 First, load the necessary tables from this file.
 

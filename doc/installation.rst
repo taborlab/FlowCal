@@ -17,6 +17,8 @@ To install Anaconda, do the following:
 
 .. image:: _static/installation_completed.png
 
+.. note:: **Windows**: If the following message appears after double clicking ``Install FlowCal (Windows)``: “Windows protected your PC – Windows SmartScreen prevented an unrecognized app from starting...”, click on the “More info” link under the text, and then click on the “Run anyway” button. This will remove the security restriction from the program and allow it to run properly.
+
 .. note:: **Mac OS X**: If the following error message appears after double clicking ``Install FlowCal (OSX)``: “’Install FlowCal (OSX)’ can’t be opened because it is from an unidentified developer.”, navigate to System Preferences -> Security and Privacy -> General, and click the “Open Anyways” button adjacent to the message stating “’Install FlowCal (OSX)’ was blocked from opening because it is not from an identified developer”. This will remove the security restriction from the program and allow it to run properly.
 
 To see ``FlowCal`` in action, head to the :doc:`How to use the Excel UI</excel_ui/howto>` section. The ``FlowCal`` zip file includes an ``examples`` folder with files that you can use while following the instructions.
