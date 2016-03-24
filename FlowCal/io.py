@@ -1000,8 +1000,14 @@ class FCSData(np.ndarray):
         Get the amplification type used for the specified channel(s).
 
         Each channel uses one of two amplification types: linear or
-        logarithmic. The amplification type for channel "n" is extracted
-        from the required $PnE parameter.
+        logarithmic. This function returns, for each channel, a tuple of
+        two numbers, in which the first number indicates the number of
+        decades covered by the logarithmic amplifier, and the second
+        indicates the linear value corresponding to the channel value zero.
+        If the first value is zero, the amplifier used is linear
+
+        The amplification type for channel "n" is extracted from the
+        required $PnE parameter.
 
         Parameters
         ----------
