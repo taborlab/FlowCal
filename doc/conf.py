@@ -289,3 +289,7 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# The following is added such that the custom css is loaded
+def setup(app):
+    app.add_stylesheet('my_style.css')
