@@ -12,7 +12,7 @@ Instruments sheet
 
 This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument; however ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an **Instruments** sheet.
 
-.. image:: /_static/spreadsheet_instruments.png
+.. image:: https://www.dropbox.com/s/jb5yvrz9p1mshr9/spreadsheet_instruments.png?raw=1
 
 For each row, the following columns must be filled.
 
@@ -28,7 +28,7 @@ Beads sheet
 
 This sheet contains details about calibration microbeads and how to process them. Each row represents a different sample of beads. The figure below shows an example of an **Beads** sheet.
 
-.. image:: /_static/spreadsheet_beads.png
+.. image:: https://www.dropbox.com/s/coxomldq23uibb2/spreadsheet_beads.png?raw=1
 
 For each row, the following columns must be filled:
 
@@ -36,7 +36,7 @@ For each row, the following columns must be filled:
 2. **Instrument ID** (B): The ID of the instrument used to take the sample.
 3. **File Path** (C): the name of the corresponding FCS file.
 4. **<Channel name> MEF Values** (E shown, F and G hidden): MEF values provided by the manufacturer, for each channel in which a standard curve must be calculated. If MEF values are provided for a channel, the corresponding instrument should include this channel name in the **Fluorescence Channels** field. More **<Channel name> MEF Values** columns can be added if needed, or removed if not used.
-5. **Gate Fraction** (H): a gate fraction parameter used for density gating.
+5. **Gate Fraction** (H): a gate fraction parameter used for :doc:`density gating</theory/density_gate>`.
 6. **Clustering Channels** (I): the fluorescence channels used for clustering, as a comma separated list.
 
 Additional columns, like **Lot** (column D), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
@@ -46,7 +46,7 @@ Samples sheet
 
 In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. Several analyses can be performed on the same file (e.g. rows 10 and 12 in the figure below, in which the gating fraction is varied). The figure below shows an example of an **Samples** sheet.
 
-.. image:: /_static/spreadsheet_samples.png
+.. image:: https://www.dropbox.com/s/mpkf0ma0hsnbvw4/spreadsheet_samples.png?raw=1
 
 For each row, the following columns must be filled:
 
@@ -59,6 +59,8 @@ For each row, the following columns must be filled:
     a. **Channel**: Raw “Channel Number” units, exactly as they are stored in the FCS file.
     b. **a.u.**: Arbitrary Units. 
     c. **MEF**: MEF units.
-6. **Gate Fraction** (I): Fraction of samples to keep in the density gating step.
+6. **Gate Fraction** (I): Fraction of samples to keep when performing :doc:`density gating</theory/density_gate>`.
 
 Additional columns, such as **Strain name** and **IPTG (µM)** (columns J and K), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
+
+Note that if MEF units are requested for a fluorescence channel of a sample, an FCS file with calibration beads data should be specified in the **Beads ID** column. Both beads and samples should have been acquired at the same settings for the specified fluorescence channel, otherwise ``FlowCal`` will throw an error.

@@ -5,4 +5,4 @@ Theory of Operation
    :maxdepth: 1
 
    density_gate.rst
-   mef_transform.rst
+   calibration.rst

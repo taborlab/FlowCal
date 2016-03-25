@@ -1,4 +1,0 @@
-MEF Transformation
-==================
-
-To do.
