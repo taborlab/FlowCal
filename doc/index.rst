@@ -6,15 +6,15 @@
 =======
 FlowCal
 =======
-``FlowCal`` is a library for processing, calibrating, and analyzing flow cytometry data in Python.
+``FlowCal`` is a library for reading, analyzing, and calibrating flow cytometry data in Python.
 It features:
 
 * Extraction of Flow Cytometry Standard (FCS) files into numpy array-like structures
 * Traditional and non-standard gating, including automatic density-based two-dimensional gating.
-* Transformation functions that allow conversion of data from raw FCS numbers to arbitrary fluorescence units (a.u.).
+* Transformation functions that allow conversion of data from raw FCS channel numbers to arbitrary fluorescence units (a.u.).
 * Plotting, including generation of histograms, density plots and scatter plots.
 
-Most importantly, ``FlowCal`` automatically analyzes calibration beads data in order to convert the fluorescence of cell samples into calibrated units, **Molecules of Equivalent Fluorophore (MEF)**. The most important advantages of using MEF are 1) Fluorescence can be reported independently of acquisition settings, and 2) Variation in data due to instrument shift is eliminated.
+Most importantly, ``FlowCal`` automatically processes calibration beads data in order to convert fluorescence to calibrated units, **Molecules of Equivalent Fluorophore (MEF)**. The most important advantages of using MEF are 1) fluorescence can be reported independently of acquisition settings, and 2) variation in data due to instrument shift is eliminated.
 
 Finally, ``FlowCal`` includes a user-fiendly Excel User Interface to perform all of these operations automatically, without the need to write any code.
 
