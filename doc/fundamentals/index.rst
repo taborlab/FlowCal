@@ -1,5 +1,5 @@
-Theory of Operation
-===================
+Fundamentals
+============
 
 .. toctree::
    :maxdepth: 1

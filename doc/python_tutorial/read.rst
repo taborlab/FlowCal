@@ -7,7 +7,7 @@ To start, navigate to the ``examples/FCFiles`` directory included with FlowCal, 
 
 >>> import FlowCal
 
-FCS files are standard files in which the events resulting from measuring a flow cytometry sample are stored. Normally, one FCS file corresponds to one flow cytometry sample.
+FCS files are standard files in which flow cytometry data is stored. Normally, one FCS file corresponds to one sample.
 
 The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The following instruction opens the file ``data_001.fcs``, loads the information into an ``FCSData`` object, and assigns it to a variable ``s``.
 

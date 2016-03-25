@@ -19,14 +19,14 @@ Introduction
 5. Perform density gating in forward/side scatter to eliminate aggregates and non-cellular debris.
 6. Transform the fluorescence of cell samples to MEF using the standard curves obtained in step 3.
 
-After this, what follows is highly dependent on the type of experiment. Some people might be interested, for example, in the geometric mean fluorescence and standard deviation of cell samples as a function of some inducer. For these cases, the Excel UI allows to easily specify a set of FCS files that will be processed as described above, and generate a set of statistics for each fluorescence channel of interest. This is performed through a convenient input Excel file, which can also document other information about the experiment, such as inducer level of each sample.
+After this, what follows is highly dependent on the type of experiment. Some might be interested, for example, in the geometric mean fluorescence and standard deviation of cell samples as a function of some inducer. For these cases, the Excel UI allows to easily specify a set of FCS files that will be processed as described above, and generate a set of statistics for each fluorescence channel of interest. This is performed through a convenient input Excel file, which can also document other information about the experiment, such as inducer level of each sample.
 
 However, some applications demand more complicated downstream processing, such as n-dimensional fluorescence analysis, which will inevitably require programming. In these cases, one can still use ``FlowCal``'s Excel UI to process files as above, and return transformed and gated ``FCSData`` objects for each specified FCS file to python, along with extra information contained in the input Excel file. This workflow combines the convenience of maintaining experimental information in an Excel file, the consistency of a standard FCS file processing pipeline, and the power of performing numerical analysis in python. We will now describe how to do this.
 
 Processing samples with the Excel UI
 ------------------------------------
 
-For this tutorial, we will analyze all the data in the ``examples/FCFiles`` folder using the input Excel file, ``examples/experiment.xlsx``. This is the same file described in the :doc:`Excel UI documentation </excel_ui/index>.
+For this tutorial, we will analyze all the data in the ``examples/FCFiles`` folder using the input Excel file, ``examples/experiment.xlsx``. This is the same file described in the :doc:`Excel UI documentation </excel_ui/index>`.
 
 First, load the necessary tables from this file.
 
@@ -51,7 +51,7 @@ From there, one can obtain the file name and analysis options of each beads file
 ...     verbose=True,
 ...     plot=True)
 
-``FlowCal.excel_ui.process_beads_table`` uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags ``verbose`` and ``plot`` instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the :doc:`MEF tutorial` </python_tutorial/mef`. The ouput arguments are ``beads_samples``, a list of transformed and gated FCSData objects, and ``mef_transform_fxns, a dictionary of MEF transformation functions, indexed by the ID of the beads files.
+``FlowCal.excel_ui.process_beads_table`` uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags ``verbose`` and ``plot`` instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the :doc:`MEF tutorial </python_tutorial/mef>`. The ouput arguments are ``beads_samples``, a list of transformed and gated FCSData objects, and ``mef_transform_fxns``, a dictionary of MEF transformation functions, indexed by the ID of the beads files.
 
 In a similar way, ``FlowCal``'s Excel UI can automatically density-gate and transform cell samples using a single instruction:
 

@@ -26,10 +26,10 @@ Table of Contents
    :maxdepth: 2
 
    getting_started/index.rst
+   fundamentals/index.rst
    excel_ui/index.rst
    python_tutorial/index.rst
    reference/modules.rst
-   theory/index.rst
    contribute/index.rst
 
 

@@ -36,7 +36,7 @@ For each row, the following columns must be filled:
 2. **Instrument ID** (B): The ID of the instrument used to take the sample.
 3. **File Path** (C): the name of the corresponding FCS file.
 4. **<Channel name> MEF Values** (E shown, F and G hidden): MEF values provided by the manufacturer, for each channel in which a standard curve must be calculated. If MEF values are provided for a channel, the corresponding instrument should include this channel name in the **Fluorescence Channels** field. More **<Channel name> MEF Values** columns can be added if needed, or removed if not used.
-5. **Gate Fraction** (H): a gate fraction parameter used for :doc:`density gating</theory/density_gate>`.
+5. **Gate Fraction** (H): a gate fraction parameter used for :doc:`density gating</fundamentals/density_gate>`.
 6. **Clustering Channels** (I): the fluorescence channels used for clustering, as a comma separated list.
 
 Additional columns, like **Lot** (column D), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
@@ -59,7 +59,7 @@ For each row, the following columns must be filled:
     a. **Channel**: Raw “Channel Number” units, exactly as they are stored in the FCS file.
     b. **a.u.**: Arbitrary Units. 
     c. **MEF**: MEF units.
-6. **Gate Fraction** (I): Fraction of samples to keep when performing :doc:`density gating</theory/density_gate>`.
+6. **Gate Fraction** (I): Fraction of samples to keep when performing :doc:`density gating</fundamentals/density_gate>`.
 
 Additional columns, such as **Strain name** and **IPTG (µM)** (columns J and K), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
 

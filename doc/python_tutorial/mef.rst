@@ -1,7 +1,7 @@
 Calibrating Flow Cytometry Data to MEF
 ======================================
 
-This tutorial focuses on how to transform flow cytometry data to Molecules of Equivalent Fluorophore (MEF) using ``FlowCal``, particularly by using the module :mod:`FlowCal.mef`
+This tutorial focuses on how to transform flow cytometry data to Molecules of Equivalent Fluorophore (MEF) using ``FlowCal``, particularly by using the module :mod:`FlowCal.mef`. For more information on MEF calibration, see the section on :doc:`fundamentals of calibration</fundamentals/calibration>`.
 
 To start, navigate to the ``examples/FCFiles`` directory included with FlowCal, and open a ``python`` session therein. Then, import ``FlowCal`` as with any other python module.
 
@@ -11,25 +11,10 @@ Also, import ``pyplot`` from ``matplotlib``
 
 >>> import matplotlib.pyplot as plt
 
-Introduction to MEF
--------------------
+Working with Calibration Beads
+------------------------------
 
-Flow cytometry data is frequently reported in arbitrary units (a.u.), which have the following issues:
-
-1. Fluorescence values in a.u depend on the instrument used.
-2. Even when using the same instrument, fluorescence values in a.u. depend on the acquisition settings used.
-3. Even when these two are kept constant, fluorescence values in a.u. can change in time due to instrument drift.
-
-These issues prevent the quantitative comparison of flow cytometry data, not only across laboratories, but also across different people in the same laboratory, different biological systems that require different acquisition settings even when taken by the same person, and different samples of the same system taken by the same person across time. 
-
-To compensate for some of these effects, manufacturers provide calibration particles, which are a mixture of microbeads with different amounts of a certain fluorophore. The manufacturer also provides a table with the mean fluorescence of each population in Molecules of Equivalent Fluorophore (MEF), the number of fluorophores in solution that result in the same fluorescence. Calibration particles are measured in every experiment along with cellular samples to obtain the fluorescence of each subpopulation in a.u. Using these fluorescence values and the MEF values provided by the manufacturer, one can construct a standard curve that maps fluorescence from a.u. to MEF. This standard curve can then be used to convert the fluorescence of a population of cells to MEF.
-
-Expressing fluorescence of cellular samples in MEF automatically eliminates issues 2 and 3. Issue 1 is also eliminated if the calibration beads' fluorophore is the same as the one used in cellular samples. If not, instrument-dependence can still be eliminated by performing a one-time calibration using a common cellular sample and a reference instrument. At the very least, transforming to MEF makes cellular samples inside a laboratory comparable. 
-
-Calibration Beads
------------------
-
-As mentioned above, conversion to MEF requires measuring calibration beads. ``data_006.fcs`` in the ``examples`` folder contains beads data. Let's examine it.
+As mentioned in the :doc:`fundamentals</fundamentals/calibration>` section, conversion to MEF requires measuring calibration beads. ``data_006.fcs`` in the ``examples`` folder contains beads data. Let's examine it.
 
 >>> b = FlowCal.io.FCSData('data_006.fcs')
 >>> b_g, __, c = FlowCal.gate.density2d(b,
@@ -53,7 +38,7 @@ The ``FSC``/``SSC`` density plot shows two groups of events: the dense group in 
 MEF Transformation in ``FlowCal``
 ---------------------------------
 
-We saw in the :doc:`transformation tutorial </python_tutorials/transform>` that a transformation function is needed to convert flow cytometry data from raw sensor numbers, as stored in FCS files, to fluorescence values in a.u. Similarly, ``FlowCal`` uses transformation functions to convert raw flow cytometry data to MEF. However, these functions have to be generated during analysis using a calibration bead sample. Once a function is generated, though, it can be used to convert many cell samples to MEF, provided that beads and samples have been acquired using the same settings.
+We saw in the :doc:`transformation tutorial </python_tutorial/transform>` that a transformation function is needed to convert flow cytometry data from raw sensor numbers, as stored in FCS files, to fluorescence values in a.u. Similarly, ``FlowCal`` uses transformation functions to convert raw flow cytometry data to MEF. However, these functions have to be generated during analysis using a calibration bead sample. Once a function is generated, though, it can be used to convert many cell samples to MEF, provided that beads and samples have been acquired using the same settings.
 
 Generating a transformation function from calibration beads data is a complicated process, therefore ``FlowCal`` has an entire module dedicated to it: :mod:`FlowCal.mef`. The main function in this module, :func:`FlowCal.mef.get_transform_fxn`, requires at least the following: calibration beads data, the names of the channels for which a MEF transformation function should be generated, and manufacturer-provided MEF values of each subpopulation for each channel. Let's now use :func:`FlowCal.mef.get_transform_fxn` to obtain a transformation function.
 
@@ -73,7 +58,7 @@ Let's now use ``to_mef`` to transform fluroescence data to MEF.
 >>> s = FlowCal.io.FCSData('data_001.fcs')
 >>>
 >>> # Transform each channel as appropriate
->>> s_t = FlowCal.transform.exponentiate(s, channels=['FSC', 'SSC'])
+>>> s_t = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC'])
 >>> s_t = to_mef(s_t, channels='FL1')
 >>>
 >>> # Gate
@@ -93,9 +78,9 @@ Let's now use ``to_mef`` to transform fluroescence data to MEF.
 Generation of a MEF Transformation Function
 -------------------------------------------
 
-We will now give a short description of the process that :func:`FlowCal.mef.get_transform_fxn` uses to generate a transformation function from beads data. We will also examine the plots produced by :func:`FlowCal.mef.get_transform_fxn` and discuss how these plots can reveal problems with the analysis. In the following, ``<beads_filename>`` refers to the file name of the FSC cotaining beads data, which was provided to :func:`FlowCal.mef.get_transform_fxn`.
+We will now give a short description of the process that :func:`FlowCal.mef.get_transform_fxn` uses to generate a transformation function from beads data. We will also examine the plots produced by :func:`FlowCal.mef.get_transform_fxn` and discuss how these plots can reveal problems with the analysis. In the following, ``<beads_filename>`` refers to the file name of the FSC cotaining beads data, which was provided to :func:`FlowCal.mef.get_transform_fxn`. This discussion is parallel to the one in the :doc:`fundamentals of calibration</fundamentals/calibration>` document, but at a higher technical level.
 
-Generating a MEf transformation function involves four steps:
+Generating a MEF transformation function involves four steps:
 
 1. Identification of Bead Subpopulations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
