@@ -20,7 +20,7 @@ Let's now visualize the contents of the ``FL1`` channel. We will explore ``FlowC
 >>> plt.hist(s[:, 'FL1'], bins=100)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_transform_1.png
+.. image:: https://www.dropbox.com/s/nh5nnfxijut3s20/python_tutorial_transform_1.png?raw=1
 
 Note that the range of the x axis is from 0 to 1024. However, our acquisition software showed fluorescence values from 1 to 10000. Where does the difference come from? An FCS file normally stores raw numbers as they are are reported by the instrument sensors. These are referred to as "channel numbers". The FCS file also contains enough information to transform these numbers back to proper fluorescence units, called Relative Fluorescence Intensities (RFI), or more commonly, arbitrary fluorescence units (a.u.). This conversion sometimes involves a simple scaling factor, but other times requires a non-straigthforward exponential transformation. The latter is our case.
 
@@ -36,7 +36,7 @@ Fortunately, ``FlowCal`` includes :func:`FlowCal.transform.to_rfi`, a function t
 >>> plt.xscale('log')
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_transform_2.png
+.. image:: https://www.dropbox.com/s/eduoahe6qgnu9fe/python_tutorial_transform_2.png?raw=1
 
 We will explore a more convenient way to plot transformed data in the :doc:`plotting tutorial </python_tutorial/plot>`.
 

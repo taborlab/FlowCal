@@ -23,7 +23,7 @@ One is often interested in the fluorescence distribution across a population of 
 >>> FlowCal.plot.hist1d(s, channel='FL1')
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_1.png
+.. image:: https://www.dropbox.com/s/7rmt5maedht22d0/python_tutorial_plot_1.png?raw=1
 
 :func:`FlowCal.plot.hist1d` behaves mostly like a regular matplotlib plotting function: it will plot in the current figure and axis. The axes labels are populated by default, but one can still use ``plt.xlabel`` and ``plt.ylabel`` to change them.
 
@@ -32,7 +32,7 @@ By default, :func:`FlowCal.plot.hist1d` uses the maximum resolution available fr
 >>> FlowCal.plot.hist1d(s, channel='FL1', div=4)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_2.png
+.. image:: https://www.dropbox.com/s/4lbmhv2gk0dmcx0/python_tutorial_plot_2.png?raw=1
 
 One of the most convenient features of :func:`FlowCal.plot.hist1d` is the ability to figure out the appropriate bins to use, even after the data has been transformed. This only works if using ``FCSData`` objects and transformation functions from the :mod:`FlowCal.transform` module. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
 
@@ -40,7 +40,7 @@ One of the most convenient features of :func:`FlowCal.plot.hist1d` is the abilit
 >>> FlowCal.plot.hist1d(s_fl1, channel='FL1', div=4, log=True)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_3.png
+.. image:: https://www.dropbox.com/s/80yeslvvwkjbrk3/python_tutorial_plot_3.png?raw=1
 
 Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the same time. Let's now load 3 FCSData objects, transform the ``FL1`` channel to a.u., and plot them with transparency.
 
@@ -51,7 +51,7 @@ Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the sam
 >>> plt.legend(filenames)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_4.png
+.. image:: https://www.dropbox.com/s/p2xpq4p9m4o4m99/python_tutorial_plot_4.png?raw=1
 
 Note that all of these plots show bimodal fluorescence distributions.
 
@@ -66,7 +66,7 @@ Let's look at the ``FSC`` and ``SSC`` channels in our sample ``s``.
 >>> FlowCal.plot.density2d(s_t, channels=['FSC', 'SSC'], log=True)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_5.png
+.. image:: https://www.dropbox.com/s/rq9id6rmp57hoe1/python_tutorial_plot_5.png?raw=1
 
 The color indicates the number of events in the region, with red indicating a bigger number than yellow and blue, in that order, by default. Similarly to :func:`FlowCal.plot.hist1d`, :func:`FlowCal.plot.density2d` automatically obtains the appropriate bins from the ``FCSData`` object ``s_t``. In addition, :func:`FlowCal.plot.density2d` applies, by default, gaussian smoothing to the density plot.
 
@@ -75,7 +75,7 @@ The color indicates the number of events in the region, with red indicating a bi
 >>> FlowCal.plot.density2d(s_t, channels=['FSC', 'SSC'], mode='scatter', log=True)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_6.png
+.. image:: https://www.dropbox.com/s/9okm2e95sthmuam/python_tutorial_plot_6.png?raw=1
 
 Both plots show events concentrated in the same four regions: two, at the left, with events saturating at the lowest detectable value of the ``FSC`` channel, one at the middle-low portion of the plot, and one at the middle-high. By looking at the shape of the different populations we know that only events in the last region are cells. We will learn how to "gate", or select only one population, in the :doc:`gating tutorial </python_tutorials/gate>`
 
@@ -95,7 +95,7 @@ In particular, :func:`FlowCal.plot.density_and_hist` uses :func:`FlowCal.plot.hi
 >>> plt.tight_layout()
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_plot_7.png
+.. image:: https://www.dropbox.com/s/1vq4bfhrj7k2vkz/python_tutorial_plot_7.png?raw=1
 
 :func:`FlowCal.plot.density_and_hist` can also plot data before and after applying gates. We will see this in the :doc:`gating tutorial </python_tutorial/gate>`.
 

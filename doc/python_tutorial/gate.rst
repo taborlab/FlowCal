@@ -22,7 +22,7 @@ We'll start by loading the data from file ``data_001.fcs`` into an ``FCSData`` o
 
 In the :doc:`plotting tutorial </python_tutorial/plot>` we looked at a density plot of the forward scatter/side scatter (``FSC``/``SSC``) channels and identified several clusters of events. This density plot is repeated below for convenience.
 
-.. image:: /_static/python_tutorial_plot_5.png
+.. image:: https://www.dropbox.com/s/rq9id6rmp57hoe1/python_tutorial_plot_5.png?raw=1
 
 From these clusters, the faint one in the middle corresponds to non-cellular debris, and the one above corresponds to cells. Two additional major groups on the left correspond to saturated events, with the lowest possible forward scatter value: 1 a.u..
 
@@ -32,7 +32,7 @@ Some flow cytometers will capture events outside of their range and assign them 
 >>> FlowCal.plot.density2d(s_g1, channels=['FSC', 'SSC'], log=True)
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_gate_1.png
+.. image:: https://www.dropbox.com/s/pujabnm5qmsa4pc/python_tutorial_gate_1.png?raw=1
 
 We successfully removed the event clusters on the left. We can go one step further and use :func:`FlowCal.gate.high_low` again to remove the cluster in the lower middle of the plot, which as we said before corresponds to debris.
 
@@ -40,7 +40,7 @@ We successfully removed the event clusters on the left. We can go one step furth
 >>> FlowCal.plot.density2d(s_g2, channels=['FSC', 'SSC'], log=True, mode='scatter')
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_gate_2.png
+.. image:: https://www.dropbox.com/s/yqc4kfmiysf2kmd/python_tutorial_gate_2.png?raw=1
 
 This approach, however, requires one to estimate a low threshold value for every sample manually. In addition, we usually want events in the densest forward scatter/side scatter region, which requires a more complex shape than a pair of thresholds. We will now explore better ways to achieve this.
 
@@ -59,7 +59,7 @@ Ellipse Gate
 >>> FlowCal.plot.density2d(s_g3, channels=['FSC', 'SSC'], log=True, mode='scatter')
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_gate_3.png
+.. image:: https://www.dropbox.com/s/triklae3jjth89g/python_tutorial_gate_3.png?raw=1
 
 As shown above, the remaining events reside only inside an ellipse-shaped region. Note that we used the argument ``log``, which indicates that the gated region should look like an ellipse in a logarithmic plot. This also requires that the center and the major and minor axes (``a`` and ``b``) be specified in log space.
 
@@ -75,7 +75,7 @@ Density Gate
 >>> FlowCal.plot.density2d(s_g4, channels=['FSC', 'SSC'], log=True, mode='scatter')
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_gate_4.png
+.. image:: https://www.dropbox.com/s/34079nzcgs4xxzv/python_tutorial_gate_4.png?raw=1
 
 We can see that :func:`FlowCal.gate.density2d` automatically identified the region that contains cells, and defined a shape that more closely resembles what the ungated density map looks like. The parameter ``gating_fraction`` allows the user to control the fraction of events to retain, and it is the only parameter that the user is required to specify.
 
@@ -105,7 +105,7 @@ The function :func:`FlowCal.plot.density_and_hist` was introduced in the :doc:`p
 >>> plt.tight_layout()
 >>> plt.show()
 
-.. image:: /_static/python_tutorial_gate_5.png
+.. image:: https://www.dropbox.com/s/4hm191bfivdt2nt/python_tutorial_gate_5.png?raw=1
 
 We can now observe the gating contour right on top of the ungated data, and see which events were kept and which ones were left out. In addition, we can visualize how gating affected the other channels. In particular, observe that bimodality in the ``FL1`` fluorescence channel disappeared with gating. This shows that the observed bimodality was produced by the difference in fluorescence between debris and cells, but that cells in this sample are unimodal.
 
