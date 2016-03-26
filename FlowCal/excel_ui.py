@@ -118,7 +118,11 @@ def write_workbook(filename, table_list):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        writer.sheets[sheet_name].set_column(0, len(df.columns) - 1, width=15)
+        for i, (col_name, column) in enumerate(df.iteritems()):
+            # Get the maximum number of characters in a column, including title
+            max_chars_col = column.astype(str).str.len().max()
+            max_chars_col = max(len(col_name), max_chars_col)
+            writer.sheets[sheet_name].set_column(i, i, width=1.*max_chars_col)
 
     # Write excel file
     writer.save()
