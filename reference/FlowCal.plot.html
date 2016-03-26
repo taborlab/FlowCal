@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.plot module &mdash; FlowCal 1.0.0b2 documentation</title>
+  <title>FlowCal.plot module &mdash; FlowCal 1.0.0 documentation</title>
   
 
   
@@ -28,9 +28,11 @@
   
 
   
+    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+  
 
   
-    <link rel="top" title="FlowCal 1.0.0b2 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.stats module" href="FlowCal.stats.html"/>
         <link rel="prev" title="FlowCal.mef module" href="FlowCal.mef.html"/> 
@@ -61,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0b2
+                1.0.0
               </div>
             
           
@@ -82,37 +84,22 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../format_excel.html">Format of the Excel File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../output_excel.html">Outputs of the Excel UI</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="modules.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="">FlowCal.plot module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modules.html#module-FlowCal">Module contents</a></li>
-</ul>
-</li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../report_bugs.html">Report Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../request_features.html">Request Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
 </ul>
 
             
@@ -211,7 +198,7 @@ specified, the figure is closed after being saved.</p>
 </ul>
 <dl class="function">
 <dt id="FlowCal.plot.density2d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], log=False, div=1, bins=None, mode='mesh', normed=False, smooth=True, sigma=10.0, colorbar=False, xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.density2d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], div=1, bins=None, mode='mesh', normed=False, smooth=True, sigma=10.0, colorbar=False, xlog=False, ylog=False, xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.density2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a 2D density plot from two channels of a flow cytometry data set.</p>
 <p><cite>density2d</cite> has two plotting modes which are selected using the <cite>mode</cite>
 argument. With <code class="docutils literal"><span class="pre">mode=='mesh'</span></code>, this function plots the data as a true
@@ -237,10 +224,6 @@ histogram can be smoothed using a Gaussian kernel by specifying
 <p><strong>channels</strong> : list of int, list of str, optional</p>
 <blockquote>
 <div><p>Two channels to use for the plot.</p>
-</div></blockquote>
-<p><strong>log</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag specifying whether the axes should be in log scale.</p>
 </div></blockquote>
 <p><strong>div</strong> : int or float, optional</p>
 <blockquote>
@@ -284,6 +267,14 @@ histogram.</p>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>sigma</strong> : float, optional</p>
 <blockquote>
 <div><p>The sigma parameter for the Gaussian kernel to use when smoothing.</p>
+</div></blockquote>
+<p><strong>xlog</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying whether the x axis should be in log scale.</p>
+</div></blockquote>
+<p><strong>ylog</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag specifying whether the y axis should be in log scale.</p>
 </div></blockquote>
 <p><strong>xlabel</strong> : str, optional</p>
 <blockquote>
@@ -403,7 +394,7 @@ subplots.</p>
 
 <dl class="function">
 <dt id="FlowCal.plot.hist1d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">hist1d</code><span class="sig-paren">(</span><em>data_list</em>, <em>channel=0</em>, <em>log=False</em>, <em>div=1</em>, <em>bins=None</em>, <em>histtype='stepfilled'</em>, <em>normed=False</em>, <em>xlabel=None</em>, <em>ylabel=None</em>, <em>xlim=None</em>, <em>ylim=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>legend_loc='best'</em>, <em>legend_fontsize='medium'</em>, <em>legend_labels=None</em>, <em>facecolor=None</em>, <em>edgecolor=None</em>, <em>savefig=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.hist1d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">hist1d</code><span class="sig-paren">(</span><em>data_list</em>, <em>channel=0</em>, <em>log=False</em>, <em>div=1</em>, <em>bins=None</em>, <em>histtype='stepfilled'</em>, <em>normed_area=False</em>, <em>normed_height=False</em>, <em>xlabel=None</em>, <em>ylabel=None</em>, <em>xlim=None</em>, <em>ylim=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>legend_loc='best'</em>, <em>legend_fontsize='medium'</em>, <em>legend_labels=None</em>, <em>facecolor=None</em>, <em>edgecolor=None</em>, <em>savefig=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.hist1d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot one 1D histogram from one or more flow cytometry data sets.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -442,10 +433,18 @@ attempts to extract bins from <code class="docutils literal"><span class="pre">d
 <blockquote>
 <div><p>Histogram type. Directly passed to <code class="docutils literal"><span class="pre">plt.hist</span></code>.</p>
 </div></blockquote>
-<p><strong>normed</strong> : bool, optional</p>
+<p><strong>normed_area</strong> : bool, optional</p>
 <blockquote>
 <div><p>Flag indicating whether to normalize the histogram such that the
-area under the curve is equal to one.</p>
+area under the curve is equal to one. The resulting plot is
+equivalent to a probability density function.</p>
+</div></blockquote>
+<p><strong>normed_height</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag indicating whether to normalize the histogram such that the
+sum of all bins&#8217; heights is equal to one. The resulting plot is
+equivalent to a probability mass function. <cite>normed_height</cite> is
+ignored if <cite>normed_area</cite> is True.</p>
 </div></blockquote>
 <p><strong>savefig</strong> : str, optional</p>
 <blockquote>
@@ -795,7 +794,7 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0b2',
+            VERSION:'1.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

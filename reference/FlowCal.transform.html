@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.transform module &mdash; FlowCal 1.0.0b2 documentation</title>
+  <title>FlowCal.transform module &mdash; FlowCal 1.0.0 documentation</title>
   
 
   
@@ -28,11 +28,13 @@
   
 
   
+    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+  
 
   
-    <link rel="top" title="FlowCal 1.0.0b2 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="Report Bugs" href="../report_bugs.html"/>
+        <link rel="next" title="Contribute" href="../contribute/index.html"/>
         <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html"/> 
 
   
@@ -61,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0b2
+                1.0.0
               </div>
             
           
@@ -82,37 +84,22 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../format_excel.html">Format of the Excel File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../output_excel.html">Outputs of the Excel UI</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="modules.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="">FlowCal.transform module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.transform module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modules.html#module-FlowCal">Module contents</a></li>
-</ul>
-</li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../report_bugs.html">Report Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../request_features.html">Request Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
 </ul>
 
             
@@ -174,43 +161,6 @@ its own restrictions or defaults on <cite>channels</cite>.</p>
 <p>If <cite>data</cite> is an FCSData object, <cite>transform</cite> should rescale <code class="docutils literal"><span class="pre">data.domain</span></code>
 and <code class="docutils literal"><span class="pre">data.hist_bin_edges</span></code> if necessary.</p>
 <dl class="function">
-<dt id="FlowCal.transform.exponentiate">
-<code class="descclassname">FlowCal.transform.</code><code class="descname">exponentiate</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.exponentiate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exponentiate flow cytometry data.</p>
-<p>This function applies the following transformation:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">256</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This spaces out 10-bit data across 4 logs from 1 to 1e4, which rescales
-the fluorecence units to those observed in most flow cytometry
-aquisition software, if a log amplifier has been used.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
-the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
-None, perform transformation in all channels.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
-<blockquote class="last">
-<div><p>NxD transformed flow cytometry data.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="FlowCal.transform.to_mef">
 <code class="descclassname">FlowCal.transform.</code><code class="descname">to_mef</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>sc_list</em>, <em>sc_channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_mef" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform flow cytometry data using a standard curve function.</p>
@@ -261,6 +211,62 @@ None, use all channels in <cite>data</cite>.</p>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
 <blockquote class="last">
 <div><p>If any channel specified in <cite>channels</cite> is not in <cite>sc_channels</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.transform.to_rfi">
+<code class="descclassname">FlowCal.transform.</code><code class="descname">to_rfi</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em>, <em>max_range=None</em>, <em>amplification_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_rfi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform flow cytometry data to Relative Fluorescence Units (RFI).</p>
+<p>This function applies the following transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">r</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal"><span class="pre">x</span></code> and <code class="docutils literal"><span class="pre">y</span></code> are the original and transformed data,
+respectively; <code class="docutils literal"><span class="pre">a</span></code> is the amplification type argument, and <code class="docutils literal"><span class="pre">r</span></code> is
+the max range argument. This will transform flow cytometry data taken
+with a log amplifier and an ADC of range <code class="docutils literal"><span class="pre">r</span></code> to linear scale, such
+that it covers <code class="docutils literal"><span class="pre">a[0]</span></code> decades of signal with a minimum value of
+<code class="docutils literal"><span class="pre">a[1]</span></code>. If <code class="docutils literal"><span class="pre">a[0]==0</span></code>, however, data is already in linear scale and
+no transformation is applied.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
+<blockquote>
+<div><p>NxD flow cytometry data where N is the number of events and D is
+the number of parameters (aka channels).</p>
+</div></blockquote>
+<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
+<blockquote>
+<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+None, perform transformation in all channels.</p>
+</div></blockquote>
+<p><strong>max_range</strong> : int, float, or list of int or float</p>
+<blockquote>
+<div><p>Maximum range, for each specified channel. If None, take
+<cite>max_range</cite> from <code class="docutils literal"><span class="pre">len(data.domain(channel))</span></code>.</p>
+</div></blockquote>
+<p><strong>amplification_type</strong> : tuple or list of tuple</p>
+<blockquote>
+<div><p>The amplification type of the specified channel(s). This should be
+reported as a tuple, in which the first element indicates how many
+decades the logarithmic amplifier covers, and the second indicates
+the linear value that corresponds to a channel value of zero. If
+the first element is zero, the amplification type is linear. If
+None, take <cite>amplification_type</cite> from
+<code class="docutils literal"><span class="pre">data.amplification_type(channel)</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
+<blockquote class="last">
+<div><p>NxD transformed flow cytometry data.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -321,7 +327,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../report_bugs.html" class="btn btn-neutral float-right" title="Report Bugs" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../contribute/index.html" class="btn btn-neutral float-right" title="Contribute" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="FlowCal.stats.html" class="btn btn-neutral" title="FlowCal.stats module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -355,7 +361,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0b2',
+            VERSION:'1.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

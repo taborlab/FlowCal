@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.excel_ui module &mdash; FlowCal 1.0.0b2 documentation</title>
+  <title>FlowCal.excel_ui module &mdash; FlowCal 1.0.0 documentation</title>
   
 
   
@@ -28,9 +28,11 @@
   
 
   
+    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+  
 
   
-    <link rel="top" title="FlowCal 1.0.0b2 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.gate module" href="FlowCal.gate.html"/>
         <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html"/> 
@@ -61,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0b2
+                1.0.0
               </div>
             
           
@@ -82,37 +84,22 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../format_excel.html">Format of the Excel File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../output_excel.html">Outputs of the Excel UI</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../tutorial_python.html">FlowCal Tutorial in Python</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="modules.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="">FlowCal.excel_ui module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.excel_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlowCal.transform.html">FlowCal.transform module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modules.html#module-FlowCal">Module contents</a></li>
-</ul>
-</li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../report_bugs.html">Report Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../request_features.html">Request Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
 </ul>
 
             
@@ -161,33 +148,154 @@
             
   <div class="section" id="module-FlowCal.excel_ui">
 <span id="flowcal-excel-ui-module"></span><h1>FlowCal.excel_ui module<a class="headerlink" href="#module-FlowCal.excel_ui" title="Permalink to this headline">¶</a></h1>
-<p><cite>FlowCal</cite>&#8216;s Microsoft Excel User Interface.</p>
+<p><code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Microsoft Excel User Interface.</p>
 <p>This module contains functions to read, gate, and transform data from a set
-of FCS files, according to an input Microsoft Excel file. This file should
-contain the following tables:</p>
+of FCS files, as specified by an input Microsoft Excel file. This file
+should contain the following tables:</p>
 <blockquote>
 <div><ul class="simple">
-<li>&#8220;Instruments&#8221; table (TODO: describe fields of the table)</li>
-<li>&#8220;Beads&#8221; table (TODO: describe fields of the table)</li>
-<li>&#8220;Samples&#8221; table (TODO: describe fields of the table)</li>
+<li><strong>Instruments</strong>: Describes the instruments used to acquire the
+samples listed in the other tables. Each instrument is specified by a
+row containing at least the following fields:<ul>
+<li><strong>ID</strong>: Short string identifying the instrument. Will be referenced
+by samples in the other tables.</li>
+<li><strong>Forward Scatter Channel</strong>: Name of the forward scatter channel,
+as specified by the <code class="docutils literal"><span class="pre">$PnN</span></code> keyword in the associated FCS files.</li>
+<li><strong>Side Scatter Channel</strong>: Name of the side scatter channel, as
+specified by the <code class="docutils literal"><span class="pre">$PnN</span></code> keyword in the associated FCS files.</li>
+<li><strong>Fluorescence Channels</strong>: Name of the fluorescence channels in a
+comma-separated list, as specified by the <code class="docutils literal"><span class="pre">$PnN</span></code> keyword in the
+associated FCS files.</li>
+<li><strong>Time Channel</strong>: Name of the time channel, as specified by the
+<code class="docutils literal"><span class="pre">$PnN</span></code> keyword in the associated FCS files.</li>
+</ul>
+</li>
+<li><strong>Beads</strong>: Describes the calibration beads samples that will be used
+to calibrate cell samples in the <strong>Samples</strong> table. The following
+information should be available for each beads sample:<ul>
+<li><strong>ID</strong>: Short string identifying the beads sample. Will be
+referenced by cell samples in the <strong>Samples</strong> table.</li>
+<li><strong>Instrument ID</strong>: ID of the instrument used to acquire the sample.
+Must match one of the rows in the <strong>Instruments</strong> table.</li>
+<li><strong>File Path</strong>: Path of the FCS file containing the sample&#8217;s data.</li>
+<li><strong>&lt;Fluorescence Channel Name&gt; MEF Values</strong>: The fluorescence in MEF
+of each bead subpopulation, as given by the manufacturer, as a
+comma-separated list of numbers. Any element of this list can be
+replaced with the word <code class="docutils literal"><span class="pre">None</span></code>, in which case the corresponding
+subpopulation will not be used when fitting the beads fluorescence
+model. Note that the number of elements in this list (including
+the elements equal to <code class="docutils literal"><span class="pre">None</span></code>) are the number of subpopulations
+that <code class="docutils literal"><span class="pre">FlowCal</span></code> will try to find.</li>
+<li><strong>Gate fraction</strong>: The fraction of events to keep from the sample
+after density-gating in the forward/side scatter channels.</li>
+<li><strong>Clustering Channels</strong>: The fluorescence channels used to identify
+the different bead subpopulations.</li>
+</ul>
+</li>
+<li><strong>Samples</strong>: Describes the biological samples to be processed. The
+following information should be available for each sample:<ul>
+<li><strong>ID</strong>: Short string identifying the sample. Will be used as part
+of the plot&#8217;s filenames and in the <strong>Histograms</strong> table in the
+output Excel file.</li>
+<li><strong>Instrument ID</strong>: ID of the instrument used to acquire the sample.
+Must match one of the rows in the <strong>Instruments</strong> table.</li>
+<li><strong>Beads ID</strong>: ID of the beads sample used to convert data to
+calibrated MEF.</li>
+<li><strong>File Path</strong>: Path of the FCS file containing the sample&#8217;s data.</li>
+<li><strong>&lt;Fluorescence Channel Name&gt; Units</strong>: Units to which the event
+list in the specified fluorescence channel should be converted, and
+all the subsequent plots and statistics should be reported. Should
+be one of the following: &#8220;Channel&#8221; (raw units), &#8220;a.u.&#8221; or &#8220;RFI&#8221;
+(arbitrary units) or &#8220;MEF&#8221; (calibrated Molecules of Equivalent
+Fluorophore). If &#8220;MEF&#8221; is specified, the <strong>Beads ID</strong> should be
+populated, and should correspond to a beads sample with the
+<strong>MEF Values</strong> specified for the same channel.</li>
+<li><strong>Gate fraction</strong>: The fraction of events to keep from the sample
+after density-gating in the forward/side scatter channels.</li>
+</ul>
+</li>
 </ul>
 </div></blockquote>
+<p>Any columns other than the ones specified above can be present, but will be
+ignored by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
+<dl class="exception">
+<dt id="FlowCal.excel_ui.ExcelUIException">
+<em class="property">exception </em><code class="descclassname">FlowCal.excel_ui.</code><code class="descname">ExcelUIException</code><a class="headerlink" href="#FlowCal.excel_ui.ExcelUIException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>FlowCal Excel UI Error.</p>
+</dd></dl>
+
 <dl class="function">
-<dt id="FlowCal.excel_ui.add_stats">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">add_stats</code><span class="sig-paren">(</span><em>samples_table</em>, <em>samples</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.add_stats" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add stats fields to samples table.</p>
-<p>The following numbers are added to each row:</p>
+<dt id="FlowCal.excel_ui.add_beads_stats">
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">add_beads_stats</code><span class="sig-paren">(</span><em>beads_table</em>, <em>beads_samples</em>, <em>mef_outputs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.add_beads_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add stats fields to beads table.</p>
+<p>The following information is added to each row:</p>
 <blockquote>
 <div><ul class="simple">
+<li>Notes (warnings, errors) resulting from the analysis</li>
 <li>Number of Events</li>
 <li>Acquisition Time (s)</li>
 </ul>
 </div></blockquote>
-<p>The following stats are added for each row, for each channel in which
-fluorescence units have been specified:</p>
+<p>The following information is added for each row, for each channel in
+which MEF values have been specified:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Gain</li>
+<li>Detector voltage (gain)</li>
+<li>Amplification type</li>
+<li>Bead model fitted parameters</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>beads_table</strong> : DataFrame</p>
+<blockquote>
+<div><p>Table specifying bead samples to analyze. For more information
+about the fields required in this table, please consult the
+module&#8217;s documentation.</p>
+</div></blockquote>
+<p><strong>beads_samples</strong> : list</p>
+<blockquote>
+<div><p>FCSData objects from which to calculate statistics.
+<code class="docutils literal"><span class="pre">beads_samples[i]</span></code> should correspond to
+<code class="docutils literal"><span class="pre">beads_table.values()[i]</span></code>.</p>
+</div></blockquote>
+<p><strong>mef_outputs</strong> : list, optional</p>
+<blockquote class="last">
+<div><p>A list with the intermediate results of the generation of the MEF
+transformation functions, as given by <code class="docutils literal"><span class="pre">mef.get_transform_fxn()</span></code>.
+This is used to populate the fields <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Model</span></code>,
+<code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Names</span></code>, and
+<code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Values</span></code>. If specified,
+<code class="docutils literal"><span class="pre">mef_outputs[i]</span></code> should correspond to
+<code class="docutils literal"><span class="pre">beads_table.values()[i]</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.excel_ui.add_samples_stats">
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">add_samples_stats</code><span class="sig-paren">(</span><em>samples_table</em>, <em>samples</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.add_samples_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add stats fields to samples table.</p>
+<p>The following information is added to each row:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Notes (warnings, errors) resulting from the analysis</li>
+<li>Number of Events</li>
+<li>Acquisition Time (s)</li>
+</ul>
+</div></blockquote>
+<p>The following information is added for each row, for each channel in
+which fluorescence units have been specified:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Detector voltage (gain)</li>
+<li>Amplification type</li>
 <li>Mean</li>
 <li>Geometric Mean</li>
 <li>Media</li>
@@ -212,6 +320,33 @@ documentation.</p>
 <blockquote class="last">
 <div><p>FCSData objects from which to calculate statistics. <code class="docutils literal"><span class="pre">samples[i]</span></code>
 should correspond to <code class="docutils literal"><span class="pre">samples_table.values()[i]</span></code></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.excel_ui.generate_about_table">
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">generate_about_table</code><span class="sig-paren">(</span><em>extra_info={}</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.generate_about_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a table with information about FlowCal and the current analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>extra_info</strong> : dict, optional</p>
+<blockquote>
+<div><p>Additional keyword:value pairs to include in the table.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>about_table</strong> : DataFrame</p>
+<blockquote class="last">
+<div><p>Table with information about FlowCal and the current analysis, as
+keyword:value pairs. The following keywords are included: FlowCal
+version, and date and time of analysis. Keywords and values from
+<cite>extra_info</cite> are also included.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -330,11 +465,11 @@ in <cite>beads_table</cite>, in the order of <code class="docutils literal"><spa
 <div><p>A dictionary of MEF transformation functions, indexed by
 <code class="docutils literal"><span class="pre">beads_table.index</span></code>.</p>
 </div></blockquote>
-<p><strong>mef_outputs</strong> : OrderedDict</p>
+<p><strong>mef_outputs</strong> : list</p>
 <blockquote class="last">
-<div><p>A dictionary with the intermediate results of the generation of the
-MEF transformation functions, indexed by <code class="docutils literal"><span class="pre">beads_table.index</span></code>.
-Only included if <cite>full_output</cite> is True.</p>
+<div><p>A list with intermediate results of the generation of the MEF
+transformation functions, indexed by <code class="docutils literal"><span class="pre">beads_table.index</span></code>. Only
+included if <cite>full_output</cite> is True.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -344,7 +479,7 @@ Only included if <cite>full_output</cite> is True.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.process_samples_table">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_samples_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>instruments_table</em>, <em>mef_transform_fxns=None</em>, <em>base_dir=''</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir=''</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_samples_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_samples_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>instruments_table</em>, <em>mef_transform_fxns=None</em>, <em>beads_table=None</em>, <em>base_dir=''</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir=''</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_samples_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load and process FCS files corresponding to samples.</p>
 <p>The function processes each entry in <cite>samples_table</cite>, and does the
 following:</p>
@@ -386,6 +521,17 @@ required in this table, please consult the module&#8217;s documentation.</p>
 in <cite>samples_table</cite> requires transformation to MEF, a key: value
 pair must exist in mef_transform_fxns, with the key being equal to
 the contents of field &#8220;Beads ID&#8221;.</p>
+</div></blockquote>
+<p><strong>beads_table</strong> : DataFrame, optional</p>
+<blockquote>
+<div><p>Table specifying beads samples used to generate
+<cite>mef_transform_fxns</cite>. This is used to check if a beads sample was
+taken at the same acquisition settings as a sample to be
+transformed to MEF. For any beads sample and channel for which a
+MEF transformation function has been generated, the following
+fields should be populated: <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Amp.</span> <span class="pre">Type</span></code> and
+<code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Detector</span> <span class="pre">Volt</span></code>. If <cite>beads_table</cite> is not specified, no
+checking will be performed.</p>
 </div></blockquote>
 <p><strong>base_dir</strong> : str, optional</p>
 <blockquote>
@@ -463,16 +609,40 @@ is empty will not be present in <cite>table</cite>.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.run">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">run</code><span class="sig-paren">(</span><em>verbose=True</em>, <em>plot=True</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">run</code><span class="sig-paren">(</span><em>input_path=None</em>, <em>output_path=None</em>, <em>verbose=True</em>, <em>plot=True</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the MS Excel User Interface.</p>
-<p>This function shows a dialog to open an input Excel workbook, loads FCS
-files and processes them as specified in the spreadsheet, and
-generates plots and an output workbook with statistics for each sample.</p>
+<p>This function performs the following:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>If <cite>input_path</cite> is not specified, show a dialog to choose an input
+Excel file.</li>
+<li>Extract data from the Instruments, Beads, and Samples tables.</li>
+<li>Process all the bead samples specified in the Beads table.</li>
+<li>Generate statistics for each bead sample.</li>
+<li>Process all the cell samples in the Samples table.</li>
+<li>Generate statistics for each sample.</li>
+<li>Generate a histogram table for each fluorescent channel specified
+for each sample.</li>
+<li>Generate a table with run time, date, FlowCal version, among
+others.</li>
+<li>Save statistics and histograms in an output Excel file.</li>
+</ol>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>verbose</strong> : bool, optional</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_path</strong> : str</p>
+<blockquote>
+<div><p>Path to the Excel file to use as input. If None, show a dialog to
+select an input file.</p>
+</div></blockquote>
+<p><strong>output_path</strong> : str</p>
+<blockquote>
+<div><p>Path to which to save the output Excel file. If None, use
+&#8220;<a href="#id1"><span class="problematic" id="id2">`</span></a>input_path`_output&#8221;.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool, optional</p>
 <blockquote>
 <div><p>Whether to print information messages during the execution of this
 function.</p>
@@ -582,7 +752,7 @@ string, and the contents of the table as a DataFrame.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0b2',
+            VERSION:'1.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

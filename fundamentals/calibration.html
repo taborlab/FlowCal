@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Calibration &mdash; FlowCal 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="Fundamentals" href="index.html"/>
+        <link rel="next" title="Density Gating" href="density_gate.html"/>
+        <link rel="prev" title="Fundamentals" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> FlowCal
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Fundamentals</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction-to-calibration-and-mef">Introduction to Calibration and MEF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-process-of-mef-calibration">The Process of MEF Calibration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#measurement-of-calibration-beads">1. Measurement of Calibration Beads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#elimination-of-bead-aggregates-and-other-debris">2. Elimination of Bead Aggregates and Other Debris</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#identification-of-bead-subpopulations">3. Identification of Bead Subpopulations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calculation-of-a-standard-curve">4. Calculation of a Standard Curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#conversion-of-cell-fluorescence-to-mef">5. Conversion of Cell Fluorescence to MEF</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="density_gate.html">Density Gating</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/modules.html">FlowCal (Python API) Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">FlowCal</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Fundamentals</a> &raquo;</li>
+      
+    <li>Calibration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/fundamentals/calibration.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="calibration">
+<h1>Calibration<a class="headerlink" href="#calibration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction-to-calibration-and-mef">
+<h2>Introduction to Calibration and MEF<a class="headerlink" href="#introduction-to-calibration-and-mef" title="Permalink to this headline">¶</a></h2>
+<p>Fluorescence data obtained via flow cytometry is frequently reported in arbitrary units (a.u.), which have the following issues:</p>
+<ol class="arabic simple">
+<li>Fluorescence values in a.u depend on the instrument used.</li>
+<li>Even when using the same instrument, fluorescence values in a.u. depend on the acquisition settings used.</li>
+<li>Even when these two are kept constant, fluorescence values in a.u. can change in time due to instrument drift.</li>
+</ol>
+<p>Because of this, the only meaningful results based on flow cytometry that are frequently presented are ratios of measured reporter in two different conditions (i.e. fold-change). However, absolute levels of reporter cannot be quantitatively compared across laboratories, or between different different biological systems that require different acquisition settings, and not even between different samples of the same system taken by the same person across large periods of time.</p>
+<p>To compensate for some of these effects, manufacturers provide calibration particles. These are a mixture of 4-8 subpopulations of microbeads, each one containing different amounts of a certain fluorophore. The fluorescence of each subpopulation is specified by the manufacturer in <strong>Molecules of Equivalent Fluorophore (MEF)</strong>, the number of fluorophores in solution that result in the same fluorescence as one microbead. Calibration particles can then be measured in every experiment to obtain the fluorescence of each subpopulation in a.u. Using these fluorescence values and the MEF values provided by the manufacturer, one can construct a standard curve that maps fluorescence from a.u. to MEF. This standard curve can then be used to convert the fluorescence of cell samples to MEF.</p>
+<p>Expressing fluorescence of cellular samples in MEF automatically eliminates issues 2 and 3. Issue 1 is also eliminated if the calibration beads&#8217; fluorophore is the same as the one used in cellular samples. If not, instrument-dependence can still be eliminated by performing a one-time calibration using a common cellular sample. At the very least, transforming to MEF makes cellular samples inside a laboratory comparable.</p>
+</div>
+<div class="section" id="the-process-of-mef-calibration">
+<h2>The Process of MEF Calibration<a class="headerlink" href="#the-process-of-mef-calibration" title="Permalink to this headline">¶</a></h2>
+<p>We will now give a short description of the process that <code class="docutils literal"><span class="pre">FlowCal</span></code> uses to calibrate fluorescence data to MEF, and show some of the plots produced in the process. A discussion on the exact figures generated by the Excel UI and how to use these to debug common problems can be found <a class="reference internal" href="../excel_ui/outputs.html"><em>here</em></a>. A more technical discussion of the MEF calibration procedure from the perspective of <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a>, the function that does most of the calibration work, can be found <a class="reference internal" href="../python_tutorial/mef.html"><em>here</em></a>.</p>
+<p>To perform MEF calibration, the following steps are typically followed:</p>
+<div class="section" id="measurement-of-calibration-beads">
+<h3>1. Measurement of Calibration Beads<a class="headerlink" href="#measurement-of-calibration-beads" title="Permalink to this headline">¶</a></h3>
+<p>Calibration beads must be measured in every experiment, using the same acquisition settings as when measuring cell samples. The figure below shows typical flow cytometry data from calibration beads.</p>
+<img alt="https://www.dropbox.com/s/e3md4qnqox3icj0/fundamentals_calibration_1.png?raw=1" src="https://www.dropbox.com/s/e3md4qnqox3icj0/fundamentals_calibration_1.png?raw=1" />
+<p>The top subfigure shows data from the forward/side scatter channels, whereas the bottom one shows one of the fluorescence channels. Note how several populations with different fluorescence values are evident in the bottom plot.</p>
+</div>
+<div class="section" id="elimination-of-bead-aggregates-and-other-debris">
+<h3>2. Elimination of Bead Aggregates and Other Debris<a class="headerlink" href="#elimination-of-bead-aggregates-and-other-debris" title="Permalink to this headline">¶</a></h3>
+<p>Notice, in the figure above, that two different populations are present in the forward/side scatter plot. The faint population on the right/upper portion of the plot corresponds to bead aggregates. These are obviously undesired, as we are only interested in single bead fluorescence. This sort of situation is normally dealt with by &#8220;gating&#8221;, which involves manually drawing a region of interest and retaining the events that fall inside. <code class="docutils literal"><span class="pre">FlowCal</span></code> performs <a class="reference internal" href="density_gate.html"><em>density gating</em></a>, an automated procedure to eliminate aggregates and other events that are clearly different from the main population of interest. The figure below shows a black contour surrounding the region identified by density gating in the forward/side scatter plot, showing that density gating can distinguish single beads from aggregates. Notice also how small peaks in the fluorescence plot disappear after density-gating, which is consistent with the eliminated population being composed of agglomerations of multiple beads.</p>
+<img alt="https://www.dropbox.com/s/qgqcbdqrrrvp7yx/fundamentals_calibration_2.png?raw=1" src="https://www.dropbox.com/s/qgqcbdqrrrvp7yx/fundamentals_calibration_2.png?raw=1" />
+</div>
+<div class="section" id="identification-of-bead-subpopulations">
+<h3>3. Identification of Bead Subpopulations<a class="headerlink" href="#identification-of-bead-subpopulations" title="Permalink to this headline">¶</a></h3>
+<p>In order to calculate the average fluorescence of each subpopulation, the individual events corresponding to each must first be identified. The figure below shows one of the plots produced by <code class="docutils literal"><span class="pre">FlowCal</span></code> after an automated clustering algorithm has properly identified each subpopulation. Note how this can be achieved using information from several fluorescence channels at the same time.</p>
+<img alt="https://www.dropbox.com/s/2ueaelf0jmgigdh/fundamentals_calibration_3.png?raw=1" src="https://www.dropbox.com/s/2ueaelf0jmgigdh/fundamentals_calibration_3.png?raw=1" />
+<p>Next, the average fluorescence of each subpopulation is calculated. Some subpopulations, however, can have fluorescence values that are outside the limit of detection of the instrument, and therefore their events will show saturated fluorescence values. These subpopulations should not be considered further in the analysis. <code class="docutils literal"><span class="pre">FlowCal</span></code> discards these automatically.</p>
+<p>The figure below shows the individual subpopulations with a vertical line representing their median fluorescence. In addition, subpopulations that were automatically discarded are shown colored in gray.</p>
+<img alt="https://www.dropbox.com/s/yemed2xr84xdydj/fundamentals_calibration_4.png?raw=1" src="https://www.dropbox.com/s/yemed2xr84xdydj/fundamentals_calibration_4.png?raw=1" />
+</div>
+<div class="section" id="calculation-of-a-standard-curve">
+<h3>4. Calculation of a Standard Curve<a class="headerlink" href="#calculation-of-a-standard-curve" title="Permalink to this headline">¶</a></h3>
+<p>Having the fluorescence of the individual populations, as measured by the flow cytometer, and the MEF values provided by the manufacturer, a standard curve can be calculated to transform fluorescence of any event to MEF. The figure below shows an example of such a standard curve. <code class="docutils literal"><span class="pre">FlowCal</span></code> uses the concept of a &#8220;bead fluorescence model&#8221;, which is directly fitted to bead data but not immediately applicable to cells. However, some small mathematical manipulations turn this bead fluorescence model into a standard curve that is readily applicable to cells.</p>
+<img alt="https://www.dropbox.com/s/wpysi3gfm8lkxxz/fundamentals_calibration_5.png?raw=1" src="https://www.dropbox.com/s/wpysi3gfm8lkxxz/fundamentals_calibration_5.png?raw=1" />
+<p>Note that in this figure, the numbers produced by the flow cytometer are logarithmically related to fluorescence values. This is true in a flow cytometer that uses a logarithmic amplifier. Instruments with linear amplifiers are treated slightly differently.</p>
+</div>
+<div class="section" id="conversion-of-cell-fluorescence-to-mef">
+<h3>5. Conversion of Cell Fluorescence to MEF<a class="headerlink" href="#conversion-of-cell-fluorescence-to-mef" title="Permalink to this headline">¶</a></h3>
+<p>Finally, the fluorescence of any cell sample can be turned into MEF by using the standard curve obtained above.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="density_gate.html" class="btn btn-neutral float-right" title="Density Gating" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Fundamentals" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

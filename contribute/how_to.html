@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>How to Contribute &mdash; FlowCal 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="Contribute" href="index.html"/>
+        <link rel="next" title="Report Bugs" href="report_bugs.html"/>
+        <link rel="prev" title="Contribute" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> FlowCal
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/modules.html">FlowCal (Python API) Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Contribute</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">How to Contribute</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flowcal-installation-for-developers"><code class="docutils literal"><span class="pre">FlowCal</span></code> Installation for Developers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-control">Version Control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#recommended-workflow">Recommended Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="report_bugs.html">Report Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_features.html">Request Features</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://www.github.com/taborlab/FlowCal">FlowCal on Github</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">FlowCal</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Contribute</a> &raquo;</li>
+      
+    <li>How to Contribute</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/contribute/how_to.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="how-to-contribute">
+<h1>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Permalink to this headline">¶</a></h1>
+<p>If you are interested in contributing to this project, either by writing code, correcting a bug, or adding a new feature, we would love your help! Below we provide some guidelines on how to contribute.</p>
+<div class="section" id="flowcal-installation-for-developers">
+<h2><code class="docutils literal"><span class="pre">FlowCal</span></code> Installation for Developers<a class="headerlink" href="#flowcal-installation-for-developers" title="Permalink to this headline">¶</a></h2>
+<p>Regardless of your OS version, we recommend using <code class="docutils literal"><span class="pre">virtualenv</span></code> for development. A short primer on <code class="docutils literal"><span class="pre">virtualenv</span></code> can be found at <a class="reference external" href="http://docs.python-guide.org/en/latest/dev/virtualenvs/">http://docs.python-guide.org/en/latest/dev/virtualenvs/</a>.</p>
+<p>The recommended way to install <code class="docutils literal"><span class="pre">FlowCal</span></code> for development is to run <code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">develop</span></code>. This will install <code class="docutils literal"><span class="pre">FlowCal</span></code> in a special &#8220;developer&#8221; mode. In this mode, a link pointing to the <code class="docutils literal"><span class="pre">FlowCal</span></code> directory is made in the python installation directory, allowing you to import <code class="docutils literal"><span class="pre">FlowCal</span></code> from any python script, while at the same time being able to modify <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s code and immediately see the resulting effects.</p>
+</div>
+<div class="section" id="version-control">
+<h2>Version Control<a class="headerlink" href="#version-control" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">FlowCal</span></code> uses <code class="docutils literal"><span class="pre">git</span></code> for version control. We try to follow the <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">git-flow</a> branching model. Please familiarize yourself with such model before contributing. A quick summary of relevant branches is given below.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">master</span></code> is only used for final release versions. <strong>Do not</strong> directly commit to <code class="docutils literal"><span class="pre">master</span></code>, ever.</li>
+<li><code class="docutils literal"><span class="pre">develop</span></code> holds unreleased features, which will eventually be released into <code class="docutils literal"><span class="pre">master</span></code>.</li>
+<li><em>Feature branches</em> are branches derived from <code class="docutils literal"><span class="pre">develop</span></code>, in which new features are committed. When the feature is completed, a merge request towards <code class="docutils literal"><span class="pre">develop</span></code> should be made.</li>
+</ul>
+</div>
+<div class="section" id="recommended-workflow">
+<h2>Recommended Workflow<a class="headerlink" href="#recommended-workflow" title="Permalink to this headline">¶</a></h2>
+<p>A recommended workflow for contributing to <code class="docutils literal"><span class="pre">FlowCal</span></code> is as follows:</p>
+<ol class="arabic simple">
+<li>Report your intended change in the issue tracker on <code class="docutils literal"><span class="pre">github</span></code>. If reporting a bug, please be as detailed as possible and try to include the necessary steps to reproduce the problem. If suggesting a feature, indicate if you&#8217;re willing to write the code for it.</li>
+<li>Assuming that you decided to write code, clone the repo in your computer. You can use the command <code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/taborlab/FlowCal</span></code> if you are using the command-line version of <code class="docutils literal"><span class="pre">git</span></code>.</li>
+<li>Switch to the develop branch, using <code class="docutils literal"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">develop</span></code>.</li>
+<li>Create a new feature branch, using <code class="docutils literal"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">&lt;feature_name&gt;</span></code>.</li>
+<li>Set up your virtual environment, if desired.</li>
+<li>Install <code class="docutils literal"><span class="pre">FlowCal</span></code> in developer mode, using <code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">develop</span></code>.</li>
+<li>Write/test code, commit. Repeat until feature is fully implemented.</li>
+<li>Push and submit a merge request towards <code class="docutils literal"><span class="pre">develop</span></code>.</li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="report_bugs.html" class="btn btn-neutral float-right" title="Report Bugs" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Contribute" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

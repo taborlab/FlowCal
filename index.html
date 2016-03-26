@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal &mdash; FlowCal 1.0.0b2 documentation</title>
+  <title>FlowCal &mdash; FlowCal 1.0.0 documentation</title>
   
 
   
@@ -28,10 +28,12 @@
   
 
   
+    <link rel="stylesheet" href="_static/my_style.css" type="text/css" />
+  
 
   
-    <link rel="top" title="FlowCal 1.0.0b2 documentation" href="#"/>
-        <link rel="next" title="Installation" href="installation.html"/> 
+    <link rel="top" title="FlowCal 1.0.0 documentation" href="#"/>
+        <link rel="next" title="Getting Started" href="getting_started/index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                1.0.0b2
+                1.0.0
               </div>
             
           
@@ -81,23 +83,12 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="format_excel.html">Format of the Excel File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_excel.html">Outputs of the Excel UI</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial_python.html">FlowCal Tutorial in Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fundamentals/index.html">Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/modules.html">FlowCal (Python API) Reference</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="report_bugs.html">Report Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_features.html">Request Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute/index.html">Contribute</a></li>
 </ul>
 
             
@@ -144,52 +135,65 @@
             
   <div class="section" id="flowcal">
 <h1>FlowCal<a class="headerlink" href="#flowcal" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal"><span class="pre">FlowCal</span></code> is a library for processing, calibrating, and analyzing flow cytometry data in Python.
+<p><code class="docutils literal"><span class="pre">FlowCal</span></code> is a library for reading, analyzing, and calibrating flow cytometry data in Python.
 It features:</p>
 <ul class="simple">
 <li>Extraction of Flow Cytometry Standard (FCS) files into numpy array-like structures</li>
 <li>Traditional and non-standard gating, including automatic density-based two-dimensional gating.</li>
-<li>Traditional transformation functions, such as exponentiation.</li>
-<li>Analysis of calibration beads data, standard curve generation, and transformation to absolute units (Molecules of Equivalent Fluorophore, MEF).</li>
+<li>Transformation functions that allow conversion of data from raw FCS channel numbers to arbitrary fluorescence units (a.u.).</li>
 <li>Plotting, including generation of histograms, density plots and scatter plots.</li>
-<li>A user-fiendly Excel UI to gate, transform, calibrate, plot, and generate statistics from a list of flow cytometry samples in a simple fashion.</li>
 </ul>
-<div class="section" id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>Most importantly, <code class="docutils literal"><span class="pre">FlowCal</span></code> automatically processes calibration beads data in order to convert fluorescence to calibrated units, <strong>Molecules of Equivalent Fluorophore (MEF)</strong>. The most important advantages of using MEF are 1) fluorescence can be reported independently of acquisition settings, and 2) variation in data due to instrument shift is eliminated.</p>
+<p>Finally, <code class="docutils literal"><span class="pre">FlowCal</span></code> includes a user-fiendly Excel User Interface to perform all of these operations automatically, without the need to write any code.</p>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/install_anaconda.html">Installing FlowCal with Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started/install_python.html">Installing FlowCal in an Existing Python Evironment</a></li>
 </ul>
-</div>
-</div>
-<div class="section" id="using-flowcal-s-excel-ui">
-<h2>Using FlowCal&#8217;s Excel UI<a class="headerlink" href="#using-flowcal-s-excel-ui" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial_excel.html">FlowCal&#8217;s Excel UI Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="format_excel.html">Format of the Excel File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_excel.html">Outputs of the Excel UI</a></li>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fundamentals/index.html">Fundamentals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fundamentals/calibration.html">Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fundamentals/density_gate.html">Density Gating</a></li>
 </ul>
-</div>
-</div>
-<div class="section" id="using-flowcal-from-python">
-<h2>Using FlowCal from Python<a class="headerlink" href="#using-flowcal-from-python" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial_python.html">FlowCal Tutorial in Python</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/modules.html">FlowCal (Python API) Reference</a></li>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="excel_ui/index.html">FlowCal&#8217;s Excel UI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="excel_ui/how_to.html">How to use FlowCal&#8217;s Excel UI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="excel_ui/input_format.html">Format of the Input Excel File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="excel_ui/analysis.html">Analysis Performed by the Excel UI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="excel_ui/outputs.html">Outputs of the Excel UI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="excel_ui/cmd_interface.html">Command Line Interface (Advanced)</a></li>
 </ul>
-</div>
-</div>
-<div class="section" id="more-information">
-<h2>More Information<a class="headerlink" href="#more-information" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="report_bugs.html">Report Bugs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_features.html">Request Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://www.github.com/rice-bioe/fc">FlowCal on Github</a></li>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/read.html">Reading Flow Cytometry Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/transform.html">Transforming Flow Cytometry Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/plot.html">Plotting Flow Cytometry Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/gate.html">Gating Flow Cytometry Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/mef.html">Calibrating Flow Cytometry Data to MEF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_tutorial/excel_ui.html">Processing FCS Files with the Excel UI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/modules.html">FlowCal (Python API) Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.gate.html">FlowCal.gate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.io.html">FlowCal.io module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.mef.html">FlowCal.mef module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.plot.html">FlowCal.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.stats.html">FlowCal.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/FlowCal.transform.html">FlowCal.transform module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribute/index.html">Contribute</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contribute/how_to.html">How to Contribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribute/report_bugs.html">Report Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribute/request_features.html">Request Features</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://www.github.com/taborlab/FlowCal">FlowCal on Github</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -202,7 +206,7 @@ It features:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="getting_started/index.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -234,7 +238,7 @@ It features:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.0b2',
+            VERSION:'1.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
