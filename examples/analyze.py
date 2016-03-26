@@ -106,8 +106,9 @@ if __name__ == "__main__":
     data = [FlowCal.gate.high_low(di, sc_channels) for di in data]
     # Gating of fluorescence channels
     data = [FlowCal.gate.high_low(di, mef_channels) for di in data]
-    # Exponential transformation
-    data_transf = [FlowCal.transform.exponentiate(di, sc_channels)
+    # Transform to Relative Fluorescence Units (rfi), commonly known as
+    # arbitrary units (a.u.)
+    data_transf = [FlowCal.transform.to_rfi(di, sc_channels)
                    for di in data]
 
     # Transform to MEF
