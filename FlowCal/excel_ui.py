@@ -19,6 +19,7 @@ import subprocess
 import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+import tkFont
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -88,7 +89,7 @@ def read_table(filename, sheetname, index_col=None):
 
     return table
 
-def write_workbook(filename, table_list):
+def write_workbook(filename, table_list, column_width='auto'):
     """
     Write an Excel workbook from a list of tables.
 
@@ -100,6 +101,9 @@ def write_workbook(filename, table_list):
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
+    column_width: int or string, optional
+        The column width to use when saving the spreadsheet. If `auto`,
+        calculate width automatically.
 
     """
     # Modify default header format
@@ -107,6 +111,12 @@ def write_workbook(filename, table_list):
     # use bold text only, without borders.
     old_header_style = pd.core.format.header_style
     pd.core.format.header_style = {"font": {"bold": True}}
+
+    # Generate font objects if required
+    if column_width=='auto':
+        root = Tk()
+        column_font = tkFont.Font(family="Calibri", size=11, weight="normal")
+        header_font = tkFont.Font(family="Calibri", size=11, weight="bold")
 
     # Generate output writer object
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -118,11 +128,23 @@ def write_workbook(filename, table_list):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        for i, (col_name, column) in enumerate(df.iteritems()):
-            # Get the maximum number of characters in a column, including title
-            max_chars_col = column.astype(str).str.len().max()
-            max_chars_col = max(len(col_name), max_chars_col)
-            writer.sheets[sheet_name].set_column(i, i, width=1.*max_chars_col)
+        if column_width=='auto':
+            for i, (col_name, column) in enumerate(df.iteritems()):
+                # Get the maximum number of characters in a column,
+                # including title
+                column_max_width = \
+                    column.astype(str).apply(column_font.measure).max()
+                header_width = header_font.measure(col_name)
+                column_max_width = max(header_width, column_max_width)
+                writer.sheets[sheet_name].set_column(
+                    i,
+                    i,
+                    width=column_max_width/7.0 + 1.0)
+        else:
+            writer.sheets[sheet_name].set_column(
+                0,
+                len(df.columns) - 1,
+                width=column_width)
 
     # Write excel file
     writer.save()
