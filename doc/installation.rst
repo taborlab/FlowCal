@@ -15,7 +15,7 @@ To install Anaconda, do the following:
 
 4. Inside the unzipped folder, double click on ``Install FlowCal (Windows).bat`` or ``Install FlowCal (OSX)`` if you are using Windows or OS X, respectively. This will open a terminal window and install ``FlowCal``. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. If the installation was successful, your terminal should look like the figure below. Press Enter to close the terminal window.
 
-.. image:: _static/installation_completed.png
+.. image:: https://www.dropbox.com/s/4jsn9y7u3wo8srt/installation_completed.png?raw=1
 
 .. note:: **Windows**: If the following message appears after double clicking ``Install FlowCal (Windows)``: “Windows protected your PC – Windows SmartScreen prevented an unrecognized app from starting...”, click on the “More info” link under the text, and then click on the “Run anyway” button. This will remove the security restriction from the program and allow it to run properly.
 
