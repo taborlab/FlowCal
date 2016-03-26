@@ -10,7 +10,7 @@ To start, navigate to the ``examples`` directory included with FlowCal, and open
 Introduction
 ------------
 
-``FlowCal`` is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the :doc:`MEF tutorial </python_tutorial/mef>`, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might want to follow a procedure similar to this:
+``FlowCal`` is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the :doc:`MEF tutorial </python_tutorial/mef>`, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might simply want to follow a procedure similar to this:
 
 1. Open calibration beads files
 2. Perform density gating in forward/side scatter to eliminate bead aggregates
@@ -23,7 +23,7 @@ After this, what follows is highly dependent on the type of experiment. Some mig
 
 However, some applications demand more complicated downstream processing, such as n-dimensional fluorescence analysis, which will inevitably require programming. In these cases, one can still use ``FlowCal``'s Excel UI to process files as above, and return transformed and gated ``FCSData`` objects for each specified FCS file to python, along with extra information contained in the input Excel file. This workflow combines the convenience of maintaining experimental information in an Excel file, the consistency of a standard FCS file processing pipeline, and the power of performing numerical analysis in python. We will now describe how to do this.
 
-Processing samples with the Excel UI
+Processing Samples with the Excel UI
 ------------------------------------
 
 For this tutorial, we will analyze all the data in the ``examples/FCFiles`` folder using the input Excel file, ``examples/experiment.xlsx``. This is the same file described in the :doc:`Excel UI documentation </excel_ui/index>`.

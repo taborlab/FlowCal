@@ -22,7 +22,7 @@ Let's now visualize the contents of the ``FL1`` channel. We will explore ``FlowC
 
 .. image:: https://www.dropbox.com/s/nh5nnfxijut3s20/python_tutorial_transform_1.png?raw=1
 
-Note that the range of the x axis is from 0 to 1024. However, our acquisition software showed fluorescence values from 1 to 10000. Where does the difference come from? An FCS file normally stores raw numbers as they are are reported by the instrument sensors. These are referred to as "channel numbers". The FCS file also contains enough information to transform these numbers back to proper fluorescence units, called Relative Fluorescence Intensities (RFI), or more commonly, arbitrary fluorescence units (a.u.). This conversion sometimes involves a simple scaling factor, but other times requires a non-straigthforward exponential transformation. The latter is our case.
+Note that the range of the x axis is from 0 to 1024. However, our acquisition software showed fluorescence values from 1 to 10000. Where does the difference come from? An FCS file normally stores raw numbers as they are are reported by the instrument sensors. These are referred to as "channel numbers". The FCS file also contains enough information to transform these numbers back to proper fluorescence units, called Relative Fluorescence Intensities (RFI), or more commonly, arbitrary fluorescence units (a.u.). Depending on the instrument used, this conversion sometimes involves a simple scaling factor, but other times requires a non-straigthforward exponential transformation. The latter is our case.
 
 Fortunately, ``FlowCal`` includes :func:`FlowCal.transform.to_rfi`, a function that reads all the necessary paremeters from the FCS file and figures out how to convert data back to a.u.
 

@@ -1,4 +1,4 @@
-Analysis performed by the Excel UI
+Analysis Performed by the Excel UI
 ==================================
 
 The analysis that FlowCal's Excel UI performs is divided roughly in two phases: processing of calibration beads and processing of samples. We will now describe the steps involved in each.
@@ -15,14 +15,14 @@ The following steps are performed for each calibration beads sample specified in
 
 :ref:`Plots<excel-ui-outputs-plots>` are generated for each one of these steps, and some intermediate results are saved to the :ref:`output Excel file<excel-ui-outputs-excel>`.
 
-For a more technical discussion of flow cytometry calibration, go to the :doc:`fundamentals of calibration</fundamentals/calibration>` section.
+For an introductory discussion of flow cytometry calibration, go to the :doc:`fundamentals of calibration</fundamentals/calibration>` section.
 
 Processing of Cell Samples
 --------------------------
 The following steps are performed for each cell sample specified in the **Samples** sheet of the :doc:`input Excel file<input_format>`:
 
 1. :doc:`Density gating</fundamentals/density_gate>` is applied in the forward/side scatter channels.
-2. Fluorescence data for each specified fluorescence channel is transformed to the units specified in the "Units" columns of the :doc:`input Excel file<input_format>`.
+2. Fluorescence data for each specified fluorescence channel is transformed to the units specified in the **Units** column of the :doc:`input Excel file<input_format>`.
 3. :ref:`Statistics<excel-ui-outputs-excel>` of the specified fluorescence channels are calculated, including mean, standard deviation, and others. A histogram of each fluorescence channel is also generated.
 
 Statistics and histograms are saved to the :ref:`output Excel file<excel-ui-outputs-excel>`.

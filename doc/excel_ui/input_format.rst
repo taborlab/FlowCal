@@ -10,7 +10,7 @@ An example of a properly formatted Excel input file is provided in the ``example
 Instruments sheet
 -----------------
 
-This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument; however ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an **Instruments** sheet.
+This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument. However, ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an **Instruments** sheet.
 
 .. image:: https://www.dropbox.com/s/jb5yvrz9p1mshr9/spreadsheet_instruments.png?raw=1
 
@@ -63,4 +63,4 @@ For each row, the following columns must be filled:
 
 Additional columns, such as **Strain name** and **IPTG (µM)** (columns J and K), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
 
-Note that if MEF units are requested for a fluorescence channel of a sample, an FCS file with calibration beads data should be specified in the **Beads ID** column. Both beads and samples should have been acquired at the same settings for the specified fluorescence channel, otherwise ``FlowCal`` will throw an error.
+.. warning:: If MEF units are requested for a fluorescence channel of a sample, an FCS file with calibration beads data should be specified in the **Beads ID** column. Both beads and samples should have been acquired at the same settings for the specified fluorescence channel, otherwise ``FlowCal`` will throw an error.

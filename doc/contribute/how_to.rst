@@ -6,7 +6,7 @@ If you are interested in contributing to this project, either by writing code, c
 ---------------------------------------
 Regardless of your OS version, we recommend using ``virtualenv`` for development. A short primer on ``virtualenv`` can be found at http://docs.python-guide.org/en/latest/dev/virtualenvs/.
 
-The recommended way to install ``FlowCal`` for development is to run ``python setup.py develop``. This will install ``FlowCal`` in a special "developer" mode. In this mode, a link pointing to the repo is made in the python installation directory, allowing you to import ``FlowCal`` from any python script, while at the same time being able to modify the repo code and immediately see the modifications.
+The recommended way to install ``FlowCal`` for development is to run ``python setup.py develop``. This will install ``FlowCal`` in a special "developer" mode. In this mode, a link pointing to the ``FlowCal`` directory is made in the python installation directory, allowing you to import ``FlowCal`` from any python script, while at the same time being able to modify ``FlowCal``'s code and immediately see the resulting effects.
 
 Version Control
 ---------------

@@ -77,7 +77,7 @@ The color indicates the number of events in the region, with red indicating a bi
 
 .. image:: https://www.dropbox.com/s/9okm2e95sthmuam/python_tutorial_plot_6.png?raw=1
 
-Both plots show events concentrated in the same four regions: two, at the left, with events saturating at the lowest detectable value of the ``FSC`` channel, one at the middle-low portion of the plot, and one at the middle-high. By looking at the shape of the different populations we know that only events in the last region are cells. We will learn how to "gate", or select only one population, in the :doc:`gating tutorial </python_tutorials/gate>`
+Both plots show events concentrated in the same four regions: two, at the left, with events saturating at the lowest detectable value of the ``FSC`` channel, one at the middle-lower portion of the plot, and one at the middle-upper portion. By looking at the shape of the different populations we know that only events in the last region are cells. We will learn how to "gate", or select only one population, in the :doc:`gating tutorial </python_tutorials/gate>`
 
 Combined Histogram and Density Plots
 ------------------------------------

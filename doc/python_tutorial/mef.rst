@@ -40,7 +40,7 @@ MEF Transformation in ``FlowCal``
 
 We saw in the :doc:`transformation tutorial </python_tutorial/transform>` that a transformation function is needed to convert flow cytometry data from raw sensor numbers, as stored in FCS files, to fluorescence values in a.u. Similarly, ``FlowCal`` uses transformation functions to convert raw flow cytometry data to MEF. However, these functions have to be generated during analysis using a calibration bead sample. Once a function is generated, though, it can be used to convert many cell samples to MEF, provided that beads and samples have been acquired using the same settings.
 
-Generating a transformation function from calibration beads data is a complicated process, therefore ``FlowCal`` has an entire module dedicated to it: :mod:`FlowCal.mef`. The main function in this module, :func:`FlowCal.mef.get_transform_fxn`, requires at least the following: calibration beads data, the names of the channels for which a MEF transformation function should be generated, and manufacturer-provided MEF values of each subpopulation for each channel. Let's now use :func:`FlowCal.mef.get_transform_fxn` to obtain a transformation function.
+Generating a transformation function from calibration beads data is a complicated process, therefore ``FlowCal`` has an entire module dedicated to it: :mod:`FlowCal.mef`. The main function in this module, :func:`FlowCal.mef.get_transform_fxn`, requires at least the following information: calibration beads data, the names of the channels for which a MEF transformation function should be generated, and manufacturer-provided MEF values of each subpopulation for each channel. Let's now use :func:`FlowCal.mef.get_transform_fxn` to obtain a transformation function.
 
 >>> # Obtain transformation function
 >>> # The following MEFL values were provided by the beads' manufacturer
@@ -50,7 +50,7 @@ Generating a transformation function from calibration beads data is a complicate
 ...                                        mef_channels='FL1',
 ...                                        plot=True)
 
-The argument ``plot`` instructs :func:`FlowCal.mef.get_transform_fxn` to generate and save plots detailing the individual steps of bead data analysis. We will look at these plots and how to interpret them in the next section. We recommend to always generate these plots to confirm that the standard curve was generated properly.
+The argument ``plot`` instructs :func:`FlowCal.mef.get_transform_fxn` to generate and save plots showing the individual steps of bead data analysis. We will look at these plots and how to interpret them in the next section. We recommend to always generate these plots to confirm that the standard curve was generated properly.
 
 Let's now use ``to_mef`` to transform fluroescence data to MEF.
 

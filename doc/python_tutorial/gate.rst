@@ -67,7 +67,7 @@ The disadvantage of this gate is that several parameters need to be specified, w
 
 Density Gate
 ------------
-:func:`FlowCal.gate.density2d` automatically identifies the region with the highest density of events in a two-dimensional diagram, and calculates how big it should be to capture a certain percentage of the total event count, which reduces the number of parameters to choose to one. Let's now try to separate cells from debris using this method.
+:func:`FlowCal.gate.density2d` automatically identifies the region with the highest density of events in a two-dimensional diagram, and calculates how big it should be to capture a certain percentage of the total event count. One effect is that the number of user-defined parameters is reduced to one. Let's now try to separate cells from debris using this method.
 
 >>> s_g4 = FlowCal.gate.density2d(s_g1,
 ...                               channels=['FSC', 'SSC'],
