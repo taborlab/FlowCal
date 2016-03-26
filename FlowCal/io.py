@@ -1001,7 +1001,7 @@ class FCSData(np.ndarray):
         channels : int, str, list of int, list of str
             Channel(s) for which to get the amplification type. If None,
             return a list with the amplification type of all channels, in
-            the order of the `channels` attribute.
+            the order of ``FCSData.channels``.
 
         Return
         ------
@@ -1039,7 +1039,7 @@ class FCSData(np.ndarray):
         channels : int, str, list of int, list of str
             Channel(s) for which to get the detector voltage. If None,
             return a list with the detector voltage of all channels, in the
-            order of the `channels` attribute.
+            order of ``FCSData.channels``.
 
         Return
         ------
@@ -1074,7 +1074,7 @@ class FCSData(np.ndarray):
         channels : int, str, list of int, list of str
             Channel(s) for which to get the amplifier gain. If None,
             return a list with the amplifier gain of all channels, in the
-            order of the `channels` attribute.
+            order of ``FCSData.channels``.
 
         Return
         ------
@@ -1116,8 +1116,8 @@ class FCSData(np.ndarray):
         ----------
         channels : int, str, list of int, list of str
             Channel(s) for which to get the range. If None, return a list
-            with the range of all channels, in the order of the `channels`
-            attribute.
+            with the range of all channels, in the order of
+            ``FCSData.channels``.
 
         Return
         ------
@@ -1150,8 +1150,8 @@ class FCSData(np.ndarray):
         ----------
         channels : int, str, list of int, list of str
             Channel(s) for which to get the resolution. If None, return a
-            list with the resolution of all channels, in the order of the
-            `channels` attribute.
+            list with the resolution of all channels, in the order of
+            ``FCSData.channels``.
 
         Return
         ------
@@ -1184,8 +1184,8 @@ class FCSData(np.ndarray):
         ----------
         channels : int, str, list of int, list of str
             Channel(s) for which to get the histogram bins. If None, return
-            a list with bins for all channels, in the order of the
-            `channels` attribute.
+            a list with bins for all channels, in the order of
+            ``FCSData.channels``.
         nbins : int or list of ints, optional
             The number of bins to calculate. If `channels` specified a list
             of channels, `nbins` should be a list of integers. If `nbins`
