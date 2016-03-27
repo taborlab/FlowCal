@@ -266,14 +266,26 @@ def density2d(data,
     channels : list of int, list of str, optional
         Two channels on which to perform gating.
     bins : int or array_like or [int, int] or [array, array], optional
-        If `bins` is an integer, it specifies the number of bins to use for
-        both axes. If `bins` is a list of two integers, it specifies the
-        number of bins to use for each axis. If `bins` is an array, it
-        specifies the bin edges to use for both or each axes. If `bins` is
-        a list of two arrays, it specifies the bin edges to use for each
-        axis. If `bins` is None, an integer or a list of two integers,
-        `density2d` will attempt to use ``data.hist_bins`` to generate
-        the bins automatically.
+        Bins used for gating:
+          - If None, use ``data.hist_bins`` to obtain bin edges for both
+            axes. None is not allowed if ``data.hist_bins`` is not
+            available.
+          - If int, `bins` specifies the number of bins to use for both
+            axes. If ``data.hist_bins`` exists, it will be used to generate
+            a number `bins` of bins.
+          - If array_like, `bins` directly specifies the bin edges to use
+            for both axes.
+          - If [int, int], each element of `bins` specifies the number of
+            bins for each axis. If ``data.hist_bins`` exists, use it to
+            generate ``bins[0]`` and ``bins[1]`` bin edges, respectively.
+          - If [array, array], each element of `bins` directly specifies
+            the bin edges to use for each axis.
+          - Any combination of the above, such as [int, array], [None,
+            int], or [array, int]. In this case, None indicates to generate
+            bin edges using ``data.hist_bins`` as above, int indicates the
+            number of bins to generate, and an array directly indicates the
+            bin edges. Note that None is not allowed if ``data.hist_bins``
+            does not exist.
     gate_fraction : float, optional
         Fraction of events to retain after gating.
     xlog : bool, optional
@@ -352,27 +364,35 @@ def density2d(data,
     if data_ch.shape[0] <= 1:
         raise ValueError('data should have more than one event')
 
-    # If ``data_ch.hist_bins()`` exists, obtain bin edges from it if necessary.
-    # If it does not exist, do not modify ``bins``.
+    # If ``data_ch.hist_bins()`` exists, obtain bin edges from it if
+    # necessary.
     if hasattr(data_ch, 'hist_bins'):
-        # ``bins`` should be a list of two elements, one per axis. If not,
-        # duplicate.
-        if not isinstance(bins, list):
-            bins = [bins, bins]
-        # If bins for the X axis is None or an integer, get bin edges from
-        # ``data_plot.hist_bins()``.
-        if bins[0] is None or isinstance(bins[0], int):
-            bins[0] = data_ch.hist_bins(channels=0, nbins=bins[0], log=xlog)
-        # If bins for the Y axis is None or an integer, get bin edges from
-        # ``data_plot.hist_bins()``.
-        if bins[1] is None or isinstance(bins[1], int):
-            bins[1] = data_ch.hist_bins(channels=1, nbins=bins[1], log=ylog)
+        # Check whether `bins` contains information for one or two axes
+        if hasattr(bins, '__iter__') and len(bins)==2:
+            # `bins` contains separate information for both axes
+            # If bins for the X axis is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins[0], '__iter__'):
+                bins[0] = data_ch.hist_bins(channels=0,
+                                              nbins=bins[0],
+                                              log=xlog)
+            # If bins for the Y axis is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins[1], '__iter__'):
+                bins[1] = data_ch.hist_bins(channels=1,
+                                              nbins=bins[1],
+                                              log=ylog)
+        else:
+            # `bins` contains information for one axis, which will be used
+            # twice.
+            # If bins is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins, '__iter__'):
+                bins = [data_ch.hist_bins(channels=0, nbins=bins, log=xlog),
+                        data_ch.hist_bins(channels=1, nbins=bins, log=ylog)]
 
     # Make 2D histogram
-    if bins is not None:
-        H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
-    else:
-        H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1])
+    H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
 
     # Map each event to its histogram bin by sorting events into a 2D array of
     # lists which mimics the histogram.
