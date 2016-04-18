@@ -1,12 +1,71 @@
 """
-`FlowCal`'s Microsoft Excel User Interface.
+``FlowCal``'s Microsoft Excel User Interface.
 
 This module contains functions to read, gate, and transform data from a set
-of FCS files, according to an input Microsoft Excel file. This file should
-contain the following tables:
-    - "Instruments" table (TODO: describe fields of the table)
-    - "Beads" table (TODO: describe fields of the table)
-    - "Samples" table (TODO: describe fields of the table)
+of FCS files, as specified by an input Microsoft Excel file. This file
+should contain the following tables:
+    - **Instruments**: Describes the instruments used to acquire the
+      samples listed in the other tables. Each instrument is specified by a
+      row containing at least the following fields:
+
+      - **ID**: Short string identifying the instrument. Will be referenced
+        by samples in the other tables.
+      - **Forward Scatter Channel**: Name of the forward scatter channel,
+        as specified by the ``$PnN`` keyword in the associated FCS files.
+      - **Side Scatter Channel**: Name of the side scatter channel, as
+        specified by the ``$PnN`` keyword in the associated FCS files.
+      - **Fluorescence Channels**: Name of the fluorescence channels in a
+        comma-separated list, as specified by the ``$PnN`` keyword in the
+        associated FCS files.
+      - **Time Channel**: Name of the time channel, as specified by the
+        ``$PnN`` keyword in the associated FCS files.
+
+    - **Beads**: Describes the calibration beads samples that will be used
+      to calibrate cell samples in the **Samples** table. The following
+      information should be available for each beads sample:
+
+      - **ID**: Short string identifying the beads sample. Will be
+        referenced by cell samples in the **Samples** table.
+      - **Instrument ID**: ID of the instrument used to acquire the sample.
+        Must match one of the rows in the **Instruments** table.
+      - **File Path**: Path of the FCS file containing the sample's data.
+      - **<Fluorescence Channel Name> MEF Values**: The fluorescence in MEF
+        of each bead subpopulation, as given by the manufacturer, as a
+        comma-separated list of numbers. Any element of this list can be
+        replaced with the word ``None``, in which case the corresponding
+        subpopulation will not be used when fitting the beads fluorescence
+        model. Note that the number of elements in this list (including
+        the elements equal to ``None``) are the number of subpopulations
+        that ``FlowCal`` will try to find.
+      - **Gate fraction**: The fraction of events to keep from the sample
+        after density-gating in the forward/side scatter channels.
+      - **Clustering Channels**: The fluorescence channels used to identify
+        the different bead subpopulations.
+
+    - **Samples**: Describes the biological samples to be processed. The
+      following information should be available for each sample:
+
+      - **ID**: Short string identifying the sample. Will be used as part
+        of the plot's filenames and in the **Histograms** table in the
+        output Excel file.
+      - **Instrument ID**: ID of the instrument used to acquire the sample.
+        Must match one of the rows in the **Instruments** table.
+      - **Beads ID**: ID of the beads sample used to convert data to
+        calibrated MEF.
+      - **File Path**: Path of the FCS file containing the sample's data.
+      - **<Fluorescence Channel Name> Units**: Units to which the event
+        list in the specified fluorescence channel should be converted, and
+        all the subsequent plots and statistics should be reported. Should
+        be one of the following: "Channel" (raw units), "a.u." or "RFI"
+        (arbitrary units) or "MEF" (calibrated Molecules of Equivalent
+        Fluorophore). If "MEF" is specified, the **Beads ID** should be
+        populated, and should correspond to a beads sample with the
+        **MEF Values** specified for the same channel.
+      - **Gate fraction**: The fraction of events to keep from the sample
+        after density-gating in the forward/side scatter channels.
+
+Any columns other than the ones specified above can be present, but will be
+ignored by ``FlowCal``.
 
 """
 
@@ -94,9 +153,9 @@ def write_workbook(filename, table_list):
 
     Parameters
     ----------
-    filename: str
+    filename : str
         Name of the Excel file to write.
-    table_list: list of ``(str, DataFrame)`` tuples
+    table_list : list of ``(str, DataFrame)`` tuples
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
@@ -714,12 +773,14 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     Add stats fields to beads table.
 
     The following information is added to each row:
+
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
 
     The following information is added for each row, for each channel in
     which MEF values have been specified:
+
         - Detector voltage (gain)
         - Amplification type
         - Bead model fitted parameters
@@ -737,8 +798,10 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     mef_outputs : list, optional
         A list with the intermediate results of the generation of the MEF
         transformation functions, as given by ``mef.get_transform_fxn()``.
-        This is used to populate the field ``<channel> Bead Model Params``.
-        If specified, ``mef_outputs[i]`` should correspond to
+        This is used to populate the fields ``<channel> Beads Model``,
+        ``<channel> Beads Params. Names``, and
+        ``<channel> Beads Params. Values``. If specified,
+        ``mef_outputs[i]`` should correspond to
         ``beads_table.values()[i]``.
 
     """
@@ -839,12 +902,14 @@ def add_samples_stats(samples_table, samples):
     Add stats fields to samples table.
 
     The following information is added to each row:
+
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
     
     The following information is added for each row, for each channel in
     which fluorescence units have been specified:
+
         - Detector voltage (gain)
         - Amplification type
         - Mean
@@ -975,7 +1040,7 @@ def generate_histograms_table(samples_table, samples):
     
     Returns
     -------
-    hist_table: DataFrame
+    hist_table : DataFrame
         A multi-indexed DataFrame. Rows cotain the histogram bins and
         counts for every sample and channel specified in samples_table.
         `hist_table` is indexed by the sample's ID, the channel name,
@@ -1040,7 +1105,7 @@ def generate_about_table(extra_info={}):
 
     Returns
     -------
-    about_table: DataFrame
+    about_table : DataFrame
         Table with information about FlowCal and the current analysis, as
         keyword:value pairs. The following keywords are included: FlowCal
         version, and date and time of analysis. Keywords and values from
@@ -1085,7 +1150,7 @@ def show_open_file_dialog(filetypes):
 
     Returns
     -------
-    filename: str
+    filename : str
         The path of the filename selected, or an empty string if no file
         was chosen.
 
@@ -1110,19 +1175,30 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     """
     Run the MS Excel User Interface.
 
-    This function shows a dialog to open an input Excel workbook, loads FCS
-    files and processes them as specified in the spreadsheet, and
-    generates plots and an output workbook with statistics for each sample.
+    This function performs the following:
+
+     1. If `input_path` is not specified, show a dialog to choose an input
+        Excel file.
+     2. Extract data from the Instruments, Beads, and Samples tables.
+     3. Process all the bead samples specified in the Beads table.
+     4. Generate statistics for each bead sample.
+     5. Process all the cell samples in the Samples table.
+     6. Generate statistics for each sample.
+     7. Generate a histogram table for each fluorescent channel specified
+        for each sample.
+     8. Generate a table with run time, date, FlowCal version, among
+        others.
+     9. Save statistics and histograms in an output Excel file.
 
     Parameters
     ----------
-    input_path: str
+    input_path : str
         Path to the Excel file to use as input. If None, show a dialog to
         select an input file.
-    output_path: str
+    output_path : str
         Path to which to save the output Excel file. If None, use
         "`input_path`_output".
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
