@@ -246,7 +246,7 @@ def ellipse(data, channels,
 
 def density2d(data,
               channels=[0,1],
-              bins=None,
+              bins=1024,
               gate_fraction=0.65,
               xlog=False,
               ylog=False,

@@ -322,7 +322,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={'bins': 256},
+                    hist_params={},
                     savefig=figname)
 
             ###
@@ -682,7 +682,6 @@ def process_samples_table(samples_table,
                 hist_params = []
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
-                    param['bins'] = 256
                     param['xlabel'] = '{} ({})'.format(rc, ru)
                     param['log'] = (ru != 'Channel Number') and \
                         bool(sample_gated.amplification_type(rc)[0])
