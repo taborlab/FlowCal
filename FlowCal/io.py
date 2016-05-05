@@ -1346,9 +1346,8 @@ class FCSData(np.ndarray):
         amplification_type = tuple(amplification_type)
 
         # range and resolution: These are extracted from the required $PnR
-        # keyword parameter. `range` is assumed to be [0, $PnR-1] if the event
-        # list consists of integers, and [0, $PnR] if the event list contains
-        # floating points or doubles. `resolution` is always equal to $PnR.
+        # keyword parameter. `range` is assumed to be [0, $PnR-1]. `resolution`
+        # is always equal to $PnR.
         data_range = []
         resolution = []
         for ch_idx, ch in enumerate(channels):
