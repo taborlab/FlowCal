@@ -366,7 +366,8 @@ def density2d(data,
 
     # If ``data_ch.hist_bins()`` exists, obtain bin edges from it if
     # necessary.
-    if hasattr(data_ch, 'hist_bins'):
+    if hasattr(data_ch, 'hist_bins') and \
+            hasattr(data_ch.hist_bins, '__call__'):
         # Check whether `bins` contains information for one or two axes
         if hasattr(bins, '__iter__') and len(bins)==2:
             # `bins` contains separate information for both axes
@@ -374,14 +375,14 @@ def density2d(data,
             # ``data_ch.hist_bins()``.
             if not hasattr(bins[0], '__iter__'):
                 bins[0] = data_ch.hist_bins(channels=0,
-                                              nbins=bins[0],
-                                              log=xlog)
+                                            nbins=bins[0],
+                                            log=xlog)
             # If bins for the Y axis is not an iterable, get bin edges from
             # ``data_ch.hist_bins()``.
             if not hasattr(bins[1], '__iter__'):
                 bins[1] = data_ch.hist_bins(channels=1,
-                                              nbins=bins[1],
-                                              log=ylog)
+                                            nbins=bins[1],
+                                            log=ylog)
         else:
             # `bins` contains information for one axis, which will be used
             # twice.

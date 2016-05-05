@@ -188,7 +188,7 @@ def hist1d(data_list,
 
         # If ``data_plot.hist_bins()`` exists, obtain bin edges from it if
         # necessary. If it does not exist, do not modify ``bins``.
-        if hasattr(y, 'hist_bins'):
+        if hasattr(y, 'hist_bins') and hasattr(y.hist_bins, '__call__'):
             # If bins is None or an integer, get bin edges from
             # ``data_plot.hist_bins()``.
             if bins is None or isinstance(bins, int):
@@ -383,7 +383,8 @@ def density2d(data,
 
     # If ``data_plot.hist_bins()`` exists, obtain bin edges from it if
     # necessary.
-    if hasattr(data_plot, 'hist_bins'):
+    if hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
         # Check whether `bins` contains information for one or two axes
         if hasattr(bins, '__iter__') and len(bins)==2:
             # `bins` contains separate information for both axes
