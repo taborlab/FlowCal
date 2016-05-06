@@ -91,25 +91,25 @@ def to_rfi(data,
     """
     Transform flow cytometry data to Relative Fluorescence Units (RFI).
 
-    If ``a[0]`` is different from zero, data has been taken using a log
-    amplifier. Therefore, to obtain RFIs, the following transformation
-    should be applied:
+    If ``amplification_type[0]`` is different from zero, data has been
+    taken using a log amplifier. Therefore, to transform to RFI, the
+    following operation is applied:
 
         y = a[1]*10^(a[0] * (x/r))
 
     Where ``x`` and ``y`` are the original and transformed data,
-    respectively; ``a`` is the amplification type argument, and ``r`` is
-    the max range argument. This will transform flow cytometry data taken
-    with a log amplifier and an ADC of range ``r`` to linear RFIs, such
+    respectively; ``a`` is `amplification_type` argument, and ``r`` is
+    `max_range`. This will transform flow cytometry data taken with a log
+    amplifier and an ADC of range ``r`` to linear RFIs, such
     that it covers ``a[0]`` decades of signal with a minimum value of
     ``a[1]``.
 
-    If ``a[0]==0``, however, a linear amplifier has been used and the
-    following operation should be applied instead:
+    If ``amplification_type[0]==0``, however, a linear amplifier has been
+    used and the following operation is applied instead:
 
         y = x/g
 
-    Where ``g`` is the amplifier gain. This will transform flow cytometry
+    Where ``g`` is `amplifier_gain`. This will transform flow cytometry
     data taken with a linear amplifier of gain ``g`` back to RFIs.
 
     Parameters
