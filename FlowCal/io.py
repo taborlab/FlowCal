@@ -190,6 +190,8 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
             while True:
                 s += delim
                 pairs_list_idx += 1
+                if pairs_list_idx >= len(pairs_list):
+                    break
                 if pairs_list[pairs_list_idx] != '':
                     s += pairs_list[pairs_list_idx]
                     break
