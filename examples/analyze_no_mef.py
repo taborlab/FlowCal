@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 hist_channels=['FL1-H'],
                 gate_contour=dgc, 
                 density_params={'mode': 'scatter', 'xlog': True, 'ylog': True}, 
-                hist_params={'div': 4, 'log': True},
+                hist_params={'log': True},
                 savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
 
