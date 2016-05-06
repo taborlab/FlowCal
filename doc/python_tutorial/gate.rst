@@ -29,7 +29,7 @@ From these clusters, the faint one in the middle corresponds to non-cellular deb
 Some flow cytometers will capture events outside of their range and assign them either the lowest or highest possible values of a channel, depending on which side of the range they fall on. We call these events "saturated". Including them in the analysis results, most of the time, in distorted distribution shapes and incorrect statistics. Therefore, it is generally advised to remove saturated events. To do so, ``FlowCal`` incorporates the function :func:`FlowCal.gate.high_low`. This function retains all the events in the specified channels between two specified values: a high and a low threshold. If these values are not specified, however, the function uses the saturating values.
 
 >>> s_g1 = FlowCal.gate.high_low(s_t, channels=['FSC', 'SSC'])
->>> FlowCal.plot.density2d(s_g1, channels=['FSC', 'SSC'], log=True)
+>>> FlowCal.plot.density2d(s_g1, channels=['FSC', 'SSC'], xlog=True, ylog=True)
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/pujabnm5qmsa4pc/python_tutorial_gate_1.png?raw=1
@@ -37,7 +37,11 @@ Some flow cytometers will capture events outside of their range and assign them 
 We successfully removed the event clusters on the left. We can go one step further and use :func:`FlowCal.gate.high_low` again to remove the cluster in the lower middle of the plot, which as we said before corresponds to debris.
 
 >>> s_g2 = FlowCal.gate.high_low(s_g1, channels='SSC', low=220)
->>> FlowCal.plot.density2d(s_g2, channels=['FSC', 'SSC'], log=True, mode='scatter')
+>>> FlowCal.plot.density2d(s_g2,
+...                        channels=['FSC', 'SSC'],
+...                        xlog=True,
+...                        ylog=True,
+...                        mode='scatter')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/yqc4kfmiysf2kmd/python_tutorial_gate_2.png?raw=1
@@ -56,7 +60,11 @@ Ellipse Gate
 ...                             a=0.2,
 ...                             b=0.15,
 ...                             theta=15/180.*np.pi)
->>> FlowCal.plot.density2d(s_g3, channels=['FSC', 'SSC'], log=True, mode='scatter')
+>>> FlowCal.plot.density2d(s_g3,
+...                        channels=['FSC', 'SSC'],
+...                        xlog=True,
+...                        ylog=True,
+...                        mode='scatter')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/triklae3jjth89g/python_tutorial_gate_3.png?raw=1
@@ -88,6 +96,8 @@ Finally, we will see a better way to visualize the result of applying a 2D gate.
 
 >>> s_g5, m_g5, contour = FlowCal.gate.density2d(s_g1,
 ...                                              channels=['FSC', 'SSC'],
+...                                              xlog=True,
+...                                              ylog=True,
 ...                                              gate_fraction=0.5,
 ...                                              full_output=True)
 
@@ -99,9 +109,11 @@ The function :func:`FlowCal.plot.density_and_hist` was introduced in the :doc:`p
 ...                               gated_data=s_g5,
 ...                               gate_contour=contour,
 ...                               density_channels=['FSC', 'SSC'],
-...                               density_params={'log':True, 'mode':'scatter'},
+...                               density_params={'xlog':True,
+...                                               'ylog':True,
+...                                               'mode':'scatter'},
 ...                               hist_channels=['FL1'],
-...                               hist_params={'div':4, 'log':True})
+...                               hist_params={'log':True})
 >>> plt.tight_layout()
 >>> plt.show()
 

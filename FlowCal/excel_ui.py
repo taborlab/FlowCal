@@ -341,7 +341,7 @@ def process_beads_table(beads_table,
                                                         num_end=100)
             # Remove saturating events in forward/side scatter. The value of a
             # saturating event is taken automatically from
-            # `beads_sample_gated.domain`.
+            # `beads_sample_gated.range`.
             beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
                                                        channels=sc_channels)
             # Density gating
@@ -349,6 +349,10 @@ def process_beads_table(beads_table,
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
+                xlog=bool(beads_sample_gated.amplification_type(
+                    sc_channels[0])[0]),
+                ylog=bool(beads_sample_gated.amplification_type(
+                    sc_channels[1])[0]),
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -377,7 +381,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={'div': 4},
+                    hist_params={},
                     savefig=figname)
 
             ###
@@ -707,7 +711,7 @@ def process_samples_table(samples_table,
                                                   num_end=100)
             # Remove saturating events in forward/side scatter, and fluorescent
             # channels to report. The value of a saturating event is taken
-            # automatically from `sample_gated.domain`.
+            # automatically from `sample_gated.range`.
             sample_gated = FlowCal.gate.high_low(sample_gated,
                                                  sc_channels + report_channels)
             # Density gating
@@ -715,6 +719,8 @@ def process_samples_table(samples_table,
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
+                xlog=bool(sample_gated.amplification_type(sc_channels[0])[0]),
+                ylog=bool(sample_gated.amplification_type(sc_channels[1])[0]),
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -735,7 +741,6 @@ def process_samples_table(samples_table,
                 hist_params = []
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
-                    param['div'] = 4
                     param['xlabel'] = '{} ({})'.format(rc, ru)
                     param['log'] = (ru != 'Channel Number') and \
                         bool(sample_gated.amplification_type(rc)[0])
@@ -1024,7 +1029,7 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' RCV',
                                         FlowCal.stats.rcv(sample, channel))
 
-def generate_histograms_table(samples_table, samples):
+def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
     Generate a table of histograms as a DataFrame.
 
@@ -1037,6 +1042,8 @@ def generate_histograms_table(samples_table, samples):
     samples : list
         FCSData objects from which to calculate histograms. ``samples[i]``
         should correspond to ``samples_table.iloc[i]``
+    max_bins : int, optional
+        Maximum number of bins to use.
     
     Returns
     -------
@@ -1062,9 +1069,11 @@ def generate_histograms_table(samples_table, samples):
             continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
-                bins = sample.domain(channel)
-                if n_columns < len(bins):
-                    n_columns = len(bins)
+                if n_columns < sample.resolution(channel):
+                    n_columns = sample.resolution(channel)
+    # Saturate at max_bins
+    if n_columns > max_bins:
+        n_columns = max_bins
 
     # Declare multi-indexed DataFrame
     index = pd.MultiIndex.from_arrays([[],[],[]],
@@ -1080,17 +1089,29 @@ def generate_histograms_table(samples_table, samples):
             if pd.notnull(samples_table[header][sample_id]):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
-                # Store bins
-                bins = sample.domain(channel)
+                # Decide whether to produce histograms in linear or log scale
+                log = (unit != 'Channel') and \
+                    bool(sample.amplification_type(channel)[0])
+                # Define number of bins
+                nbins = min(sample.resolution(channel), max_bins)
+                # Calculate bin edges
+                bin_edges = sample.hist_bins(channel, nbins, log)
+                # Calculate bin centers
+                if log:
+                    bin_centers = (np.log10(bin_edges[:-1]) + \
+                        np.log10(bin_edges[1:]))/2
+                    bin_centers = 10**bin_centers
+                else:
+                    bin_centers = (bin_edges[:-1] + bin_edges[1:])/2
+                # Store bin centers
                 hist_table.loc[(sample_id,
                                 channel,
-                                'Bin Values ({})'.format(unit)),
-                               columns[0:len(bins)]] = bins
+                                'Bin Centers ({})'.format(unit)),
+                                columns[0:len(bin_centers)]] = bin_centers
                 # Calculate and store histogram counts
-                bin_edges = sample.hist_bin_edges(channel)
                 hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
                 hist_table.loc[(sample_id, channel, 'Counts'),
-                               columns[0:len(bins)]] = hist
+                               columns[0:len(bin_centers)]] = hist
 
     return hist_table
 

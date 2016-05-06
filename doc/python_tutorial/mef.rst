@@ -26,8 +26,7 @@ As mentioned in the :doc:`fundamentals</fundamentals/calibration>` section, conv
 ...                               gate_contour=c,
 ...                               density_channels=['FSC', 'SSC'],
 ...                               density_params={'mode':'scatter'},
-...                               hist_channels=['FL1'],
-...                               hist_params={'div':4})
+...                               hist_channels=['FL1'])
 >>> plt.tight_layout()
 >>> plt.show()
 
@@ -49,6 +48,7 @@ Generating a transformation function from calibration beads data is a complicate
 ...                                        mef_values=mef_values_fl1,
 ...                                        mef_channels='FL1',
 ...                                        plot=True)
+>>> plt.show()
 
 The argument ``plot`` instructs :func:`FlowCal.mef.get_transform_fxn` to generate and save plots showing the individual steps of bead data analysis. We will look at these plots and how to interpret them in the next section. We recommend to always generate these plots to confirm that the standard curve was generated properly.
 
@@ -68,7 +68,7 @@ Let's now use ``to_mef`` to transform fluroescence data to MEF.
 ...                              gate_fraction=0.5)
 >>>
 >>> # Plot histogram of transformed channel
->>> FlowCal.plot.hist1d(s_g, channel='FL1', div=4, log=True)
+>>> FlowCal.plot.hist1d(s_g, channel='FL1', log=True)
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/lis33tp84cyjmy7/python_tutorial_mef_2.png?raw=1
