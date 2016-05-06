@@ -222,7 +222,8 @@ def to_rfi(data,
             # If no amplifier gain has been specified, try to obtain from data,
             # otherwise assume one
             if ag is None:
-                if hasattr(data, 'amplifier_gain'):
+                if hasattr(data, 'amplifier_gain') and \
+                        hasattr(data.amplifier_gain, '__call__'):
                     ag = data.amplifier_gain(channel)
                     # If the linear gain has not been specified, it should be
                     # assumed to be one.
