@@ -23,21 +23,21 @@ One is often interested in the fluorescence distribution across a population of 
 >>> FlowCal.plot.hist1d(s, channel='FL1')
 >>> plt.show()
 
-.. image:: https://www.dropbox.com/s/7rmt5maedht22d0/python_tutorial_plot_1.png?raw=1
+.. image:: https://www.dropbox.com/s/4lbmhv2gk0dmcx0/python_tutorial_plot_2.png?raw=1
 
 :func:`FlowCal.plot.hist1d` behaves mostly like a regular matplotlib plotting function: it will plot in the current figure and axis. The axes labels are populated by default, but one can still use ``plt.xlabel`` and ``plt.ylabel`` to change them.
 
-By default, :func:`FlowCal.plot.hist1d` uses the maximum resolution available from the FCS file. But sometimes we want a smoother histogram. We can override the default bins using the ``bins`` argument, or we can downsample the default bins by a certain factor by using the ``div`` argument. Let's try downsampling by a factor of four.
+By default, :func:`FlowCal.plot.hist1d` uses 256 uniformly spaced bins. We can override the default bins using the ``bins`` argument. Let's try using 1024 bins.
 
->>> FlowCal.plot.hist1d(s, channel='FL1', div=4)
+>>> FlowCal.plot.hist1d(s, channel='FL1', bins=1024)
 >>> plt.show()
 
-.. image:: https://www.dropbox.com/s/4lbmhv2gk0dmcx0/python_tutorial_plot_2.png?raw=1
+.. image:: https://www.dropbox.com/s/7rmt5maedht22d0/python_tutorial_plot_1.png?raw=1
 
-One of the most convenient features of :func:`FlowCal.plot.hist1d` is the ability to figure out the appropriate bins to use, even after the data has been transformed. This only works if using ``FCSData`` objects and transformation functions from the :mod:`FlowCal.transform` module. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
+:func:`FlowCal.plot.hist1d` can also use bins that are logarithmically spaced. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
 
 >>> s_fl1 = FlowCal.transform.to_rfi(s, channels='FL1')
->>> FlowCal.plot.hist1d(s_fl1, channel='FL1', div=4, log=True)
+>>> FlowCal.plot.hist1d(s_fl1, channel='FL1', log=True)
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/80yeslvvwkjbrk3/python_tutorial_plot_3.png?raw=1
@@ -47,7 +47,7 @@ Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the sam
 >>> filenames = ['data_{:03d}.fcs'.format(i + 2) for i in range(3)]
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]
 >>> d = [FlowCal.transform.to_rfi(di, channels='FL1') for di in d]
->>> FlowCal.plot.hist1d(d, channel='FL1', div=4, alpha=0.7, log=True)
+>>> FlowCal.plot.hist1d(d, channel='FL1', alpha=0.7, log=True)
 >>> plt.legend(filenames)
 >>> plt.show()
 
@@ -63,7 +63,10 @@ It is also common to look at the forward scatter and side scatter values in a 2D
 Let's look at the ``FSC`` and ``SSC`` channels in our sample ``s``.
 
 >>> s_t = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC'])
->>> FlowCal.plot.density2d(s_t, channels=['FSC', 'SSC'], log=True)
+>>> FlowCal.plot.density2d(s_t,
+...                        channels=['FSC', 'SSC'],
+...                        xlog=True,
+...                        ylog=True)
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/rq9id6rmp57hoe1/python_tutorial_plot_5.png?raw=1
@@ -72,7 +75,11 @@ The color indicates the number of events in the region, with red indicating a bi
 
 :func:`FlowCal.plot.density2d` includes two visualization modes: ``mesh`` (seen above), and ``scatter``. The last one is good for distinguishing regions with few events.
 
->>> FlowCal.plot.density2d(s_t, channels=['FSC', 'SSC'], mode='scatter', log=True)
+>>> FlowCal.plot.density2d(s_t,
+...                        channels=['FSC', 'SSC'],
+...                        mode='scatter',
+...                        xlog=True,
+...                        ylog=True)
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/9okm2e95sthmuam/python_tutorial_plot_6.png?raw=1
@@ -89,9 +96,11 @@ In particular, :func:`FlowCal.plot.density_and_hist` uses :func:`FlowCal.plot.hi
 >>> s_t = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC', 'FL1'])
 >>> FlowCal.plot.density_and_hist(s_t,
 ...                               density_channels=['FSC', 'SSC'],
-...                               density_params={'log':True, 'mode':'scatter'},
+...                               density_params={'xlog':True,
+...                                               'ylog':True,
+...                                                'mode':'scatter'},
 ...                               hist_channels=['FL1'],
-...                               hist_params={'div':4, 'log':True})
+...                               hist_params={'log':True})
 >>> plt.tight_layout()
 >>> plt.show()
 
