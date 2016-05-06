@@ -180,9 +180,25 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     # 'quoted' by being repeated" and "null (zero length) keywords or keyword
     # values are not permitted", so this issue should manifest itself as an
     # empty element in the list.
-    if any(x=='' for x in pairs_list):
-        raise NotImplementedError("use of delimiter in keywords or keyword"
-            + " values is not supported")
+    pairs_list_fixed = []
+    pairs_list_idx = 0
+    while pairs_list_idx < len(pairs_list):
+        if pairs_list[pairs_list_idx] != '':
+            pairs_list_fixed.append(pairs_list[pairs_list_idx])
+        else:
+            s = ''
+            while True:
+                s += delim
+                pairs_list_idx += 1
+                if pairs_list[pairs_list_idx] != '':
+                    s += pairs_list[pairs_list_idx]
+                    break
+            if pairs_list_fixed:
+                pairs_list_fixed[-1] += s
+            else:
+                pairs_list_fixed.append(s)
+        pairs_list_idx += 1
+    pairs_list = pairs_list_fixed
 
     # List length should be even since all key-value entries should be pairs
     if len(pairs_list) % 2 != 0:
