@@ -76,21 +76,34 @@ def transform(data, channels, transform_fxn, def_channels = None):
 
     return data_t
 
-def to_rfi(data, channels=None, max_range=None, amplification_type=None):
+def to_rfi(data,
+           channels=None,
+           amplification_type=None,
+           amplifier_gain=None,
+           resolution=None):
     """
     Transform flow cytometry data to Relative Fluorescence Units (RFI).
 
-    This function applies the following transformation::
+    If ``amplification_type[0]`` is different from zero, data has been
+    taken using a log amplifier. Therefore, to transform to RFI, the
+    following operation is applied:
 
         y = a[1]*10^(a[0] * (x/r))
 
     Where ``x`` and ``y`` are the original and transformed data,
-    respectively; ``a`` is the amplification type argument, and ``r`` is
-    the max range argument. This will transform flow cytometry data taken
-    with a log amplifier and an ADC of range ``r`` to linear scale, such
+    respectively; ``a`` is `amplification_type` argument, and ``r`` is
+    `resolution`. This will transform flow cytometry data taken with a log
+    amplifier and an ADC of range ``r`` to linear RFIs, such
     that it covers ``a[0]`` decades of signal with a minimum value of
-    ``a[1]``. If ``a[0]==0``, however, data is already in linear scale and
-    no transformation is applied.
+    ``a[1]``.
+
+    If ``amplification_type[0]==0``, however, a linear amplifier has been
+    used and the following operation is applied instead:
+
+        y = x/g
+
+    Where ``g`` is `amplifier_gain`. This will transform flow cytometry
+    data taken with a linear amplifier of gain ``g`` back to RFIs.
 
     Parameters
     ----------
@@ -100,17 +113,23 @@ def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     channels : int, str, list of int, list of str, optional
         Channels on which to perform the transformation. If `channels` is
         None, perform transformation in all channels.
-    max_range : int, float, or list of int or float
-        Maximum range, for each specified channel. If None, take
-        `max_range` from ``data.resolution(channel)``.
     amplification_type : tuple or list of tuple
         The amplification type of the specified channel(s). This should be
         reported as a tuple, in which the first element indicates how many
         decades the logarithmic amplifier covers, and the second indicates
         the linear value that corresponds to a channel value of zero. If
-        the first element is zero, the amplification type is linear. If
-        None, take `amplification_type` from
-        ``data.amplification_type(channel)``.
+        the first element is zero, the amplification type is linear. This
+        is similar to the $PnE keyword from the FCS standard. If None, take
+        `amplification_type` from ``data.amplification_type(channel)``.
+    amplifier_gain : float or list of floats, optional
+        The linear amplifier gain of the specified channel(s). Only used if
+        ``amplification_type[0]==0`` (linear amplifier). If None,
+        take `amplifier_gain` from ``data.amplifier_gain(channel)``. If
+        `data` does not contain ``amplifier_gain()``, use 1.0.
+    resolution : int, float, or list of int or float, optional
+        Maximum range, for each specified channel. Only needed if
+        ``amplification_type[0]!=0`` (log amplifier). If None, take
+        `resolution` from ``len(data.domain(channel))``.
 
     Returns
     -------
@@ -122,13 +141,55 @@ def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     if channels is None:
         channels = range(data.shape[1])
 
-    # Convert channels, max_range and amplification_type to iterables
     if not hasattr(channels, '__iter__'):
+        # If channels is not an iterable, convert it, along with resolution,
+        # amplification_type, and amplifier_gain.
         channels = [channels]
-        if max_range is not None:
-            max_range = [max_range]
-        if amplification_type is not None:
-            amplification_type = [amplification_type]
+        amplification_type = [amplification_type]
+        amplifier_gain = [amplifier_gain]
+        resolution = [resolution]
+    else:
+        # If channels is an iterable, check that the other attributes are either
+        # None, or iterables of the same length.
+
+        if amplification_type is None:
+            # If None, propagate None for all channels
+            amplification_type = [None]*len(channels)
+        elif hasattr(amplification_type, '__iter__'):
+            # If it's a list, it should be the same length as channels
+            if len(amplification_type) != len(channels):
+                raise ValueError("channels and amplification_type should have "
+                    "the same length")
+        else:
+            # If it's not a list or None, raise error
+            raise ValueError("channels and amplification_type should have the "
+                    "same length")
+
+        if amplifier_gain is None:
+            # If None, propagate None for all channels
+            amplifier_gain = [None]*len(channels)
+        elif hasattr(amplifier_gain, '__iter__'):
+            # If it's a list, it should be the same length as channels
+            if len(amplifier_gain) != len(channels):
+                raise ValueError("channels and amplifier_gain should have "
+                    "the same length")
+        else:
+            # If it's not a list or None, raise error
+            raise ValueError("channels and amplifier_gain should have the "
+                    "same length")
+
+        if resolution is None:
+            # If None, propagate None for all channels
+            resolution = [None]*len(channels)
+        elif hasattr(resolution, '__iter__'):
+            # If it's a list, it should be the same length as channels
+            if len(resolution) != len(channels):
+                raise ValueError("channels and resolution should have "
+                    "the same length")
+        else:
+            # If it's not a list or None, raise error
+            raise ValueError("channels and resolution should have the "
+                    "same length")
 
     # Convert channels to integers
     if hasattr(data, '_name_to_index'):
@@ -136,39 +197,43 @@ def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     else:
         channels = channels
 
-    # If max_range is not specified, take it from data.resolution
-    if max_range is None:
-        if hasattr(data, 'resolution'):
-            max_range = [data.resolution(channel) for channel in channels]
-        else:
-            raise ValueError('max_range should be specified')
-    
-    # If amplification_type is not specified, take it from
-    # data.amplification_type
-    if amplification_type is None:
-        if hasattr(data, 'amplification_type'):
-            amplification_type = data.amplification_type(channels)
-        else:
-            raise ValueError('amplification_type should be specified')
-
-    # Check that channels, max_range, and amplification_type have the same
-    # length
-    if len(channels) != len(max_range):
-        raise ValueError("channels and max_range should have the same length")
-    if len(channels) != len(amplification_type):
-        raise ValueError("channels and amplification_type should have the same"
-            " length")
-
     # Copy data array
     data_t = data.copy().astype(np.float64)
 
     # Iterate over channels
-    for channel, r, at in zip(channels, max_range, amplification_type):
-        # Don't do anything if data is in linear scale
+    for channel, r, at, ag in \
+            zip(channels, resolution, amplification_type, amplifier_gain):
+        # If amplification type is None, try to obtain from data
+        if at is None:
+            if hasattr(data, 'amplification_type'):
+                at = data.amplification_type(channel)
+            else:
+                raise ValueError('amplification_type should be specified')
+        # Define transformation, depending on at[0]
         if at[0]==0:
-            continue
-        # Define transformation
-        tf = lambda x: at[1] * 10**(at[0]/float(r) * x)
+            # Linear amplifier
+            # If no amplifier gain has been specified, try to obtain from data,
+            # otherwise assume one
+            if ag is None:
+                if hasattr(data, 'amplifier_gain') and \
+                        hasattr(data.amplifier_gain, '__call__'):
+                    ag = data.amplifier_gain(channel)
+                    # If the linear gain has not been specified, it should be
+                    # assumed to be one.
+                    if ag is None:
+                        ag = 1.
+                else:
+                    ag = 1.
+            tf = lambda x: x/ag
+        else:
+            # Log amplifier
+            # If no range has been specified, try to obtain from data.
+            if r is None:
+                if hasattr(data, 'resolution'):
+                    r = data.resolution(channel)
+                else:
+                    raise ValueError('range should be specified')
+            tf = lambda x: at[1] * 10**(at[0]/float(r) * x)
         # Apply transformation to event list
         data_t[:,channel] = tf(data_t[:,channel])
         # Apply transformation to range
