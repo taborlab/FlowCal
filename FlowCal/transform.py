@@ -118,9 +118,9 @@ def to_rfi(data,
         reported as a tuple, in which the first element indicates how many
         decades the logarithmic amplifier covers, and the second indicates
         the linear value that corresponds to a channel value of zero. If
-        the first element is zero, the amplification type is linear. If
-        None, take `amplification_type` from
-        ``data.amplification_type(channel)``.
+        the first element is zero, the amplification type is linear. This
+        is similar to the $PnE keyword from the FCS standard. If None, take
+        `amplification_type` from ``data.amplification_type(channel)``.
     amplifier_gain : float or list of floats, optional
         The linear amplifier gain of the specified channel(s). Only used if
         ``amplification_type[0]==0`` (linear amplifier). If None,
