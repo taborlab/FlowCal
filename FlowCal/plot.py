@@ -3,7 +3,7 @@ Functions for visualizing flow cytometry data.
 
 Functions in this module are divided in two categories:
 
-- Simple Plot Functions, with a signature similar to the following:
+- Simple Plot Functions, with a signature similar to the following::
 
       plot_fxn(data_list, channels, parameters, savefig)
 
@@ -26,7 +26,11 @@ Functions in this module are divided in two categories:
   legend or color, which allow the user to modify the axis prior to saving.
 
   The following functions in this module are Simple Plot Functions:
-  `hist1d`, `density2d`, `scatter2d`, and `scatter3d`.
+
+    - ``hist1d``
+    - ``density2d``
+    - ``scatter2d``
+    - ``scatter3d``
 
 - Complex Plot Functions, which create a figure with several axes, and use
   one or more Simple Plot functions to populate the axes. They always
@@ -36,7 +40,9 @@ Functions in this module are divided in two categories:
   specified, the figure is closed after being saved.
 
   The following functions in this module are Complex Plot Functions:
-  `density_and_hist` and `scatter3d_and_projections`.
+
+    - ``density_and_hist``
+    - ``scatter3d_and_projections``
 
 """
 

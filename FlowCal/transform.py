@@ -1,15 +1,15 @@
 """
 Functions for transforming flow cytometry data
 
-All transformations are of the following form:
+All transformations are of the following form::
 
-    data_t = transform(data, channels, params):
+    data_t = transform(data, channels, *args, **kwargs):
 
 where `data` and `data_t` are NxD FCSData objects or numpy arrays,
 representing N events with D channels, `channels` indicate the channels in
-which to apply the transformation, and `params` are transformation-specific
-parameters. Each transformation function can apply its own restrictions or
-default on `channels`.
+which to apply the transformation, and `args` and `kwargs` are
+transformation-specific parameters. Each transformation function can apply
+its own restrictions or defaults on `channels`.
 
 If `data` is an FCSData object, `transform` should rescale ``data.range``
 if necessary.
@@ -80,7 +80,7 @@ def to_rfi(data, channels=None, max_range=None, amplification_type=None):
     """
     Transform flow cytometry data to Relative Fluorescence Units (RFI).
 
-    This function applies the following transformation:
+    This function applies the following transformation::
 
         y = a[1]*10^(a[0] * (x/r))
 
@@ -189,7 +189,7 @@ def to_mef(data, channels, sc_list, sc_channels = None):
     is available for each channel specified in `channels`, and throws an
     error otherwise.
 
-    This function is intended to be reduced to the following signature:
+    This function is intended to be reduced to the following signature::
 
         to_mef_reduced(data, channels)
 
