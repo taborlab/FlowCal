@@ -80,7 +80,7 @@ def to_rfi(data,
            channels=None,
            amplification_type=None,
            amplifier_gain=None,
-           max_range=None):
+           resolution=None):
     """
     Transform flow cytometry data to Relative Fluorescence Units (RFI).
 
@@ -92,7 +92,7 @@ def to_rfi(data,
 
     Where ``x`` and ``y`` are the original and transformed data,
     respectively; ``a`` is `amplification_type` argument, and ``r`` is
-    `max_range`. This will transform flow cytometry data taken with a log
+    `resolution`. This will transform flow cytometry data taken with a log
     amplifier and an ADC of range ``r`` to linear RFIs, such
     that it covers ``a[0]`` decades of signal with a minimum value of
     ``a[1]``.
@@ -126,10 +126,10 @@ def to_rfi(data,
         ``amplification_type[0]==0`` (linear amplifier). If None,
         take `amplifier_gain` from ``data.amplifier_gain(channel)``. If
         `data` does not contain ``amplifier_gain()``, use 1.0.
-    max_range : int, float, or list of int or float, optional
+    resolution : int, float, or list of int or float, optional
         Maximum range, for each specified channel. Only needed if
         ``amplification_type[0]!=0`` (log amplifier). If None, take
-        `max_range` from ``len(data.domain(channel))``.
+        `resolution` from ``len(data.domain(channel))``.
 
     Returns
     -------
@@ -142,12 +142,12 @@ def to_rfi(data,
         channels = range(data.shape[1])
 
     if not hasattr(channels, '__iter__'):
-        # If channels is not an iterable, convert it, along with max_range,
+        # If channels is not an iterable, convert it, along with resolution,
         # amplification_type, and amplifier_gain.
         channels = [channels]
         amplification_type = [amplification_type]
         amplifier_gain = [amplifier_gain]
-        max_range = [max_range]
+        resolution = [resolution]
     else:
         # If channels is an iterable, check that the other attributes are either
         # None, or iterables of the same length.
@@ -178,17 +178,17 @@ def to_rfi(data,
             raise ValueError("channels and amplifier_gain should have the "
                     "same length")
 
-        if max_range is None:
+        if resolution is None:
             # If None, propagate None for all channels
-            max_range = [None]*len(channels)
-        elif hasattr(max_range, '__iter__'):
+            resolution = [None]*len(channels)
+        elif hasattr(resolution, '__iter__'):
             # If it's a list, it should be the same length as channels
-            if len(max_range) != len(channels):
-                raise ValueError("channels and max_range should have "
+            if len(resolution) != len(channels):
+                raise ValueError("channels and resolution should have "
                     "the same length")
         else:
             # If it's not a list or None, raise error
-            raise ValueError("channels and max_range should have the "
+            raise ValueError("channels and resolution should have the "
                     "same length")
 
     # Convert channels to integers
@@ -202,7 +202,7 @@ def to_rfi(data,
 
     # Iterate over channels
     for channel, r, at, ag in \
-            zip(channels, max_range, amplification_type, amplifier_gain):
+            zip(channels, resolution, amplification_type, amplifier_gain):
         # If amplification type is None, try to obtain from data
         if at is None:
             if hasattr(data, 'amplification_type'):
