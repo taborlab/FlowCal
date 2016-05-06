@@ -306,37 +306,26 @@ class TestRFIFCSLog(unittest.TestCase):
                                       10**(self.d[:,'FL3-H']/256.))
         np.testing.assert_array_equal(dt[:,'Time'], self.d[:,'Time'])
 
-    def test_rfi_2d_domain(self):
+    def test_rfi_2d_range(self):
         dt = FlowCal.transform.to_rfi(self.d,
                                       channels=['FL1-H', 'FL3-H'],
                                       max_range=[512, 2048],
                                       amplification_type=[(4, 0.01), (2, 1)])
-        np.testing.assert_array_equal(dt.domain('FSC-H'),
-                                      self.d.domain('FSC-H'))
-        np.testing.assert_array_equal(dt.domain('SSC-H'),
-                                      self.d.domain('SSC-H'))
-        np.testing.assert_array_equal(dt.domain('FL1-H'),
-                                      0.01*10**(self.d.domain('FL1-H')/128.0))
-        np.testing.assert_array_equal(dt.domain('FL2-H'),
-                                      self.d.domain('FL2-H'))
-        np.testing.assert_array_equal(dt.domain('FL3-H'),
-                                      10**(self.d.domain('FL3-H')/1024.0))
-
-    def test_rfi_2d_bin_edges(self):
-        dt = FlowCal.transform.to_rfi(self.d,
-                                      channels=['FL1-H', 'FL3-H'],
-                                      max_range=[512, 2048],
-                                      amplification_type=[(4, 0.01), (2, 1)])
-        np.testing.assert_array_equal(dt.hist_bin_edges('FSC-H'),
-                                      self.d.hist_bin_edges('FSC-H'))
-        np.testing.assert_array_equal(dt.hist_bin_edges('SSC-H'),
-                                      self.d.hist_bin_edges('SSC-H'))
-        np.testing.assert_array_equal(dt.hist_bin_edges('FL1-H'),
-                                      0.01*10**(self.d.hist_bin_edges('FL1-H')/128.0))
-        np.testing.assert_array_equal(dt.hist_bin_edges('FL2-H'),
-                                      self.d.hist_bin_edges('FL2-H'))
-        np.testing.assert_array_equal(dt.hist_bin_edges('FL3-H'),
-                                      10**(self.d.hist_bin_edges('FL3-H')/1024.0))
+        np.testing.assert_array_equal(
+            dt.range('FSC-H'),
+            self.d.range('FSC-H'))
+        np.testing.assert_array_equal(
+            dt.range('SSC-H'),
+            self.d.range('SSC-H'))
+        np.testing.assert_array_equal(
+            dt.range('FL1-H'),
+            [0.01*10**(r/128.0) for r in self.d.range('FL1-H')])
+        np.testing.assert_array_equal(
+            dt.range('FL2-H'),
+            self.d.range('FL2-H'))
+        np.testing.assert_array_equal(
+            dt.range('FL3-H'),
+            [10**(r/1024.0) for r in self.d.range('FL3-H')])
 
     def test_rfi_default_channel(self):
         # Leave time channel out
@@ -562,22 +551,14 @@ class TestMefFCS(unittest.TestCase):
     def test_mef_bins_channels(self):
         dt = FlowCal.transform.to_mef(
             self.d, ['FL1-H','FL3-H'], [self.sc1, self.sc2], ['FL1-H','FL3-H'])
-        vit = [dt.domain(i) for i in range(5)]
-        eit = [dt.hist_bin_edges(i) for i in range(5)]
-        vo = [np.arange(1024),
-              np.arange(1024),
-              np.arange(1024)**2,
-              np.arange(1024),
-              np.log(np.arange(1024) + 1),
-              ]
-        eo = [np.arange(-0.5, 1024.5, 1.0),
-              np.arange(-0.5, 1024.5, 1.0),
-              np.arange(-0.5, 1024.5, 1.0)**2,
-              np.arange(-0.5, 1024.5, 1.0),
-              np.log(np.arange(-0.5, 1024.5, 1.0) + 1),
+        vit = [dt.range(i) for i in range(5)]
+        vo = [np.array([0, 1023]),
+              np.array([0, 1023]),
+              np.array([0, 1023])**2,
+              np.array([0, 1023]),
+              np.log(np.array([0, 1023]) + 1),
               ]
         np.testing.assert_array_equal(vit, vo)
-        np.testing.assert_array_equal(eit, eo)
 
 if __name__ == '__main__':
     unittest.main()

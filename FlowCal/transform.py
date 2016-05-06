@@ -1,18 +1,18 @@
 """
 Functions for transforming flow cytometry data
 
-All transformations are of the following form:
+All transformations are of the following form::
 
-    data_t = transform(data, channels, params):
+    data_t = transform(data, channels, *args, **kwargs):
 
 where `data` and `data_t` are NxD FCSData objects or numpy arrays,
 representing N events with D channels, `channels` indicate the channels in
-which to apply the transformation, and `params` are transformation-specific
-parameters. Each transformation function can apply its own restrictions or
-default on `channels`.
+which to apply the transformation, and `args` and `kwargs` are
+transformation-specific parameters. Each transformation function can apply
+its own restrictions or defaults on `channels`.
 
-If `data` is an FCSData object, `transform` should rescale ``data.domain``
-and ``data.hist_bin_edges`` if necessary.
+If `data` is an FCSData object, `transform` should rescale ``data.range``
+if necessary.
 
 """
 
@@ -25,8 +25,8 @@ def transform(data, channels, transform_fxn, def_channels = None):
     This function is a template transformation function, intended to be
     used by other specific transformation functions. It performs basic
     checks on `channels` and `data`. It then applies `transform_fxn` to the
-    specified channels. Finally, it rescales  ``data.domain`` and
-    ``data.hist_bin_edges`` if necessary.
+    specified channels. Finally, it rescales  ``data.range`` and if
+    necessary.
 
     Parameters
     ----------
@@ -65,21 +65,14 @@ def transform(data, channels, transform_fxn, def_channels = None):
     # Apply transformation
     data_t[:,channels] = transform_fxn(data_t[:,channels])
 
-    # Apply transformation to ``data.domain`` and ``data.hist_bin_edges``
-    if hasattr(data_t, '_domain'):
+    # Apply transformation to ``data.range``
+    if hasattr(data_t, '_range'):
         for channel in channels:
             # Transform channel name to index if necessary
             channel_idx = data_t._name_to_index(channel)
-            if data_t._domain[channel_idx] is not None:
-                data_t._domain[channel_idx] = \
-                    transform_fxn(data_t._domain[channel_idx])
-    if hasattr(data_t, '_hist_bin_edges'):
-        for channel in channels:
-            # Transform channel name to index if necessary
-            channel_idx = data_t._name_to_index(channel)
-            if data_t._hist_bin_edges[channel_idx] is not None:
-                data_t._hist_bin_edges[channel_idx] = \
-                    transform_fxn(data_t._hist_bin_edges[channel_idx])
+            if data_t._range[channel_idx] is not None:
+                data_t._range[channel_idx] = \
+                    transform_fxn(data_t._range[channel_idx])
 
     return data_t
 
@@ -236,20 +229,17 @@ def to_rfi(data,
             # Log amplifier
             # If no range has been specified, try to obtain from data.
             if r is None:
-                if hasattr(data, 'domain'):
-                    r = len(data.domain(channel))
+                if hasattr(data, 'resolution'):
+                    r = data.resolution(channel)
                 else:
                     raise ValueError('range should be specified')
             tf = lambda x: at[1] * 10**(at[0]/float(r) * x)
         # Apply transformation to event list
         data_t[:,channel] = tf(data_t[:,channel])
-        # Apply transformation to domain and hist_bin_edges
-        if hasattr(data_t, '_domain') and data_t._domain[channel] is not None:
-            data_t._domain[channel] = tf(data_t._domain[channel])
-        if (hasattr(data_t, '_hist_bin_edges')
-                and data_t._hist_bin_edges[channel] is not None):
-            data_t._hist_bin_edges[channel] = \
-                tf(data_t._hist_bin_edges[channel])
+        # Apply transformation to range
+        if hasattr(data_t, '_range') and data_t._range[channel] is not None:
+            data_t._range[channel] = [tf(data_t._range[channel][0]),
+                                      tf(data_t._range[channel][1])]
 
     return data_t
 
@@ -264,7 +254,7 @@ def to_mef(data, channels, sc_list, sc_channels = None):
     is available for each channel specified in `channels`, and throws an
     error otherwise.
 
-    This function is intended to be reduced to the following signature:
+    This function is intended to be reduced to the following signature::
 
         to_mef_reduced(data, channels)
 
@@ -336,11 +326,9 @@ def to_mef(data, channels, sc_list, sc_channels = None):
             continue
         # Apply transformation
         data_t[:,chi] = sc(data_t[:,chi])
-        # Apply transformation to domain and hist_bin_edges
-        if hasattr(data_t, '_domain') and data_t._domain[chi] is not None:
-            data_t._domain[chi] = sc(data_t._domain[chi])
-        if (hasattr(data_t, '_hist_bin_edges')
-                and data_t._hist_bin_edges[chi] is not None):
-            data_t._hist_bin_edges[chi] = sc(data_t._hist_bin_edges[chi])
+        # Apply transformation to range
+        if hasattr(data_t, '_range') and data_t._range[chi] is not None:
+            data_t._range[chi] = [sc(data_t._range[chi][0]),
+                                  sc(data_t._range[chi][1])]
 
     return data_t
