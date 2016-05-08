@@ -164,6 +164,12 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
 
+    # Some files have been found to include space characters at the end of the
+    # TEXT segment. If the delimiter is not a space character, strip spaces
+    # from the end of the segment.
+    if not delim.isspace():
+        raw = raw.rstrip()
+
     pairs_list = raw.split(delim)
 
     # The first and last list items should be empty because the TEXT
