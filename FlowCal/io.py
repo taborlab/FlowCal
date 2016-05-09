@@ -660,20 +660,28 @@ class FCSFile(object):
         if self._header.analysis_begin and self._header.analysis_end:
             # Prioritize ANALYSIS segment offsets specified in HEADER over
             # offsets specified in TEXT segment.
-            self._analysis = read_fcs_text_segment(
-                buf=f,
-                begin=self._header.analysis_begin,
-                end=self._header.analysis_end,
-                delim=delim)[0]
+            try:
+                self._analysis = read_fcs_text_segment(
+                    buf=f,
+                    begin=self._header.analysis_begin,
+                    end=self._header.analysis_end,
+                    delim=delim)[0]
+            except:
+                warnings.warn("ignoring ANALYSIS segment")
+                self._analysis = {}
         elif self._header.version in ('FCS3.0', 'FCS3.1'):
             analysis_begin = int(self._text['$BEGINANALYSIS'])
             analysis_end = int(self._text['$ENDANALYSIS'])
             if analysis_begin and analysis_end:
-                self._analysis = read_fcs_text_segment(
-                    buf=f,
-                    begin=analysis_begin,
-                    end=analysis_end,
-                    delim=delim)[0]
+                try:
+                    self._analysis = read_fcs_text_segment(
+                        buf=f,
+                        begin=analysis_begin,
+                        end=analysis_end,
+                        delim=delim)[0]
+                except:
+                    warnings.warn("ignoring ANALYSIS segment")
+                    self._analysis = {}
             else:
                 self._analysis = {}
         else:
