@@ -349,10 +349,14 @@ def process_beads_table(beads_table,
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
-                xlog=bool(beads_sample_gated.amplification_type(
-                    sc_channels[0])[0]),
-                ylog=bool(beads_sample_gated.amplification_type(
-                    sc_channels[1])[0]),
+                xscale='log'
+                       if beads_sample_gated.amplification_type(
+                           sc_channels[0])[0]
+                       else 'linear',
+                yscale='log'
+                       if beads_sample_gated.amplification_type(
+                           sc_channels[1])[0]
+                       else 'linear',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -362,10 +366,14 @@ def process_beads_table(beads_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xlog'] = bool(
-                    beads_sample_gated.amplification_type(sc_channels[0])[0])
-                density_params['ylog'] = bool(
-                    beads_sample_gated.amplification_type(sc_channels[1])[0])
+                if beads_sample_gated.amplification_type(sc_channels[0])[0]:
+                    density_params['xscale'] = 'log'
+                else:
+                    density_params['xscale'] = 'linear'
+                if beads_sample_gated.amplification_type(sc_channels[1])[0]:
+                    density_params['yscale'] = 'log'
+                else:
+                    density_params['yscale'] = 'linear'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
@@ -719,8 +727,12 @@ def process_samples_table(samples_table,
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
-                xlog=bool(sample_gated.amplification_type(sc_channels[0])[0]),
-                ylog=bool(sample_gated.amplification_type(sc_channels[1])[0]),
+                xscale='log'
+                       if sample_gated.amplification_type(sc_channels[0])[0]
+                       else 'linear',
+                yscale='log'
+                       if sample_gated.amplification_type(sc_channels[1])[0]
+                       else 'linear',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -730,10 +742,14 @@ def process_samples_table(samples_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xlog'] = bool(
-                    sample_gated.amplification_type(sc_channels[0])[0])
-                density_params['ylog'] = bool(
-                    sample_gated.amplification_type(sc_channels[1])[0])
+                if sample_gated.amplification_type(sc_channels[0])[0]:
+                    density_params['xscale'] = 'log'
+                else:
+                    density_params['xscale'] = 'linear'
+                if sample_gated.amplification_type(sc_channels[1])[0]:
+                    density_params['yscale'] = 'log'
+                else:
+                    density_params['yscale'] = 'linear'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
@@ -742,8 +758,11 @@ def process_samples_table(samples_table,
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
                     param['xlabel'] = '{} ({})'.format(rc, ru)
-                    param['log'] = (ru != 'Channel Number') and \
-                        bool(sample_gated.amplification_type(rc)[0])
+                    if (ru != 'Channel Number') and \
+                            bool(sample_gated.amplification_type(rc)[0]):
+                        param['xscale'] = 'log'
+                    else:
+                        param['xscale'] = 'linear'
                     hist_params.append(param)
                     
                 # Plot
@@ -1090,19 +1109,22 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
                 # Decide whether to produce histograms in linear or log scale
-                log = (unit != 'Channel') and \
-                    bool(sample.amplification_type(channel)[0])
+                if (unit != 'Channel') and \
+                    bool(sample.amplification_type(channel)[0]):
+                    scale = 'log'
+                else:
+                    scale = 'linear'
                 # Define number of bins
                 nbins = min(sample.resolution(channel), max_bins)
                 # Calculate bin edges
-                bin_edges = sample.hist_bins(channel, nbins, log)
+                bin_edges = sample.hist_bins(channel, nbins, scale)
                 # Calculate bin centers
-                if log:
+                if scale == 'linear':
+                    bin_centers = (bin_edges[:-1] + bin_edges[1:])/2
+                elif scale == 'log':
                     bin_centers = (np.log10(bin_edges[:-1]) + \
                         np.log10(bin_edges[1:]))/2
                     bin_centers = 10**bin_centers
-                else:
-                    bin_centers = (bin_edges[:-1] + bin_edges[1:])/2
                 # Store bin centers
                 hist_table.loc[(sample_id,
                                 channel,
