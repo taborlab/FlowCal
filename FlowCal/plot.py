@@ -49,6 +49,7 @@ Functions in this module are divided in two categories:
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
@@ -651,6 +652,9 @@ def scatter2d(data_list,
 
 def scatter3d(data_list, 
               channels=[0,1,2],
+              xscale='linear',
+              yscale='linear',
+              zscale='linear',
               xlabel=None,
               ylabel=None,
               zlabel=None,
@@ -675,6 +679,12 @@ def scatter3d(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
+    zscale : str, optional
+        Scale of the z axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -733,17 +743,38 @@ def scatter3d(data_list,
     for i, data in enumerate(data_list):
         # Get channels to plot
         data_plot = data[:, channels]
+        # Transform according to the scale of each axis
+        # Explicit rescaling is required for non-linear scales because mplot3d
+        # does not natively support anything but linear scale.
+        if xscale == 'linear':
+            data_plot_x = data_plot[:,0]
+        elif xscale == 'log':
+            data_plot_x = np.log10(data_plot[:,0])
+        else:
+            raise ValueError('scale {} not supported'.format(xscale))
+        if yscale == 'linear':
+            data_plot_y = data_plot[:,1]
+        elif yscale == 'log':
+            data_plot_y = np.log10(data_plot[:,1])
+        else:
+            raise ValueError('scale {} not supported'.format(yscale))
+        if zscale == 'linear':
+            data_plot_z = data_plot[:,2]
+        elif zscale == 'log':
+            data_plot_z = np.log10(data_plot[:,2])
+        else:
+            raise ValueError('scale {} not supported'.format(zscale))
         # Make scatter plot
-        ax_3d.scatter(data_plot[:,0],
-                      data_plot[:,1],
-                      data_plot[:,2],
+        ax_3d.scatter(data_plot_x,
+                      data_plot_y,
+                      data_plot_z,
                       marker='o',
                       alpha=0.1,
                       color=color[i],
                       c=color[i],
                       **kwargs)
 
-    # Remove tick marks
+    # Remove tick labels
     ax_3d.xaxis.set_ticklabels([])
     ax_3d.yaxis.set_ticklabels([])
     ax_3d.zaxis.set_ticklabels([])
@@ -762,19 +793,61 @@ def scatter3d(data_list,
     elif hasattr(data_plot, 'channels'):
         ax_3d.set_zlabel(data_plot.channels[2])
 
+    # If log scale is used for any axis, ticks have to be manually set.
+    if xscale == 'log':
+        if hasattr(data_plot, 'hist_bins') and \
+                hasattr(data_plot.hist_bins, '__call__'):
+            xr = data_plot.hist_bins(channels=0, nbins=1, scale=xscale)
+        else:
+            xr = np.array([min(data_plot_x), max(data_plot_x)])
+        xr = np.log10(xr)
+        locator = matplotlib.ticker.MaxNLocator(nbins=6)
+        ax_3d.set_xticks(locator.tick_values(xr[0], xr[1]))
+    if yscale == 'log':
+        if hasattr(data_plot, 'hist_bins') and \
+                hasattr(data_plot.hist_bins, '__call__'):
+            yr = data_plot.hist_bins(channels=1, nbins=1, scale=yscale)
+        else:
+            yr = np.array([min(data_plot_y), max(data_plot_y)])
+        yr = np.log10(yr)
+        locator = matplotlib.ticker.MaxNLocator(nbins=6)
+        ax_3d.set_yticks(locator.tick_values(yr[0], yr[1]))
+    if zscale == 'log':
+        if hasattr(data_plot, 'hist_bins') and \
+                hasattr(data_plot.hist_bins, '__call__'):
+            zr = data_plot.hist_bins(channels=2, nbins=1, scale=zscale)
+        else:
+            zr = np.array([min(data_plot_z), max(data_plot_z)])
+        zr = np.log10(zr)
+        locator = matplotlib.ticker.MaxNLocator(nbins=6)
+        ax_3d.set_zticks(locator.tick_values(zr[0], zr[1]))
+
     # Set plot limits if specified, else extract range from data_plot
+    # Use data_plot.hist_bins with one single bin
     if xlim is not None:
         ax_3d.set_xlim(xlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
-        ax_3d.set_xlim(data_plot.range(0)[0], data_plot.range(0)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        xlim = data_plot.hist_bins(channels=0, nbins=1, scale=xscale)
+        if xscale == 'log':
+            xlim = np.log10(xlim)
+        ax_3d.set_xlim(xlim)
     if ylim is not None:
         ax_3d.set_ylim(ylim)
-    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
-        ax_3d.set_ylim(data_plot.range(1)[0], data_plot.range(1)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        ylim = data_plot.hist_bins(channels=1, nbins=1, scale=yscale)
+        if yscale == 'log':
+            ylim = np.log10(ylim)
+        ax_3d.set_ylim(ylim)
     if zlim is not None:
         ax_3d.set_zlim(zlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(2) is not None:
-        ax_3d.set_zlim(data_plot.range(2)[0], data_plot.range(2)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        zlim = data_plot.hist_bins(channels=2, nbins=1, scale=zscale)
+        if zscale == 'log':
+            zlim = np.log10(zlim)
+        ax_3d.set_zlim(zlim)
 
     # Title
     if title is not None:
