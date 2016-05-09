@@ -443,7 +443,8 @@ def read_fcs_data_segment(buf,
 
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA segment.
-        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
+            (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
                 + " (array size = {0}".format(shape[0]*shape[1]*(num_bits/8))
                 + " bytes, DATA segment size ="
