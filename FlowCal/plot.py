@@ -527,6 +527,8 @@ def density2d(data,
 
 def scatter2d(data_list, 
               channels=[0,1],
+              xscale='linear',
+              yscale='linear',
               xlabel=None,
               ylabel=None,
               xlim=None,
@@ -549,6 +551,10 @@ def scatter2d(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -616,15 +622,22 @@ def scatter2d(data_list,
     elif hasattr(data_plot, 'channels'):
         plt.ylabel(data_plot.channels[1])
 
+    # Set scale of axes
+    plt.gca().set_xscale(xscale)
+    plt.gca().set_yscale(yscale)
+
     # Set plot limits if specified, else extract range from data_plot
+    # Use data_plot.hist_bins with one single bin
     if xlim is not None:
         plt.xlim(xlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
-        plt.xlim(data_plot.range(0)[0], data_plot.range(0)[1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        plt.xlim(data_plot.hist_bins(channels=0, nbins=1, scale=xscale))
     if ylim is not None:
         plt.ylim(ylim)
-    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
-        plt.ylim(data_plot.range(1)[0], data_plot.range(1)[1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        plt.ylim(data_plot.hist_bins(channels=1, nbins=1, scale=yscale))
 
     # Title
     if title is not None:
