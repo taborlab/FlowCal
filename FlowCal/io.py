@@ -1533,12 +1533,20 @@ class FCSData(np.ndarray):
             else:
                 # 'hh:mm:ss' format
                 time_str = time_str + ':0'
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         elif len(time_l) == 4:
             # 'hh:mm:ss:tt' format
             time_l[3] = '{:06d}'.format(int(float(time_l[3])*1e6/60))
             time_str = ':'.join(time_l)
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         else:
             # Unknown format
             t = None
