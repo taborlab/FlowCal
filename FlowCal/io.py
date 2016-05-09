@@ -180,18 +180,23 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
         del pairs_list[0]
         del pairs_list[-1]
 
-    # Detect if delimiter was used in keyword or value (which, according to
-    # the standards, is technically legal). According to the FCS2.0 standard,
-    # "If the separator appears in a keyword or in a keyword value, it must be
-    # 'quoted' by being repeated" and "null (zero length) keywords or keyword
-    # values are not permitted", so this issue should manifest itself as an
-    # empty element in the list.
-    pairs_list_fixed = []
+    # According to the FCS2.0 standard, "If the separator appears in a keyword
+    # or in a keyword value, it must be 'quoted' by being repeated" and "null
+    # (zero length) keywords or keyword values are not permitted", so this
+    # issue should manifest itself as an empty element in the list.
+    # The following scans the list of pairs for empty elements and appends a
+    # delimiter character to the previous element when an empty element is
+    # found.
+    pairs_list_delim = []
     pairs_list_idx = 0
     while pairs_list_idx < len(pairs_list):
         if pairs_list[pairs_list_idx] != '':
-            pairs_list_fixed.append(pairs_list[pairs_list_idx])
+            # Non-empty element, just append
+            pairs_list_delim.append(pairs_list[pairs_list_idx])
         else:
+            # Empty element
+            # Accumulate delimiters in a temporary string as long as more empty
+            # elements are found, until the last element
             s = ''
             while True:
                 s += delim
@@ -201,12 +206,14 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
                 if pairs_list[pairs_list_idx] != '':
                     s += pairs_list[pairs_list_idx]
                     break
-            if pairs_list_fixed:
-                pairs_list_fixed[-1] += s
+            # Append temporary string to previous element if pairs_list_delim
+            # is not empty, otherwise make it the first element.
+            if pairs_list_delim:
+                pairs_list_delim[-1] += s
             else:
-                pairs_list_fixed.append(s)
+                pairs_list_delim.append(s)
         pairs_list_idx += 1
-    pairs_list = pairs_list_fixed
+    pairs_list = pairs_list_delim
 
     # List length should be even since all key-value entries should be pairs
     if len(pairs_list) % 2 != 0:
