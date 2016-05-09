@@ -680,7 +680,7 @@ class FCSFile(object):
             self._analysis = {}
         
         # Import DATA segment
-        param_ranges = [int(self._text['$P{0}R'.format(p)])
+        param_ranges = [float(self._text['$P{0}R'.format(p)])
                         for p in xrange(1,D+1)]
         if self._header.data_begin and self._header.data_end:
             # Prioritize DATA segment offsets specified in HEADER over
