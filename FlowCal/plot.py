@@ -69,7 +69,7 @@ savefig_dpi = 250
 
 def hist1d(data_list,
            channel=0,
-           log=False,
+           xscale='linear',
            bins=256,
            histtype='stepfilled',
            normed_area=False,
@@ -99,8 +99,8 @@ def hist1d(data_list,
         channel is ignored. String channel specifications are only
         supported for data types which support string-based indexing
         (e.g. FCSData).
-    log : bool, optional
-        Flag specifying whether the x axis should be in log scale.
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
     bins : int or array_like, optional
         If `bins` is an integer, it specifies the number of bins to use.
         If `bins` is an array, it specifies the bin edges to use. If `bins`
@@ -198,7 +198,7 @@ def hist1d(data_list,
             # If bins is None or an integer, get bin edges from
             # ``data_plot.hist_bins()``.
             if bins is None or isinstance(bins, int):
-                bins = y.hist_bins(channels=0, nbins=bins, log=log)
+                bins = y.hist_bins(channels=0, nbins=bins, scale=xscale)
 
         # Decide whether to normalize
         if normed_height:
@@ -224,8 +224,9 @@ def hist1d(data_list,
                                          edgecolor=edgecolor[i],
                                          facecolor=facecolor[i],
                                          **kwargs)
-        if log == True:
-            plt.gca().set_xscale('log')
+
+        # Set scale of x axis
+        plt.gca().set_xscale(xscale)
 
     ###
     # Final configuration
@@ -287,8 +288,8 @@ def density2d(data,
               smooth=True,
               sigma=10.0,
               colorbar=False,
-              xlog=False,
-              ylog=False,
+              xscale='linear',
+              yscale='linear',
               xlabel=None,
               ylabel=None,
               xlim=None,
@@ -358,10 +359,10 @@ def density2d(data,
     ----------------
     sigma : float, optional
         The sigma parameter for the Gaussian kernel to use when smoothing.
-    xlog : bool, optional
-        Flag specifying whether the x axis should be in log scale.
-    ylog : bool, optional
-        Flag specifying whether the y axis should be in log scale.
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from `data`.
@@ -399,21 +400,25 @@ def density2d(data,
             if not hasattr(bins[0], '__iter__'):
                 bins[0] = data_plot.hist_bins(channels=0,
                                               nbins=bins[0],
-                                              log=xlog)
+                                              scale=xscale)
             # If bins for the Y axis is not an iterable, get bin edges from
             # ``data_plot.hist_bins()``.
             if not hasattr(bins[1], '__iter__'):
                 bins[1] = data_plot.hist_bins(channels=1,
                                               nbins=bins[1],
-                                              log=ylog)
+                                              scale=yscale)
         else:
             # `bins` contains information for one axis, which will be used
             # twice.
             # If bins is not an iterable, get bin edges from
             # ``data_plot.hist_bins()``.
             if not hasattr(bins, '__iter__'):
-                bins = [data_plot.hist_bins(channels=0, nbins=bins, log=xlog),
-                        data_plot.hist_bins(channels=1, nbins=bins, log=ylog)]
+                bins = [data_plot.hist_bins(channels=0,
+                                            nbins=bins,
+                                            scale=xscale),
+                        data_plot.hist_bins(channels=1,
+                                            nbins=bins,
+                                            scale=yscale)]
 
     else:
         # Check if ``bins`` is None and raise error
@@ -476,11 +481,9 @@ def density2d(data,
         else:
             cbar.ax.set_ylabel('Counts')
 
-    # Make axes log if necessary
-    if xlog:
-        plt.gca().set_xscale('log')
-    if ylog:
-        plt.gca().set_yscale('log')
+    # Set scale of axes
+    plt.gca().set_xscale(xscale)
+    plt.gca().set_yscale(yscale)
 
     # x and y limits
     if xlim is not None:
