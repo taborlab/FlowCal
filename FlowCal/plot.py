@@ -1001,6 +1001,9 @@ def density_and_hist(data,
 
 def scatter3d_and_projections(data_list,
                               channels=[0,1,2],
+                              xscale='linear',
+                              yscale='linear',
+                              zscale='linear',
                               xlabel=None,
                               ylabel=None,
                               zlabel=None,
@@ -1029,6 +1032,12 @@ def scatter3d_and_projections(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
+    zscale : str, optional
+        Scale of the z axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -1076,6 +1085,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(221)
     scatter2d(data_list,
               channels=[channels[0], channels[2]],
+              xscale=xscale,
+              yscale=zscale,
               xlabel=xlabel,
               ylabel=zlabel,
               xlim=xlim,
@@ -1087,6 +1098,9 @@ def scatter3d_and_projections(data_list,
     ax_3d = plt.gcf().add_subplot(222, projection='3d')
     scatter3d(data_list,
               channels=channels,
+              xscale=xscale,
+              yscale=yscale,
+              zscale=zscale,
               xlabel=xlabel,
               ylabel=ylabel,
               zlabel=zlabel,
@@ -1100,6 +1114,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(223)
     scatter2d(data_list,
               channels=[channels[0], channels[1]],
+              xscale=xscale,
+              yscale=yscale,
               xlabel=xlabel,
               ylabel=ylabel,
               xlim=xlim,
@@ -1111,6 +1127,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(224)
     scatter2d(data_list,
               channels=[channels[2], channels[1]],
+              xscale=zscale,
+              yscale=yscale,
               xlabel=zlabel,
               ylabel=ylabel,
               xlim=zlim,
