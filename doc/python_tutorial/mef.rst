@@ -68,7 +68,7 @@ Let's now use ``to_mef`` to transform fluroescence data to MEF.
 ...                              gate_fraction=0.5)
 >>>
 >>> # Plot histogram of transformed channel
->>> FlowCal.plot.hist1d(s_g, channel='FL1', log=True)
+>>> FlowCal.plot.hist1d(s_g, channel='FL1', xscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/lis33tp84cyjmy7/python_tutorial_mef_2.png?raw=1
