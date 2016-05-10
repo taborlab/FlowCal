@@ -333,8 +333,9 @@ def read_fcs_data_segment(buf,
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
             # In some FCS files, the offset to the last byte (end) actually
-            # points to the first byte of the next section. Therefore, also
-            # test for this.
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
             if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
                     (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
@@ -375,8 +376,9 @@ def read_fcs_data_segment(buf,
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
             # In some FCS files, the offset to the last byte (end) actually
-            # points to the first byte of the next section. Therefore, also
-            # test for this.
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
             if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin) and \
                     (byte_shape[0]*byte_shape[1]) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
@@ -450,6 +452,10 @@ def read_fcs_data_segment(buf,
 
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA segment.
+        # In some FCS files, the offset to the last byte (end) actually points
+        # to the first byte of the next segment, in which case the # of bytes
+        # specified in the header exceeds the # of bytes that we should read by
+        # one.
         if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
             (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
