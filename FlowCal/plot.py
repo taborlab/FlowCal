@@ -49,7 +49,6 @@ Functions in this module are divided in two categories:
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
-import matplotlib.ticker
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
@@ -792,35 +791,6 @@ def scatter3d(data_list,
         ax_3d.set_zlabel(zlabel)
     elif hasattr(data_plot, 'channels'):
         ax_3d.set_zlabel(data_plot.channels[2])
-
-    # If log scale is used for any axis, ticks have to be manually set.
-    if xscale == 'log':
-        if hasattr(data_plot, 'hist_bins') and \
-                hasattr(data_plot.hist_bins, '__call__'):
-            xr = data_plot.hist_bins(channels=0, nbins=1, scale=xscale)
-        else:
-            xr = np.array([min(data_plot_x), max(data_plot_x)])
-        xr = np.log10(xr)
-        locator = matplotlib.ticker.MaxNLocator(nbins=6)
-        ax_3d.set_xticks(locator.tick_values(xr[0], xr[1]))
-    if yscale == 'log':
-        if hasattr(data_plot, 'hist_bins') and \
-                hasattr(data_plot.hist_bins, '__call__'):
-            yr = data_plot.hist_bins(channels=1, nbins=1, scale=yscale)
-        else:
-            yr = np.array([min(data_plot_y), max(data_plot_y)])
-        yr = np.log10(yr)
-        locator = matplotlib.ticker.MaxNLocator(nbins=6)
-        ax_3d.set_yticks(locator.tick_values(yr[0], yr[1]))
-    if zscale == 'log':
-        if hasattr(data_plot, 'hist_bins') and \
-                hasattr(data_plot.hist_bins, '__call__'):
-            zr = data_plot.hist_bins(channels=2, nbins=1, scale=zscale)
-        else:
-            zr = np.array([min(data_plot_z), max(data_plot_z)])
-        zr = np.log10(zr)
-        locator = matplotlib.ticker.MaxNLocator(nbins=6)
-        ax_3d.set_zticks(locator.tick_values(zr[0], zr[1]))
 
     # Set plot limits if specified, else extract range from data_plot
     # Use data_plot.hist_bins with one single bin
