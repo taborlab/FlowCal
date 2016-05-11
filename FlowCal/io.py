@@ -814,7 +814,7 @@ class FCSData(np.ndarray):
         Get the range of the specified channel(s).
     resolution(channels=None)
         Get the resolution of the specified channel(s).
-    hist_bins(channels=None, nbins=None, log=False)
+    hist_bins(channels=None, nbins=None, scale='linear')
         Get histogram bin edges for the specified channel(s).
 
     Notes
@@ -1187,7 +1187,7 @@ class FCSData(np.ndarray):
         else:
             return self._resolution[channels]
 
-    def hist_bins(self, channels=None, nbins=None, log=False):
+    def hist_bins(self, channels=None, nbins=None, scale='linear'):
         """
         Get histogram bin edges for the specified channel(s).
 
@@ -1208,9 +1208,9 @@ class FCSData(np.ndarray):
             The number of bins to calculate. If `channels` specified a list
             of channels, `nbins` should be a list of integers. If `nbins`
             is None, use ``FCSData.resolution(channel)``.
-        log : bool, optional
-            Whether to generate bins uniformly spaced in linear or
-            logarithmic scale.
+        scale : str, optional
+            Scale in which to generate bins. Can be either ``linear`` or
+            ``log``.
 
         Return
         ------
@@ -1231,39 +1231,56 @@ class FCSData(np.ndarray):
             channel_list = [channel_list]
         if not isinstance(nbins, list):
             nbins = [nbins]*len(channel_list)
-        if not isinstance(log, list):
-            log = [log]*len(channel_list)
+        if not isinstance(scale, list):
+            scale = [scale]*len(channel_list)
 
         # Iterate
         bins = []
-        for channel, nbins_channel, log_channel in \
-                zip(channel_list, nbins, log):
+        for channel, nbins_channel, scale_channel in \
+                zip(channel_list, nbins, scale):
             # Get channel resolution
             res_channel = self.resolution(channel)
             # Get default nbins
             if nbins_channel is None:
                 nbins_channel = res_channel
-            # Get range of channel, log if necessary
+            # Get range of channel
             range_channel = self.range(channel)
-            if log_channel:
+            # Process scale
+            if scale_channel == 'linear':
+                # We will now generate ``nbins`` uniformly spaced bins centered
+                # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
+                # do so, we need to generate ``nbins + 1`` uniformly spaced
+                # points.
+                delta_res = (range_channel[1] - range_channel[0]) / \
+                    (res_channel - 1)
+                bins_channel = np.linspace(range_channel[0] - delta_res/2,
+                                           range_channel[1] + delta_res/2,
+                                           nbins_channel + 1)
+            elif scale_channel == 'log':
                 # Check if the lower limit is equal or less than zero. If so,
                 # change the lower limit to be 5.42 logs from the upper limit.
                 # This number has been chosen because 10**5.42 = 263027, close
                 # to the 262143 commonly used with floating points
                 if range_channel[0] <= 0:
                     range_channel[0] = range_channel[1]/10**(5.42)
+                # Log range
                 range_channel = [np.log10(range_channel[0]),
                                  np.log10(range_channel[1])]
-            # We will now generate ``nbins`` uniformly spaced bins centered at
-            # ``linspace(range_channel[0], range_channel[1], nbins)``. To do so,
-            # we need to generate ``nbins + 1`` uniformly spaced points.
-            delta_res = (range_channel[1] - range_channel[0])/(res_channel - 1)
-            bins_channel = np.linspace(range_channel[0] - delta_res/2,
-                                       range_channel[1] + delta_res/2,
-                                       nbins_channel + 1)
-            # Exponentiate if necessary
-            if log_channel:
+                # We will now generate ``nbins`` uniformly spaced bins centered
+                # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
+                # do so, we need to generate ``nbins + 1`` uniformly spaced
+                # points.
+                delta_res = (range_channel[1] - range_channel[0]) / \
+                    (res_channel - 1)
+                bins_channel = np.linspace(range_channel[0] - delta_res/2,
+                                           range_channel[1] + delta_res/2,
+                                           nbins_channel + 1)
+                # Exponentiate bins
                 bins_channel = 10**(bins_channel)
+            else:
+                # Scale not supported
+                raise ValueError('scale "{}" not supported'.format(
+                    scale_channel))
             # Accumulate
             bins.append(bins_channel)
 

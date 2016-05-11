@@ -234,8 +234,8 @@ def density2d(data,
               channels=[0,1],
               bins=1024,
               gate_fraction=0.65,
-              xlog=False,
-              ylog=False,
+              xscale='linear',
+              yscale='linear',
               sigma=10.0,
               full_output=False):
     """
@@ -274,14 +274,14 @@ def density2d(data,
             does not exist.
     gate_fraction : float, optional
         Fraction of events to retain after gating.
-    xlog : bool, optional
-        Flag specifying whether to generate bins in linear or log scale for
-        the x axis. `xlog` is ignored if `bins` is an array or a list of
-        arrays.
-    ylog : bool, optional
-        Flag specifying whether to generate bins in linear or log scale for
-        the y axis. `ylog` is ignored if `bins` is an array or a list of
-        arrays.
+    xscale : str, optional
+        Scale of the bins generated for the x axis. Can be either
+        ``linear`` or ``log``. `xscale` is ignored in `bins is an array or
+        a list of arrays.
+    yscale : str, optional
+        Scale of the bins generated for the y axis. Can be either
+        ``linear`` or ``log``. `yscale` is ignored in `bins is an array or
+        a list of arrays.
     sigma : scalar or sequence of scalars, optional
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
@@ -367,21 +367,25 @@ def density2d(data,
             if not hasattr(bins[0], '__iter__'):
                 bins[0] = data_ch.hist_bins(channels=0,
                                             nbins=bins[0],
-                                            log=xlog)
+                                            scale=xscale)
             # If bins for the Y axis is not an iterable, get bin edges from
             # ``data_ch.hist_bins()``.
             if not hasattr(bins[1], '__iter__'):
                 bins[1] = data_ch.hist_bins(channels=1,
                                             nbins=bins[1],
-                                            log=ylog)
+                                            scale=yscale)
         else:
             # `bins` contains information for one axis, which will be used
             # twice.
             # If bins is not an iterable, get bin edges from
             # ``data_ch.hist_bins()``.
             if not hasattr(bins, '__iter__'):
-                bins = [data_ch.hist_bins(channels=0, nbins=bins, log=xlog),
-                        data_ch.hist_bins(channels=1, nbins=bins, log=ylog)]
+                bins = [data_ch.hist_bins(channels=0,
+                                          nbins=bins,
+                                          scale=xscale),
+                        data_ch.hist_bins(channels=1,
+                                          nbins=bins,
+                                          scale=yscale)]
 
     # Make 2D histogram
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)

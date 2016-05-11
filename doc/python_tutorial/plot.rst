@@ -37,7 +37,7 @@ By default, :func:`FlowCal.plot.hist1d` uses 256 uniformly spaced bins. We can o
 :func:`FlowCal.plot.hist1d` can also use bins that are logarithmically spaced. For example, let's convert the data in the ``FL1`` channel to a.u., and plot it in a semilog histogram.
 
 >>> s_fl1 = FlowCal.transform.to_rfi(s, channels='FL1')
->>> FlowCal.plot.hist1d(s_fl1, channel='FL1', log=True)
+>>> FlowCal.plot.hist1d(s_fl1, channel='FL1', xscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/80yeslvvwkjbrk3/python_tutorial_plot_3.png?raw=1
@@ -47,7 +47,7 @@ Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the sam
 >>> filenames = ['data_{:03d}.fcs'.format(i + 2) for i in range(3)]
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]
 >>> d = [FlowCal.transform.to_rfi(di, channels='FL1') for di in d]
->>> FlowCal.plot.hist1d(d, channel='FL1', alpha=0.7, log=True)
+>>> FlowCal.plot.hist1d(d, channel='FL1', alpha=0.7, xscale='log')
 >>> plt.legend(filenames)
 >>> plt.show()
 
@@ -65,8 +65,8 @@ Let's look at the ``FSC`` and ``SSC`` channels in our sample ``s``.
 >>> s_t = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC'])
 >>> FlowCal.plot.density2d(s_t,
 ...                        channels=['FSC', 'SSC'],
-...                        xlog=True,
-...                        ylog=True)
+...                        xscale='log',
+...                        yscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/rq9id6rmp57hoe1/python_tutorial_plot_5.png?raw=1
@@ -78,8 +78,8 @@ The color indicates the number of events in the region, with red indicating a bi
 >>> FlowCal.plot.density2d(s_t,
 ...                        channels=['FSC', 'SSC'],
 ...                        mode='scatter',
-...                        xlog=True,
-...                        ylog=True)
+...                        xscale='log',
+...                        yscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/9okm2e95sthmuam/python_tutorial_plot_6.png?raw=1
@@ -96,11 +96,11 @@ In particular, :func:`FlowCal.plot.density_and_hist` uses :func:`FlowCal.plot.hi
 >>> s_t = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC', 'FL1'])
 >>> FlowCal.plot.density_and_hist(s_t,
 ...                               density_channels=['FSC', 'SSC'],
-...                               density_params={'xlog':True,
-...                                               'ylog':True,
-...                                                'mode':'scatter'},
+...                               density_params={'xscale':'log',
+...                                               'yscale':'log',
+...                                               'mode':'scatter'},
 ...                               hist_channels=['FL1'],
-...                               hist_params={'log':True})
+...                               hist_params={'xscale':'log'})
 >>> plt.tight_layout()
 >>> plt.show()
 

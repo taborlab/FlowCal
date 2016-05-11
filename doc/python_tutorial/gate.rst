@@ -29,7 +29,10 @@ From these clusters, the faint one in the middle corresponds to non-cellular deb
 Some flow cytometers will capture events outside of their range and assign them either the lowest or highest possible values of a channel, depending on which side of the range they fall on. We call these events "saturated". Including them in the analysis results, most of the time, in distorted distribution shapes and incorrect statistics. Therefore, it is generally advised to remove saturated events. To do so, ``FlowCal`` incorporates the function :func:`FlowCal.gate.high_low`. This function retains all the events in the specified channels between two specified values: a high and a low threshold. If these values are not specified, however, the function uses the saturating values.
 
 >>> s_g1 = FlowCal.gate.high_low(s_t, channels=['FSC', 'SSC'])
->>> FlowCal.plot.density2d(s_g1, channels=['FSC', 'SSC'], xlog=True, ylog=True)
+>>> FlowCal.plot.density2d(s_g1,
+...                        channels=['FSC', 'SSC'],
+...                        xscale='log',
+...                        yscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/pujabnm5qmsa4pc/python_tutorial_gate_1.png?raw=1
@@ -39,8 +42,8 @@ We successfully removed the event clusters on the left. We can go one step furth
 >>> s_g2 = FlowCal.gate.high_low(s_g1, channels='SSC', low=220)
 >>> FlowCal.plot.density2d(s_g2,
 ...                        channels=['FSC', 'SSC'],
-...                        xlog=True,
-...                        ylog=True,
+...                        xscale='log',
+...                        yscale='log',
 ...                        mode='scatter')
 >>> plt.show()
 
@@ -62,8 +65,8 @@ Ellipse Gate
 ...                             theta=15/180.*np.pi)
 >>> FlowCal.plot.density2d(s_g3,
 ...                        channels=['FSC', 'SSC'],
-...                        xlog=True,
-...                        ylog=True,
+...                        xscale='log',
+...                        yscale='log',
 ...                        mode='scatter')
 >>> plt.show()
 
@@ -79,8 +82,14 @@ Density Gate
 
 >>> s_g4 = FlowCal.gate.density2d(s_g1,
 ...                               channels=['FSC', 'SSC'],
+...                               xscale='log',
+...                               yscale='log',
 ...                               gate_fraction=0.5)
->>> FlowCal.plot.density2d(s_g4, channels=['FSC', 'SSC'], log=True, mode='scatter')
+>>> FlowCal.plot.density2d(s_g4,
+...                        channels=['FSC', 'SSC'],
+...                        xscale='log',
+...                        yscale='log',
+...                        mode='scatter')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/34079nzcgs4xxzv/python_tutorial_gate_4.png?raw=1
@@ -96,8 +105,8 @@ Finally, we will see a better way to visualize the result of applying a 2D gate.
 
 >>> s_g5, m_g5, contour = FlowCal.gate.density2d(s_g1,
 ...                                              channels=['FSC', 'SSC'],
-...                                              xlog=True,
-...                                              ylog=True,
+...                                              xscale='log',
+...                                              yscale='log',
 ...                                              gate_fraction=0.5,
 ...                                              full_output=True)
 
@@ -109,11 +118,11 @@ The function :func:`FlowCal.plot.density_and_hist` was introduced in the :doc:`p
 ...                               gated_data=s_g5,
 ...                               gate_contour=contour,
 ...                               density_channels=['FSC', 'SSC'],
-...                               density_params={'xlog':True,
-...                                               'ylog':True,
+...                               density_params={'xscale':'log',
+...                                               'yscale':'log',
 ...                                               'mode':'scatter'},
 ...                               hist_channels=['FL1'],
-...                               hist_params={'log':True})
+...                               hist_params={'xscale':'log'})
 >>> plt.tight_layout()
 >>> plt.show()
 
