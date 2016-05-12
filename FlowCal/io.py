@@ -164,21 +164,18 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
 
-    # Some files have been found to include space characters at the end of the
-    # TEXT segment. If the delimiter is not a space character, strip spaces
-    # from the end of the segment.
-    if not delim.isspace():
-        raw = raw.rstrip()
+    # Check that the first character of the TEXT segment is equal to the
+    # delimiter.
+    if raw[0] != delim:
+        raise ValueError("segment should start with delimiter")
+
+    # Look for the last delimiter in the segment string, and retain everything
+    # from one character after the first delimiter to one character before the
+    # last delimiter.
+    end_index = raw.rfind(delim)
+    raw = raw[1: end_index]
 
     pairs_list = raw.split(delim)
-
-    # The first and last list items should be empty because the TEXT
-    # segment starts and ends with the delimiter
-    if pairs_list[0] != '' or pairs_list[-1] != '':
-        raise ValueError("segment should start and end with delimiter")
-    else:
-        del pairs_list[0]
-        del pairs_list[-1]
 
     # According to the FCS2.0 standard, "If the separator appears in a keyword
     # or in a keyword value, it must be 'quoted' by being repeated" and "null
