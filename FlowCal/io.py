@@ -536,13 +536,10 @@ class FCSFile(object):
         If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
         endian ('1,2,3,4', '1,2').
     ValueError
-        If TEXT-like segment does not start and end with delimiter.
+        If TEXT-like segment does not start with delimiter.
     ValueError
         If TEXT-like segment has odd number of total extracted keys and
         values (indicating an unpaired key or value).
-    NotImplementedError
-        If the TEXT segment delimiter is used in a TEXT-like segment
-        keyword or value.
     ValueError
         If calculated DATA segment size (as determined from the number
         of events, the number of parameters, and the number of bytes per
@@ -550,6 +547,8 @@ class FCSFile(object):
         offsets.
     Warning
         If more than one data set is detected in the same file.
+    Warning
+        If the ANALYSIS segment was not successfully parsed.
     
     Notes
     -----
