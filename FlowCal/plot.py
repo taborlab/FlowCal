@@ -527,6 +527,8 @@ def density2d(data,
 
 def scatter2d(data_list, 
               channels=[0,1],
+              xscale='linear',
+              yscale='linear',
               xlabel=None,
               ylabel=None,
               xlim=None,
@@ -549,6 +551,10 @@ def scatter2d(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -616,15 +622,22 @@ def scatter2d(data_list,
     elif hasattr(data_plot, 'channels'):
         plt.ylabel(data_plot.channels[1])
 
+    # Set scale of axes
+    plt.gca().set_xscale(xscale)
+    plt.gca().set_yscale(yscale)
+
     # Set plot limits if specified, else extract range from data_plot
+    # Use data_plot.hist_bins with one single bin
     if xlim is not None:
         plt.xlim(xlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
-        plt.xlim(data_plot.range(0)[0], data_plot.range(0)[1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        plt.xlim(data_plot.hist_bins(channels=0, nbins=1, scale=xscale))
     if ylim is not None:
         plt.ylim(ylim)
-    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
-        plt.ylim(data_plot.range(1)[0], data_plot.range(1)[1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        plt.ylim(data_plot.hist_bins(channels=1, nbins=1, scale=yscale))
 
     # Title
     if title is not None:
@@ -638,6 +651,9 @@ def scatter2d(data_list,
 
 def scatter3d(data_list, 
               channels=[0,1,2],
+              xscale='linear',
+              yscale='linear',
+              zscale='linear',
               xlabel=None,
               ylabel=None,
               zlabel=None,
@@ -662,6 +678,12 @@ def scatter3d(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
+    zscale : str, optional
+        Scale of the z axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -720,17 +742,38 @@ def scatter3d(data_list,
     for i, data in enumerate(data_list):
         # Get channels to plot
         data_plot = data[:, channels]
+        # Transform according to the scale of each axis
+        # Explicit rescaling is required for non-linear scales because mplot3d
+        # does not natively support anything but linear scale.
+        if xscale == 'linear':
+            data_plot_x = data_plot[:,0]
+        elif xscale == 'log':
+            data_plot_x = np.log10(data_plot[:,0])
+        else:
+            raise ValueError('scale {} not supported'.format(xscale))
+        if yscale == 'linear':
+            data_plot_y = data_plot[:,1]
+        elif yscale == 'log':
+            data_plot_y = np.log10(data_plot[:,1])
+        else:
+            raise ValueError('scale {} not supported'.format(yscale))
+        if zscale == 'linear':
+            data_plot_z = data_plot[:,2]
+        elif zscale == 'log':
+            data_plot_z = np.log10(data_plot[:,2])
+        else:
+            raise ValueError('scale {} not supported'.format(zscale))
         # Make scatter plot
-        ax_3d.scatter(data_plot[:,0],
-                      data_plot[:,1],
-                      data_plot[:,2],
+        ax_3d.scatter(data_plot_x,
+                      data_plot_y,
+                      data_plot_z,
                       marker='o',
                       alpha=0.1,
                       color=color[i],
                       c=color[i],
                       **kwargs)
 
-    # Remove tick marks
+    # Remove tick labels
     ax_3d.xaxis.set_ticklabels([])
     ax_3d.yaxis.set_ticklabels([])
     ax_3d.zaxis.set_ticklabels([])
@@ -750,18 +793,31 @@ def scatter3d(data_list,
         ax_3d.set_zlabel(data_plot.channels[2])
 
     # Set plot limits if specified, else extract range from data_plot
+    # Use data_plot.hist_bins with one single bin
     if xlim is not None:
         ax_3d.set_xlim(xlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(0) is not None:
-        ax_3d.set_xlim(data_plot.range(0)[0], data_plot.range(0)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        xlim = data_plot.hist_bins(channels=0, nbins=1, scale=xscale)
+        if xscale == 'log':
+            xlim = np.log10(xlim)
+        ax_3d.set_xlim(xlim)
     if ylim is not None:
         ax_3d.set_ylim(ylim)
-    elif hasattr(data_plot, 'range') and data_plot.range(1) is not None:
-        ax_3d.set_ylim(data_plot.range(1)[0], data_plot.range(1)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        ylim = data_plot.hist_bins(channels=1, nbins=1, scale=yscale)
+        if yscale == 'log':
+            ylim = np.log10(ylim)
+        ax_3d.set_ylim(ylim)
     if zlim is not None:
         ax_3d.set_zlim(zlim)
-    elif hasattr(data_plot, 'range') and data_plot.range(2) is not None:
-        ax_3d.set_zlim(data_plot.range(2)[0], data_plot.range(2)[-1])
+    elif hasattr(data_plot, 'hist_bins') and \
+            hasattr(data_plot.hist_bins, '__call__'):
+        zlim = data_plot.hist_bins(channels=2, nbins=1, scale=zscale)
+        if zscale == 'log':
+            zlim = np.log10(zlim)
+        ax_3d.set_zlim(zlim)
 
     # Title
     if title is not None:
@@ -915,6 +971,9 @@ def density_and_hist(data,
 
 def scatter3d_and_projections(data_list,
                               channels=[0,1,2],
+                              xscale='linear',
+                              yscale='linear',
+                              zscale='linear',
                               xlabel=None,
                               ylabel=None,
                               zlabel=None,
@@ -943,6 +1002,12 @@ def scatter3d_and_projections(data_list,
 
     Other parameters
     ----------------
+    xscale : str, optional
+        Scale of the x axis, either ``linear`` or ``log``.
+    yscale : str, optional
+        Scale of the y axis, either ``linear`` or ``log``.
+    zscale : str, optional
+        Scale of the z axis, either ``linear`` or ``log``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -990,6 +1055,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(221)
     scatter2d(data_list,
               channels=[channels[0], channels[2]],
+              xscale=xscale,
+              yscale=zscale,
               xlabel=xlabel,
               ylabel=zlabel,
               xlim=xlim,
@@ -1001,6 +1068,9 @@ def scatter3d_and_projections(data_list,
     ax_3d = plt.gcf().add_subplot(222, projection='3d')
     scatter3d(data_list,
               channels=channels,
+              xscale=xscale,
+              yscale=yscale,
+              zscale=zscale,
               xlabel=xlabel,
               ylabel=ylabel,
               zlabel=zlabel,
@@ -1014,6 +1084,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(223)
     scatter2d(data_list,
               channels=[channels[0], channels[1]],
+              xscale=xscale,
+              yscale=yscale,
               xlabel=xlabel,
               ylabel=ylabel,
               xlim=xlim,
@@ -1025,6 +1097,8 @@ def scatter3d_and_projections(data_list,
     plt.subplot(224)
     scatter2d(data_list,
               channels=[channels[2], channels[1]],
+              xscale=zscale,
+              yscale=yscale,
               xlabel=zlabel,
               ylabel=ylabel,
               xlim=zlim,
