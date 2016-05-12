@@ -675,8 +675,9 @@ class FCSFile(object):
                     begin=self._header.analysis_begin,
                     end=self._header.analysis_end,
                     delim=delim)[0]
-            except:
-                warnings.warn("ignoring ANALYSIS segment")
+            except Exception as e:
+                warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                    format(str(e)))
                 self._analysis = {}
         elif self._header.version in ('FCS3.0', 'FCS3.1'):
             analysis_begin = int(self._text['$BEGINANALYSIS'])
@@ -688,8 +689,9 @@ class FCSFile(object):
                         begin=analysis_begin,
                         end=analysis_end,
                         delim=delim)[0]
-                except:
-                    warnings.warn("ignoring ANALYSIS segment")
+                except Exception as e:
+                    warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                        format(str(e)))
                     self._analysis = {}
             else:
                 self._analysis = {}
