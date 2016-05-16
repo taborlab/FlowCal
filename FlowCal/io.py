@@ -164,25 +164,57 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
 
+    # If segment is empty, return empty dictionary as text
+    if not raw:
+        return {}, delim
+
+    # Check that the first character of the TEXT segment is equal to the
+    # delimiter.
+    if raw[0] != delim:
+        raise ValueError("segment should start with delimiter")
+
+    # Look for the last delimiter in the segment string, and retain everything
+    # from one character after the first delimiter to one character before the
+    # last delimiter.
+    end_index = raw.rfind(delim)
+    raw = raw[1: end_index]
+
     pairs_list = raw.split(delim)
 
-    # The first and last list items should be empty because the TEXT
-    # segment starts and ends with the delimiter
-    if pairs_list[0] != '' or pairs_list[-1] != '':
-        raise ValueError("segment should start and end with delimiter")
-    else:
-        del pairs_list[0]
-        del pairs_list[-1]
-
-    # Detect if delimiter was used in keyword or value (which, according to
-    # the standards, is technically legal). According to the FCS2.0 standard,
-    # "If the separator appears in a keyword or in a keyword value, it must be
-    # 'quoted' by being repeated" and "null (zero length) keywords or keyword
-    # values are not permitted", so this issue should manifest itself as an
-    # empty element in the list.
-    if any(x=='' for x in pairs_list):
-        raise NotImplementedError("use of delimiter in keywords or keyword"
-            + " values is not supported")
+    # According to the FCS2.0 standard, "If the separator appears in a keyword
+    # or in a keyword value, it must be 'quoted' by being repeated" and "null
+    # (zero length) keywords or keyword values are not permitted", so this
+    # issue should manifest itself as an empty element in the list.
+    # The following scans the list of pairs for empty elements and appends a
+    # delimiter character to the previous element when an empty element is
+    # found.
+    pairs_list_delim = []
+    pairs_list_idx = 0
+    while pairs_list_idx < len(pairs_list):
+        if pairs_list[pairs_list_idx] != '':
+            # Non-empty element, just append
+            pairs_list_delim.append(pairs_list[pairs_list_idx])
+        else:
+            # Empty element
+            # Accumulate delimiters in a temporary string as long as more empty
+            # elements are found, until the last element
+            s = ''
+            while True:
+                s += delim
+                pairs_list_idx += 1
+                if pairs_list_idx >= len(pairs_list):
+                    break
+                if pairs_list[pairs_list_idx] != '':
+                    s += pairs_list[pairs_list_idx]
+                    break
+            # Append temporary string to previous element if pairs_list_delim
+            # is not empty, otherwise make it the first element.
+            if pairs_list_delim:
+                pairs_list_delim[-1] += s
+            else:
+                pairs_list_delim.append(s)
+        pairs_list_idx += 1
+    pairs_list = pairs_list_delim
 
     # List length should be even since all key-value entries should be pairs
     if len(pairs_list) % 2 != 0:
@@ -301,7 +333,12 @@ def read_fcs_data_segment(buf,
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
-            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+            # In some FCS files, the offset to the last byte (end) actually
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
+            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
+                    (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
                     + " {0} bytes,".format(shape[0]*shape[1]*(num_bits/8))
@@ -339,7 +376,12 @@ def read_fcs_data_segment(buf,
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
-            if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin):
+            # In some FCS files, the offset to the last byte (end) actually
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
+            if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin) and \
+                    (byte_shape[0]*byte_shape[1]) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
                     + " {0} bytes,".format(byte_shape[0]*byte_shape[1])
@@ -411,7 +453,12 @@ def read_fcs_data_segment(buf,
 
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA segment.
-        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+        # In some FCS files, the offset to the last byte (end) actually points
+        # to the first byte of the next segment, in which case the # of bytes
+        # specified in the header exceeds the # of bytes that we should read by
+        # one.
+        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
+            (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
                 + " (array size = {0}".format(shape[0]*shape[1]*(num_bits/8))
                 + " bytes, DATA segment size ="
@@ -493,13 +540,10 @@ class FCSFile(object):
         If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
         endian ('1,2,3,4', '1,2').
     ValueError
-        If TEXT-like segment does not start and end with delimiter.
+        If TEXT-like segment does not start with delimiter.
     ValueError
         If TEXT-like segment has odd number of total extracted keys and
         values (indicating an unpaired key or value).
-    NotImplementedError
-        If the TEXT segment delimiter is used in a TEXT-like segment
-        keyword or value.
     ValueError
         If calculated DATA segment size (as determined from the number
         of events, the number of parameters, and the number of bytes per
@@ -507,6 +551,8 @@ class FCSFile(object):
         offsets.
     Warning
         If more than one data set is detected in the same file.
+    Warning
+        If the ANALYSIS segment was not successfully parsed.
     
     Notes
     -----
@@ -627,27 +673,37 @@ class FCSFile(object):
         if self._header.analysis_begin and self._header.analysis_end:
             # Prioritize ANALYSIS segment offsets specified in HEADER over
             # offsets specified in TEXT segment.
-            self._analysis = read_fcs_text_segment(
-                buf=f,
-                begin=self._header.analysis_begin,
-                end=self._header.analysis_end,
-                delim=delim)[0]
+            try:
+                self._analysis = read_fcs_text_segment(
+                    buf=f,
+                    begin=self._header.analysis_begin,
+                    end=self._header.analysis_end,
+                    delim=delim)[0]
+            except Exception as e:
+                warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                    format(str(e)))
+                self._analysis = {}
         elif self._header.version in ('FCS3.0', 'FCS3.1'):
             analysis_begin = int(self._text['$BEGINANALYSIS'])
             analysis_end = int(self._text['$ENDANALYSIS'])
             if analysis_begin and analysis_end:
-                self._analysis = read_fcs_text_segment(
-                    buf=f,
-                    begin=analysis_begin,
-                    end=analysis_end,
-                    delim=delim)[0]
+                try:
+                    self._analysis = read_fcs_text_segment(
+                        buf=f,
+                        begin=analysis_begin,
+                        end=analysis_end,
+                        delim=delim)[0]
+                except Exception as e:
+                    warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                        format(str(e)))
+                    self._analysis = {}
             else:
                 self._analysis = {}
         else:
             self._analysis = {}
         
         # Import DATA segment
-        param_ranges = [int(self._text['$P{0}R'.format(p)])
+        param_ranges = [float(self._text['$P{0}R'.format(p)])
                         for p in xrange(1,D+1)]
         if self._header.data_begin and self._header.data_end:
             # Prioritize DATA segment offsets specified in HEADER over
@@ -1518,12 +1574,20 @@ class FCSData(np.ndarray):
             else:
                 # 'hh:mm:ss' format
                 time_str = time_str + ':0'
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         elif len(time_l) == 4:
             # 'hh:mm:ss:tt' format
             time_l[3] = '{:06d}'.format(int(float(time_l[3])*1e6/60))
             time_str = ':'.join(time_l)
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         else:
             # Unknown format
             t = None
