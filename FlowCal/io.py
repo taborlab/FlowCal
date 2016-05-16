@@ -164,6 +164,10 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
 
+    # If segment is empty, return empty dictionary as text
+    if not raw:
+        return {}, delim
+
     # Check that the first character of the TEXT segment is equal to the
     # delimiter.
     if raw[0] != delim:
