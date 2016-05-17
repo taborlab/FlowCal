@@ -1250,9 +1250,7 @@ class FCSData(np.ndarray):
         These cover the range specified in ``FCSData.range(channels)`` with
         a number of bins `nbins`, either linearly or logarithmically
         spaced. If ``range[0]`` is equal or less than zero and `log` is
-        True, the lower limit of the range is redefined such that it covers
-        5.42 decades (if ``range[1] == 262143``, the lower limit is almost
-        1).
+        True, the lower limit of the range is replaced by one.
 
         Parameters
         ----------
@@ -1314,11 +1312,9 @@ class FCSData(np.ndarray):
                                            nbins_channel + 1)
             elif scale_channel == 'log':
                 # Check if the lower limit is equal or less than zero. If so,
-                # change the lower limit to be 5.42 logs from the upper limit.
-                # This number has been chosen because 10**5.42 = 263027, close
-                # to the 262143 commonly used with floating points
+                # change the lower limit to one.
                 if range_channel[0] <= 0:
-                    range_channel[0] = range_channel[1]/10**(5.42)
+                    range_channel[0] = 1.
                 # Log range
                 range_channel = [np.log10(range_channel[0]),
                                  np.log10(range_channel[1])]
