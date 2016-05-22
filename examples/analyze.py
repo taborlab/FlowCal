@@ -39,29 +39,40 @@ mef_values = {'FL1': [0, 792, 2079, 6588, 16471, 47497, 137049, 271647],
              }
 
 if __name__ == "__main__":
-    # Check that directories exists, create if it doesn't.
+    # Check that directories exists, create if they don't.
     if not os.path.exists(beads_plot_dir):
         os.makedirs(beads_plot_dir)
     if not os.path.exists(gated_plot_dir):
         os.makedirs(gated_plot_dir)
 
-    # Process beads data
+    # Load beads data
     print("\nProcessing beads...")
     beads_data = FlowCal.io.FCSData('{}/{}'.format(directory, beads_file))
     print("Beads file contains {} events.".format(beads_data.shape[0]))
 
-    # Trim
+    # Transform to Relative Fluorescence Units (rfi), commonly known as
+    # arbitrary units (a.u.)
+    beads_data = FlowCal.transform.to_rfi(beads_data,
+                                          sc_channels + fl_channels)
+
+    # Gating
+
+    # Remove first and last events. Transients in fluidics can make the
+    # first few and last events slightly different from the rest.
     beads_data = FlowCal.gate.start_end(beads_data, num_start=250, num_end=100)
+
+    # Remove saturating events in forward/side scatter.
     beads_data = FlowCal.gate.high_low(beads_data, sc_channels)
 
-    # Density gate
+    # Apply density gating
     print("\nRunning density gate on beads data...")
     gated_beads_data, __, gate_contour = FlowCal.gate.density2d(
         data=beads_data,
         channels=sc_channels,
         gate_fraction=0.3,
         full_output=True)
-    # Plot
+
+    # Plot forward/side scatter density plot and fluorescence histograms
     plt.figure(figsize = (6,4))
     FlowCal.plot.density_and_hist(
         beads_data,
@@ -69,8 +80,8 @@ if __name__ == "__main__":
         density_channels=sc_channels,
         hist_channels=fl_channels,
         gate_contour=gate_contour, 
-        density_params={'mode': 'scatter'}, 
-        hist_params={'ylim': (0, 1000)},
+        density_params={'mode': 'scatter', 'xscale': 'log', 'yscale': 'log'},
+        hist_params={'ylim': (0, 1000), 'xscale': 'log'},
         savefig='{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
     plt.close()
 
@@ -87,7 +98,7 @@ if __name__ == "__main__":
         plot_dir = beads_plot_dir)
 
 
-    # Process data files
+    # Load cell sample data
     print("\nLoading data...")
     data = []
     for df in data_files:
@@ -100,26 +111,32 @@ if __name__ == "__main__":
             di.shape[0],
             dv))
 
-    # Basic gating/trimming
-    data = [FlowCal.gate.start_end(di, num_start=250, num_end=100)
-            for di in data]
-    data = [FlowCal.gate.high_low(di, sc_channels) for di in data]
-    # Gating of fluorescence channels
-    data = [FlowCal.gate.high_low(di, mef_channels) for di in data]
     # Transform to Relative Fluorescence Units (rfi), commonly known as
     # arbitrary units (a.u.)
-    data_transf = [FlowCal.transform.to_rfi(di, sc_channels)
+    data_transf = [FlowCal.transform.to_rfi(di, sc_channels + mef_channels)
                    for di in data]
 
-    # Transform to MEF
+    # Transform specified fluorescence channels to MEF
     print("\nTransforming to MEF...")
     data_transf = [to_mef(di, mef_channels) for di in data_transf]
 
+    # Gate
+
+    # Remove first and last events. Transients in fluidics can make the
+    # first few and last events slightly different from the rest.
+    data_gated = [FlowCal.gate.start_end(di, num_start=250, num_end=100)
+            for di in data_transf]
+
+    # Remove saturating events in forward/side scatter and fluorescence
+    # channels.
+    data_gated = [FlowCal.gate.high_low(di, sc_channels + mef_channels)
+            for di in data_gated]
+
     # Density gate
     print("\nRunning density gate on data files...")
-    data_gated = []
-    data_gated_contour = []
-    for di in data_transf:
+    data_dg = []
+    data_dg_contour = []
+    for di in data_gated:
         print("{}...".format(str(di)))
         di_gated, __, gate_contour = FlowCal.gate.density2d(
             data=di,
@@ -128,14 +145,14 @@ if __name__ == "__main__":
             yscale='log',
             gate_fraction=0.2,
             full_output=True)
-        data_gated.append(di_gated)
-        data_gated_contour.append(gate_contour)
+        data_dg.append(di_gated)
+        data_dg_contour.append(gate_contour)
 
     # Plot
     xlabels = [mef_names[chi] for chi in mef_channels]
     if plot_gated:
         print("\nPlotting density diagrams and histograms of data")
-        for di, dig, dgc in zip(data_transf, data_gated, data_gated_contour):
+        for di, dig, dgc in zip(data_transf, data_dg, data_dg_contour):
             print("{}...".format(str(di)))
             # Create histogram parameters
             hist_params = []
