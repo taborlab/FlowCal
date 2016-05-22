@@ -847,6 +847,8 @@ class FCSData(np.ndarray):
     analysis : dict
         Dictionary of keyword-value entries from ANALYSIS segment of the
         FCS file.
+    data_type : str
+        Type of data in the FCS file's DATA segment.
     time_step : float
         Time step of the time channel.
     acquisition_start_time : time or datetime
@@ -970,6 +972,17 @@ class FCSData(np.ndarray):
 
         """
         return self._analysis
+
+    @property
+    def data_type(self):
+        """
+        Type of data in the FCS file's DATA segment.
+
+        `data_type` is 'I' if the data type is integer, 'F' for floating
+        point, and 'D' for double.
+
+        """
+        return self._data_type
 
     @property
     def time_step(self):
@@ -1371,6 +1384,9 @@ class FCSData(np.ndarray):
         else:
             time_step = None
 
+        # Data type
+        data_type = fcs_file.text['$DATATYPE']
+
         # Extract the acquisition date.
         acquisition_date = cls._parse_date_string(fcs_file.text.get('$DATE'))
 
@@ -1473,6 +1489,7 @@ class FCSData(np.ndarray):
         obj._analysis = fcs_file.analysis
 
         # Add channel-independent attributes
+        obj._data_type = data_type
         obj._time_step = time_step
         obj._acquisition_start_time = acquisition_start_time
         obj._acquisition_end_time = acquisition_end_time

@@ -888,6 +888,16 @@ class TestFCSAttributes(unittest.TestCase):
         """
         self.assertEqual(str(self.d), 'Data001.fcs')
 
+    def test_data_type(self):
+        """
+        Testing of data type.
+
+        """
+        # Data001.fcs is a FCS2.0 file, with integer data.
+        # We have previously looked at self.d.text['$DATATYPE']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.data_type, 'I')
+
     def test_time_step(self):
         """
         Testing of the time step.
@@ -952,6 +962,16 @@ class TestFCSAttributes3(unittest.TestCase):
 
         """
         self.assertEqual(str(self.d), 'Data003.fcs')
+
+    def test_data_type(self):
+        """
+        Testing of the data type.
+
+        """
+        # Data003.fcs is a FCS3.0 file, with integer data.
+        # We have previously looked at self.d.text['$DATATYPE']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.data_type, 'I')
 
     def test_time_step(self):
         """
