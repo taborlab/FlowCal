@@ -198,7 +198,8 @@ def process_beads_table(beads_table,
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter and fluorescence
+          channels to a.u.
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
@@ -322,8 +323,9 @@ def process_beads_table(beads_table,
             ###
             if verbose:
                 print("Performing data transformation...")
-            # Transform FSC/SSC to linear scale
-            beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
+            # Transform FSC/SSC and fluorescence channels to linear scale
+            beads_sample = FlowCal.transform.to_rfi(beads_sample,
+                                                    sc_channels + fl_channels)
 
             # Parse clustering channels data
             cluster_channels = beads_row['Clustering Channels'].split(',')
@@ -349,14 +351,8 @@ def process_beads_table(beads_table,
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
-                xscale='log'
-                       if beads_sample_gated.amplification_type(
-                           sc_channels[0])[0]
-                       else 'linear',
-                yscale='log'
-                       if beads_sample_gated.amplification_type(
-                           sc_channels[1])[0]
-                       else 'linear',
+                xscale='log',
+                yscale='log',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -366,14 +362,8 @@ def process_beads_table(beads_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                if beads_sample_gated.amplification_type(sc_channels[0])[0]:
-                    density_params['xscale'] = 'log'
-                else:
-                    density_params['xscale'] = 'linear'
-                if beads_sample_gated.amplification_type(sc_channels[1])[0]:
-                    density_params['yscale'] = 'log'
-                else:
-                    density_params['yscale'] = 'linear'
+                density_params['xscale'] = 'log'
+                density_params['yscale'] = 'log'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
@@ -381,7 +371,7 @@ def process_beads_table(beads_table,
                 figname = os.path.join(base_dir,
                                        plot_dir,
                                        "density_hist_{}.png".format(beads_id))
-                plt.figure(figsize = (6,4))
+                plt.figure(figsize=(6,4))
                 FlowCal.plot.density_and_hist(
                     beads_sample,
                     beads_sample_gated,
@@ -389,7 +379,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={},
+                    hist_params={'xscale': 'log'},
                     savefig=figname)
 
             ###
@@ -489,14 +479,14 @@ def process_samples_table(samples_table,
     The function processes each entry in `samples_table`, and does the
     following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter to a.u., if needed.
+        - Transform the fluorescence channels to the units specified in the
+          column "<Channel name> Units".
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
         - Apply density gating on the forward scatter/side scatter
           channels.
-        - Transform the fluorescence channels to the units specified in the
-          column "<Channel name> Units".
         - Plot combined forward/side scatter density plots and fluorescence
           historgrams, if `plot` = True.
     
@@ -689,7 +679,9 @@ def process_samples_table(samples_table,
                                         beads_dv,
                                         sample.detector_voltage(fl_channel)))
 
-                        # Attempt to transform
+                        # Transform first to RFI
+                        sample = FlowCal.transform.to_rfi(sample, fl_channel)
+                        # Attempt to transform to MEF
                         # Transformation function raises a ValueError if a
                         # standard curve does not exist for a channel
                         try:
@@ -727,12 +719,8 @@ def process_samples_table(samples_table,
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
-                xscale='log'
-                       if sample_gated.amplification_type(sc_channels[0])[0]
-                       else 'linear',
-                yscale='log'
-                       if sample_gated.amplification_type(sc_channels[1])[0]
-                       else 'linear',
+                xscale='log',
+                yscale='log',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -742,14 +730,8 @@ def process_samples_table(samples_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                if sample_gated.amplification_type(sc_channels[0])[0]:
-                    density_params['xscale'] = 'log'
-                else:
-                    density_params['xscale'] = 'linear'
-                if sample_gated.amplification_type(sc_channels[1])[0]:
-                    density_params['yscale'] = 'log'
-                else:
-                    density_params['yscale'] = 'linear'
+                density_params['xscale'] = 'log'
+                density_params['yscale'] = 'log'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
@@ -758,11 +740,11 @@ def process_samples_table(samples_table,
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
                     param['xlabel'] = '{} ({})'.format(rc, ru)
-                    if (ru != 'Channel Number') and \
-                            bool(sample_gated.amplification_type(rc)[0]):
-                        param['xscale'] = 'log'
-                    else:
+                    # Only channel numbers are plotted in linear scale
+                    if (ru == 'Channel Number'):
                         param['xscale'] = 'linear'
+                    else:
+                        param['xscale'] = 'log'
                     hist_params.append(param)
                     
                 # Plot
