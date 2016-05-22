@@ -1026,6 +1026,85 @@ class TestFCSAttributes3(unittest.TestCase):
         d = self.d[:,['FSC', 'SSC', 'FL1', 'FL2', 'FL3']]
         self.assertEqual(d.acquisition_time, 156)
 
+class TestFCSAttributesFloating(unittest.TestCase):
+    def setUp(self):
+        self.d = FlowCal.io.FCSData(filenames[3])
+        self.n_samples = self.d.shape[0]
+
+    def test_str(self):
+        """
+        Testing string representation.
+
+        """
+        self.assertEqual(str(self.d), 'Data004.fcs')
+
+    def test_data_type(self):
+        """
+        Testing of the data type.
+
+        """
+        # Data004.fcs is a FCS3.0 file, with floating-point data.
+        # We have previously looked at self.d.text['$DATATYPE']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.data_type, 'F')
+
+    def test_time_step(self):
+        """
+        Testing of the time step.
+
+        """
+        # Data004.fcs is a FCS3.0 file, use the $TIMESTEP parameter.
+        # We have previously looked at self.d.text['$TIMESTEP']) to determine
+        # the correct output for this file.
+        self.assertEqual(self.d.time_step, 0.01)
+
+    def test_acquisition_start_time(self):
+        """
+        Testing of acquisition start time.
+
+        """
+        # We have previously looked at the $BTIM and #DATE attributes of
+        # Data004.fcs to determine the correct value of acquisition_start_time.
+        time_correct = datetime.datetime(2015, 5, 29, 17, 10, 23)
+        self.assertEqual(self.d.acquisition_start_time, time_correct)
+
+    def test_acquisition_end_time(self):
+        """
+        Testing of acquisition end time.
+
+        """
+        # We have previously looked at the $ETIM and #DATE attributes of
+        # Data004.fcs to determine the correct value of acquisition_end_time.
+        time_correct = datetime.datetime(2015, 5, 29, 17, 10, 27)
+        self.assertEqual(self.d.acquisition_end_time, time_correct)
+
+    def test_acquisition_time_event(self):
+        """
+        Testing acquisition time.
+
+        """
+        # Data004.fcs has the time channel, so the acquisition time should be
+        # calculated using the event list.
+        # We have previously looked at self.d[0, 'TIME'] and self.d[-1, 'TIME']
+        # to determine the correct output for this file.
+        self.assertEqual(self.d.acquisition_time, 1.7029998779296875)
+
+    def test_acquisition_time_btim_etim(self):
+        """
+        Testing acquisition time using the btim/etim method.
+
+        """
+        # Data004.fcs has the time channel, so we will remove it so that the
+        # BTIM and ETIM keyword arguments are used.
+        # We have previously looked at d.text['$BTIM'] and d.text['$ETIM'] to
+        # determine the correct output for this file.
+        d = self.d[:,['FSC-A', 'FSC-H', 'FSC-W',
+                      'SSC-A', 'SSC-H', 'SSC-W',
+                      'FSC PMT-A', 'FSC PMT-H', 'FSC PMT-W',
+                      'GFP-A', 'GFP-H',
+                      'mCherry-A', 'mCherry-H']]
+        self.assertEqual(d.acquisition_time, 4)
+
 class TestFCSDataSlicing(unittest.TestCase):
     def setUp(self):
         self.d = FlowCal.io.FCSData(filenames[0])
