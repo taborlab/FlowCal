@@ -341,11 +341,13 @@ def process_beads_table(beads_table,
             beads_sample_gated = FlowCal.gate.start_end(beads_sample,
                                                         num_start=250,
                                                         num_end=100)
-            # Remove saturating events in forward/side scatter. The value of a
-            # saturating event is taken automatically from
-            # `beads_sample_gated.range`.
-            beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
-                                                       channels=sc_channels)
+            # Remove saturating events in forward/side scatter, if the FCS data
+            # type is integer. The value of a saturating event is taken
+            # automatically from `beads_sample_gated.range`.
+            if beads_sample_gated.data_type == 'I':
+                beads_sample_gated = FlowCal.gate.high_low(
+                    beads_sample_gated,
+                    channels=sc_channels)
             # Density gating
             beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=beads_sample_gated,
@@ -710,10 +712,13 @@ def process_samples_table(samples_table,
                                                   num_start=250,
                                                   num_end=100)
             # Remove saturating events in forward/side scatter, and fluorescent
-            # channels to report. The value of a saturating event is taken
-            # automatically from `sample_gated.range`.
-            sample_gated = FlowCal.gate.high_low(sample_gated,
-                                                 sc_channels + report_channels)
+            # channels to report, if the FCS data type is integer. The value of
+            # a saturating event is taken automatically from
+            # `sample_gated.range`.
+            if sample_gated.data_type == 'I':
+                sample_gated = FlowCal.gate.high_low(
+                    sample_gated,
+                    sc_channels + report_channels)
             # Density gating
             sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=sample_gated,
