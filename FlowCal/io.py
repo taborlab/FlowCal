@@ -1521,6 +1521,8 @@ class FCSData(np.ndarray):
             self._analysis = copy.deepcopy(obj._analysis)
 
         # Channel-independent attributes
+        if hasattr(obj, '_data_type'):
+            self._data_type = copy.deepcopy(obj._data_type)
         if hasattr(obj, '_time_step'):
             self._time_step = copy.deepcopy(obj._time_step)
         if hasattr(obj, '_acquisition_start_time'):
