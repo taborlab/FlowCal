@@ -164,14 +164,29 @@ class _LogicleTransform(matplotlib.transforms.Transform):
     """
     Class implementing the Logicle transform, from scale to data values.
 
+    Relevant parameters can be specified manually, or calculated from
+    a given FCSData object.
+
     Parameters
     ----------
     T : float
-        Maximum range of data.
+        Maximum range of data values. If `data` is None, `T` defaults to
+        262144. If `data` is not None, specifying `T` overrides the
+        default value that would be calculated from `data`.
     M : float
-        (Asymptotic) number of decades in display scale units.
+        (Asymptotic) number of decades in display scale units. If `data` is
+        None, `M` defaults to 4.5. If `data` is not None, specifying `M`
+        overrides the default value that would be calculated from `data`.
     W : float
-        Width of linear range in display scale units.
+        Width of linear range in display scale units. If `data` is None,
+        `W` defaults to 0.5. If `data` is not None, specifying `W`
+        overrides the default value that would be calculated from `data`.
+    data : FCSData or numpy array or list of FCSData or numpy array
+        Flow cytometry data from which a set of T, M, and W parameters will
+        be generated.
+    channel : str or int
+        Channel of `data` from which a set of T, M, and W parameters will
+        be generated. `channel` should be specified if `data` is not None.
 
     Methods
     -------
@@ -197,6 +212,13 @@ class _LogicleTransform(matplotlib.transforms.Transform):
 
         W = 2*p * log10(p) / (p + 1)
 
+    If a FCSData object or list of FCSData objects is specified along with
+    a channel, the following default logicle parameters are used: T is
+    taken from the largest ``data[i].range(channel)[1]`` or the largest
+    element in ``data[i]`` if ``data[i].range()`` is not available, M is
+    set to 4.5, and W is taken from ``(M - log10(T / abs(r))) / 2``, where
+    ``r`` is the fifth percentile of all events below zero.
+
     References
     ----------
     .. [1] D.R. Parks, M. Roederer, W.A. Moore, "A New Logicle Display
@@ -214,8 +236,49 @@ class _LogicleTransform(matplotlib.transforms.Transform):
     # attribute.
     base = 10
 
-    def __init__(self, T, M, W):
+    def __init__(self, T=None, M=None, W=None, data=None, channel=None):
         matplotlib.transforms.Transform.__init__(self)
+        # If data is included, try to obtain T, M and W from it
+        if data is not None:
+            if channel is None:
+                ValueError("if data is provided, a channel should be specified")
+            # Convert to list if necessary
+            if not isinstance(data, list):
+                data = [data]
+            # Obtain T, M, and W if not specified
+            # If elements of data have ``.range()``, use it to determine the
+            # max data value. Else, use the maximum value in the array.
+            if T is None:
+                T = 0
+                for d in data:
+                    # Extract channel
+                    y = d[:, channel] if d.ndim > 1 else d
+                    if hasattr(y, 'range') and hasattr(y.range, '__call__'):
+                        Ti = y.range(0)[1]
+                    else:
+                        Ti = np.max(y)
+                    T = Ti if Ti > T else T
+            if M is None:
+                M = 4.5
+            if W is None:
+                W = 0
+                for d in data:
+                    # Extract channel
+                    y = d[:, channel] if d.ndim > 1 else d
+                    # Use 5th percentile of the negative events.
+                    negative_events = y[y < 0]
+                    if len(negative_events) > 0:
+                        r = np.percentile(negative_events, 5)
+                        Wi = (M - np.log10(T / abs(r))) / 2
+                        W = Wi if Wi > W else W
+        else:
+            # Default parameter values
+            if T is None:
+                T = 262144
+            if M is None:
+                M = 4.5
+            if W is None:
+                W = 0.5
         # Check that property values are valid
         if T <= 0:
             ValueError("T should be positive")
@@ -223,6 +286,7 @@ class _LogicleTransform(matplotlib.transforms.Transform):
             ValueError("M should be positive")
         if W < 0:
             ValueError("W should not be negative")
+
         # Store parameters
         self._T = T
         self._M = M
@@ -305,8 +369,8 @@ class _LogicleTransform(matplotlib.transforms.Transform):
 
         """
         return _InterpolatedInverseTransform(transform=self,
-                                            smin=0,
-                                            smax=self._M)
+                                             smin=0,
+                                             smax=self._M)
 
 class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
     """
@@ -345,7 +409,8 @@ class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
         # b. The negative part of b will have similar subticks.
 
         # If the linear range is too small, create new transformation object
-        if self._transform.M / self._transform.W > self.numticks:
+        if self._transform.W == 0 or \
+                self._transform.M / self._transform.W > self.numticks:
             self._transform = _LogicleTransform(
                 T=self._transform.T,
                 M=self._transform.M,
@@ -421,14 +486,24 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
 
     Parameters
     ----------
-    T : float, optional
-        Maximum range of data. If not provided, use 262144.
-    M : float, optional
-        (Asymptotic) number of decades in display scale units. If not
-        provided, use 4.5.
-    W : float, optional
-        Width of linear range in display scale units. If not provided, use
-        0.5.
+    T : float
+        Maximum range of data values. If `data` is None, `T` defaults to
+        262144. If `data` is not None, specifying `T` overrides the
+        default value that would be calculated from `data`.
+    M : float
+        (Asymptotic) number of decades in display scale units. If `data` is
+        None, `M` defaults to 4.5. If `data` is not None, specifying `M`
+        overrides the default value that would be calculated from `data`.
+    W : float
+        Width of linear range in display scale units. If `data` is None,
+        `W` defaults to 0.5. If `data` is not None, specifying `W`
+        overrides the default value that would be calculated from `data`.
+    data : FCSData or numpy array or list of FCSData or numpy array
+        Flow cytometry data from which a set of T, M, and W parameters will
+        be generated.
+    channel : str or int
+        Channel of `data` from which a set of T, M, and W parameters will
+        be generated. `channel` should be specified if `data` is not None.
 
     """
     # String name of the scaling
@@ -438,10 +513,7 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
         # Run parent's constructor
         matplotlib.scale.ScaleBase.__init__(self)
         # Initialize and store logicle transform object
-        self._transform = _LogicleTransform(
-            T=kwargs.pop("T", 262144.),
-            M=kwargs.pop("M", 4.5),
-            W=kwargs.pop("W", 0.5))
+        self._transform = _LogicleTransform(**kwargs)
 
     def get_transform(self):
         """
@@ -449,8 +521,8 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
 
         """
         return _InterpolatedInverseTransform(transform=self._transform,
-                                            smin=0,
-                                            smax=self._transform._M)
+                                             smin=0,
+                                             smax=self._transform._M)
 
     def set_default_locators_and_formatters(self, axis):
         """
@@ -535,7 +607,7 @@ def hist1d(data_list,
         supported for data types which support string-based indexing
         (e.g. FCSData).
     xscale : str, optional
-        Scale of the x axis, either ``linear`` or ``log``.
+        Scale of the x axis, either ``linear``, ``log``, or ``logicle``.
     bins : int or array_like, optional
         If `bins` is an integer, it specifies the number of bins to use.
         If `bins` is an array, it specifies the bin edges to use. If `bins`
@@ -619,6 +691,14 @@ def hist1d(data_list,
     if not isinstance(facecolor, list):
         facecolor = [facecolor]*len(data_list)
 
+    # Collect bin parameters that depend on all elements in data_list
+    xscale_kwargs = {}
+    if xscale=='logicle':
+        t = _LogicleTransform(data=data_list, channel=channel)
+        xscale_kwargs['T'] = t.T
+        xscale_kwargs['M'] = t.M
+        xscale_kwargs['W'] = t.W
+
     # Iterate through data_list
     for i, data in enumerate(data_list):
         # Extract channel
@@ -633,7 +713,10 @@ def hist1d(data_list,
             # If bins is None or an integer, get bin edges from
             # ``data_plot.hist_bins()``.
             if bins is None or isinstance(bins, int):
-                bins = y.hist_bins(channels=0, nbins=bins, scale=xscale)
+                bins = y.hist_bins(channels=0,
+                                   nbins=bins,
+                                   scale=xscale,
+                                   **xscale_kwargs)
 
         # Decide whether to normalize
         if normed_height:
@@ -660,8 +743,8 @@ def hist1d(data_list,
                                          facecolor=facecolor[i],
                                          **kwargs)
 
-        # Set scale of x axis
-        plt.gca().set_xscale(xscale)
+    # Set scale of x axis
+    plt.gca().set_xscale(xscale, data=data_list, channel=channel)
 
     ###
     # Final configuration
@@ -917,8 +1000,8 @@ def density2d(data,
             cbar.ax.set_ylabel('Counts')
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale)
-    plt.gca().set_yscale(yscale)
+    plt.gca().set_xscale(xscale, data=data_plot, channel=0)
+    plt.gca().set_yscale(yscale, data=data_plot, channel=1)
 
     # x and y limits
     if xlim is not None:
@@ -987,9 +1070,9 @@ def scatter2d(data_list,
     Other parameters
     ----------------
     xscale : str, optional
-        Scale of the x axis, either ``linear`` or ``log``.
+        Scale of the x axis, either ``linear``, ``log``, or ``logicle``.
     yscale : str, optional
-        Scale of the y axis, either ``linear`` or ``log``.
+        Scale of the y axis, either ``linear``, ``log``, or ``logicle``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -1058,21 +1141,33 @@ def scatter2d(data_list,
         plt.ylabel(data_plot.channels[1])
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale)
-    plt.gca().set_yscale(yscale)
+    plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
+    plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
 
-    # Set plot limits if specified, else extract range from data_plot
+    # Set plot limits if specified, else extract range from data_list
     # Use data_plot.hist_bins with one single bin
-    if xlim is not None:
-        plt.xlim(xlim)
-    elif hasattr(data_plot, 'hist_bins') and \
-            hasattr(data_plot.hist_bins, '__call__'):
-        plt.xlim(data_plot.hist_bins(channels=0, nbins=1, scale=xscale))
-    if ylim is not None:
-        plt.ylim(ylim)
-    elif hasattr(data_plot, 'hist_bins') and \
-            hasattr(data_plot.hist_bins, '__call__'):
-        plt.ylim(data_plot.hist_bins(channels=1, nbins=1, scale=yscale))
+    if xlim is None:
+        xlim = [np.inf, -np.inf]
+        for data in data_list:
+            if hasattr(data, 'hist_bins') and \
+                    hasattr(data.hist_bins, '__call__'):
+                xlim_data = data.hist_bins(channels=channels[0],
+                                           nbins=1,
+                                           scale=xscale)
+                xlim[0] = xlim_data[0] if xlim_data[0] < xlim[0] else xlim[0]
+                xlim[1] = xlim_data[1] if xlim_data[1] > xlim[1] else xlim[1]
+    plt.xlim(xlim)
+    if ylim is None:
+        ylim = [np.inf, -np.inf]
+        for data in data_list:
+            if hasattr(data, 'hist_bins') and \
+                    hasattr(data.hist_bins, '__call__'):
+                ylim_data = data.hist_bins(channels=channels[1],
+                                           nbins=1,
+                                           scale=yscale)
+                ylim[0] = ylim_data[0] if ylim_data[0] < ylim[0] else ylim[0]
+                ylim[1] = ylim_data[1] if ylim_data[1] > ylim[1] else ylim[1]
+    plt.ylim(ylim)
 
     # Title
     if title is not None:
