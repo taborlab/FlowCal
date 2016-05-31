@@ -10,6 +10,8 @@ import datetime
 import warnings
 
 import numpy as np
+import scipy
+import scipy.optimize
 
 ###
 # Utility functions for importing segments of FCS files
@@ -1256,33 +1258,76 @@ class FCSData(np.ndarray):
         else:
             return self._resolution[channels]
 
-    def hist_bins(self, channels=None, nbins=None, scale='linear'):
+    def hist_bins(self, channels=None, nbins=None, scale='linear', **kwargs):
         """
         Get histogram bin edges for the specified channel(s).
 
         These cover the range specified in ``FCSData.range(channels)`` with
-        a number of bins `nbins`, either linearly or logarithmically
-        spaced. If ``range[0]`` is equal or less than zero and `log` is
-        True, the lower limit of the range is replaced by one.
+        a number of bins `nbins`, with linear, logarithmic, or logicle
+        spacing.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the histogram bins. If None, return
-            a list with bins for all channels, in the order of
+            Channel(s) for which to generate histogram bins. If None,
+            return a list with bins for all channels, in the order of
             ``FCSData.channels``.
         nbins : int or list of ints, optional
-            The number of bins to calculate. If `channels` specified a list
+            The number of bins to calculate. If `channels` specifies a list
             of channels, `nbins` should be a list of integers. If `nbins`
             is None, use ``FCSData.resolution(channel)``.
         scale : str, optional
-            Scale in which to generate bins. Can be either ``linear`` or
-            ``log``.
+            Scale in which to generate bins. Can be either ``linear``,
+            ``log``, or ``logicle``.
+        kwargs : optional
+            Keyword arguments specific to the selected bin scaling. Linear
+            and logarithmic scaling do not use additional arguments.
+            For logicle scaling, the following parameters can be provided:
+
+            T : float, optional
+                Maximum range of data. If not provided, use ``range[1]``.
+            M : float, optional
+                (Asymptotic) number of decades in scaled units. If not
+                provided, use 4.5.
+            W : float, optional
+                Width of linear range in scaled units. If not provided,
+                calculate using the following relationship::
+
+                    W = (M - log10(T / abs(r))) / 2
+
+                Where ``r`` is the fifth percentile of all events below
+                zero.
 
         Return
         ------
         array or list of arrays
             Histogram bin edges for the specified channel(s).
+
+        Notes
+        -----
+        If ``range[0]`` is equal or less than zero and `scale` is  ``log``,
+        the lower limit of the range is replaced with one.
+
+        Logicle scaling is implemented using the following equation::
+
+            x = T * 10**(-(M-W)) * (10**(s-W) \
+                    - (p**2)*10**(-(s-W)/p) + p**2 - 1)
+
+        This equation transforms linearly-spaced bins ``s`` into
+        logicle-spaced bins ``x``. This involves 3 independent parameters:
+        ``T`` (maximum range of data in ``x`` coordinates), ``M`` (maximum
+        range in ``s`` coordinates, roughly the number of assymptotic
+        decades in data space), and ``W`` (range of negative values in
+        ``s`` coordinates). ``p`` is directly related to ``W`` as follows::
+
+            W = 2*p * log10(p) / (p + 1)
+
+        References
+        ----------
+        .. [1] D.R. Parks, M. Roederer, W.A. Moore, "A New Logicle Display
+        Method Avoids Deceptive Effects of Logarithmic Scaling for Low
+        Signals and Compensated Data," Cytometry Part A 69A:541-551, 2006,
+        PMID 16604519.
 
         """
         # Default: all channels
@@ -1312,7 +1357,7 @@ class FCSData(np.ndarray):
                 nbins_channel = res_channel
             # Get range of channel
             range_channel = self.range(channel)
-            # Process scale
+            # Generate bins according to specified scale
             if scale_channel == 'linear':
                 # We will now generate ``nbins`` uniformly spaced bins centered
                 # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
@@ -1323,6 +1368,7 @@ class FCSData(np.ndarray):
                 bins_channel = np.linspace(range_channel[0] - delta_res/2,
                                            range_channel[1] + delta_res/2,
                                            nbins_channel + 1)
+
             elif scale_channel == 'log':
                 # Check if the lower limit is equal or less than zero. If so,
                 # change the lower limit to one.
@@ -1342,6 +1388,57 @@ class FCSData(np.ndarray):
                                            nbins_channel + 1)
                 # Exponentiate bins
                 bins_channel = 10**(bins_channel)
+
+            elif scale_channel == 'logicle':
+                # Extract parameters for logicle function
+                T = kwargs.pop('T', range_channel[1])
+                M = kwargs.pop('M', 4.5)
+                if 'W' in kwargs:
+                    W = kwargs['W']
+                else:
+                    # If W was not provided, use 5th percentile of the negative
+                    # events.
+                    negative_events = self[self[:, channel] < 0, channel]
+                    if len(negative_events) == 0:
+                        W = 0
+                    else:
+                        r = np.percentile(negative_events, 5)
+                        W = (M - np.log10(T / abs(r))) / 2
+                # Check that T, M, and W have good values
+                if T <= 0:
+                    ValueError("parameter T should be positive")
+                if M <= 0:
+                    ValueError("parameter M should be positive")
+                if W < 0:
+                    ValueError("parameter W should not be negative")
+                # Calculate parameter p. p and W are related by the following
+                # expression: ``W = 2*p * log10(p) / (p + 1)``. It is not
+                # possible to analytically obtain p as a function of W only, so
+                # p is calculated numerically using a root finding algorithm.
+                # The initial estimate provided to the algorithm comes from
+                # the asymptotic behavior of the equation as ``p -> inf``,
+                # ``W = 2*log10(p)``.
+                p0 = 10**(W / 2.)
+                # Functions to provide to the root finding algorithm
+                def W_f(p):
+                    return 2*p / (p + 1) * np.log10(p)
+                def W_root(p, W_target):
+                    return W_f(p) - W_target
+                # Find solution
+                sol = scipy.optimize.root(W_root, x0=p0, args=(W))
+                # Solution should be unique
+                assert sol.success
+                assert len(sol.x) == 1
+                # Extract p
+                p = sol.x[0]
+                # We will now generate ``nbins`` uniformly spaced bins centered
+                # at ``linspace(0, M, nbins)``. To do so, we need to generate
+                # ``nbins + 1`` uniformly spaced points.
+                delta_res = float(M) / (res_channel - 1)
+                s = np.linspace(-delta_res/2, M + delta_res/2, nbins_channel+1)
+                # Finally, apply the logicle transformation to generate bins
+                bins_channel = T * 10**(-(M-W)) * (10**(s-W) \
+                                    - (p**2)*10**(-(s-W)/p) + p**2 - 1)
             else:
                 # Scale not supported
                 raise ValueError('scale "{}" not supported'.format(
