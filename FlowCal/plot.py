@@ -49,6 +49,9 @@ Functions in this module are divided in two categories:
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
+import matplotlib.scale
+import matplotlib.transforms
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
@@ -62,6 +65,438 @@ else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
 
 savefig_dpi = 250
+
+###
+# CLASSES IMPLEMENTING CUSTOM SCALES
+###
+
+class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
+    """
+    Class that inverts a given transform class using interpolation.
+
+    Parameters
+    ----------
+    transform : matplotlib.transforms.Transform
+        Transform class to invert. It should be a monotonic transformation.
+    smin : float
+        Minimum value to transform.
+    smax : float
+        Maximum value to transform.
+    resolution : int, optional
+        Number of points to use to evaulate `transform`. Default is 1000.
+
+    Methods
+    -------
+    transform_non_affine(x)
+        Apply inverse transformation to a Nx1 numpy array.
+
+    Notes
+    -----
+    Upon construction, this class generates an array of `resolution` points
+    between `smin` and `smax`. Next, it evaluates the specified
+    transformation on this array, and both the original and transformed
+    arrays are stored. When calling ``transform_non_affine(x)``, these two
+    arrays are used along with ``np.interp()`` to inverse-transform ``x``.
+
+    Note that `smin` and `smax` are also transformed and stored. When using
+    ``transform_non_affine(x)``, any values in ``x`` outside the range
+    specified by `smin` and `smax` transformed are masked.
+
+    """
+    # ``input_dims``, ``output_dims``, and ``is_separable`` are required by
+    # matplotlib.
+    input_dims = 1
+    output_dims = 1
+    is_separable = True
+
+    def __init__(self, transform, smin, smax, resolution=1000):
+        # Call parent's constructor
+        matplotlib.transforms.Transform.__init__(self)
+        # Store transform object
+        self._transform = transform
+
+        # Generate input array
+        self._s_range = np.linspace(smin, smax, resolution)
+        # Evaluate provided transformation and store result
+        self._x_range = transform.transform_non_affine(self._s_range)
+        # Transform bounds and store
+        self._xmin = transform.transform_non_affine(smin)
+        self._xmax = transform.transform_non_affine(smax)
+        if self._xmin > self._xmax:
+            self._xmax, self._xmin = self._xmin, self._xmax
+
+    def transform_non_affine(self, x):
+        """
+        Transform a Nx1 numpy array.
+
+        Parameters
+        ----------
+        x : array
+            Data to be transformed.
+
+        Return
+        ------
+        array or masked array
+            Transformed data.
+
+        """
+        # Mask out-of-range values
+        x_masked = np.ma.masked_where((x < self._xmin) | (x > self._xmax), x)
+        # Calculate s and return
+        return np.interp(x_masked, self._x_range, self._s_range)
+
+    def inverted(self):
+        """
+        Get an object representing an inverse transformation to this class.
+
+        Since this class implements the inverse of a given transformation,
+        this function just returns the original transformation.
+
+        Return
+        ------
+        matplotlib.transforms.Transform
+            Object implementing the reverse transformation.
+
+        """
+        return self._transform
+
+class _LogicleTransform(matplotlib.transforms.Transform):
+    """
+    Class implementing the Logicle transform, from scale to data values.
+
+    Parameters
+    ----------
+    T : float
+        Maximum range of data.
+    M : float
+        (Asymptotic) number of decades in display scale units.
+    W : float
+        Width of linear range in display scale units.
+
+    Methods
+    -------
+    transform_non_affine(s)
+        Apply transformation to a Nx1 numpy array.
+
+    Notes
+    -----
+    Logicle scaling combines the advantages of logarithmic and linear
+    scaling. It is useful when data spans several orders of magnitude
+    (when logarithmic scaling would be appropriate) and a significant
+    number of datapoints are negative.
+
+    Logicle scaling is implemented using the following equation::
+
+        x = T * 10**(-(M-W)) * (10**(s-W) \
+                - (p**2)*10**(-(s-W)/p) + p**2 - 1)
+
+    This equation transforms data ``s`` expressed in "display scale" units
+    into ``x`` in "data value" units. Parameters in this equation
+    correspond to the class properties. ``p`` and ``W`` are related as
+    follows::
+
+        W = 2*p * log10(p) / (p + 1)
+
+    References
+    ----------
+    .. [1] D.R. Parks, M. Roederer, W.A. Moore, "A New Logicle Display
+    Method Avoids Deceptive Effects of Logarithmic Scaling for Low Signals
+    and Compensated Data," Cytometry Part A 69A:541-551, 2006, PMID
+    16604519.
+
+    """
+    # ``input_dims``, ``output_dims``, and ``is_separable`` are required by
+    # matplotlib.
+    input_dims = 1
+    output_dims = 1
+    is_separable = True
+    # Locator objects need this object to store the logarithm base used as an
+    # attribute.
+    base = 10
+
+    def __init__(self, T, M, W):
+        matplotlib.transforms.Transform.__init__(self)
+        # Check that property values are valid
+        if T <= 0:
+            ValueError("T should be positive")
+        if M <= 0:
+            ValueError("M should be positive")
+        if W < 0:
+            ValueError("W should not be negative")
+        # Store parameters
+        self._T = T
+        self._M = M
+        self._W = W
+
+        # Calculate dependent parameter p
+        # It is not possible to analytically obtain ``p`` as a function of W
+        # only, so ``p`` is calculated numerically using a root finding
+        # algorithm. The initial estimate provided to the algorithm is taken
+        # from the asymptotic behavior of the equation as ``p -> inf``. This
+        # results in ``W = 2*log10(p)``.
+        p0 = 10**(W / 2.)
+        # Functions to provide to the root finding algorithm
+        def W_f(p):
+            return 2*p / (p + 1) * np.log10(p)
+        def W_root(p, W_target):
+            return W_f(p) - W_target
+        # Find solution
+        sol = scipy.optimize.root(W_root, x0=p0, args=(W))
+        # Solution should be unique
+        assert sol.success
+        assert len(sol.x) == 1
+        # Store solution
+        self._p = sol.x[0]
+
+    @property
+    def T(self):
+        """
+        Maximum range of data.
+
+        """
+        return self._T
+
+    @property
+    def M(self):
+        """
+        (Asymptotic) number of decades in display scale units.
+
+        """
+        return self._M
+
+    @property
+    def W(self):
+        """
+        Width of linear range in display scale units.
+
+        """
+        return self._W
+
+    def transform_non_affine(self, s):
+        """
+        Apply transformation to a Nx1 numpy array.
+
+        Parameters
+        ----------
+        s : array
+            Data to be transformed in display scale units.
+
+        Return
+        ------
+        array or masked array
+            Transformed data, in data value units.
+
+        """
+        T = self._T
+        M = self._M
+        W = self._W
+        p = self._p
+        # Calculate x
+        return T * 10**(-(M-W)) * (10**(s-W) - (p**2)*10**(-(s-W)/p) + p**2 - 1)
+
+    def inverted(self):
+        """
+        Get an object implementing the inverse transformation.
+
+        Return
+        ------
+        _InterpolatedInverseTransform
+            Object implementing the reverse transformation.
+
+        """
+        return _InterpolatedInverseTransform(transform=self,
+                                            smin=0,
+                                            smax=self._M)
+
+class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
+    """
+    Determine the tick locations for logicle axes.
+
+    Parameters
+    ----------
+    transform : _LogicleTransform
+        transform object
+    subs : array, optional
+        Subtick values, as multiples of the main ticks. If None, do not use
+        subticks.
+
+    """
+
+    def tick_values(self, vmin, vmax):
+        """
+        Get a set of tick values properly spaced for logicle axis.
+
+        """
+        # Extract base from transform object
+        b = self._transform.base
+        # The domain is divided into two sections, only some of which may
+        # actually be present.
+        #
+        # -t ==0== t ========>
+        #    bbbbb   ccccccccc
+        #
+        # Where ``t`` is obtained from the logicle linear range.
+        #
+        # c) will have ticks at integral log positions. The number of ticks
+        # needs to be reduced if there are more than self.numticks of them.
+        #
+        # b) will have one tick at zero. Subticks will be added from the
+        # smallest integral log in c to the next smallest, all throughout
+        # b. The negative part of b will have similar subticks.
+
+        # If the linear range is too small, create new transformation object
+        if self._transform.M / self._transform.W > self.numticks:
+            self._transform = _LogicleTransform(
+                T=self._transform.T,
+                M=self._transform.M,
+                W=self._transform.M / self.numticks)
+        # Calculate t
+        t = - self._transform.transform_non_affine(0)
+
+        if vmax < vmin:
+            vmin, vmax = vmax, vmin
+
+        # Check whether sections b and c are present
+        has_b = has_c = False
+        if vmin < t:
+            has_b = True
+            if vmax > t:
+                has_c = True
+        else:
+            has_c = True
+
+        # First, calculate all the ranges, so we can determine striding
+        if has_c:
+            log_range = [np.ceil(np.log(t) / np.log(b)),
+                         np.ceil(np.log(vmax) / np.log(b))]
+
+        # Number of ticks
+        # Ticks in the right logarithmic region
+        total_ticks = log_range[1] - log_range[0]
+        # One more tick for zero.
+        if has_b:
+            total_ticks += 1
+
+        stride = max(np.floor(float(total_ticks) / (self.numticks - 1)), 1)
+
+        # Obtain integral decades for which ticks will be generated
+        decades = []
+        if has_b:
+            # Major tick for zero
+            decades.append(0.0)
+        if has_c:
+            decades.extend(b ** (np.arange(
+                log_range[0],
+                log_range[1],
+                stride)))
+        decades = np.array(decades)
+
+        # Add subticks if requested
+        subs = self._subs
+        if (subs is not None) and (len(subs) > 1 or subs[0] != 1.0):
+            ticklocs = []
+            # Subticks for each decade present
+            for decade in decades:
+                ticklocs.extend(subs * decade)
+            # Subticks down from the lowest decade
+            decade_next_low = min(decades[np.nonzero(decades)]) / b
+            ticklocs.append(decade_next_low)
+            ticklocs.extend(subs * decade_next_low)
+            # Similar subticks for the negative range
+            ticklocs.append(- decade_next_low)
+            ticklocs.extend(- subs * decade_next_low)
+        else:
+            ticklocs = decades
+
+        return self.raise_if_exceeds(np.array(ticklocs))
+
+class _LogicleScale(matplotlib.scale.ScaleBase):
+    """
+    Class that implements the logicle axis scaling.
+
+    To select this scale, an instruction similar to
+    ``gca().set_yscale("logicle")`` should be used. Note that any keyword
+    arguments passed to ``set_xscale`` and ``set_yscale`` are passed along
+    to the scale's constructor.
+
+    Parameters
+    ----------
+    T : float, optional
+        Maximum range of data. If not provided, use 262144.
+    M : float, optional
+        (Asymptotic) number of decades in display scale units. If not
+        provided, use 4.5.
+    W : float, optional
+        Width of linear range in display scale units. If not provided, use
+        0.5.
+
+    """
+    # String name of the scaling
+    name = 'logicle'
+
+    def __init__(self, axis, **kwargs):
+        # Run parent's constructor
+        matplotlib.scale.ScaleBase.__init__(self)
+        # Initialize and store logicle transform object
+        self._transform = _LogicleTransform(
+            T=kwargs.pop("T", 262144.),
+            M=kwargs.pop("M", 4.5),
+            W=kwargs.pop("W", 0.5))
+
+    def get_transform(self):
+        """
+        Get a new object to perform the scaling transformation.
+
+        """
+        return _InterpolatedInverseTransform(transform=self._transform,
+                                            smin=0,
+                                            smax=self._transform._M)
+
+    def set_default_locators_and_formatters(self, axis):
+        """
+        Set up the locators and formatters for the scale.
+
+        Parameters
+        ----------
+        axis: matplotlib.axis
+            Axis for which to set locators and formatters.
+
+        """
+        axis.set_major_locator(_LogicleLocator(self._transform))
+        axis.set_minor_locator(_LogicleLocator(self._transform,
+                                               subs=np.arange(2.0, 10.)))
+        axis.set_major_formatter(matplotlib.ticker.LogFormatterMathtext())
+
+    def limit_range_for_scale(self, vmin, vmax, minpos):
+        """
+        Return minimum and maximum bounds for the logicle axis.
+
+        Parameters
+        ----------
+        vmin : float
+            Minimum data value.
+        vmax : float
+            Maximum data value.
+        minpos : float
+            Minimum positive value in the data. Ignored by this function.
+
+        Return
+        ------
+        float
+            Minimum axis bound.
+        float
+            Maximum axis bound.
+
+        """
+        vmin_bound = self._transform.transform_non_affine(0)
+        vmax_bound = self._transform.transform_non_affine(self._transform.M)
+        vmin = max(vmin, vmin_bound)
+        vmax = min(vmax, vmax_bound)
+        return vmin, vmax
+
+# Register custom scales
+matplotlib.scale.register_scale(_LogicleScale)
+
 
 ###
 # SIMPLE PLOT FUNCTIONS
