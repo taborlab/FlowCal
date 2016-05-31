@@ -67,7 +67,7 @@ else:
 savefig_dpi = 250
 
 ###
-# CLASSES IMPLEMENTING CUSTOM SCALES
+# CUSTOM SCALES
 ###
 
 class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
@@ -795,9 +795,9 @@ def density2d(data,
     sigma : float, optional
         The sigma parameter for the Gaussian kernel to use when smoothing.
     xscale : str, optional
-        Scale of the x axis, either ``linear`` or ``log``.
+        Scale of the x axis, either ``linear``, ``log``, or ``logicle``.
     yscale : str, optional
-        Scale of the y axis, either ``linear`` or ``log``.
+        Scale of the y axis, either ``linear``, ``log``, or ``logicle``
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from `data`.
