@@ -353,8 +353,8 @@ def process_beads_table(beads_table,
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
-                xscale='log',
-                yscale='log',
+                xscale='logicle',
+                yscale='logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -364,8 +364,8 @@ def process_beads_table(beads_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xscale'] = 'log'
-                density_params['yscale'] = 'log'
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
@@ -381,7 +381,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={'xscale': 'log'},
+                    hist_params={'xscale': 'logicle'},
                     savefig=figname)
 
             ###
@@ -724,8 +724,8 @@ def process_samples_table(samples_table,
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
-                xscale='log',
-                yscale='log',
+                xscale='logicle',
+                yscale='logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -735,8 +735,8 @@ def process_samples_table(samples_table,
                 # Define density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xscale'] = 'log'
-                density_params['yscale'] = 'log'
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
@@ -749,7 +749,7 @@ def process_samples_table(samples_table,
                     if (ru == 'Channel Number'):
                         param['xscale'] = 'linear'
                     else:
-                        param['xscale'] = 'log'
+                        param['xscale'] = 'logicle'
                     hist_params.append(param)
                     
                 # Plot
