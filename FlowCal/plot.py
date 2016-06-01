@@ -691,7 +691,7 @@ def hist1d(data_list,
     if not isinstance(facecolor, list):
         facecolor = [facecolor]*len(data_list)
 
-    # Collect bin parameters that depend on all elements in data_list
+    # Collect scale parameters that depend on all elements in data_list
     xscale_kwargs = {}
     if xscale=='logicle':
         t = _LogicleTransform(data=data_list, channel=channel)
@@ -1209,11 +1209,11 @@ def scatter3d(data_list,
     Other parameters
     ----------------
     xscale : str, optional
-        Scale of the x axis, either ``linear`` or ``log``.
+        Scale of the x axis, either ``linear``, ``log``, or ``logicle``.
     yscale : str, optional
-        Scale of the y axis, either ``linear`` or ``log``.
+        Scale of the y axis, either ``linear``, ``log``, or ``logicle``.
     zscale : str, optional
-        Scale of the z axis, either ``linear`` or ``log``.
+        Scale of the z axis, either ``linear``, ``log``, or ``logicle``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
@@ -1265,6 +1265,42 @@ def scatter3d(data_list,
     if not isinstance(color, list):
        color = [color]*len(data_list)
 
+    # Get transformation functions for each axis
+    # Explicit rescaling is required for non-linear scales because mplot3d does
+    # not natively support anything but linear scale.
+    if xscale == 'linear':
+        xscale_transform = lambda x: x
+    elif xscale == 'log':
+        xscale_transform = np.log10
+    elif xscale == 'logicle':
+        t = _LogicleTransform(data=data_list, channel=channels[0])
+        it = _InterpolatedInverseTransform(t, 0, t.M)
+        xscale_transform = it.transform_non_affine
+    else:
+        raise ValueError('scale {} not supported'.format(xscale))
+
+    if yscale == 'linear':
+        yscale_transform = lambda x: x
+    elif yscale == 'log':
+        yscale_transform = np.log10
+    elif yscale == 'logicle':
+        t = _LogicleTransform(data=data_list, channel=channels[1])
+        it = _InterpolatedInverseTransform(t, 0, t.M)
+        yscale_transform = it.transform_non_affine
+    else:
+        raise ValueError('scale {} not supported'.format(yscale))
+
+    if zscale == 'linear':
+        zscale_transform = lambda x: x
+    elif zscale == 'log':
+        zscale_transform = np.log10
+    elif zscale == 'logicle':
+        t = _LogicleTransform(data=data_list, channel=channels[2])
+        it = _InterpolatedInverseTransform(t, 0, t.M)
+        zscale_transform = it.transform_non_affine
+    else:
+        raise ValueError('scale {} not supported'.format(zscale))
+
     # Make 3d axis if necessary
     ax_3d = plt.gca(projection='3d')
 
@@ -1272,31 +1308,10 @@ def scatter3d(data_list,
     for i, data in enumerate(data_list):
         # Get channels to plot
         data_plot = data[:, channels]
-        # Transform according to the scale of each axis
-        # Explicit rescaling is required for non-linear scales because mplot3d
-        # does not natively support anything but linear scale.
-        if xscale == 'linear':
-            data_plot_x = data_plot[:,0]
-        elif xscale == 'log':
-            data_plot_x = np.log10(data_plot[:,0])
-        else:
-            raise ValueError('scale {} not supported'.format(xscale))
-        if yscale == 'linear':
-            data_plot_y = data_plot[:,1]
-        elif yscale == 'log':
-            data_plot_y = np.log10(data_plot[:,1])
-        else:
-            raise ValueError('scale {} not supported'.format(yscale))
-        if zscale == 'linear':
-            data_plot_z = data_plot[:,2]
-        elif zscale == 'log':
-            data_plot_z = np.log10(data_plot[:,2])
-        else:
-            raise ValueError('scale {} not supported'.format(zscale))
         # Make scatter plot
-        ax_3d.scatter(data_plot_x,
-                      data_plot_y,
-                      data_plot_z,
+        ax_3d.scatter(xscale_transform(data_plot[:, 0]),
+                      yscale_transform(data_plot[:, 1]),
+                      zscale_transform(data_plot[:, 2]),
                       marker='o',
                       alpha=0.1,
                       color=color[i],
@@ -1324,30 +1339,44 @@ def scatter3d(data_list,
 
     # Set plot limits if specified, else extract range from data_plot
     # Use data_plot.hist_bins with one single bin
-    if xlim is not None:
-        ax_3d.set_xlim(xlim)
-    elif hasattr(data_plot, 'hist_bins') and \
-            hasattr(data_plot.hist_bins, '__call__'):
-        xlim = data_plot.hist_bins(channels=0, nbins=1, scale=xscale)
-        if xscale == 'log':
-            xlim = np.log10(xlim)
-        ax_3d.set_xlim(xlim)
-    if ylim is not None:
-        ax_3d.set_ylim(ylim)
-    elif hasattr(data_plot, 'hist_bins') and \
-            hasattr(data_plot.hist_bins, '__call__'):
-        ylim = data_plot.hist_bins(channels=1, nbins=1, scale=yscale)
-        if yscale == 'log':
-            ylim = np.log10(ylim)
-        ax_3d.set_ylim(ylim)
-    if zlim is not None:
-        ax_3d.set_zlim(zlim)
-    elif hasattr(data_plot, 'hist_bins') and \
-            hasattr(data_plot.hist_bins, '__call__'):
-        zlim = data_plot.hist_bins(channels=2, nbins=1, scale=zscale)
-        if zscale == 'log':
-            zlim = np.log10(zlim)
-        ax_3d.set_zlim(zlim)
+    if xlim is None:
+        xlim = np.array([np.inf, -np.inf])
+        for data in data_list:
+            if hasattr(data, 'hist_bins') and \
+                    hasattr(data.hist_bins, '__call__'):
+                xlim_data = data.hist_bins(channels=channels[0],
+                                           nbins=1,
+                                           scale=xscale)
+                xlim[0] = xlim_data[0] if xlim_data[0] < xlim[0] else xlim[0]
+                xlim[1] = xlim_data[1] if xlim_data[1] > xlim[1] else xlim[1]
+        xlim = xscale_transform(xlim)
+    ax_3d.set_xlim(xlim)
+
+    if ylim is None:
+        ylim = np.array([np.inf, -np.inf])
+        for data in data_list:
+            if hasattr(data, 'hist_bins') and \
+                    hasattr(data.hist_bins, '__call__'):
+                ylim_data = data.hist_bins(channels=channels[1],
+                                           nbins=1,
+                                           scale=yscale)
+                ylim[0] = ylim_data[0] if ylim_data[0] < ylim[0] else ylim[0]
+                ylim[1] = ylim_data[1] if ylim_data[1] > ylim[1] else ylim[1]
+        ylim = yscale_transform(ylim)
+    ax_3d.set_ylim(ylim)
+
+    if zlim is None:
+        zlim = np.array([np.inf, -np.inf])
+        for data in data_list:
+            if hasattr(data, 'hist_bins') and \
+                    hasattr(data.hist_bins, '__call__'):
+                zlim_data = data.hist_bins(channels=channels[2],
+                                           nbins=1,
+                                           scale=zscale)
+                zlim[0] = zlim_data[0] if zlim_data[0] < zlim[0] else zlim[0]
+                zlim[1] = zlim_data[1] if zlim_data[1] > zlim[1] else zlim[1]
+        zlim = zscale_transform(zlim)
+    ax_3d.set_zlim(zlim)
 
     # Title
     if title is not None:
@@ -1533,11 +1562,11 @@ def scatter3d_and_projections(data_list,
     Other parameters
     ----------------
     xscale : str, optional
-        Scale of the x axis, either ``linear`` or ``log``.
+        Scale of the x axis, either ``linear``, ``log``, or ``logicle``.
     yscale : str, optional
-        Scale of the y axis, either ``linear`` or ``log``.
+        Scale of the y axis, either ``linear``, ``log``, or ``logicle``.
     zscale : str, optional
-        Scale of the z axis, either ``linear`` or ``log``.
+        Scale of the z axis, either ``linear``, ``log``, or ``logicle``.
     xlabel : str, optional
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
