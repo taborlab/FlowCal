@@ -275,13 +275,13 @@ def density2d(data,
     gate_fraction : float, optional
         Fraction of events to retain after gating.
     xscale : str, optional
-        Scale of the bins generated for the x axis. Can be either
-        ``linear`` or ``log``. `xscale` is ignored in `bins is an array or
-        a list of arrays.
+        Scale of the bins generated for the x axis, either ``linear``,
+        ``log``, or ``logicle``. `xscale` is ignored in `bins is an array
+        or a list of arrays.
     yscale : str, optional
-        Scale of the bins generated for the y axis. Can be either
-        ``linear`` or ``log``. `yscale` is ignored in `bins is an array or
-        a list of arrays.
+        Scale of the bins generated for the y axis, either ``linear``,
+        ``log``, or ``logicle``. `yscale` is ignored in `bins is an array
+        or a list of arrays.
     sigma : scalar or sequence of scalars, optional
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
