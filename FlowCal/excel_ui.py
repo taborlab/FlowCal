@@ -78,6 +78,7 @@ import subprocess
 import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+import warnings
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -1035,9 +1036,6 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' Mean',
                                         FlowCal.stats.mean(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Mean',
-                                        FlowCal.stats.gmean(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' Median',
                                         FlowCal.stats.median(sample, channel))
                 samples_table.set_value(row_id,
@@ -1050,17 +1048,43 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' CV',
                                         FlowCal.stats.cv(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Std',
-                                        FlowCal.stats.gstd(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Geom. CV',
-                                        FlowCal.stats.gcv(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' IQR',
                                         FlowCal.stats.iqr(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' RCV',
                                         FlowCal.stats.rcv(sample, channel))
+
+                # For geometric statistics, first check for non-positive events.
+                # If found, throw a warning and calculate statistics on positive
+                # events only.
+                if np.any(sample[:, channel] <= 0):
+                    # Separate positive events
+                    sample_positive = sample[sample[:, channel] > 0]
+                    # Throw warning
+                    msg = "Geometric statistics for channel" + \
+                        " {} calculated on positive events".format(channel) + \
+                        " only ({:.1f}%). ".format(
+                            100.*sample_positive.shape[0]/sample.shape[0])
+                    warnings.warn("On sample {}: {}".format(row_id, msg))
+                    # Write warning message to table
+                    if samples_table.loc[row_id, 'Analysis Notes']:
+                        msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
+                    samples_table.set_value(row_id, 'Analysis Notes', msg)
+                else:
+                    sample_positive = sample
+                # Calculate and write geometric statistics
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Mean',
+                    FlowCal.stats.gmean(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Std',
+                    FlowCal.stats.gstd(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. CV',
+                    FlowCal.stats.gcv(sample_positive, channel))
 
 def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
