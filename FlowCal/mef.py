@@ -701,24 +701,30 @@ def get_transform_fxn(data_beads,
         else:
             savefig = None
 
+        # Extract amplification type of clustering channels
+        clustering_amp_type = \
+            populations[0].amplification_type(clustering_channels)
+
         # If used one channel for clustering, make histogram
         if len(clustering_channels) == 1:
             plt.figure(figsize=(8,4))
-            FlowCal.plot.hist1d(populations,
-                                channel=clustering_channels[0],
-                                xscale='logicle',
-                                bins=256,
-                                alpha=0.75,
-                                savefig=savefig)
+            FlowCal.plot.hist1d(
+                populations,
+                channel=clustering_channels[0],
+                xscale='log' if clustering_amp_type[0][0] else 'logicle',
+                bins=256,
+                alpha=0.75,
+                savefig=savefig)
 
         # If used two channels for clustering, make 2D scatter plot
         elif len(clustering_channels) == 2:
             plt.figure(figsize=(6,4))
-            FlowCal.plot.scatter2d(populations,
-                                   channels=clustering_channels,
-                                   xscale='logicle',
-                                   yscale='logicle',
-                                   savefig=savefig)
+            FlowCal.plot.scatter2d(
+                populations,
+                channels=clustering_channels,
+                xscale='log' if clustering_amp_type[0][0] else 'logicle',
+                yscale='log' if clustering_amp_type[1][0] else 'logicle',
+                savefig=savefig)
 
         # If used three channels or more for clustering, make 3D scatter plot
         # with the first three.
@@ -727,9 +733,9 @@ def get_transform_fxn(data_beads,
             FlowCal.plot.scatter3d_and_projections(
                 populations,
                 channels=clustering_channels[:3],
-                xscale='logicle',
-                yscale='logicle',
-                zscale='logicle',
+                xscale='log' if clustering_amp_type[0][0] else 'logicle',
+                yscale='log' if clustering_amp_type[1][0] else 'logicle',
+                zscale='log' if clustering_amp_type[2][0] else 'logicle',
                 savefig=savefig)
 
         if plot_dir is not None:
@@ -815,11 +821,13 @@ def get_transform_fxn(data_beads,
                           if selected else (0.6, 0.6, 0.6)
                       for selected, level in zip(selected_mask, color_levels)]
 
+            # Decide scale to plot based on amplification type
+            mef_amp_type = populations[0].amplification_type(mef_channel)
             # Plot histograms
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=mef_channel,
-                                xscale='logicle',
+                                xscale='log' if mef_amp_type[0] else 'logicle',
                                 bins=256,
                                 alpha=0.75,
                                 facecolor=colors)

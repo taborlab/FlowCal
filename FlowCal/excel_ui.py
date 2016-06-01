@@ -349,26 +349,42 @@ def process_beads_table(beads_table,
                     beads_sample_gated,
                     channels=sc_channels)
             # Density gating
+            # Axis scaling will be logarithmic if data was acquired with a log
+            # amplifier, and logicle otherwise.
+            sc_amp_type = beads_sample_gated.amplification_type(sc_channels)
             beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
+                xscale='log' if sc_amp_type[0][0] else 'logicle',
+                yscale='log' if sc_amp_type[1][0] else 'logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xscale'] = 'logicle'
-                density_params['yscale'] = 'logicle'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
+                # Axis scaling will be logarithmic if data was acquired with a
+                # log amplifier, and logicle otherwise.
+                sc_amp_type = beads_sample_gated.amplification_type(sc_channels)
+                density_params['xscale'] = \
+                    'log' if sc_amp_type[0][0] else 'logicle'
+                density_params['yscale'] = \
+                    'log' if sc_amp_type[1][0] else 'logicle'
+                # Histogram plot parameters
+                # Axis scaling will be logarithmic if data was acquired with a
+                # log amplifier, and logicle otherwise.
+                cluster_amp_type = \
+                    beads_sample_gated.amplification_type(cluster_channels)
+                hist_params = \
+                    [{'xscale': 'log' if ch_amp_type[0] else 'logicle'}
+                     for ch_amp_type in cluster_amp_type]
                 # Plot
                 figname = os.path.join(base_dir,
                                        plot_dir,
@@ -381,7 +397,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={'xscale': 'logicle'},
+                    hist_params=hist_params,
                     savefig=figname)
 
             ###
@@ -720,27 +736,35 @@ def process_samples_table(samples_table,
                     sample_gated,
                     sc_channels + report_channels)
             # Density gating
+            # Axis scaling will be logarithmic if data was acquired with a log
+            # amplifier, and logicle otherwise.
+            sc_amp_type = sample_gated.amplification_type(sc_channels)
             sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
+                xscale='log' if sc_amp_type[0][0] else 'logicle',
+                yscale='log' if sc_amp_type[1][0] else 'logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xscale'] = 'logicle'
-                density_params['yscale'] = 'logicle'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
-                # Define histogram plot parameters
+                # Axis scaling will be logarithmic if data was acquired with a
+                # log amplifier, and logicle otherwise.
+                sc_amp_type = sample_gated.amplification_type(sc_channels)
+                density_params['xscale'] = \
+                    'log' if sc_amp_type[0][0] else 'logicle'
+                density_params['yscale'] = \
+                    'log' if sc_amp_type[1][0] else 'logicle'
+                # Histogram plot parameters
                 hist_params = []
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
@@ -749,7 +773,10 @@ def process_samples_table(samples_table,
                     if (ru == 'Channel Number'):
                         param['xscale'] = 'linear'
                     else:
-                        param['xscale'] = 'logicle'
+                        # Axis scaling will be logarithmic if data was acquired
+                        # with a log amplifier, and logicle otherwise.
+                        rc_amp_type = sample_gated.amplification_type(rc)
+                        param['xscale'] = 'log' if rc_amp_type[0] else 'logicle'
                     hist_params.append(param)
                     
                 # Plot
@@ -1095,23 +1122,24 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
             if pd.notnull(samples_table[header][sample_id]):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
-                # Decide whether to produce histograms in linear or log scale
-                if (unit != 'Channel') and \
-                    bool(sample.amplification_type(channel)[0]):
+                # Decide which scale to use
+                # Channel units result in linear scale. Otherwise, scale is
+                # decided based on amplification type.
+                if unit == 'Channel':
+                    scale = 'linear'
+                elif sample.amplification_type(channel)[0]:
                     scale = 'log'
                 else:
-                    scale = 'linear'
+                    scale = 'logicle'
                 # Define number of bins
                 nbins = min(sample.resolution(channel), max_bins)
-                # Calculate bin edges
-                bin_edges = sample.hist_bins(channel, nbins, scale)
-                # Calculate bin centers
-                if scale == 'linear':
-                    bin_centers = (bin_edges[:-1] + bin_edges[1:])/2
-                elif scale == 'log':
-                    bin_centers = (np.log10(bin_edges[:-1]) + \
-                        np.log10(bin_edges[1:]))/2
-                    bin_centers = 10**bin_centers
+                # Calculate bin edges and centers
+                # We generate twice the necessary number of bins. We then take
+                # every other value as the proper bin edges, and the remaining
+                # values as the bin centers.
+                bins_extended = sample.hist_bins(channel, 2*nbins, scale)
+                bin_edges = bins_extended[::2]
+                bin_centers = bins_extended[1::2]
                 # Store bin centers
                 hist_table.loc[(sample_id,
                                 channel,
