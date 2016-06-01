@@ -706,7 +706,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=clustering_channels[0],
-                                xscale='log',
+                                xscale='logicle',
                                 bins=256,
                                 alpha=0.75,
                                 savefig=savefig)
@@ -716,8 +716,8 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(6,4))
             FlowCal.plot.scatter2d(populations,
                                    channels=clustering_channels,
-                                   xscale='log',
-                                   yscale='log',
+                                   xscale='logicle',
+                                   yscale='logicle',
                                    savefig=savefig)
 
         # If used three channels or more for clustering, make 3D scatter plot
@@ -727,9 +727,9 @@ def get_transform_fxn(data_beads,
             FlowCal.plot.scatter3d_and_projections(
                 populations,
                 channels=clustering_channels[:3],
-                xscale='log',
-                yscale='log',
-                zscale='log',
+                xscale='logicle',
+                yscale='logicle',
+                zscale='logicle',
                 savefig=savefig)
 
         if plot_dir is not None:
@@ -819,7 +819,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=mef_channel,
-                                xscale='log',
+                                xscale='logicle',
                                 bins=256,
                                 alpha=0.75,
                                 facecolor=colors)
