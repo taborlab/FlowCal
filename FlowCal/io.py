@@ -10,8 +10,8 @@ import datetime
 import warnings
 
 import numpy as np
-import scipy
-import scipy.optimize
+
+import FlowCal.plot
 
 ###
 # Utility functions for importing segments of FCS files
@@ -1308,19 +1308,7 @@ class FCSData(np.ndarray):
         If ``range[0]`` is equal or less than zero and `scale` is  ``log``,
         the lower limit of the range is replaced with one.
 
-        Logicle scaling is implemented using the following equation::
-
-            x = T * 10**(-(M-W)) * (10**(s-W) \
-                    - (p**2)*10**(-(s-W)/p) + p**2 - 1)
-
-        This equation transforms linearly-spaced bins ``s`` into
-        logicle-spaced bins ``x``. This involves 3 independent parameters:
-        ``T`` (maximum range of data in ``x`` coordinates), ``M`` (maximum
-        range in ``s`` coordinates, roughly the number of assymptotic
-        decades in data space), and ``W`` (range of negative values in
-        ``s`` coordinates). ``p`` is directly related to ``W`` as follows::
-
-            W = 2*p * log10(p) / (p + 1)
+        Logicle scaling uses the LogicleTransform class in the plot module.
 
         References
         ----------
@@ -1390,55 +1378,21 @@ class FCSData(np.ndarray):
                 bins_channel = 10**(bins_channel)
 
             elif scale_channel == 'logicle':
-                # Extract parameters for logicle function
-                T = kwargs.pop('T', range_channel[1])
-                M = kwargs.pop('M', 4.5)
-                if 'W' in kwargs:
-                    W = kwargs['W']
-                else:
-                    # If W was not provided, use 5th percentile of the negative
-                    # events.
-                    negative_events = self[self[:, channel] < 0, channel]
-                    if len(negative_events) == 0:
-                        W = 0
-                    else:
-                        r = np.percentile(negative_events, 5)
-                        W = (M - np.log10(T / abs(r))) / 2
-                # Check that T, M, and W have good values
-                if T <= 0:
-                    ValueError("parameter T should be positive")
-                if M <= 0:
-                    ValueError("parameter M should be positive")
-                if W < 0:
-                    ValueError("parameter W should not be negative")
-                # Calculate parameter p. p and W are related by the following
-                # expression: ``W = 2*p * log10(p) / (p + 1)``. It is not
-                # possible to analytically obtain p as a function of W only, so
-                # p is calculated numerically using a root finding algorithm.
-                # The initial estimate provided to the algorithm comes from
-                # the asymptotic behavior of the equation as ``p -> inf``,
-                # ``W = 2*log10(p)``.
-                p0 = 10**(W / 2.)
-                # Functions to provide to the root finding algorithm
-                def W_f(p):
-                    return 2*p / (p + 1) * np.log10(p)
-                def W_root(p, W_target):
-                    return W_f(p) - W_target
-                # Find solution
-                sol = scipy.optimize.root(W_root, x0=p0, args=(W))
-                # Solution should be unique
-                assert sol.success
-                assert len(sol.x) == 1
-                # Extract p
-                p = sol.x[0]
-                # We will now generate ``nbins`` uniformly spaced bins centered
-                # at ``linspace(0, M, nbins)``. To do so, we need to generate
+                # Create transform class
+                # Use the LogicleTransform class from the plot module
+                t = FlowCal.plot._LogicleTransform(data=self,
+                                                   channel=channel,
+                                                   **kwargs)
+                # We now generate ``nbins`` uniformly spaced bins centered at
+                # ``linspace(0, M, nbins)``. To do so, we need to generate
                 # ``nbins + 1`` uniformly spaced points.
-                delta_res = float(M) / (res_channel - 1)
-                s = np.linspace(-delta_res/2, M + delta_res/2, nbins_channel+1)
+                delta_res = float(t.M) / (res_channel - 1)
+                s = np.linspace(- delta_res/2.,
+                                t.M + delta_res/2.,
+                                nbins_channel + 1)
                 # Finally, apply the logicle transformation to generate bins
-                bins_channel = T * 10**(-(M-W)) * (10**(s-W) \
-                                    - (p**2)*10**(-(s-W)/p) + p**2 - 1)
+                bins_channel = t.transform_non_affine(s)
+
             else:
                 # Scale not supported
                 raise ValueError('scale "{}" not supported'.format(
