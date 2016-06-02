@@ -288,7 +288,8 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     where ``fl_au[i]`` is the fluorescence of bead subpopulation ``i`` in
     arbitrary units and ``fl_mef[i]`` is the corresponding fluorescence in
     MEF units. The model includes 3 parameters: ``m`` (slope), ``b``
-    (intercept), and ``fl_mef_auto`` (bead autofluorescence).
+    (intercept), and ``fl_mef_auto`` (bead autofluorescence). The last term
+    is constrained to be greater or equal to zero.
 
     The bead fluorescence model is fit in log space using nonlinear least
     squares regression. In our experience, fitting in log space weights
@@ -343,7 +344,10 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     
     # Fit parameters
     err_par = lambda p: err_fun(p, fl_au, fl_mef)
-    res = minimize(err_par, params, options = {'gtol': 1e-6})
+    res = minimize(err_par,
+                   params,
+                   bounds=((None, None), (None, None), (0, None)),
+                   options = {'gtol': 1e-8, 'ftol': 1e-6})
 
     # Separate parameters
     beads_params = res.x
