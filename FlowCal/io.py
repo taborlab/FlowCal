@@ -1288,7 +1288,10 @@ class FCSData(np.ndarray):
                 Maximum range of data. If not provided, use ``range[1]``.
             M : float, optional
                 (Asymptotic) number of decades in scaled units. If not
-                provided, use 4.5.
+                provided, calculate from the following::
+
+                    4.5 / np.log10(262144) * np.log10(T)
+
             W : float, optional
                 Width of linear range in scaled units. If not provided,
                 calculate using the following relationship::

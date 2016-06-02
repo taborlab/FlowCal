@@ -378,9 +378,9 @@ def process_beads_table(beads_table,
                     'log' if sc_amp_type[0][0] else 'logicle'
                 density_params['yscale'] = \
                     'log' if sc_amp_type[1][0] else 'logicle'
-                # Beads have a tight distribution, so axis limits will be
-                # restrictied to 0.75 decades below the 5th percentile, to 0.75
-                # decades above the 95th percentile.
+                # Beads have a tight distribution, so axis limits will be set
+                # from 0.75 decades below the 5th percentile to 0.75 decades
+                # above the 95th percentile.
                 density_params['xlim'] = \
                     (np.percentile(beads_sample_gated[:, sc_channels[0]],
                                    5) / (10**0.75),
