@@ -144,13 +144,13 @@ def selection_std(populations,
 
     Parameters
     ----------
-    populations : list of 1D arrays or FCSData objects
+    populations : list of 1D arrays or 1-channel FCSData objects
         Populations to select or discard.
     low, high : int or float
         Low and high thresholds. Required if the elements in `populations`
         are numpy arrays. If not specified, and the elements in
         `populations` are FCSData objects, use 0.015 of the lowest value
-        and 0.0985 of the highest value in ``populations[0].domain``.
+        and 0.0985 of the highest value in ``populations[0].range``.
     n_std_low, n_std_high : float, optional
         Number of standard deviations from `low` and `high`, respectively,
         that a population's mean has to be closer than to be discarded.
@@ -163,13 +163,13 @@ def selection_std(populations,
     """
     # Default thresholds
     if low is None:
-        if hasattr(populations[0], 'domain'):
-            low = 0.015*populations[0].domain(0)[0]
+        if hasattr(populations[0], 'range'):
+            low = 0.015*populations[0].range(0)[0]
         else:
             raise TypeError("argument 'low' not specified")
     if high is None:
-        if hasattr(populations[0], 'domain'):
-            high = 0.985*populations[0].domain(0)[-1]
+        if hasattr(populations[0], 'range'):
+            high = 0.985*populations[0].range(0)[-1]
         else:
             raise TypeError("argument 'high' not specified")
 
@@ -225,14 +225,15 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
 
     Notes
     -----
-    The following model is used to describe bead fluorescence:
+    The following model is used to describe bead fluorescence::
 
         m*fl_channel[i] + b = log(fl_mef_auto + fl_mef[i])
 
-    where fl_channel[i] is the fluorescence of bead subpopulation i in
-    channel units and fl_mef[i] is the corresponding fluorescence in MEF
-    units. The model includes 3 parameters: m (slope), b (intercept), and
-    fl_mef_auto (bead autofluorescence).
+    where ``fl_channel[i]`` is the fluorescence of bead subpopulation
+    ``i`` in channel units and ``fl_mef[i]`` is the corresponding
+    fluorescence in MEF units. The model includes 3 parameters: ``m``
+    (slope), ``b`` (intercept), and ``fl_mef_auto`` (bead
+    autofluorescence).
 
     The bead fluorescence model is fit in a log-MEF space using nonlinear
     least squares regression (as opposed to fitting an exponential model in
@@ -240,13 +241,13 @@ def fit_beads_autofluorescence(fl_channel, fl_mef):
     residuals more evenly, whereas fitting an exponential vastly overvalues
     the brighter beads.
 
-    A standard curve is constructed by solving for fl_mef. As cell samples
-    may not have the same autofluorescence as beads, the bead
-    autofluorescence term (fl_mef_auto) is omitted from the standard curve;
-    the user is expected to use an appropriate white cell sample to account
-    for cellular autofluorescence if necessary. The returned standard curve
-    mapping fluorescence in channel units to MEF units is thus of the
-    following form:
+    A standard curve is constructed by solving for ``fl_mef``. As cell
+    samples may not have the same autofluorescence as beads, the bead
+    autofluorescence term (``fl_mef_auto``) is omitted from the standard
+    curve; the user is expected to use an appropriate white cell sample to
+    account for cellular autofluorescence if necessary. The returned
+    standard curve mapping fluorescence in channel units to MEF units is
+    thus of the following form::
 
         fl_mef = exp(m*fl_channel + b)
 
@@ -413,92 +414,117 @@ def get_transform_fxn(data_beads,
 
     Returns
     -------
-    transform_fxn : function, if ``full_output==False``
+    transform_fxn : function
         Transformation function to convert flow cytometry data from channel
         units to MEF. This function has the same basic signature as the
         general transformation function specified in ``FlowCal.transform``.
-    namedtuple, if ``full_output==True``
-        ``namedtuple``, containing the following fields in this order:
-        mef_channels : int, or str, or list of int, or list of str
-            Channels on which transformation functions have been generated.
-            Directly copied from the `mef_channels` argument.
-        transform_fxn : function
-            Transformation function to convert flow cytometry data from
-            channel units to MEF. This function has the same basic
-            signature as the general transformation function specified in
-            ``FlowCal.transform``.
-        clustering : dict
-            Results of the clustering step, containing the following
-            fields:
-            labels : array
-                Labels for each event in `data_beads`.
-        statistic : dict
-            Results of the calculation of bead subpopulations'
-            fluorescence, containing the following fields:
-            values : list
-                The representative fluorescence values of each
-                subpopulation, for each channel in `mef_channels`.
-        selection : dict
-            Results of the subpopulation selection step, containing the
-            following fields:
-            channel : list
-                The fluorescence values of each selected subpopulation in
-                channel units, for each channel in `mef_channels`.
-            mef : list
-                The fluorescence values of each selected subpopulation in
-                MEF units, for each channel in `mef_channels`.
-        fitting : dict
-            Results of the model fitting step, containing the following
-            fields:
-            std_crv : list
-                Functions encoding the standard curves, for each channel in
-                `mef_channels`.
-            beads_model : list
-                Functions encoding the fluorescence model of the
-                calibration beads, for each channel in `mef_channels`.
-            beads_params : list
-                Fitted parameters of the bead fluorescence model, for each
-                channel in `mef_chanels`.
+
+    mef_channels : int, or str, or list, only if ``full_output==True``
+        Channels on which transformation functions have been generated.
+        Directly copied from the `mef_channels` argument.
+
+    clustering : dict, only if ``full_output==True``
+        Results of the clustering step, containing the following fields:
+
+        labels : array
+            Labels for each event in `data_beads`.
+
+    statistic : dict, only if ``full_output==True``
+        Results of the calculation of bead subpopulations' fluorescence,
+        containing the following fields:
+
+        values : list
+            The representative fluorescence values of each
+            subpopulation, for each channel in `mef_channels`.
+
+    selection : dict, only if ``full_output==True``
+        Results of the subpopulation selection step, containing the
+        following fields:
+
+        channel : list
+            The fluorescence values of each selected subpopulation in
+            channel units, for each channel in `mef_channels`.
+        mef : list
+            The fluorescence values of each selected subpopulation in
+            MEF units, for each channel in `mef_channels`.
+
+    fitting : dict, only if ``full_output==True``
+        Results of the model fitting step, containing the following fields:
+
+        std_crv : list
+            Functions encoding the standard curves, for each channel in
+            `mef_channels`.
+        beads_model : list
+            Functions encoding the fluorescence model of the
+            calibration beads, for each channel in `mef_channels`.
+        beads_params : list
+            Fitted parameters of the bead fluorescence model, for each
+            channel in `mef_chanels`.
+        beads_model_str : list
+            String representation of the bead models used, for each channel
+            in `mef_channels`.
+        beads_params_names : list
+            Names of the parameters given in `beads_params`, for each
+            channel in `mef_channels`.
 
     Other parameters
     ----------------
     clustering_fxn : function, optional
         Function used for clustering, or identification of subpopulations.
-        Must have the following signature: ``labels = clustering_fxn(
-        data, n_clusters, **clustering_params)``, where `data` is a NxD
-        FCSData object or numpy array, `n_clusters` is the expected number
-        of bead subpopulations, and `labels` is a 1D numpy array of length
-        N, assigning each event in `data` to one subpopulation.
+        Must have the following signature::
+
+            labels = clustering_fxn(data, n_clusters, **clustering_params)
+
+        where `data` is a NxD FCSData object or numpy array, `n_clusters`
+        is the expected number of bead subpopulations, and `labels` is a 1D
+        numpy array of length N, assigning each event in `data` to one
+        subpopulation.
+
     clustering_params : dict, optional
         Additional keyword parameters to pass to `clustering_fxn`.
+
     clustering_channels : list, optional
         Channels used for clustering. If not specified, use `mef_channels`.
         If more than three channels are specified and `plot` is True, only
         a 3D scatter plot will be produced using the first three channels.
+
     statistic_fxn : function, optional
         Function used to calculate the representative fluorescence of each
-        subpopulation. Must have the following signature:
-        ``s = statistic_fxn(data, **statistic_params)``, where `data` is a
-        1D FCSData object or numpy array, and `s` is a float. Statistical
-        functions from numpy, scipy, or FlowCal.stats are valid options.
+        subpopulation. Must have the following signature::
+
+            s = statistic_fxn(data, **statistic_params)
+
+        where `data` is a 1D FCSData object or numpy array, and `s` is a
+        float. Statistical functions from numpy, scipy, or FlowCal.stats
+        are valid options.
+
     statistic_params : dict, optional
         Additional keyword parameters to pass to `statistic_fxn`.
+
     selection_fxn : function, optional
         Function to use for bead population selection. Must have the
-        following signature: ``selected_mask = selection_fxn(data_list,
-        **selection_params)``, where `data_list` is a list of FCSData
-        objects, each one cotaining the events of one population, and
-        `selected_mask` is a boolean array indicating whether the
-        population has been selected (True) or discarded (False). If None,
-        don't use a population selection procedure.
+        following signature::
+
+            selected_mask = selection_fxn(data_list, **selection_params)
+
+        where `data_list` is a list of FCSData objects, each one cotaining
+        the events of one population, and `selected_mask` is a boolean
+        array indicating whether the population has been selected (True) or
+        discarded (False). If None, don't use a population selection
+        procedure.
+
     selection_params : dict, optional
         Additional keyword parameters to pass to `selection_fxn`.
+
     fitting_fxn : function, optional
         Function used to fit the beads fluorescence model and obtain a
-        standard curve. Must have the following signature: ``std_crv,
-        beads_model, beads_params, beads_model_str, beads_params_names =
-        fitting_fxn(fl_channel, fl_mef, **fitting_params)``, where
-        `std_crv` is a function implementing the standard curve,
+        standard curve. Must have the following signature::
+
+            std_crv, beads_model, beads_params, \\
+            beads_model_str, beads_params_names = fitting_fxn(
+                fl_channel, fl_mef, **fitting_params)
+
+        where `std_crv` is a function implementing the standard curve,
         `beads_model` is a function implementing the beads fluorescence
         model, `beads_params` is an array containing the fitted parameters
         of the beads model, `beads_model_str` is a string representation
@@ -508,6 +534,7 @@ def get_transform_fxn(data_beads,
         values of the beads in channel units and MEF units, respectively.
         Note that the standard curve and the fitted beads model are not
         necessarily the same.
+
     fitting_params : dict, optional
         Additional keyword parameters to pass to `fitting_fxn`.
 
@@ -521,8 +548,8 @@ def get_transform_fxn(data_beads,
        channel in `mef_channels`.
     3. Some subpopulations are then discarded if they are close to either
        the minimum or the maximum channel value. In addition, if the MEF
-       value of some subpopulation is unknown (represented as a ``NaN`` in
-       `mef_values`), the whole subpopulation is also discarded.
+       value of some subpopulation is unknown (represented as a ``np.nan``
+       in `mef_values`), the whole subpopulation is also discarded.
     4. The measured fluorescence of each subpopulation is compared with
        the known MEF values in `mef_values`, and a standard curve function
        is generated using the appropriate MEF model.
@@ -609,7 +636,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=clustering_channels[0],
-                                div=4,
+                                bins=256,
                                 alpha=0.75,
                                 savefig=savefig)
 
@@ -716,7 +743,7 @@ def get_transform_fxn(data_beads,
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=mef_channel,
-                                div=4,
+                                bins=256,
                                 alpha=0.75,
                                 facecolor=colors)
 
@@ -766,8 +793,8 @@ def get_transform_fxn(data_beads,
         # Plot
         if plot:
             # Get channel range
-            min_fl = populations[0].domain(mef_channel)[0]
-            max_fl = populations[0].domain(mef_channel)[-1]
+            min_fl = populations[0].range(mef_channel)[0]
+            max_fl = populations[0].range(mef_channel)[-1]
 
             # Plot standard curve
             plt.figure(figsize=(6,4))

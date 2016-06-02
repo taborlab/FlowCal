@@ -72,11 +72,13 @@ if __name__ == "__main__":
                 di,
                 gated_data=dig,
                 figsize=(7,7),
-                density_channels=['FSC-H', 'SSC-H'], 
+                density_channels=['FSC-H', 'SSC-H'],
                 hist_channels=['FL1-H'],
                 gate_contour=dgc, 
-                density_params={'mode': 'scatter', 'xlog': True, 'ylog': True}, 
-                hist_params={'div': 4, 'log': True},
+                density_params={'mode': 'scatter',
+                                'xscale': 'log',
+                                'yscale': 'log'},
+                hist_params={'xscale': 'log'},
                 savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
 

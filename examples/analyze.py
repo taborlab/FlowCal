@@ -70,7 +70,7 @@ if __name__ == "__main__":
         hist_channels=fl_channels,
         gate_contour=gate_contour, 
         density_params={'mode': 'scatter'}, 
-        hist_params={'ylim': (0, 1000), 'div': 4},
+        hist_params={'ylim': (0, 1000)},
         savefig='{}/density_hist_{}.png'.format(beads_plot_dir, beads_file))
     plt.close()
 
@@ -124,6 +124,8 @@ if __name__ == "__main__":
         di_gated, __, gate_contour = FlowCal.gate.density2d(
             data=di,
             channels=sc_channels,
+            xscale='log',
+            yscale='log',
             gate_fraction=0.2,
             full_output=True)
         data_gated.append(di_gated)
@@ -139,10 +141,9 @@ if __name__ == "__main__":
             hist_params = []
             for chi in mef_channels:
                 param = {}
-                param['div'] = 4
                 param['facecolor'] = hist_colors[chi]
                 param['xlabel'] = mef_names[chi]
-                param['log'] = True
+                param['xscale'] = 'log'
                 hist_params.append(param)
             # Plot
             FlowCal.plot.density_and_hist(di,
@@ -151,7 +152,9 @@ if __name__ == "__main__":
                 density_channels=sc_channels,
                 hist_channels=mef_channels,
                 gate_contour=dgc, 
-                density_params={'mode': 'scatter', 'xlog': True, 'ylog': True}, 
+                density_params={'mode': 'scatter',
+                                'xscale': 'log',
+                                'yscale': 'log'},
                 hist_params=hist_params,
                 savefig='{}/{}.png'.format(gated_plot_dir, str(di)))
             plt.close()
