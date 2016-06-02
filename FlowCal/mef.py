@@ -347,7 +347,7 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     res = minimize(err_par,
                    params,
                    bounds=((None, None), (None, None), (0, None)),
-                   options = {'gtol': 1e-8, 'ftol': 1e-6})
+                   options = {'gtol': 1e-10, 'ftol': 1e-10})
 
     # Separate parameters
     beads_params = res.x
