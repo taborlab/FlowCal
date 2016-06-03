@@ -1439,7 +1439,7 @@ class FCSData(np.ndarray):
             time_step = None
 
         # Data type
-        data_type = fcs_file.text['$DATATYPE']
+        data_type = fcs_file.text.get('$DATATYPE')
 
         # Extract the acquisition date.
         acquisition_date = cls._parse_date_string(fcs_file.text.get('$DATE'))
