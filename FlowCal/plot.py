@@ -217,8 +217,8 @@ class _LogicleTransform(matplotlib.transforms.Transform):
     taken from the largest ``data[i].range(channel)[1]`` or the largest
     element in ``data[i]`` if ``data[i].range()`` is not available, M is
     set to ``4.5 / np.log10(262144) * np.log10(T)``, and W is taken from
-    ``(M - log10(T / abs(r))) / 2``, where ``r`` is the fifth percentile of
-    all events below zero.
+    ``(M - log10(T / abs(r))) / 2``, where ``r`` is the minimum negative
+    event. If no negative events are present, W is set to zero.
 
     References
     ----------
@@ -266,10 +266,9 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                 for d in data:
                     # Extract channel
                     y = d[:, channel] if d.ndim > 1 else d
-                    # Use 5th percentile of the negative events.
-                    negative_events = y[y < 0]
-                    if len(negative_events) > 0:
-                        r = np.percentile(negative_events, 5)
+                    # If negative events are present, use minimum.
+                    if np.any(y < 0):
+                        r = np.min(y)
                         Wi = (M - np.log10(T / abs(r))) / 2
                         W = Wi if Wi > W else W
         else:

@@ -1298,8 +1298,8 @@ class FCSData(np.ndarray):
 
                     W = (M - log10(T / abs(r))) / 2
 
-                Where ``r`` is the fifth percentile of all events below
-                zero.
+                Where ``r`` is the minimum negative event. If no negative
+                events are present, W is set to zero.
 
         Return
         ------
