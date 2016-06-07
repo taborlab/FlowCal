@@ -242,7 +242,8 @@ class _LogicleTransform(matplotlib.transforms.Transform):
         # If data is included, try to obtain T, M and W from it
         if data is not None:
             if channel is None:
-                ValueError("if data is provided, a channel should be specified")
+                raise ValueError("if data is provided, a channel should be"
+                    + " specified")
             # Convert to list if necessary
             if not isinstance(data, list):
                 data = [data]
@@ -281,11 +282,11 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                 W = 0.5
         # Check that property values are valid
         if T <= 0:
-            ValueError("T should be positive")
+            raise ValueError("T should be positive")
         if M <= 0:
-            ValueError("M should be positive")
+            raise ValueError("M should be positive")
         if W < 0:
-            ValueError("W should not be negative")
+            raise ValueError("W should not be negative")
 
         # Store parameters
         self._T = T
