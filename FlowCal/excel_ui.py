@@ -148,7 +148,7 @@ def read_table(filename, sheetname, index_col=None):
 
     return table
 
-def write_workbook(filename, table_list):
+def write_workbook(filename, table_list, column_width=None):
     """
     Write an Excel workbook from a list of tables.
 
@@ -160,6 +160,10 @@ def write_workbook(filename, table_list):
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
+    column_width: int, optional
+        The column width to use when saving the spreadsheet. If None,
+        calculate width automatically from the maximum number of characters
+        in each column.
 
     """
     # Modify default header format
@@ -178,7 +182,21 @@ def write_workbook(filename, table_list):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        writer.sheets[sheet_name].set_column(0, len(df.columns) - 1, width=15)
+        if column_width is None:
+            for i, (col_name, column) in enumerate(df.iteritems()):
+                # Get the maximum number of characters in a column
+                max_chars_col = column.astype(str).str.len().max()
+                max_chars_col = max(len(col_name), max_chars_col)
+                # Write width
+                writer.sheets[sheet_name].set_column(
+                    i,
+                    i,
+                    width=1.*max_chars_col)
+        else:
+            writer.sheets[sheet_name].set_column(
+                0,
+                len(df.columns) - 1,
+                width=column_width)
 
     # Write excel file
     writer.save()
