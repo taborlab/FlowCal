@@ -161,7 +161,8 @@ def write_workbook(filename, table_list, column_width=None):
         string, and the contents of the table as a DataFrame.
     column_width: int, optional
         The column width to use when saving the spreadsheet. If None,
-        calculate width automatically.
+        calculate width automatically from the maximum number of characters
+        in each column.
 
     """
     # Modify default header format
