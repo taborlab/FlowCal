@@ -702,7 +702,9 @@ def process_samples_table(samples_table,
                             # Detector voltage
                             beads_dv = beads_row['{} Detector Volt.'. \
                                 format(fl_channel)]
-                            if beads_dv != sample.detector_voltage(fl_channel):
+                            if sample.detector_voltage(fl_channel) is not None \
+                                    and beads_dv != sample.detector_voltage(
+                                        fl_channel):
                                 raise ExcelUIException("Detector voltage for "
                                     "acquisition of beads and samples in "
                                     "channel {} are not the same (beads {}'s "
