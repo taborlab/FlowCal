@@ -620,7 +620,7 @@ def get_transform_fxn(data_beads,
     2. The fluorescence of each subpopulation is calculated, for each
        channel in `mef_channels`.
     3. Some subpopulations are then discarded if they are close to either
-       the minimum or the maximum cannel range limits. In addition, if the
+       the minimum or the maximum channel range limits. In addition, if the
        MEF value of some subpopulation is unknown (represented as a
        ``np.nan`` in `mef_values`), the whole subpopulation is also
         discarded.
