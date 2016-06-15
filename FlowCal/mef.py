@@ -203,7 +203,7 @@ def selection_std(populations,
         if hasattr(populations[0], 'hist_bins'):
             if scale=='linear':
                 r = populations[0].range(0)
-                low = r[0] + 0.985*(r[1] - r[0])
+                high = r[0] + 0.985*(r[1] - r[0])
             elif scale=='log':
                 r = populations[0].hist_bins(channels=0, nbins=1, scale='log')
                 high = 10**(np.log10(r[0]) + 0.985*(np.log10(r[1]/r[0])))
