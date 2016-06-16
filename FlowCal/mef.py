@@ -706,6 +706,11 @@ def get_transform_fxn(data_beads,
             savefig = None
 
         # Extract amplification type of clustering channels
+        # The amplification type for each channel is a tuple of two numbers,
+        # in which the first number indicates the number of decades covered by
+        # a logarithmic amplifier, and the second indicates the linear value
+        # corresponding to the channel value zero. If the first value is zero,
+        # the amplifier used is linear, otherwise it is logarithmic.
         clustering_amp_type = \
             populations[0].amplification_type(clustering_channels)
 

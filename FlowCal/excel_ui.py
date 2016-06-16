@@ -370,6 +370,10 @@ def process_beads_table(beads_table,
             # Density gating
             # Axis scaling will be logarithmic if data was acquired with a log
             # amplifier, and logicle otherwise.
+            # sc_amp_type is a list of tuples, one for each channel in
+            # sc_channels. Each tuple contains two numbers. If the amplification
+            # type of a channel is linear, the first number in this tuple is
+            # equal to zero. Any other value indicates a logarithmic amplifier.
             sc_amp_type = beads_sample_gated.amplification_type(sc_channels)
             beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=beads_sample_gated,
@@ -391,6 +395,11 @@ def process_beads_table(beads_table,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
                 # Axis scaling will be logarithmic if data was acquired with a
                 # log amplifier, and logicle otherwise.
+                # sc_amp_type is a list of tuples, one for each channel in
+                # sc_channels. Each tuple contains two numbers. If the
+                # amplification type of a channel is linear, the first number in
+                # this tuple is equal to zero. Any other value indicates a
+                # logarithmic amplifier.
                 sc_amp_type = beads_sample_gated.amplification_type(sc_channels)
                 density_params['xscale'] = \
                     'log' if sc_amp_type[0][0] else 'logicle'
@@ -774,6 +783,10 @@ def process_samples_table(samples_table,
             # Density gating
             # Axis scaling will be logarithmic if data was acquired with a log
             # amplifier, and logicle otherwise.
+            # sc_amp_type is a list of tuples, one for each channel in
+            # sc_channels. Each tuple contains two numbers. If the amplification
+            # type of a channel is linear, the first number in this tuple is
+            # equal to zero. Any other value indicates a logarithmic amplifier.
             sc_amp_type = sample_gated.amplification_type(sc_channels)
             sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=sample_gated,
@@ -795,6 +808,11 @@ def process_samples_table(samples_table,
                     sample_gated.shape[0] * 100. / sample.shape[0])
                 # Axis scaling will be logarithmic if data was acquired with a
                 # log amplifier, and logicle otherwise.
+                # sc_amp_type is a list of tuples, one for each channel in
+                # sc_channels. Each tuple contains two numbers. If the
+                # amplification type of a channel is linear, the first number in
+                # this tuple is equal to zero. Any other value indicates a
+                # logarithmic amplifier.
                 sc_amp_type = sample_gated.amplification_type(sc_channels)
                 density_params['xscale'] = \
                     'log' if sc_amp_type[0][0] else 'logicle'
@@ -811,6 +829,10 @@ def process_samples_table(samples_table,
                     else:
                         # Axis scaling will be logarithmic if data was acquired
                         # with a log amplifier, and logicle otherwise.
+                        # rc_amp_type is a tuple. If the amplification type of
+                        # channel rc is linear, the first number in this tuple
+                        # is equal to zero. Any other value indicates a
+                        # logarithmic amplifier.
                         rc_amp_type = sample_gated.amplification_type(rc)
                         param['xscale'] = 'log' if rc_amp_type[0] else 'logicle'
                     hist_params.append(param)
