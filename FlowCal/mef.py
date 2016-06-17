@@ -10,7 +10,7 @@ import collections
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from sklearn.mixture import GMM 
+from sklearn.mixture import GMM
 
 import FlowCal.plot
 import FlowCal.transform
@@ -247,29 +247,30 @@ def selection_std(populations,
         (pop_mean + n_std_high*pop_std) < high)
     return selected_mask
 
-def fit_beads_autofluorescence(fl_au, fl_mef):
+def fit_beads_autofluorescence(fl_rfi, fl_mef):
     """
     Fit a standard curve using a beads model with autofluorescence.
 
     Parameters
     ----------
-    fl_au : array
-        Fluorescence values of bead populations in arbitrary units.
+    fl_rfi : array
+        Fluorescence values of bead populations in units of Relative
+        Fluorescence Intensity (RFI).
     fl_mef : array
         Fluorescence values of bead populations in MEF units.
 
     Returns
     -------
     std_crv : function
-        Standard curve that transforms arbitrary fluorescence values to MEF
+        Standard curve that transforms fluorescence values from RFI to MEF
         units. This function has the signature ``y = std_crv(x)``, where
-        `x` is some fluorescence value in arbitrary units and `y` is the
-        same fluorescence expressed in MEF units.
+        `x` is some fluorescence value in RFI and `y` is the same
+        fluorescence expressed in MEF units.
     beads_model : function
         Fluorescence model of calibration beads. This function has the
         signature ``y = beads_model(x)``, where `x` is the fluorescence of
-        some bead population in arbitrary units and `y` is the same
-        fluorescence expressed in MEF units, without autofluorescence.
+        some bead population in RFI units and `y` is the same fluorescence
+        expressed in MEF units, without autofluorescence.
     beads_params : array
         Fitted parameters of the bead fluorescence model: ``[m, b,
         fl_mef_auto]``.
@@ -283,11 +284,11 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     -----
     The following model is used to describe bead fluorescence::
 
-        m*log(fl_au[i]) + b = log(fl_mef_auto + fl_mef[i])
+        m*log(fl_mef[i]) + b = log(fl_mef_auto + fl_mef[i])
 
-    where ``fl_au[i]`` is the fluorescence of bead subpopulation ``i`` in
-    arbitrary units and ``fl_mef[i]`` is the corresponding fluorescence in
-    MEF units. The model includes 3 parameters: ``m`` (slope), ``b``
+    where ``fl_mef[i]`` is the fluorescence of bead subpopulation ``i`` in
+    RFI units and ``fl_mef[i]`` is the corresponding fluorescence in MEF
+    units. The model includes 3 parameters: ``m`` (slope), ``b``
     (intercept), and ``fl_mef_auto`` (bead autofluorescence). The last term
     is constrained to be greater or equal to zero.
 
@@ -304,14 +305,14 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     standard curve mapping fluorescence in channel units to MEF units is
     thus of the following form::
 
-        fl_mef = exp(m*log(fl_au) + b)
+        fl_mef = exp(m*log(fl_rfi) + b)
 
     """
     # Check that the input data has consistent dimensions
-    if len(fl_au) != len(fl_mef):
-        raise ValueError("fl_au and fl_mef have different lengths")
+    if len(fl_rfi) != len(fl_mef):
+        raise ValueError("fl_rfi and fl_mef have different lengths")
     # Check that we have at least three points
-    if len(fl_au) <= 2:
+    if len(fl_rfi) <= 2:
         raise ValueError("standard curve model requires at least three "
             "values")
         
@@ -322,9 +323,9 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     # 1: y-intercept found by putting a line through highest two points.
     # 2: bead autofluorescence initialized using the first point.
     params[0] = (np.log(fl_mef[-1]) - np.log(fl_mef[-2])) / \
-                (np.log(fl_au[-1]) - np.log(fl_au[-2]))
-    params[1] = np.log(fl_mef[-1]) - params[0] * np.log(fl_au[-1])
-    params[2] = np.exp(params[0]*np.log(fl_au[0]) + params[1]) - fl_mef[0]
+                (np.log(fl_rfi[-1]) - np.log(fl_rfi[-2]))
+    params[1] = np.log(fl_mef[-1]) - params[0] * np.log(fl_rfi[-1])
+    params[2] = np.exp(params[0]*np.log(fl_rfi[0]) + params[1]) - fl_mef[0]
 
     # Error function
     def err_fun(p, x, y):
@@ -334,7 +335,7 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     def fit_fun(p,x):
         return np.exp(p[0] * np.log(x) + p[1]) - p[2]
 
-    # a.u.-to-MEF standard curve transformation function
+    # RFI-to-MEF standard curve transformation function
     # We use the equivalent form ``exp(p[1]) * x**p[0]``. Mathematically, this
     # is undefined for x < 0. In this case, we redefine the output as
     # ``- exp(p[1]) * (-x)**p[0]``. These two can be combined as follows:
@@ -343,7 +344,7 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
         return np.sign(x) * np.exp(p[1]) * (np.abs(x)**p[0])
     
     # Fit parameters
-    err_par = lambda p: err_fun(p, fl_au, fl_mef)
+    err_par = lambda p: err_fun(p, fl_rfi, fl_mef)
     res = minimize(err_par,
                    params,
                    bounds=((None, None), (None, None), (0, None)),
@@ -359,7 +360,7 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
     std_crv = lambda x: sc_fun(beads_params, x)
 
     # Model string representation
-    beads_model_str = 'm*log(fl_au) + b = log(fl_mef_auto + fl_mef)'
+    beads_model_str = 'm*log(fl_rfi) + b = log(fl_mef_auto + fl_mef)'
 
     # Parameter names
     beads_params_names = ['m', 'b', 'fl_mef_auto']
@@ -370,7 +371,7 @@ def fit_beads_autofluorescence(fl_au, fl_mef):
             beads_model_str,
             beads_params_names)
 
-def plot_standard_curve(fl_au,
+def plot_standard_curve(fl_rfi,
                         fl_mef,
                         beads_model,
                         std_crv,
@@ -383,8 +384,8 @@ def plot_standard_curve(fl_au,
 
     Parameters
     ----------
-    fl_au : array_like
-        Fluorescence of the calibration beads' subpopulations, in arbitrary
+    fl_rfi : array_like
+        Fluorescence of the calibration beads' subpopulations, in RFI
         units.
     fl_mef : array_like
         Fluorescence of the calibration beads' subpopulations, in MEF
@@ -392,7 +393,8 @@ def plot_standard_curve(fl_au,
     beads_model : function
         Fluorescence model of the calibration beads.
     std_crv : function
-        The standard curve, mapping arbitrary units to MEF units.
+        The standard curve, mapping relative fluorescence (RFI) units to
+        MEF units.
 
     Other parameters:
     -----------------
@@ -407,7 +409,7 @@ def plot_standard_curve(fl_au,
 
     """
     # Plot fluorescence of beads populations
-    plt.plot(fl_au,
+    plt.plot(fl_rfi,
              fl_mef,
              'o',
              label='Beads',
@@ -487,10 +489,9 @@ def get_transform_fxn(data_beads,
     Returns
     -------
     transform_fxn : function
-        Transformation function to convert flow cytometry data from
-        arbitrary units to MEF. This function has the same basic signature
-        as the general transformation function specified in
-        ``FlowCal.transform``.
+        Transformation function to convert flow cytometry data from RFI
+        units to MEF. This function has the same basic signature as the
+        general transformation function specified in ``FlowCal.transform``.
 
     mef_channels : int, or str, or list, only if ``full_output==True``
         Channels on which transformation functions have been generated.
@@ -514,9 +515,9 @@ def get_transform_fxn(data_beads,
         Results of the subpopulation selection step, containing the
         following fields:
 
-        au : list
+        rfi : list
             The fluorescence values of each selected subpopulation in
-            arbitrary units, for each channel in `mef_channels`.
+            RFI units, for each channel in `mef_channels`.
         mef : list
             The fluorescence values of each selected subpopulation in
             MEF units, for each channel in `mef_channels`.
@@ -595,7 +596,7 @@ def get_transform_fxn(data_beads,
 
             std_crv, beads_model, beads_params, \\
             beads_model_str, beads_params_names = fitting_fxn(
-                fl_au, fl_mef, **fitting_params)
+                fl_rfi, fl_mef, **fitting_params)
 
         where `std_crv` is a function implementing the standard curve,
         `beads_model` is a function implementing the beads fluorescence
@@ -603,8 +604,8 @@ def get_transform_fxn(data_beads,
         of the beads model, `beads_model_str` is a string representation
         of the beads model used, `beads_params_names` is a list with the
         parameter names in the same order as they are given in
-        `beads_params`, and `fl_au` and `fl_mef` are the fluorescence
-        values of the beads in arbitrary units and MEF units, respectively.
+        `beads_params`, and `fl_rfi` and `fl_mef` are the fluorescence
+        values of the beads in RFI units and MEF units, respectively.
         Note that the standard curve and the fitted beads model are not
         necessarily the same.
 
@@ -754,7 +755,7 @@ def get_transform_fxn(data_beads,
     std_crv_res = []
     if full_output:
         stats_values_res = []
-        selected_au_res = []
+        selected_rfi_res = []
         selected_mef_res = []
         beads_model_res = []
         beads_params_res =[]
@@ -802,21 +803,21 @@ def get_transform_fxn(data_beads,
         selected_mask = np.logical_and(selected_mask,
                                        ~np.isnan(mef_values_channel))
 
-        # Get selected au and mef values
-        selected_au = stats_values[selected_mask]
+        # Get selected rfi and mef values
+        selected_rfi = stats_values[selected_mask]
         selected_mef = mef_values_channel[selected_mask]
 
         # Accumulate results
         if full_output:
-            selected_au_res.append(selected_au)
+            selected_rfi_res.append(selected_rfi)
             selected_mef_res.append(selected_mef)
 
         # Print information
         if verbose:
             print("({}) Step 3: Population Selection".format(mef_channel))
-            print("  {} populations selected.".format(len(selected_au)))
+            print("  {} populations selected.".format(len(selected_rfi)))
             print("  Fluorescence of selected populations (a.u.):")
-            print("    " + str(selected_au))
+            print("    " + str(selected_rfi))
             print("  Fluorescence of selected populations (MEF):")
             print("    " + str(selected_mef))
 
@@ -862,7 +863,7 @@ def get_transform_fxn(data_beads,
         ###
 
         # Fit
-        fitting_output = fitting_fxn(selected_au,
+        fitting_output = fitting_fxn(selected_rfi,
                                      selected_mef,
                                      **fitting_params)
         std_crv = fitting_output[0]
@@ -893,7 +894,7 @@ def get_transform_fxn(data_beads,
 
             # Plot standard curve
             plt.figure(figsize=(6,4))
-            plot_standard_curve(selected_au,
+            plot_standard_curve(selected_rfi,
                                 selected_mef,
                                 beads_model,
                                 std_crv,
@@ -929,7 +930,7 @@ def get_transform_fxn(data_beads,
         statistic_res['values'] = stats_values_res
         # Population selection results
         selection_res = {}
-        selection_res['au'] = selected_au_res
+        selection_res['rfi'] = selected_rfi_res
         selection_res['mef'] = selected_mef_res
         # Fitting results
         fitting_res = {}

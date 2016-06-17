@@ -218,7 +218,7 @@ def process_beads_table(beads_table,
     function does the following:
         - Load the FCS file specified in the field "File Path".
         - Transform the forward scatter/side scatter and fluorescence
-          channels to a.u.
+          channels to RFI
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
@@ -540,7 +540,7 @@ def process_samples_table(samples_table,
     The function processes each entry in `samples_table`, and does the
     following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter to a.u., if needed.
+        - Transform the forward scatter/side scatter to RFI.
         - Transform the fluorescence channels to the units specified in the
           column "<Channel name> Units".
         - Remove the 250 first and 100 last events.
