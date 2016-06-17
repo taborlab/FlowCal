@@ -742,7 +742,7 @@ def process_samples_table(samples_table,
                                         beads_dv,
                                         sample.detector_voltage(fl_channel)))
 
-                        # Transform first to RFI
+                        # First, transform to RFI
                         sample = FlowCal.transform.to_rfi(sample, fl_channel)
                         # Attempt to transform to MEF
                         # Transformation function raises a ValueError if a
