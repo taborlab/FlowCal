@@ -28,7 +28,7 @@ else:
 def clustering_gmm(data,
                    n_clusters,
                    tol=1e-7,
-                   min_covar=1e-2,
+                   min_covar=5e-5,
                    scale='log'):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
@@ -87,7 +87,7 @@ def clustering_gmm(data,
         # Log scale requires saturating negative and zero-valued events
         data[data < 1] = 1.
         # Rescale
-        data = np.log10(data)*256
+        data = np.log10(data)
 
     ###
     # Parameter initialization
