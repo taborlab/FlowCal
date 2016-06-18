@@ -125,7 +125,7 @@ class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
         if self._xmin > self._xmax:
             self._xmax, self._xmin = self._xmin, self._xmax
 
-    def transform_non_affine(self, x):
+    def transform_non_affine(self, x, mask_out_of_range=True):
         """
         Transform a Nx1 numpy array.
 
@@ -133,6 +133,8 @@ class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
         ----------
         x : array
             Data to be transformed.
+        mask_out_of_range : bool, optional
+            Whether to mask input values out of range.
 
         Return
         ------
@@ -141,7 +143,11 @@ class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
 
         """
         # Mask out-of-range values
-        x_masked = np.ma.masked_where((x < self._xmin) | (x > self._xmax), x)
+        if mask_out_of_range:
+            x_masked = np.ma.masked_where((x < self._xmin) | (x > self._xmax),
+                                          x)
+        else:
+            x_masked = x
         # Calculate s and return
         return np.interp(x_masked, self._x_range, self._s_range)
 

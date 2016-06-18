@@ -94,14 +94,13 @@ def clustering_gmm(data,
         # Copy events
         data = data.copy()
         # Rescale
-        # Use the logicle transform class in the plot module. This class
-        # transforms data one channel at a time.
+        # Use the logicle transform class in the plot module, and transform
+        # data one channel at a time.
         for i in range(data.shape[1]):
             # We need a transformation from "data value" to "display scale"
             # units. To do so, we use an inverse logicle transformation.
-            t = FlowCal.plot._LogicleTransform(data=data, channel=i)
-            ti = FlowCal.plot._InterpolatedInverseTransform(t, smin=0, smax=t.M)
-            data[:,i] = ti.transform_non_affine(data[:,i])
+            t = FlowCal.plot._LogicleTransform(data=data, channel=i).inverted()
+            data[:,i] = t.transform_non_affine(data[:,i])
 
     ###
     # Parameter initialization
@@ -167,7 +166,7 @@ def selection_std(populations,
                   high=None,
                   n_std_low=2.5,
                   n_std_high=2.5,
-                  scale='log'):
+                  scale='linear'):
     """
     Select populations if most of their elements are between two values.
 
@@ -189,8 +188,8 @@ def selection_std(populations,
         that a population's mean has to be closer than to be discarded.
     scale : str, optional
         Rescaling applied to `populations` before calculating means and
-        standard deviations. If ``linear``, no rescaling is applied. If
-        ``log``, apply base-10 logarithm to `populations`.
+        standard deviations. Can be either ``linear``, ``log``, or
+        ``logicle``.
 
     Returns
     -------
@@ -198,49 +197,62 @@ def selection_std(populations,
         Flags indicating whether a population has been selected.
 
     """
-    # Check that ``scale`` is supported
-    if scale!='linear' and scale!='log':
+    # Generate scaling functions
+    if scale == 'linear':
+        # Identity function
+        sf = lambda x: x
+    elif scale == 'log':
+        sf = np.log10
+    elif scale == 'logicle':
+        # We need a transformation from "data value" to "display scale"
+        # units. To do so, we use an inverse logicle transformation.
+        t = FlowCal.plot._LogicleTransform(data=populations[0],
+                                           channel=0).inverted()
+        sf = lambda x: t.transform_non_affine(x, mask_out_of_range=False)
+    else:
         raise ValueError("scale {} not supported".format(scale))
 
     # Default thresholds
     if low is None:
         if hasattr(populations[0], 'hist_bins'):
-            if scale=='linear':
-                r = populations[0].range(0)
-                low = r[0] + 0.015*(r[1] - r[0])
-            elif scale=='log':
-                r = populations[0].hist_bins(channels=0, nbins=1, scale='log')
-                low = 10**(np.log10(r[0]) + 0.015*(np.log10(r[1]/r[0])))
+            # Obtain default thresholds from range
+            r = populations[0].range(channels=0)
+            if scale == 'log' and r[0] <= 0:
+                r[0] = np.finfo(float).eps
+            low = sf(r[0]) + 0.015*(sf(r[1]) - sf(r[0]))
         else:
             raise TypeError("argument 'low' not specified")
+    else:
+        # Scale threshold
+        low = sf(low)
     if high is None:
         if hasattr(populations[0], 'hist_bins'):
-            if scale=='linear':
-                r = populations[0].range(0)
-                high = r[0] + 0.985*(r[1] - r[0])
-            elif scale=='log':
-                r = populations[0].hist_bins(channels=0, nbins=1, scale='log')
-                high = 10**(np.log10(r[0]) + 0.985*(np.log10(r[1]/r[0])))
+            # Obtain default thresholds from range
+            r = populations[0].range(channels=0)
+            if scale == 'log' and r[0] <= 0:
+                r[0] = np.finfo(float).eps
+            high = sf(r[0]) + 0.985*(sf(r[1]) - sf(r[0]))
         else:
             raise TypeError("argument 'high' not specified")
+    else:
+        # Scale threshold
+        high = sf(high)
 
-    # Rescale if necessary
-    if scale=='log':
-        # Copy events
-        for i in range(len(populations)):
-            populations[i] = populations[i].copy()
+    # Copy events
+    for i in range(len(populations)):
+        populations[i] = populations[i].copy()
 
-        # Log scale requires saturating negative and zero-valued events
+    # For log scaling, logarithm of zero and negatives is undefined. Therefore,
+    # saturate any non-positives to a small positive value.
+    # `eps` is the smallest number such that `1.0 + eps != eps`. In a
+    # typical 64-bit machine, `eps ~= 1e-16`.
+    if scale == 'log':
         for p in populations:
-            p[p < 1] = 1.
+            p[p < np.finfo(float).eps] = np.finfo(float).eps
 
-        # Rescale events
-        for i in range(len(populations)):
-            populations[i] = np.log10(populations[i])
-
-        # Rescale low and high thresholds
-        low = np.log10(low)
-        high = np.log10(high)
+    # Rescale events
+    for i in range(len(populations)):
+        populations[i] = sf(populations[i])
 
     # Calculate means and standard deviations
     pop_mean = np.array([FlowCal.stats.mean(p) for p in populations])
@@ -826,11 +838,27 @@ def get_transform_fxn(data_beads,
         # 3. Select populations to be used for fitting
         ###
 
+        # Copy selection_params to avoid modifying the original object
+        selection_params_channel = selection_params.copy()
+        # If scale has not been specified in selection_params_channel, choose
+        # scale automatically.
+        if 'scale' not in selection_params_channel:
+            # If amplification type is logarithmic, use log scaling. Otherwise,
+            # use logicle scaling.
+            # The amplification type for each channel is a tuple of two numbers,
+            # in which the first number indicates the number of decades covered
+            # by a logarithmic amplifier, and the second indicates the linear
+            # value corresponding to the channel value zero. If the first value
+            # is zero, the amplifier used is linear, otherwise it is
+            # logarithmic.
+            mef_amp_type = populations[0].amplification_type(mef_channel)
+            selection_params_channel['scale'] = 'log' if mef_amp_type[0] else 'logicle'
+
         # Select populations based on selection_fxn
         if selection_fxn is not None:
             selected_mask = selection_fxn(
                 [population for population in populations_channel],
-                **selection_params)
+                **selection_params_channel)
         else:
             selected_mask = np.ones(n_clusters, dtype=bool)
 
