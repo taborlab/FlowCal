@@ -29,7 +29,7 @@ def clustering_gmm(data,
                    n_clusters,
                    tol=1e-7,
                    min_covar=5e-5,
-                   scale='log'):
+                   scale='linear'):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
 
@@ -45,9 +45,8 @@ def clustering_gmm(data,
     min_covar : float, optional
         Minimum covariance. Passed directly to ``scikit-learn``'s GMM.
     scale : str, optional
-        Rescaling applied to `data` before performing clustering. If
-        ``linear``, no rescaling is applied. If ``log``, base-10 logarithm
-        is applied.
+        Rescaling applied to `data` before performing clustering. Can be
+        either ``linear``, ``log``, or ``logicle``.
 
     Returns
     -------
@@ -77,17 +76,32 @@ def clustering_gmm(data,
 
     """
     # Check that ``scale`` is supported
-    if scale!='linear' and scale!='log':
+    if scale not in ['linear', 'log', 'logicle']:
         raise ValueError("scale {} not supported".format(scale))
 
     # Rescale if necessary
     if scale=='log':
         # Copy events
         data = data.copy()
-        # Log scale requires saturating negative and zero-valued events
-        data[data < 1] = 1.
+        # Logarithm of zero and negatives is undefined. Therefore, saturate
+        # any non-positives to a small positive value.
+        # `eps` is the smallest number such that `1.0 + eps != eps`. In a
+        # typical 64-bit machine, `eps ~= 1e-16`.
+        data[data < np.finfo(float).eps] = np.finfo(float).eps
         # Rescale
         data = np.log10(data)
+    elif scale=='logicle':
+        # Copy events
+        data = data.copy()
+        # Rescale
+        # Use the logicle transform class in the plot module. This class
+        # transforms data one channel at a time.
+        for i in range(data.shape[1]):
+            # We need a transformation from "data value" to "display scale"
+            # units. To do so, we use an inverse logicle transformation.
+            t = FlowCal.plot._LogicleTransform(data=data, channel=i)
+            ti = FlowCal.plot._InterpolatedInverseTransform(t, smin=0, smax=t.M)
+            data[:,i] = ti.transform_non_affine(data[:,i])
 
     ###
     # Parameter initialization
@@ -669,6 +683,27 @@ def get_transform_fxn(data_beads,
 
     # Get number of clusters from number of specified MEF values
     n_clusters = mef_values.shape[1]
+
+    # Copy clustering_params to avoid modifying the original object
+    clustering_params = clustering_params.copy()
+    # If scale has not been specified in clustering_params, select clustering
+    # scale automatically.
+    if 'scale' not in clustering_params:
+        # If at least one channel has been acquired in linear scale, use
+        # logicle. Else, use log.
+        clustering_scale = 'log'
+        for ch in clustering_channels:
+            # Extract amplification type
+            # The amplification type for each channel is a tuple of two numbers,
+            # in which the first number indicates the number of decades covered
+            # by a logarithmic amplifier, and the second indicates the linear
+            # value corresponding to the channel value zero. If the first value
+            # is zero, the amplifier used is linear, otherwise it is
+            # logarithmic.
+            if data_beads.amplification_type(ch)[0] == 0:
+                clustering_scale = 'logicle'
+                break
+        clustering_params['scale'] = clustering_scale
 
     # Run clustering function
     labels = clustering_fxn(data_beads[:, clustering_channels],
