@@ -85,9 +85,9 @@ def clustering_gmm(data,
         data = data.copy()
         # Logarithm of zero and negatives is undefined. Therefore, saturate
         # any non-positives to a small positive value.
-        # `eps` is the smallest number such that `1.0 + eps != eps`. In a
-        # typical 64-bit machine, `eps ~= 1e-16`.
-        data[data < np.finfo(float).eps] = np.finfo(float).eps
+        # The machine epsilon `eps` is the smallest number such that
+        # `1.0 + eps != eps`. For a 64-bit floating point, `eps ~= 1e-15`.
+        data[data < 1e-15] = 1e-15
         # Rescale
         data = np.log10(data)
     elif scale=='logicle':
@@ -212,13 +212,18 @@ def selection_std(populations,
     else:
         raise ValueError("scale {} not supported".format(scale))
 
-    # If thresholds were provided, scale. Else, obtain thresholds from range.
+    # If thresholds were provided, apply scaling function. Else, obtain and
+    # rescale thresholds from range.
     if low is None:
         if hasattr(populations[0], 'hist_bins'):
             # Obtain default thresholds from range
             r = populations[0].range(channels=0)
+            # If using log scale and the lower limit is non-positive, change to
+            # a very small positive number.
+            # The machine epsilon `eps` is the smallest number such that
+            # `1.0 + eps != eps`. For a 64-bit floating point, `eps ~= 1e-15`.
             if scale == 'log' and r[0] <= 0:
-                r[0] = np.finfo(float).eps
+                r[0] = 1e-15
             low = sf(r[0]) + 0.015*(sf(r[1]) - sf(r[0]))
         else:
             raise TypeError("argument 'low' not specified")
@@ -228,8 +233,12 @@ def selection_std(populations,
         if hasattr(populations[0], 'hist_bins'):
             # Obtain default thresholds from range
             r = populations[0].range(channels=0)
+            # If using log scale and the lower limit is non-positive, change to
+            # a very small positive number.
+            # The machine epsilon `eps` is the smallest number such that
+            # `1.0 + eps != eps`. For a 64-bit floating point, `eps ~= 1e-15`.
             if scale == 'log' and r[0] <= 0:
-                r[0] = np.finfo(float).eps
+                r[0] = 1e-15
             high = sf(r[0]) + 0.985*(sf(r[1]) - sf(r[0]))
         else:
             raise TypeError("argument 'high' not specified")
@@ -242,11 +251,11 @@ def selection_std(populations,
 
     # For log scaling, logarithm of zero and negatives is undefined. Therefore,
     # saturate any non-positives to a small positive value.
-    # `eps` is the smallest number such that `1.0 + eps != eps`. In a
-    # typical 64-bit machine, `eps ~= 1e-16`.
+    # The machine epsilon `eps` is the smallest number such that
+    # `1.0 + eps != eps`. For a 64-bit floating point, `eps ~= 1e-15`.
     if scale == 'log':
         for p in populations:
-            p[p < np.finfo(float).eps] = np.finfo(float).eps
+            p[p < 1e-15] = 1e-15
 
     # Rescale events
     for i in range(len(populations)):
