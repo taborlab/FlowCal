@@ -1151,8 +1151,8 @@ def scatter2d(data_list,
     plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
     plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
 
-    # Set plot limits if specified, else extract range from data_list
-    # Use data_plot.hist_bins with one single bin
+    # Set plot limits if specified, else extract range from data_list.
+    # Use data_plot.hist_bins with a single bin as range.
     if xlim is None:
         xlim = [np.inf, -np.inf]
         for data in data_list:

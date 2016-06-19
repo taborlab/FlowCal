@@ -1362,9 +1362,10 @@ class FCSData(np.ndarray):
 
             elif scale_channel == 'log':
                 # Check if the lower limit is equal or less than zero. If so,
-                # change the lower limit to one.
+                # change the lower limit to one or some lower value, such that
+                # the range covers at least five decades.
                 if range_channel[0] <= 0:
-                    range_channel[0] = 1.
+                    range_channel[0] = min(1., range_channel[1]/1e5)
                 # Log range
                 range_channel = [np.log10(range_channel[0]),
                                  np.log10(range_channel[1])]

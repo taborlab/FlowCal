@@ -212,7 +212,7 @@ def selection_std(populations,
     else:
         raise ValueError("scale {} not supported".format(scale))
 
-    # Default thresholds
+    # If thresholds were provided, scale. Else, obtain thresholds from range.
     if low is None:
         if hasattr(populations[0], 'hist_bins'):
             # Obtain default thresholds from range
@@ -223,7 +223,6 @@ def selection_std(populations,
         else:
             raise TypeError("argument 'low' not specified")
     else:
-        # Scale threshold
         low = sf(low)
     if high is None:
         if hasattr(populations[0], 'hist_bins'):
@@ -235,7 +234,6 @@ def selection_std(populations,
         else:
             raise TypeError("argument 'high' not specified")
     else:
-        # Scale threshold
         high = sf(high)
 
     # Copy events
@@ -951,9 +949,12 @@ def get_transform_fxn(data_beads,
         # Plot
         if plot:
             # Get channel range
-            xlim = populations[0].hist_bins(channels=mef_channel,
-                                            nbins=1,
-                                            scale='log')
+            xlim = populations[0].range(channels=mef_channel)
+            # The plot will be made in log scale. If the lower limit of the
+            # range is zero or less, replace by one or some lower value, such
+            # that the range covers at least five decades.
+            if xlim[0] <= 0:
+                xlim[0] = min(1., xlim[1]/1e5)
 
             # Plot standard curve
             plt.figure(figsize=(6,4))
