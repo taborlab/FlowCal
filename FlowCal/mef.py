@@ -91,20 +91,18 @@ def clustering_gmm(data,
         # Directly check if data has the `amplification_type` attribute. If it
         # does, select scale based on it. Else, use logicle.
         if hasattr(data, 'amplification_type'):
-            # If at least one channel has been acquired in linear scale, use
-            # logicle. Else, use log.
-            scale = 'log'
-            for ch in range(data.shape[1]):
-                # Extract amplification type
-                # The amplification type for each channel is a tuple of two
-                # numbers, in which the first number indicates the number of
-                # decades covered by a logarithmic amplifier, and the second
-                # indicates the linear value corresponding to the channel value
-                # zero. If the first value is zero, the amplifier used is
-                # linear, otherwise it is logarithmic.
-                if data.amplification_type(ch)[0] == 0:
-                    scale = 'logicle'
-                    break
+            # Extract amplification type
+            # The amplification type for each channel is a tuple of two numbers,
+            # in which the first number indicates the number of decades covered
+            # by a logarithmic amplifier, and the second indicates the linear
+            # value corresponding to the channel value zero. If the first value
+            # is zero, the amplifier used is linear, otherwise it is
+            # logarithmic.
+            amplification_types = np.array([data.amplification_type(ch)[0]
+                                            for ch in range(data.shape[1])])
+            # If all channels have been acquired in log scale, use ``log``.
+            # Else, use logicle.
+            scale = 'log' if np.all(amplification_types!=0) else 'logicle'
         else:
             scale = 'logicle'
 
