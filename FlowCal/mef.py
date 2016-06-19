@@ -71,11 +71,12 @@ def clustering_gmm(data,
 
     GMM can be fairly sensitive to the initial parameter choice. To
     generate a reasonable set of initial conditions, `clustering_gmm`
-    first divides all samples in `data` into `n_clusters` groups of the
-    same size based on their Euclidean distance to the origin. Then, for
-    each group, the 50% samples farther away from the mean are discarded.
-    The mean and covariance are calculated from the remaining samples of
-    each group, and used as initial conditions for the GMM EM algorithm.
+    first divides all points in `data` into `n_clusters` groups of the
+    same size based on their Euclidean distance to the minimum value. Then,
+    for each group, the 50% samples farther away from the mean are
+    discarded. The mean and covariance are calculated from the remaining
+    samples of each group, and used as initial conditions for the GMM EM
+    algorithm.
 
     `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
     library, with full covariance matrices for each cluster and a fixed,
@@ -140,8 +141,8 @@ def clustering_gmm(data,
     means = []
     covars = []
 
-    # Get distance and sort based on it
-    dist = np.sum(data**2., axis=1)
+    # Calculate distance to minimum value. Then, sort based on this distance.
+    dist = np.sum((data - np.min(data, axis=0))**2., axis=1)
     sorted_idx = np.argsort(dist)
 
     # Expected number of elements per cluster
