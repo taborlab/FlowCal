@@ -776,14 +776,6 @@ def process_samples_table(samples_table,
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
-                # Axis scaling will be logarithmic if data was acquired with a
-                # log amplifier, and logicle otherwise.
-                # sc_amp_type is a list of tuples, one for each channel in
-                # sc_channels. Each tuple contains two numbers. If the
-                # amplification type of a channel is linear, the first number in
-                # this tuple is equal to zero. Any other value indicates a
-                # logarithmic amplifier.
-                sc_amp_type = sample_gated.amplification_type(sc_channels)
                 density_params['xscale'] = 'logicle'
                 density_params['yscale'] = 'logicle'
                 # Histogram plot parameters
