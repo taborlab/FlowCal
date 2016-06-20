@@ -374,6 +374,7 @@ def process_beads_table(beads_table,
                 gate_fraction=beads_row['Gate Fraction'],
                 xscale='logicle',
                 yscale='logicle',
+                sigma=5.,
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
@@ -403,6 +404,9 @@ def process_beads_table(beads_table,
                      np.percentile(beads_sample_gated[:, sc_channels[1]],
                                    95) * (10**0.75),
                      )
+                # Beads have a tight distribution, so less smoothing should be
+                # applied for visualization
+                density_params['sigma'] = 5.
                 # Histogram plot parameters
                 hist_params = {'xscale': 'logicle'}
                 # Plot
