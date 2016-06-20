@@ -234,8 +234,8 @@ def density2d(data,
               channels=[0,1],
               bins=1024,
               gate_fraction=0.65,
-              xscale='linear',
-              yscale='linear',
+              xscale='logicle',
+              yscale='logicle',
               sigma=10.0,
               full_output=False):
     """

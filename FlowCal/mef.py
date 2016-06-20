@@ -29,7 +29,7 @@ def clustering_gmm(data,
                    n_clusters,
                    tol=1e-7,
                    min_covar=5e-5,
-                   scale=None):
+                   scale='logicle'):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
 
@@ -49,13 +49,7 @@ def clustering_gmm(data,
         Minimum covariance. Passed directly to ``scikit-learn``'s GMM.
     scale : str, optional
         Rescaling applied to `data` before performing clustering. Can be
-        either ``linear`` (no rescaling), ``log``, or ``logicle``. If None,
-        one of the following is selected:
-          - ``log``, if `data` is an FCSData object and the amplification
-            type of all channels in it is logarithmic.
-          - ``logicle``, if `data` is an FCSData object and the
-            amplification type of at least one channel is linear, or if
-            `data` is not an FCSData object.
+        either ``linear`` (no rescaling), ``log``, or ``logicle``.
 
     Returns
     -------
@@ -85,26 +79,6 @@ def clustering_gmm(data,
     events. For more information, consult ``scikit-learn``'s documentation.
 
     """
-
-    # If scale is None, select scaling automatically.
-    if scale is None:
-        # Directly check if data has the `amplification_type` attribute. If it
-        # does, select scale based on it. Else, use logicle.
-        if hasattr(data, 'amplification_type'):
-            # Extract amplification type
-            # The amplification type for each channel is a tuple of two numbers,
-            # in which the first number indicates the number of decades covered
-            # by a logarithmic amplifier, and the second indicates the linear
-            # value corresponding to the channel value zero. If the first value
-            # is zero, the amplifier used is linear, otherwise it is
-            # logarithmic.
-            amplification_types = np.array([data.amplification_type(ch)[0]
-                                            for ch in range(data.shape[1])])
-            # If all channels have been acquired in log scale, use ``log``.
-            # Else, use logicle.
-            scale = 'log' if np.all(amplification_types!=0) else 'logicle'
-        else:
-            scale = 'logicle'
 
     # Copy events before rescaling
     data = data.copy()
@@ -196,7 +170,7 @@ def selection_std(populations,
                   high=None,
                   n_std_low=2.5,
                   n_std_high=2.5,
-                  scale=None):
+                  scale='logicle'):
     """
     Select populations if most of their elements are between two values.
 
@@ -223,12 +197,7 @@ def selection_std(populations,
     scale : str, optional
         Rescaling applied to `populations` before calculating means and
         standard deviations. Can be either ``linear`` (no rescaling),
-        ``log``, or ``logicle``. If None, one of the following is selected:
-          - ``log``, if `populations[0]` is an FCSData object and its
-            amplification type is logarithmic.
-          - ``logicle``, if `populations[0]` is an FCSData object and its
-            amplification type is linear, or if `populations[0]` is not an
-            FCSData object.
+        ``log``, or ``logicle``.
 
     Returns
     -------
@@ -236,26 +205,6 @@ def selection_std(populations,
         Flags indicating whether a population has been selected.
 
     """
-
-    # If scale is None, select scaling automatically.
-    if scale is None:
-        # Directly check if populations[0] has the `amplification_type`
-        # attribute. If it does, select scale based on it. Else, use logicle.
-        if hasattr(populations[0], 'amplification_type'):
-            # Use log scale if the amplification type is logarithmic, else use
-            # logicle.
-            # The amplification type for each channel is a tuple of two numbers,
-            # in which the first number indicates the number of decades covered
-            # by a logarithmic amplifier, and the second indicates the linear
-            # value corresponding to the channel value zero. If the first value
-            # is zero, the amplifier used is linear, otherwise it is
-            # logarithmic.
-            if populations[0].amplification_type(0)[0]:
-                scale = 'log'
-            else:
-                scale = 'logicle'
-        else:
-            scale = 'logicle'
 
     # Generate scaling functions
     if scale == 'linear':
@@ -799,22 +748,13 @@ def get_transform_fxn(data_beads,
         else:
             savefig = None
 
-        # Extract amplification type of clustering channels
-        # The amplification type for each channel is a tuple of two numbers,
-        # in which the first number indicates the number of decades covered by
-        # a logarithmic amplifier, and the second indicates the linear value
-        # corresponding to the channel value zero. If the first value is zero,
-        # the amplifier used is linear, otherwise it is logarithmic.
-        clustering_amp_type = \
-            populations[0].amplification_type(clustering_channels)
-
         # If used one channel for clustering, make histogram
         if len(clustering_channels) == 1:
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(
                 populations,
                 channel=clustering_channels[0],
-                xscale='log' if clustering_amp_type[0][0] else 'logicle',
+                xscale='logicle',
                 bins=256,
                 alpha=0.75,
                 savefig=savefig)
@@ -825,8 +765,8 @@ def get_transform_fxn(data_beads,
             FlowCal.plot.scatter2d(
                 populations,
                 channels=clustering_channels,
-                xscale='log' if clustering_amp_type[0][0] else 'logicle',
-                yscale='log' if clustering_amp_type[1][0] else 'logicle',
+                xscale='logicle',
+                yscale='logicle',
                 savefig=savefig)
 
         # If used three channels or more for clustering, make 3D scatter plot
@@ -836,9 +776,9 @@ def get_transform_fxn(data_beads,
             FlowCal.plot.scatter3d_and_projections(
                 populations,
                 channels=clustering_channels[:3],
-                xscale='log' if clustering_amp_type[0][0] else 'logicle',
-                yscale='log' if clustering_amp_type[1][0] else 'logicle',
-                zscale='log' if clustering_amp_type[2][0] else 'logicle',
+                xscale='logicle',
+                yscale='logicle',
+                zscale='logicle',
                 savefig=savefig)
 
         if plot_dir is not None:
@@ -924,13 +864,11 @@ def get_transform_fxn(data_beads,
                           if selected else (0.6, 0.6, 0.6)
                       for selected, level in zip(selected_mask, color_levels)]
 
-            # Decide scale to plot based on amplification type
-            mef_amp_type = populations[0].amplification_type(mef_channel)
             # Plot histograms
             plt.figure(figsize=(8,4))
             FlowCal.plot.hist1d(populations,
                                 channel=mef_channel,
-                                xscale='log' if mef_amp_type[0] else 'logicle',
+                                xscale='logicle',
                                 bins=256,
                                 alpha=0.75,
                                 facecolor=colors)
