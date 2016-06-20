@@ -333,9 +333,9 @@ def fit_beads_autofluorescence(fl_rfi, fl_mef):
     -----
     The following model is used to describe bead fluorescence::
 
-        m*log(fl_mef[i]) + b = log(fl_mef_auto + fl_mef[i])
+        m*log(fl_rfi[i]) + b = log(fl_mef_auto + fl_mef[i])
 
-    where ``fl_mef[i]`` is the fluorescence of bead subpopulation ``i`` in
+    where ``fl_rfi[i]`` is the fluorescence of bead subpopulation ``i`` in
     RFI units and ``fl_mef[i]`` is the corresponding fluorescence in MEF
     units. The model includes 3 parameters: ``m`` (slope), ``b``
     (intercept), and ``fl_mef_auto`` (bead autofluorescence). The last term
