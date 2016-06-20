@@ -131,11 +131,17 @@ def clustering_gmm(data,
         ih = int((i + 1 - discard_frac/2)*n_per_cluster)
         sorted_idx_cluster = sorted_idx[il:ih]
         data_cluster = data[sorted_idx_cluster]
+        # Calculate means and covariances
         means.append(np.mean(data_cluster, axis=0))
         if data.shape[1] == 1:
-            covars.append(np.cov(data_cluster.T).reshape(1,1))
+            cov = np.cov(data_cluster.T).reshape(1,1)
         else:
-            covars.append(np.cov(data_cluster.T))
+            cov = np.cov(data_cluster.T)
+        # If the trace of the covariance is less than min_covar, change by a
+        # diagonal covariance with nonzero elements equal to min_covar.
+        if np.trace(cov) < min_covar:
+            cov = np.eye(data.shape[1]) * min_covar
+        covars.append(cov)
     means = np.array(means)
 
     ###
