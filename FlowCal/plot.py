@@ -222,9 +222,10 @@ class _LogicleTransform(matplotlib.transforms.Transform):
     a channel, the following default logicle parameters are used: T is
     taken from the largest ``data[i].range(channel)[1]`` or the largest
     element in ``data[i]`` if ``data[i].range()`` is not available, M is
-    set to ``4.5 / np.log10(262144) * np.log10(T)``, and W is taken from
-    ``(M - log10(T / abs(r))) / 2``, where ``r`` is the minimum negative
-    event. If no negative events are present, W is set to zero.
+    set to the largest of 4.5 and ``4.5 / np.log10(262144) * np.log10(T)``,
+    and W is taken from ``(M - log10(T / abs(r))) / 2``, where ``r`` is the
+    minimum negative event. If no negative events are present, W is set to
+    zero.
 
     References
     ----------
@@ -267,7 +268,7 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                         Ti = np.max(y)
                     T = Ti if Ti > T else T
             if M is None:
-                M = 4.5 / np.log10(262144) * np.log10(T)
+                M = max(4.5, 4.5 / np.log10(262144) * np.log10(T))
             if W is None:
                 W = 0
                 for d in data:
