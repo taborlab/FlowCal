@@ -994,7 +994,7 @@ def density2d(data,
         x = np.ravel(xv)[Hind != 0]
         y = np.ravel(yv)[Hind != 0]
         z = np.ravel(H if sH is None else sH)[Hind != 0]
-        plt.scatter(x, y, s=1, edgecolor='none', c=z, **kwargs)
+        plt.scatter(x, y, s=1.5, edgecolor='none', c=z, **kwargs)
     elif mode == 'mesh':
         plt.pcolormesh(xe, ye, H if sH is None else sH, **kwargs)
     else:
