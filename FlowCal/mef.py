@@ -102,7 +102,8 @@ def clustering_gmm(data,
             # We need a transformation from "data value" to "display scale"
             # units. To do so, we use an inverse logicle transformation.
             t = FlowCal.plot._LogicleTransform(data=data, channel=ch).inverted()
-            data[:,ch] = t.transform_non_affine(data[:,ch])
+            data[:,ch] = t.transform_non_affine(data[:,ch],
+                                                mask_out_of_range=False)
     else:
         raise ValueError("scale {} not supported".format(scale))
 
