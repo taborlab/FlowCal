@@ -1,3 +1,4 @@
 experiment_output.xlsx
+*.png
 plot_beads/*.*
 plot_samples/*.*
