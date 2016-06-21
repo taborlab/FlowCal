@@ -351,8 +351,8 @@ def fit_beads_autofluorescence(fl_rfi, fl_mef):
     autofluorescence term (``fl_mef_auto``) is omitted from the standard
     curve; the user is expected to use an appropriate white cell sample to
     account for cellular autofluorescence if necessary. The returned
-    standard curve mapping fluorescence in channel units to MEF units is
-    thus of the following form::
+    standard curve mapping fluorescence in RFI units to MEF units is thus
+    of the following form::
 
         fl_mef = exp(m*log(fl_rfi) + b)
 
@@ -824,7 +824,7 @@ def get_transform_fxn(data_beads,
         # Print information
         if verbose:
             print("({}) Step 2: Population Statistic".format(mef_channel))
-            print("  Fluorescence per population (Channel Units):")
+            print("  Fluorescence of each population (RFI):")
             print("    " + str(stats_values))
 
         ###
@@ -856,7 +856,7 @@ def get_transform_fxn(data_beads,
         if verbose:
             print("({}) Step 3: Population Selection".format(mef_channel))
             print("  {} populations selected.".format(len(selected_rfi)))
-            print("  Fluorescence of selected populations (a.u.):")
+            print("  Fluorescence of selected populations (RFI):")
             print("    " + str(selected_rfi))
             print("  Fluorescence of selected populations (MEF):")
             print("    " + str(selected_mef))
