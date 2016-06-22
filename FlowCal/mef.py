@@ -356,6 +356,34 @@ def fit_beads_autofluorescence(fl_rfi, fl_mef):
 
         fl_mef = exp(m*log(fl_rfi) + b)
 
+    This is equivalent to::
+
+        fl_mef = exp(b) * (fl_rfi**m)
+
+    This works for positive ``fl_rfi`` values, but it is undefined for
+    ``fl_rfi < 0`` and non-integer ``m`` (general case).
+
+    To extend this standard curve to negative values of ``fl_rfi``, we
+    define ``s(fl_rfi)`` to be equal to the standard curve above when
+    ``fl_rfi >= 0``. Next, we require this function to be odd, that is,
+    ``s(fl_rfi) = - s(-fl_rfi)``. This extends the domain to negative
+    ``fl_rfi`` values and results in ``s(fl_rfi) < 0`` for any negative
+    ``fl_rfi``. Finally, we make ``fl_mef = s(fl_rfi)`` our new
+    standard curve. In this way,::
+
+        s(fl_rfi) =   exp(b) * (  fl_rfi **m),    fl_rfi >= 0
+                    - exp(b) * ((-fl_rfi)**m),    fl_rfi <  0
+
+    This satisfies the definition of an odd function. In addition,
+    ``s(0) = 0``, and ``s(fl_rfi)`` converges to zero when ``fl_rfi -> 0``
+    from both sides. Therefore, the function is continuous at
+    ``fl_rfi = 0``. The definition of ``s(fl_rfi)`` can be expressed more
+    conveniently as::
+
+        s(fl_rfi) = sign(fl_rfi) * exp(b) * (abs(fl_rfi)**m)
+
+    This is the equation implemented.
+
     """
     # Check that the input data has consistent dimensions
     if len(fl_rfi) != len(fl_mef):
@@ -385,10 +413,6 @@ def fit_beads_autofluorescence(fl_rfi, fl_mef):
         return np.exp(p[0] * np.log(x) + p[1]) - p[2]
 
     # RFI-to-MEF standard curve transformation function
-    # We use the equivalent form ``exp(p[1]) * x**p[0]``. Mathematically, this
-    # is undefined for x < 0. In this case, we redefine the output as
-    # ``- exp(p[1]) * (-x)**p[0]``. These two can be combined as follows:
-    # ``np.sign(x) * np.exp(p[1]) * (np.abs(x)**p[0])``.
     def sc_fun(p,x):
         return np.sign(x) * np.exp(p[1]) * (np.abs(x)**p[0])
     
