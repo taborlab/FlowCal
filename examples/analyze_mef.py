@@ -142,8 +142,10 @@ if __name__ == "__main__":
     density_params['ylim'] = [90, 1023]
     density_params['sigma'] = 5.
 
-    # Figure name
-    figname = '{}/density_hist_{}.png'.format(beads_plot_dir, 'beads')
+    # Plot filename
+    # The figure can be saved in any format supported by matplotlib (svg, jpg,
+    # etc.) by just changing the extension.
+    plot_filename = '{}/density_hist_{}.png'.format(beads_plot_dir, 'beads')
 
     # Plot and save
     # The function ``FlowCal.plot.density_and_hist()`` plots a combined figure
@@ -163,7 +165,7 @@ if __name__ == "__main__":
         hist_channels=['FL1', 'FL3'],
         gate_contour=gate_contour, 
         density_params=density_params,
-        savefig=figname)
+        savefig=plot_filename)
 
     # Use beads data to obtain a MEF transformation function
     print("\nCalculating standard curve for channel FL1...")
@@ -249,8 +251,10 @@ if __name__ == "__main__":
         hist_params['xlabel'] = 'FL1 ' + \
             '(Molecules of Equivalent Fluorescein, MEFL)'
 
-        # Figure name
-        figname = '{}/density_hist_{}.png'.format(
+        # Plot filename
+        # The figure can be saved in any format supported by matplotlib (svg,
+        # jpg, etc.) by just changing the extension.
+        plot_filename = '{}/density_hist_{}.png'.format(
             samples_plot_dir,
             'S{:03}'.format(sample_id + 1))
 
@@ -266,7 +270,7 @@ if __name__ == "__main__":
             gate_contour=gate_contour,
             density_params=density_params,
             hist_params=hist_params,
-            savefig=figname)
+            savefig=plot_filename)
 
         # Save cell sample object
         samples.append(sample_gated)
