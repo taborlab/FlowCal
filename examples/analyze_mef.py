@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # individually as in a scatter plot, but with a color proportional to the
     # particle density around.
     density_params['mode'] = 'scatter'
-    # We use short axis limits and a low smoothing factor, as out calibration
+    # We use short axis limits and a low smoothing factor, as our calibration
     # beads form a very narrow cluster.
     density_params['xlim'] = [90, 1023]
     density_params['ylim'] = [90, 1023]
