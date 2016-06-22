@@ -44,7 +44,7 @@ samples_filenames = ['FCFiles/Data001.fcs',
 # These values should be taken from the datasheet provided by the bead
 # manufacturer. We take Molecules of Equivalent Fluorescein (MEFL) to calibrate
 # the FL1 (GFP) channel.
-mefl_values = [0, 646, 1704, 4827, 15991, 47609, 135896, 273006]
+mefl_values = np.array([0, 646, 1704, 4827, 15991, 47609, 135896, 273006])
 
 # IPTG concentration of each cell sample, in micromolar.
 iptg = np.array([0, 81, 161, 318, 1000])
