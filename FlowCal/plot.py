@@ -1153,7 +1153,13 @@ def scatter2d(data_list,
     plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
 
     # Set plot limits if specified, else extract range from data_list.
-    # Use data_plot.hist_bins with a single bin as range.
+    # ``.hist_bins`` with one bin works better for visualization that
+    # ``.range``, because it deals with two issues. First, it automatically
+    # deals with range values that are outside the domain of the current scaling
+    # (e.g. when the lower range value is zero and the scaling is logarithmic).
+    # Second, it takes into account events that are outside the limits specified
+    # by .range (e.g. negative events will be shown with logicle scaling, even
+    # when the lower range is zero).
     if xlim is None:
         xlim = [np.inf, -np.inf]
         for data in data_list:
@@ -1346,7 +1352,13 @@ def scatter3d(data_list,
         ax_3d.set_zlabel(data_plot.channels[2])
 
     # Set plot limits if specified, else extract range from data_plot
-    # Use data_plot.hist_bins with one single bin
+    # ``.hist_bins`` with one bin works better for visualization that
+    # ``.range``, because it deals with two issues. First, it automatically
+    # deals with range values that are outside the domain of the current scaling
+    # (e.g. when the lower range value is zero and the scaling is logarithmic).
+    # Second, it takes into account events that are outside the limits specified
+    # by .range (e.g. negative events will be shown with logicle scaling, even
+    # when the lower range is zero).
     if xlim is None:
         xlim = np.array([np.inf, -np.inf])
         for data in data_list:

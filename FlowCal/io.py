@@ -1258,7 +1258,7 @@ class FCSData(np.ndarray):
         else:
             return self._resolution[channels]
 
-    def hist_bins(self, channels=None, nbins=None, scale='linear', **kwargs):
+    def hist_bins(self, channels=None, nbins=None, scale='logicle', **kwargs):
         """
         Get histogram bin edges for the specified channel(s).
 
