@@ -87,7 +87,9 @@ if __name__ == "__main__":
     # We will read IPTG concentrations for each sample from the Excel file.
     # ``samples_table`` contains all the data from sheet "Samples", including
     # data not directly used by ``FlowCal.excel_ui.process_samples_table()``.
-    # We multiply this by 1000 to get micromolar.
+    # ``samples_table`` is a pandas dataframe, with each column having the
+    # same name as the corresponding header in the Excel file.
+    # We multiply the IPTG concentration by 1000 to convert to micromolar.
     iptg = samples_table['IPTG (mM)']*1000
 
     # Histogram of all samples

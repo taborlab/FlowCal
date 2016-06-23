@@ -145,9 +145,9 @@ if __name__ == "__main__":
         # figure with a 2D density plot at the top, and an arbitrary number of
         # 1D histograms below. In this case, we will plot the forward/side
         # scatter channels in the density plot, and a histogram of the
-        # fluorescence channel FL1 below as two separate histograms.
+        # fluorescence channel FL1 below.
         # Note that we are providing data both before (``sample``) and after
-        # (``sample_gated``) gating. Each 1D histogram will display the ungated
+        # (``sample_gated``) gating. The 1D histogram will display the ungated
         # dataset with transparency, and the gated dataset in front with a solid
         # solid color. In addition, we are providing ``gate_contour`` from the
         # density gating step, which will be displayed in the density diagram.
