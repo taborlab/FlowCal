@@ -469,8 +469,8 @@ def plot_standard_curve(fl_rfi,
         The standard curve, mapping relative fluorescence (RFI) units to
         MEF units.
 
-    Other parameters:
-    -----------------
+    Other Parameters
+    ----------------
     xscale : str, optional
         Scale of the x axis, either ``linear`` or ``log``.
     yscale : str, optional
