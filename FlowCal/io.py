@@ -870,11 +870,11 @@ class FCSData(np.ndarray):
         Get the detector voltage used for the specified channel(s).
     amplifier_gain
         Get the amplifier gain used for the specified channel(s).
-    range(channels=None)
+    range
         Get the range of the specified channel(s).
-    resolution(channels=None)
+    resolution
         Get the resolution of the specified channel(s).
-    hist_bins(channels=None, nbins=None, scale='linear')
+    hist_bins
         Get histogram bin edges for the specified channel(s).
 
     Notes
@@ -1290,7 +1290,7 @@ class FCSData(np.ndarray):
                 (Asymptotic) number of decades in scaled units. If not
                 provided, calculate from the following::
 
-                    4.5 / np.log10(262144) * np.log10(T)
+                    max(4.5, 4.5 / np.log10(262144) * np.log10(T))
 
             W : float, optional
                 Width of linear range in scaled units. If not provided,
