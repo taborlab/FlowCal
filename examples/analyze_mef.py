@@ -157,9 +157,9 @@ if __name__ == "__main__":
     # channels in the density plot, and the fluorescence channels FL1 and FL3
     # below as two separate histograms.
     # Note that we are providing data both before (``beads_sample``) and after
-    # (``beads_sample_gated``) gating. Each fluorescence histogram will display
-    # the ungated dataset with transparency, and the gated dataset in front with
-    # a solid color. In addition, we are providing ``gate_contour`` from the
+    # (``beads_sample_gated``) gating. Each 1D histogram will display the
+    # ungated dataset with transparency, and the gated dataset in front with a
+    # solid color. In addition, we are providing ``gate_contour`` from the
     # density gating step, which will be displayed in the density diagram. This
     # will result in a convenient representation of the data both before and
     # after gating.
