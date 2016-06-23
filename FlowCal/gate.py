@@ -92,7 +92,7 @@ def high_low(data, channels=None, high=None, low=None, full_output=False):
     high, low : int, float, optional
         High and low threshold values. If None, `high` and `low` will be
         taken from ``data.range`` if available, otherwise
-        ``np.Inf`` and ``-np.Inf`` will be used.
+        ``np.inf`` and ``-np.inf`` will be used.
     full_output : bool, optional
         Flag specifying to return additional outputs. If true, the outputs
         are given as a namedtuple.
@@ -253,6 +253,7 @@ def density2d(data,
         Two channels on which to perform gating.
     bins : int or array_like or [int, int] or [array, array], optional
         Bins used for gating:
+
           - If None, use ``data.hist_bins`` to obtain bin edges for both
             axes. None is not allowed if ``data.hist_bins`` is not
             available.
@@ -276,11 +277,11 @@ def density2d(data,
         Fraction of events to retain after gating.
     xscale : str, optional
         Scale of the bins generated for the x axis, either ``linear``,
-        ``log``, or ``logicle``. `xscale` is ignored in `bins is an array
+        ``log``, or ``logicle``. `xscale` is ignored in `bins` is an array
         or a list of arrays.
     yscale : str, optional
         Scale of the bins generated for the y axis, either ``linear``,
-        ``log``, or ``logicle``. `yscale` is ignored in `bins is an array
+        ``log``, or ``logicle``. `yscale` is ignored in `bins` is an array
         or a list of arrays.
     sigma : scalar or sequence of scalars, optional
         Standard deviation for Gaussian kernel used by
