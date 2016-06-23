@@ -848,6 +848,7 @@ def density2d(data,
         Two channels to use for the plot.
     bins : int or array_like or [int, int] or [array, array], optional
         Bins used for plotting:
+
           - If None, use ``data.hist_bins`` to obtain bin edges for both
             axes. None is not allowed if ``data.hist_bins`` is not
             available.
