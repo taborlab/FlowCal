@@ -11,6 +11,8 @@ import warnings
 
 import numpy as np
 
+import FlowCal.plot
+
 ###
 # Utility functions for importing segments of FCS files
 ###
@@ -847,6 +849,8 @@ class FCSData(np.ndarray):
     analysis : dict
         Dictionary of keyword-value entries from ANALYSIS segment of the
         FCS file.
+    data_type : str
+        Type of data in the FCS file's DATA segment.
     time_step : float
         Time step of the time channel.
     acquisition_start_time : time or datetime
@@ -970,6 +974,17 @@ class FCSData(np.ndarray):
 
         """
         return self._analysis
+
+    @property
+    def data_type(self):
+        """
+        Type of data in the FCS file's DATA segment.
+
+        `data_type` is 'I' if the data type is integer, 'F' for floating
+        point, and 'D' for double.
+
+        """
+        return self._data_type
 
     @property
     def time_step(self):
@@ -1243,35 +1258,67 @@ class FCSData(np.ndarray):
         else:
             return self._resolution[channels]
 
-    def hist_bins(self, channels=None, nbins=None, scale='linear'):
+    def hist_bins(self, channels=None, nbins=None, scale='logicle', **kwargs):
         """
         Get histogram bin edges for the specified channel(s).
 
         These cover the range specified in ``FCSData.range(channels)`` with
-        a number of bins `nbins`, either linearly or logarithmically
-        spaced. If ``range[0]`` is equal or less than zero and `log` is
-        True, the lower limit of the range is redefined such that it covers
-        5.42 decades (if ``range[1] == 262143``, the lower limit is almost
-        1).
+        a number of bins `nbins`, with linear, logarithmic, or logicle
+        spacing.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the histogram bins. If None, return
-            a list with bins for all channels, in the order of
+            Channel(s) for which to generate histogram bins. If None,
+            return a list with bins for all channels, in the order of
             ``FCSData.channels``.
         nbins : int or list of ints, optional
-            The number of bins to calculate. If `channels` specified a list
+            The number of bins to calculate. If `channels` specifies a list
             of channels, `nbins` should be a list of integers. If `nbins`
             is None, use ``FCSData.resolution(channel)``.
         scale : str, optional
-            Scale in which to generate bins. Can be either ``linear`` or
-            ``log``.
+            Scale in which to generate bins. Can be either ``linear``,
+            ``log``, or ``logicle``.
+        kwargs : optional
+            Keyword arguments specific to the selected bin scaling. Linear
+            and logarithmic scaling do not use additional arguments.
+            For logicle scaling, the following parameters can be provided:
+
+            T : float, optional
+                Maximum range of data. If not provided, use ``range[1]``.
+            M : float, optional
+                (Asymptotic) number of decades in scaled units. If not
+                provided, calculate from the following::
+
+                    4.5 / np.log10(262144) * np.log10(T)
+
+            W : float, optional
+                Width of linear range in scaled units. If not provided,
+                calculate using the following relationship::
+
+                    W = (M - log10(T / abs(r))) / 2
+
+                Where ``r`` is the minimum negative event. If no negative
+                events are present, W is set to zero.
 
         Return
         ------
         array or list of arrays
             Histogram bin edges for the specified channel(s).
+
+        Notes
+        -----
+        If ``range[0]`` is equal or less than zero and `scale` is  ``log``,
+        the lower limit of the range is replaced with one.
+
+        Logicle scaling uses the LogicleTransform class in the plot module.
+
+        References
+        ----------
+        .. [1] D.R. Parks, M. Roederer, W.A. Moore, "A New Logicle Display
+        Method Avoids Deceptive Effects of Logarithmic Scaling for Low
+        Signals and Compensated Data," Cytometry Part A 69A:541-551, 2006,
+        PMID 16604519.
 
         """
         # Default: all channels
@@ -1301,7 +1348,7 @@ class FCSData(np.ndarray):
                 nbins_channel = res_channel
             # Get range of channel
             range_channel = self.range(channel)
-            # Process scale
+            # Generate bins according to specified scale
             if scale_channel == 'linear':
                 # We will now generate ``nbins`` uniformly spaced bins centered
                 # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
@@ -1312,13 +1359,13 @@ class FCSData(np.ndarray):
                 bins_channel = np.linspace(range_channel[0] - delta_res/2,
                                            range_channel[1] + delta_res/2,
                                            nbins_channel + 1)
+
             elif scale_channel == 'log':
                 # Check if the lower limit is equal or less than zero. If so,
-                # change the lower limit to be 5.42 logs from the upper limit.
-                # This number has been chosen because 10**5.42 = 263027, close
-                # to the 262143 commonly used with floating points
+                # change the lower limit to one or some lower value, such that
+                # the range covers at least five decades.
                 if range_channel[0] <= 0:
-                    range_channel[0] = range_channel[1]/10**(5.42)
+                    range_channel[0] = min(1., range_channel[1]/1e5)
                 # Log range
                 range_channel = [np.log10(range_channel[0]),
                                  np.log10(range_channel[1])]
@@ -1333,6 +1380,23 @@ class FCSData(np.ndarray):
                                            nbins_channel + 1)
                 # Exponentiate bins
                 bins_channel = 10**(bins_channel)
+
+            elif scale_channel == 'logicle':
+                # Create transform class
+                # Use the LogicleTransform class from the plot module
+                t = FlowCal.plot._LogicleTransform(data=self,
+                                                   channel=channel,
+                                                   **kwargs)
+                # We now generate ``nbins`` uniformly spaced bins centered at
+                # ``linspace(0, M, nbins)``. To do so, we need to generate
+                # ``nbins + 1`` uniformly spaced points.
+                delta_res = float(t.M) / (res_channel - 1)
+                s = np.linspace(- delta_res/2.,
+                                t.M + delta_res/2.,
+                                nbins_channel + 1)
+                # Finally, apply the logicle transformation to generate bins
+                bins_channel = t.transform_non_affine(s)
+
             else:
                 # Scale not supported
                 raise ValueError('scale "{}" not supported'.format(
@@ -1374,6 +1438,9 @@ class FCSData(np.ndarray):
             time_step = float(fcs_file.text['TIMETICKS'])/1000.
         else:
             time_step = None
+
+        # Data type
+        data_type = fcs_file.text.get('$DATATYPE')
 
         # Extract the acquisition date.
         acquisition_date = cls._parse_date_string(fcs_file.text.get('$DATE'))
@@ -1477,6 +1544,7 @@ class FCSData(np.ndarray):
         obj._analysis = fcs_file.analysis
 
         # Add channel-independent attributes
+        obj._data_type = data_type
         obj._time_step = time_step
         obj._acquisition_start_time = acquisition_start_time
         obj._acquisition_end_time = acquisition_end_time
@@ -1508,6 +1576,8 @@ class FCSData(np.ndarray):
             self._analysis = copy.deepcopy(obj._analysis)
 
         # Channel-independent attributes
+        if hasattr(obj, '_data_type'):
+            self._data_type = copy.deepcopy(obj._data_type)
         if hasattr(obj, '_time_step'):
             self._time_step = copy.deepcopy(obj._time_step)
         if hasattr(obj, '_acquisition_start_time'):

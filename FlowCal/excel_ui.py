@@ -78,6 +78,7 @@ import subprocess
 import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+import warnings
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -216,7 +217,8 @@ def process_beads_table(beads_table,
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter and fluorescence
+          channels to RFI
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
@@ -340,8 +342,9 @@ def process_beads_table(beads_table,
             ###
             if verbose:
                 print("Performing data transformation...")
-            # Transform FSC/SSC to linear scale
-            beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
+            # Transform FSC/SSC and fluorescence channels to linear scale
+            beads_sample = FlowCal.transform.to_rfi(beads_sample,
+                                                    sc_channels + fl_channels)
 
             # Parse clustering channels data
             cluster_channels = beads_row['Clustering Channels'].split(',')
@@ -357,49 +360,60 @@ def process_beads_table(beads_table,
             beads_sample_gated = FlowCal.gate.start_end(beads_sample,
                                                         num_start=250,
                                                         num_end=100)
-            # Remove saturating events in forward/side scatter. The value of a
-            # saturating event is taken automatically from
-            # `beads_sample_gated.range`.
-            beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
-                                                       channels=sc_channels)
+            # Remove saturating events in forward/side scatter, if the FCS data
+            # type is integer. The value of a saturating event is taken
+            # automatically from `beads_sample_gated.range`.
+            if beads_sample_gated.data_type == 'I':
+                beads_sample_gated = FlowCal.gate.high_low(
+                    beads_sample_gated,
+                    channels=sc_channels)
             # Density gating
             beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
-                xscale='log'
-                       if beads_sample_gated.amplification_type(
-                           sc_channels[0])[0]
-                       else 'linear',
-                yscale='log'
-                       if beads_sample_gated.amplification_type(
-                           sc_channels[1])[0]
-                       else 'linear',
+                xscale='logicle',
+                yscale='logicle',
+                sigma=5.,
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                if beads_sample_gated.amplification_type(sc_channels[0])[0]:
-                    density_params['xscale'] = 'log'
-                else:
-                    density_params['xscale'] = 'linear'
-                if beads_sample_gated.amplification_type(sc_channels[1])[0]:
-                    density_params['yscale'] = 'log'
-                else:
-                    density_params['yscale'] = 'linear'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
+                # Beads have a tight distribution, so axis limits will be set
+                # from 0.75 decades below the 5th percentile to 0.75 decades
+                # above the 95th percentile.
+                density_params['xlim'] = \
+                    (np.percentile(beads_sample_gated[:, sc_channels[0]],
+                                   5) / (10**0.75),
+                     np.percentile(beads_sample_gated[:, sc_channels[0]],
+                                   95) * (10**0.75),
+                     )
+                density_params['ylim'] = \
+                    (np.percentile(beads_sample_gated[:, sc_channels[1]],
+                                   5) / (10**0.75),
+                     np.percentile(beads_sample_gated[:, sc_channels[1]],
+                                   95) * (10**0.75),
+                     )
+                # Beads have a tight distribution, so less smoothing should be
+                # applied for visualization
+                density_params['sigma'] = 5.
+                # Histogram plot parameters
+                hist_params = {'xscale': 'logicle'}
                 # Plot
                 figname = os.path.join(base_dir,
                                        plot_dir,
                                        "density_hist_{}.png".format(beads_id))
-                plt.figure(figsize = (6,4))
+                plt.figure(figsize=(6,4))
                 FlowCal.plot.density_and_hist(
                     beads_sample,
                     beads_sample_gated,
@@ -407,7 +421,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={},
+                    hist_params=hist_params,
                     savefig=figname)
 
             ###
@@ -507,14 +521,14 @@ def process_samples_table(samples_table,
     The function processes each entry in `samples_table`, and does the
     following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter to RFI.
+        - Transform the fluorescence channels to the units specified in the
+          column "<Channel name> Units".
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
         - Apply density gating on the forward scatter/side scatter
           channels.
-        - Transform the fluorescence channels to the units specified in the
-          column "<Channel name> Units".
         - Plot combined forward/side scatter density plots and fluorescence
           historgrams, if `plot` = True.
     
@@ -696,7 +710,9 @@ def process_samples_table(samples_table,
                             # Detector voltage
                             beads_dv = beads_row['{} Detector Volt.'. \
                                 format(fl_channel)]
-                            if beads_dv != sample.detector_voltage(fl_channel):
+                            if sample.detector_voltage(fl_channel) is not None \
+                                    and beads_dv != sample.detector_voltage(
+                                        fl_channel):
                                 raise ExcelUIException("Detector voltage for "
                                     "acquisition of beads and samples in "
                                     "channel {} are not the same (beads {}'s "
@@ -707,7 +723,9 @@ def process_samples_table(samples_table,
                                         beads_dv,
                                         sample.detector_voltage(fl_channel)))
 
-                        # Attempt to transform
+                        # First, transform to RFI
+                        sample = FlowCal.transform.to_rfi(sample, fl_channel)
+                        # Attempt to transform to MEF
                         # Transformation function raises a ValueError if a
                         # standard curve does not exist for a channel
                         try:
@@ -736,51 +754,44 @@ def process_samples_table(samples_table,
                                                   num_start=250,
                                                   num_end=100)
             # Remove saturating events in forward/side scatter, and fluorescent
-            # channels to report. The value of a saturating event is taken
-            # automatically from `sample_gated.range`.
-            sample_gated = FlowCal.gate.high_low(sample_gated,
-                                                 sc_channels + report_channels)
+            # channels to report, if the FCS data type is integer. The value of
+            # a saturating event is taken automatically from
+            # `sample_gated.range`.
+            if sample_gated.data_type == 'I':
+                sample_gated = FlowCal.gate.high_low(
+                    sample_gated,
+                    sc_channels + report_channels)
             # Density gating
             sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
-                xscale='log'
-                       if sample_gated.amplification_type(sc_channels[0])[0]
-                       else 'linear',
-                yscale='log'
-                       if sample_gated.amplification_type(sc_channels[1])[0]
-                       else 'linear',
+                xscale='logicle',
+                yscale='logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                if sample_gated.amplification_type(sc_channels[0])[0]:
-                    density_params['xscale'] = 'log'
-                else:
-                    density_params['xscale'] = 'linear'
-                if sample_gated.amplification_type(sc_channels[1])[0]:
-                    density_params['yscale'] = 'log'
-                else:
-                    density_params['yscale'] = 'linear'
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
-                # Define histogram plot parameters
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
+                # Histogram plot parameters
                 hist_params = []
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
                     param['xlabel'] = '{} ({})'.format(rc, ru)
-                    if (ru != 'Channel Number') and \
-                            bool(sample_gated.amplification_type(rc)[0]):
-                        param['xscale'] = 'log'
-                    else:
+                    # Only channel numbers are plotted in linear scale
+                    if (ru == 'Channel Number'):
                         param['xscale'] = 'linear'
+                    else:
+                        param['xscale'] = 'logicle'
                     hist_params.append(param)
                     
                 # Plot
@@ -1039,9 +1050,6 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' Mean',
                                         FlowCal.stats.mean(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Mean',
-                                        FlowCal.stats.gmean(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' Median',
                                         FlowCal.stats.median(sample, channel))
                 samples_table.set_value(row_id,
@@ -1054,17 +1062,43 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' CV',
                                         FlowCal.stats.cv(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Std',
-                                        FlowCal.stats.gstd(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Geom. CV',
-                                        FlowCal.stats.gcv(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' IQR',
                                         FlowCal.stats.iqr(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' RCV',
                                         FlowCal.stats.rcv(sample, channel))
+
+                # For geometric statistics, first check for non-positive events.
+                # If found, throw a warning and calculate statistics on positive
+                # events only.
+                if np.any(sample[:, channel] <= 0):
+                    # Separate positive events
+                    sample_positive = sample[sample[:, channel] > 0]
+                    # Throw warning
+                    msg = "Geometric statistics for channel" + \
+                        " {} calculated on positive events".format(channel) + \
+                        " only ({:.1f}%). ".format(
+                            100.*sample_positive.shape[0]/sample.shape[0])
+                    warnings.warn("On sample {}: {}".format(row_id, msg))
+                    # Write warning message to table
+                    if samples_table.loc[row_id, 'Analysis Notes']:
+                        msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
+                    samples_table.set_value(row_id, 'Analysis Notes', msg)
+                else:
+                    sample_positive = sample
+                # Calculate and write geometric statistics
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Mean',
+                    FlowCal.stats.gmean(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Std',
+                    FlowCal.stats.gstd(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. CV',
+                    FlowCal.stats.gcv(sample_positive, channel))
 
 def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
@@ -1126,23 +1160,21 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
             if pd.notnull(samples_table[header][sample_id]):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
-                # Decide whether to produce histograms in linear or log scale
-                if (unit != 'Channel') and \
-                    bool(sample.amplification_type(channel)[0]):
-                    scale = 'log'
-                else:
+                # Decide which scale to use
+                # Channel units result in linear scale. Otherwise, use logicle.
+                if unit == 'Channel':
                     scale = 'linear'
+                else:
+                    scale = 'logicle'
                 # Define number of bins
                 nbins = min(sample.resolution(channel), max_bins)
-                # Calculate bin edges
-                bin_edges = sample.hist_bins(channel, nbins, scale)
-                # Calculate bin centers
-                if scale == 'linear':
-                    bin_centers = (bin_edges[:-1] + bin_edges[1:])/2
-                elif scale == 'log':
-                    bin_centers = (np.log10(bin_edges[:-1]) + \
-                        np.log10(bin_edges[1:]))/2
-                    bin_centers = 10**bin_centers
+                # Calculate bin edges and centers
+                # We generate twice the necessary number of bins. We then take
+                # every other value as the proper bin edges, and the remaining
+                # values as the bin centers.
+                bins_extended = sample.hist_bins(channel, 2*nbins, scale)
+                bin_edges = bins_extended[::2]
+                bin_centers = bins_extended[1::2]
                 # Store bin centers
                 hist_table.loc[(sample_id,
                                 channel,
