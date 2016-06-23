@@ -94,8 +94,11 @@ if __name__ == "__main__":
                                                 num_start=250,
                                                 num_end=100)
 
-    # ``FlowCal.gate.high_low()`` removes saturated events.
-    # The flow cytometer's detector has a finite range of detection. If the
+    # ``FlowCal.gate.high_low()`` removes events outside a range specified by
+    # a ``low`` and a ``high`` value. If these are not specified (as shown
+    # below), the function removes events outside the channel's range of
+    # detection.
+    # Detectors in a flow cytometer have a finite range of detection. If the
     # fluorescence of a particle is higher than the upper limit of this range,
     # the instrument will incorrectly record it with a value equal to this
     # limit. The same happens for fluorescence values lower than the lower limit
