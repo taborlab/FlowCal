@@ -212,7 +212,7 @@ def process_beads_table(beads_table,
                         plot_dir="",
                         full_output=False):
     """
-    Load and process FCS files corresponding to beads.
+    Process calibration bead samples, as specified by an input table.
 
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
@@ -245,7 +245,7 @@ def process_beads_table(beads_table,
         required in this table, please consult the module's documentation.
     base_dir : str, optional
         Directory from where all the other paths are specified.
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
@@ -516,7 +516,7 @@ def process_samples_table(samples_table,
                           plot=False,
                           plot_dir=""):
     """
-    Load and process FCS files corresponding to samples.
+    Process flow cytometry samples, as specified by an input table.
 
     The function processes each entry in `samples_table`, and does the
     following:
@@ -560,7 +560,7 @@ def process_samples_table(samples_table,
         checking will be performed.
     base_dir : str, optional
         Directory from where all the other paths are specified.
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
@@ -846,16 +846,14 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         module's documentation.
     beads_samples : list
         FCSData objects from which to calculate statistics.
-        ``beads_samples[i]`` should correspond to
-        ``beads_table.values()[i]``.
+        ``beads_samples[i]`` should correspond to ``beads_table.iloc[i]``.
     mef_outputs : list, optional
         A list with the intermediate results of the generation of the MEF
         transformation functions, as given by ``mef.get_transform_fxn()``.
         This is used to populate the fields ``<channel> Beads Model``,
         ``<channel> Beads Params. Names``, and
         ``<channel> Beads Params. Values``. If specified,
-        ``mef_outputs[i]`` should correspond to
-        ``beads_table.values()[i]``.
+        ``mef_outputs[i]`` should correspond to ``beads_table.iloc[i]``.
 
     """
     # Add per-row info
@@ -967,10 +965,12 @@ def add_samples_stats(samples_table, samples):
         - Amplification type
         - Mean
         - Geometric Mean
-        - Media
+        - Median
         - Mode
         - Standard Deviation
         - Coefficient of Variation (CV)
+        - Geometric Standard Deviation
+        - Geometric Coefficient of Variation
         - Inter-Quartile Range
         - Robust Coefficient of Variation (RCV)
 
@@ -982,7 +982,15 @@ def add_samples_stats(samples_table, samples):
         documentation.
     samples : list
         FCSData objects from which to calculate statistics. ``samples[i]``
-        should correspond to ``samples_table.values()[i]``
+        should correspond to ``samples_table.iloc[i]``.
+
+    Notes
+    -----
+    Geometric statistics (geometric mean, standard deviation, and geometric
+    coefficient of variation) are defined only for positive data. If there
+    are negative events in any relevant channel of any member of `samples`,
+    geometric statistics will only be calculated on the positive events,
+    and a warning message will be written to the "Analysis Notes" field.
 
     """
     # Add per-row info
@@ -1290,7 +1298,7 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
         select an input file.
     output_path : str
         Path to which to save the output Excel file. If None, use
-        "`input_path`_output".
+        "<input_path>_output".
     verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
