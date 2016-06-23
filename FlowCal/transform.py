@@ -86,7 +86,7 @@ def to_rfi(data,
 
     If ``amplification_type[0]`` is different from zero, data has been
     taken using a log amplifier. Therefore, to transform to RFI, the
-    following operation is applied:
+    following operation is applied::
 
         y = a[1]*10^(a[0] * (x/r))
 
@@ -98,7 +98,7 @@ def to_rfi(data,
     ``a[1]``.
 
     If ``amplification_type[0]==0``, however, a linear amplifier has been
-    used and the following operation is applied instead:
+    used and the following operation is applied instead::
 
         y = x/g
 
