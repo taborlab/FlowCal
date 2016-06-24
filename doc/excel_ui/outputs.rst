@@ -14,17 +14,23 @@ Plots
 
     .. image:: https://www.dropbox.com/s/qbnudtz1cfej7wg/output_beads_density.png?raw=1
 
-    b. ``clustering_<ID>.png``: A plot of the sub-populations identified during the clustering step, where the different sub-populations are shown in different colors. Depending on the number of channels used for clustering, this plot is a histogram (when using only one channel), a 2D scatter plot (when using two channels), or a 3D scatter plot with three 2D projections (when using three channels or more). If the populations have been identified incorrectly, changing the number of channels used for clustering or the density gate fraction can improve the results. These two parameters can be changed in the **Beads** sheet of the input Excel file.
+    b. ``clustering_<ID>.png``: A plot of the sub-populations identified during the clustering step, where the different sub-populations are shown in different colors. Depending on the number of channels used for clustering, this plot is a histogram (when using only one channel), a 2D scatter plot (when using two channels), or a 3D scatter plot with three 2D projections (when using three channels or more).
 
     .. image:: https://www.dropbox.com/s/omvr8t6qatuo64v/output_beads_clustering.png?raw=1
+
+    .. note:: It is normally easy to distinguish the different bead populations in this plot, and the different colors should correspond to this expectation. If the populations have been identified incorrectly, changing the number of channels used for clustering or the density gate fraction can improve the results. These two parameters can be changed in the **Beads** sheet of the input Excel file.
 
     c. ``populations_<channel>_<ID>.png``: A histogram showing the identified microbead sub-populations in different colors, for each fluorescence channel in which a MEF standard curve is to be calculated. In addition, a vertical line is shown representing the median of each population, which is later used to calculate the standard curve. Sub-populations that were not used to generate the standard curve are shown in gray.
 
     .. image:: https://www.dropbox.com/s/j8ac6reg6uxbbz5/output_beads_populations.png?raw=1
 
+    .. note:: All populations should be unimodal. Bimodal populations indicate incorrect clustering. This can be fixed by changing the number of channels used for clustering or the density gate fraction in the **Beads** sheet of the input Excel file.
+
     d. ``std_crv_<channel>_<ID>.png``: A plot of the fitted standard curve, for each channel in which MEF values were specified.
 
     .. image:: https://www.dropbox.com/s/e1mp3woslx32rev/output_beads_sc.png?raw=1
+
+    .. note:: All the blue dots should line almost perfectly on the green line, otherwise the estimation of the standard curve might not be good. If this is not the case, you should make sure that clustering is being performed correctly by looking at the previous plots. If one dot differs significantly from the curve despite perfect clustering, you might want to manually remove it. This can be done by replacing its MEF value with the word "None" in the **Beads** sheet of the input Excel file.
 
 2. The folder ``plot_samples`` contains plots of the experimental cell samples. Each experimental sample of name “ID” as specified in the Excel input sheet results in a file named ``<ID>.png``. This image contains a forward/side scatter 2D density diagram with the gated region indicated, and a histogram for each user-specified fluorescence channel.
 

@@ -36,7 +36,7 @@ As mentioned in the :doc:`fundamentals</fundamentals/calibration>` section, conv
 
 .. image:: https://www.dropbox.com/s/fgzpnmk7njfirua/python_tutorial_mef_1.png?raw=1
 
-The ``FSC``/``SSC`` density plot shows two groups of events: the dense group in the middle corresponds to single beads, whereas the fainter cluster on the upper right corresponds to bead agglomerations. Only single beads should be used, so :func:`FlowCal.gate.density2d` is used here to identify single beads automatically. Looking at the ``FL1`` histogram, we can clearly distinguish 8 subpopulations with different fluorescence levels. Notice that the group with the highest fluorescence seems to have saturated fluorescence values.
+The ``FSC``/``SSC`` density plot shows two groups of events: the dense group in the middle corresponds to single beads, whereas the fainter cluster on the upper right corresponds to bead agglomerations. Only single beads should be used, so :func:`FlowCal.gate.density2d` is used here to identify single beads automatically. Looking at the ``FL1`` histogram, we can clearly distinguish 8 subpopulations with different fluorescence levels. Note that the group with the highest fluorescence seems to be close to saturation.
 
 MEF Transformation in ``FlowCal``
 ---------------------------------

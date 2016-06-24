@@ -40,11 +40,13 @@ Fortunately, ``FlowCal`` includes :func:`FlowCal.transform.to_rfi`, a function t
 
 We will explore a more convenient way to plot transformed data in the :doc:`plotting tutorial </python_tutorial/plot>`.
 
-:func:`FlowCal.transform.to_rfi` can transform several channels at the same time. For example, to transform the forward scatter and side scatted channels, we can use the following.
+:func:`FlowCal.transform.to_rfi` can transform several channels at the same time. In fact, all channels will be transformed if no channel is specified.
 
->>> s_transformed = FlowCal.transform.to_rfi(s, channels=['FSC', 'SSC'])
+>>> s_transformed = FlowCal.transform.to_rfi(s)
+
+We will use this throughout the whole tutorial right after loading an FCSData object.
 
 Transforming to Molecules of Equivalent Fluorophore (MEF)
 ---------------------------------------------------------
 
-``FlowCal`` includes the ability to transform flow cytometry data to :doc:`Molecules of Equivalent Fluorophore (MEF)</fundamentals/calibration>`, a unit independent of the acquisition settings. However, doing so is slightly more complex. For more information, consult the :doc:`MEF tutorial </python_tutorial/mef>`.
+``FlowCal`` includes the ability to transform flow cytometry data to :doc:`Molecules of Equivalent Fluorophore (MEF)</fundamentals/calibration>`, a unit independent of the acquisition settings. However, doing so is slightly more complex. We will see how to do this in the :doc:`MEF tutorial </python_tutorial/mef>`.

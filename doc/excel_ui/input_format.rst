@@ -44,13 +44,13 @@ Additional columns, like **Beads Lot** (column D), can be added in any place for
 Samples sheet
 -------------
 
-In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. One file can be analyzed several times with different options (e.g. gating fractions or fluorescence units) by adding more rows that reference the same file. The figure below shows an example of an **Samples** sheet.
+In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. One file can be analyzed several times with different options (e.g. gating fractions or fluorescence units) by adding more rows that reference the same file. The figure below shows an example of a **Samples** sheet.
 
 .. image:: https://www.dropbox.com/s/6c5b9lme2eg7iwx/input_samples.png?raw=1
 
 For each row, the following columns must be filled:
 
-1. **ID** (column A in the figure above): used to name the figures produced by ``FlowCal``. Each row must have a unique ID.
+1. **ID** (column A in the figure above): used to reference the sample while generating figures, and in the output Excel file. Each row must have a unique ID.
 2. **Instrument ID** (B): The ID of the instrument used to take the sample.
 3. **Beads ID** (C): The ID of the beads sample that will be used to perform the MEF transformation. Can be left blank if MEF units are not desired.
 4. **File Path** (D): the name of the corresponding FCS file.
