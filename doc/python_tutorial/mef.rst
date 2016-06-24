@@ -104,7 +104,7 @@ The default clustering algorithm is Gaussian Mixture Models, implemented in :fun
 2. Calculation of Population Statistics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For each channel in ``mef_channels``, a representative fluorescence value in channel units is calculated for each subpopulation. By default, the median of each population is used, but this can be customized using the ``statistic_fxn`` parameter.
+For each channel in ``mef_channels``, a representative fluorescence value in a.u. is calculated for each subpopulation. By default, the median of each population is used, but this can be customized using the ``statistic_fxn`` parameter.
 
 3. Population Selection
 ~~~~~~~~~~~~~~~~~~~~~~~
