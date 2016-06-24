@@ -28,7 +28,7 @@ To perform MEF calibration, the following steps are typically followed:
 
 Calibration beads must be measured in every experiment, using the same acquisition settings as when measuring cell samples. The figure below shows typical flow cytometry data from calibration beads.
 
-.. image:: https://www.dropbox.com/s/e3md4qnqox3icj0/fundamentals_calibration_1.png?raw=1
+.. image:: https://www.dropbox.com/s/z4atwyiba8wy3b1/fundamentals_calibration_1.png?raw=1
 
 The top subfigure shows data from the forward/side scatter channels, whereas the bottom one shows one of the fluorescence channels. Note how several populations with different fluorescence values are evident in the bottom plot.
 
@@ -37,29 +37,27 @@ The top subfigure shows data from the forward/side scatter channels, whereas the
 
 Notice, in the figure above, that two different populations are present in the forward/side scatter plot. The faint population on the right/upper portion of the plot corresponds to bead aggregates. These are obviously undesired, as we are only interested in single bead fluorescence. This sort of situation is normally dealt with by "gating", which involves manually drawing a region of interest and retaining the events that fall inside. ``FlowCal`` performs :doc:`density gating<density_gate>`, an automated procedure to eliminate aggregates and other events that are clearly different from the main population of interest. The figure below shows a black contour surrounding the region identified by density gating in the forward/side scatter plot, showing that density gating can distinguish single beads from aggregates. Notice also how small peaks in the fluorescence plot disappear after density-gating, which is consistent with the eliminated population being composed of agglomerations of multiple beads.
 
-.. image:: https://www.dropbox.com/s/qgqcbdqrrrvp7yx/fundamentals_calibration_2.png?raw=1
+.. image:: https://www.dropbox.com/s/95ph8z8ajdn5wta/fundamentals_calibration_2.png?raw=1
 
 3. Identification of Bead Subpopulations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to calculate the average fluorescence of each subpopulation, the individual events corresponding to each must first be identified. The figure below shows one of the plots produced by ``FlowCal`` after an automated clustering algorithm has properly identified each subpopulation. Note how this can be achieved using information from several fluorescence channels at the same time.
 
-.. image:: https://www.dropbox.com/s/2ueaelf0jmgigdh/fundamentals_calibration_3.png?raw=1
+.. image:: https://www.dropbox.com/s/x0gnbrhzp51ljum/fundamentals_calibration_3.png?raw=1
 
 Next, the average fluorescence of each subpopulation is calculated. Some subpopulations, however, can have fluorescence values that are outside the limit of detection of the instrument, and therefore their events will show saturated fluorescence values. These subpopulations should not be considered further in the analysis. ``FlowCal`` discards these automatically.
 
 The figure below shows the individual subpopulations with a vertical line representing their median fluorescence. In addition, subpopulations that were automatically discarded are shown colored in gray.
 
-.. image:: https://www.dropbox.com/s/yemed2xr84xdydj/fundamentals_calibration_4.png?raw=1
+.. image:: https://www.dropbox.com/s/r9n8s96fmj7runm/fundamentals_calibration_4.png?raw=1
 
 4. Calculation of a Standard Curve
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Having the fluorescence of the individual populations, as measured by the flow cytometer, and the MEF values provided by the manufacturer, a standard curve can be calculated to transform fluorescence of any event to MEF. The figure below shows an example of such a standard curve. ``FlowCal`` uses the concept of a "bead fluorescence model", which is directly fitted to bead data but not immediately applicable to cells. However, some small mathematical manipulations turn this bead fluorescence model into a standard curve that is readily applicable to cells.
 
-.. image:: https://www.dropbox.com/s/wpysi3gfm8lkxxz/fundamentals_calibration_5.png?raw=1
-
-Note that in this figure, the numbers produced by the flow cytometer are logarithmically related to fluorescence values. This is true in a flow cytometer that uses a logarithmic amplifier. Instruments with linear amplifiers are treated slightly differently.
+.. image:: https://www.dropbox.com/s/9c6ibfo0vxa9j1a/fundamentals_calibration_5.png?raw=1
 
 5. Conversion of Cell Fluorescence to MEF
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

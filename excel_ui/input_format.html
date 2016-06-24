@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Format of the Input Excel File &mdash; FlowCal 1.0.0 documentation</title>
+  <title>Format of the Input Excel File &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Excel UI" href="index.html"/>
         <link rel="next" title="Analysis Performed by the Excel UI" href="analysis.html"/>
         <link rel="prev" title="How to use FlowCal’s Excel UI" href="how_to.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -160,7 +160,7 @@
 <div class="section" id="instruments-sheet">
 <h2>Instruments sheet<a class="headerlink" href="#instruments-sheet" title="Permalink to this headline">¶</a></h2>
 <p>This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument. However, <code class="docutils literal"><span class="pre">FlowCal</span></code> allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an <strong>Instruments</strong> sheet.</p>
-<img alt="https://www.dropbox.com/s/jb5yvrz9p1mshr9/spreadsheet_instruments.png?raw=1" src="https://www.dropbox.com/s/jb5yvrz9p1mshr9/spreadsheet_instruments.png?raw=1" />
+<img alt="https://www.dropbox.com/s/jgmgbgc2rbwagle/input_instruments.png?raw=1" src="https://www.dropbox.com/s/jgmgbgc2rbwagle/input_instruments.png?raw=1" />
 <p>For each row, the following columns must be filled.</p>
 <ol class="arabic simple">
 <li><strong>ID</strong> (column A in the figure above) used to reference the instrument from the other sheets. Each row must have a unique ID.</li>
@@ -173,25 +173,25 @@
 <div class="section" id="beads-sheet">
 <h2>Beads sheet<a class="headerlink" href="#beads-sheet" title="Permalink to this headline">¶</a></h2>
 <p>This sheet contains details about calibration microbeads and how to process them. Each row represents a different sample of beads. The figure below shows an example of an <strong>Beads</strong> sheet.</p>
-<img alt="https://www.dropbox.com/s/coxomldq23uibb2/spreadsheet_beads.png?raw=1" src="https://www.dropbox.com/s/coxomldq23uibb2/spreadsheet_beads.png?raw=1" />
+<img alt="https://www.dropbox.com/s/e4snspj3w8yiqpl/input_beads.png?raw=1" src="https://www.dropbox.com/s/e4snspj3w8yiqpl/input_beads.png?raw=1" />
 <p>For each row, the following columns must be filled:</p>
 <ol class="arabic simple">
 <li><strong>ID</strong> (column A in the figure above): used to reference the beads sample from the Samples sheet, and to name the figures produced by <code class="docutils literal"><span class="pre">FlowCal</span></code>. Each row must have a unique ID.</li>
 <li><strong>Instrument ID</strong> (B): The ID of the instrument used to take the sample.</li>
 <li><strong>File Path</strong> (C): the name of the corresponding FCS file.</li>
-<li><strong>&lt;Channel name&gt; MEF Values</strong> (E shown, F and G hidden): MEF values provided by the manufacturer, for each channel in which a standard curve must be calculated. If MEF values are provided for a channel, the corresponding instrument should include this channel name in the <strong>Fluorescence Channels</strong> field. More <strong>&lt;Channel name&gt; MEF Values</strong> columns can be added if needed, or removed if not used.</li>
-<li><strong>Gate Fraction</strong> (H): a gate fraction parameter used for <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</li>
-<li><strong>Clustering Channels</strong> (I): the fluorescence channels used for clustering, as a comma separated list.</li>
+<li><strong>&lt;Channel name&gt; MEF Values</strong> (E): MEF values provided by the manufacturer, for each channel in which a standard curve must be calculated. If MEF values are provided for a channel, the corresponding instrument should include this channel name in the <strong>Fluorescence Channels</strong> field. More <strong>&lt;Channel name&gt; MEF Values</strong> columns can be added if needed, or removed if not used.</li>
+<li><strong>Gate Fraction</strong> (F): a gate fraction parameter used for <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</li>
+<li><strong>Clustering Channels</strong> (G): the fluorescence channels used for clustering, as a comma separated list.</li>
 </ol>
-<p>Additional columns, like <strong>Lot</strong> (column D), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
+<p>Additional columns, like <strong>Beads Lot</strong> (column D), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
 </div>
 <div class="section" id="samples-sheet">
 <h2>Samples sheet<a class="headerlink" href="#samples-sheet" title="Permalink to this headline">¶</a></h2>
-<p>In this sheet, the user specifies cell samples and tells <code class="docutils literal"><span class="pre">FlowCal</span></code> how to process them. Each row contains the information used in the analysis of one FCS file. Several analyses can be performed on the same file (e.g. rows 10 and 12 in the figure below, in which the gating fraction is varied). The figure below shows an example of an <strong>Samples</strong> sheet.</p>
-<img alt="https://www.dropbox.com/s/mpkf0ma0hsnbvw4/spreadsheet_samples.png?raw=1" src="https://www.dropbox.com/s/mpkf0ma0hsnbvw4/spreadsheet_samples.png?raw=1" />
+<p>In this sheet, the user specifies cell samples and tells <code class="docutils literal"><span class="pre">FlowCal</span></code> how to process them. Each row contains the information used in the analysis of one FCS file. One file can be analyzed several times with different options (e.g. gating fractions or fluorescence units) by adding more rows that reference the same file. The figure below shows an example of a <strong>Samples</strong> sheet.</p>
+<img alt="https://www.dropbox.com/s/6c5b9lme2eg7iwx/input_samples.png?raw=1" src="https://www.dropbox.com/s/6c5b9lme2eg7iwx/input_samples.png?raw=1" />
 <p>For each row, the following columns must be filled:</p>
 <ol class="arabic">
-<li><p class="first"><strong>ID</strong> (column A in the figure above): used to name the figures produced by <code class="docutils literal"><span class="pre">FlowCal</span></code>. Each row must have a unique ID.</p>
+<li><p class="first"><strong>ID</strong> (column A in the figure above): used to reference the sample while generating figures, and in the output Excel file. Each row must have a unique ID.</p>
 </li>
 <li><p class="first"><strong>Instrument ID</strong> (B): The ID of the instrument used to take the sample.</p>
 </li>
@@ -199,19 +199,19 @@
 </li>
 <li><p class="first"><strong>File Path</strong> (D): the name of the corresponding FCS file.</p>
 </li>
-<li><p class="first"><strong>&lt;Channel name&gt; Units</strong> (E, F, G, and H): The units in which to report statistics and make plots, for each fluorescence channel. If left blank, no statistics or plots will be made for that channel. More of these columns can be added or removed if necessary. If this field is specified for a channel, the corresponding instrument should include this channel in its <strong>Fluorescence Channels</strong> field. The available options are:</p>
+<li><p class="first"><strong>&lt;Channel name&gt; Units</strong> (E): The units in which to report statistics and make plots, for each fluorescence channel. If left blank, no statistics or plots will be made for that channel. More of these columns can be added or removed if necessary. If this field is specified for a channel, the corresponding instrument should include this channel in its <strong>Fluorescence Channels</strong> field. The available options are:</p>
 <blockquote>
 <div><ol class="loweralpha simple">
 <li><strong>Channel</strong>: Raw “Channel Number” units, exactly as they are stored in the FCS file.</li>
-<li><strong>a.u.</strong>: Arbitrary Units.</li>
+<li><strong>RFI</strong> or <strong>a.u.</strong>: Relative Fluorescence Intensity units, also known as Arbitrary Units.</li>
 <li><strong>MEF</strong>: MEF units.</li>
 </ol>
 </div></blockquote>
 </li>
-<li><p class="first"><strong>Gate Fraction</strong> (I): Fraction of samples to keep when performing <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</p>
+<li><p class="first"><strong>Gate Fraction</strong> (F): Fraction of samples to keep when performing <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</p>
 </li>
 </ol>
-<p>Additional columns, such as <strong>Strain name</strong> and <strong>IPTG (µM)</strong> (columns J and K), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
+<p>Additional columns, such as <strong>Strain</strong>, <strong>Plasmid</strong>, and <strong>IPTG (mM)</strong> (columns G, H, and I), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">If MEF units are requested for a fluorescence channel of a sample, an FCS file with calibration beads data should be specified in the <strong>Beads ID</strong> column. Both beads and samples should have been acquired at the same settings for the specified fluorescence channel, otherwise <code class="docutils literal"><span class="pre">FlowCal</span></code> will throw an error.</p>
@@ -238,7 +238,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -260,7 +260,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.plot module &mdash; FlowCal 1.0.0 documentation</title>
+  <title>FlowCal.plot module &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.stats module" href="FlowCal.stats.html"/>
         <link rel="prev" title="FlowCal.mef module" href="FlowCal.mef.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -198,7 +198,7 @@ specified, the figure is closed after being saved.</p>
 </ul>
 <dl class="function">
 <dt id="FlowCal.plot.density2d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], div=1, bins=None, mode='mesh', normed=False, smooth=True, sigma=10.0, colorbar=False, xlog=False, ylog=False, xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.density2d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], bins=1024, mode='mesh', normed=False, smooth=True, sigma=10.0, colorbar=False, xscale='logicle', yscale='logicle', xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.density2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a 2D density plot from two channels of a flow cytometry data set.</p>
 <p><cite>density2d</cite> has two plotting modes which are selected using the <cite>mode</cite>
 argument. With <code class="docutils literal"><span class="pre">mode=='mesh'</span></code>, this function plots the data as a true
@@ -225,18 +225,32 @@ histogram can be smoothed using a Gaussian kernel by specifying
 <blockquote>
 <div><p>Two channels to use for the plot.</p>
 </div></blockquote>
-<p><strong>div</strong> : int or float, optional</p>
+<p><strong>bins</strong> : int or array_like or [int, int] or [array, array], optional</p>
 <blockquote>
-<div><p>Downscaling factor for the default number of bins. If <cite>bins</cite> is not
-specified, the default set of bins extracted from <cite>data</cite> contains
-<code class="docutils literal"><span class="pre">n*m</span></code> bins, and <code class="docutils literal"><span class="pre">div</span> <span class="pre">!=</span> <span class="pre">1</span></code>, <cite>density2d</cite> will actually use
-<code class="docutils literal"><span class="pre">n/div</span> <span class="pre">*</span> <span class="pre">m/div</span></code> bins that cover the same range as the default
-bins. <cite>div</cite> is ignored if <cite>bins</cite> is specified.</p>
+<div><p>Bins used for plotting:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If None, use <code class="docutils literal"><span class="pre">data.hist_bins</span></code> to obtain bin edges for both
+axes. None is not allowed if <code class="docutils literal"><span class="pre">data.hist_bins</span></code> is not
+available.</li>
+<li>If int, <cite>bins</cite> specifies the number of bins to use for both
+axes. If <code class="docutils literal"><span class="pre">data.hist_bins</span></code> exists, it will be used to generate
+a number <cite>bins</cite> of bins.</li>
+<li>If array_like, <cite>bins</cite> directly specifies the bin edges to use
+for both axes.</li>
+<li>If [int, int], each element of <cite>bins</cite> specifies the number of
+bins for each axis. If <code class="docutils literal"><span class="pre">data.hist_bins</span></code> exists, use it to
+generate <code class="docutils literal"><span class="pre">bins[0]</span></code> and <code class="docutils literal"><span class="pre">bins[1]</span></code> bin edges, respectively.</li>
+<li>If [array, array], each element of <cite>bins</cite> directly specifies
+the bin edges to use for each axis.</li>
+<li>Any combination of the above, such as [int, array], [None,
+int], or [array, int]. In this case, None indicates to generate
+bin edges using <code class="docutils literal"><span class="pre">data.hist_bins</span></code> as above, int indicates the
+number of bins to generate, and an array directly indicates the
+bin edges. Note that None is not allowed if <code class="docutils literal"><span class="pre">data.hist_bins</span></code>
+does not exist.</li>
+</ul>
 </div></blockquote>
-<p><strong>bins</strong> : array_like, optional</p>
-<blockquote>
-<div><p>bins argument to pass to plt.hist. If not specified, attempts to 
-extract bins from <cite>data</cite>.</p>
 </div></blockquote>
 <p><strong>mode</strong> : {&#8216;mesh&#8217;, &#8216;scatter&#8217;}, str, optional</p>
 <blockquote>
@@ -268,13 +282,13 @@ histogram.</p>
 <blockquote>
 <div><p>The sigma parameter for the Gaussian kernel to use when smoothing.</p>
 </div></blockquote>
-<p><strong>xlog</strong> : bool, optional</p>
+<p><strong>xscale</strong> : str, optional</p>
 <blockquote>
-<div><p>Flag specifying whether the x axis should be in log scale.</p>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
 </div></blockquote>
-<p><strong>ylog</strong> : bool, optional</p>
+<p><strong>yscale</strong> : str, optional</p>
 <blockquote>
-<div><p>Flag specifying whether the y axis should be in log scale.</p>
+<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code></p>
 </div></blockquote>
 <p><strong>xlabel</strong> : str, optional</p>
 <blockquote>
@@ -394,7 +408,7 @@ subplots.</p>
 
 <dl class="function">
 <dt id="FlowCal.plot.hist1d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">hist1d</code><span class="sig-paren">(</span><em>data_list</em>, <em>channel=0</em>, <em>log=False</em>, <em>div=1</em>, <em>bins=None</em>, <em>histtype='stepfilled'</em>, <em>normed_area=False</em>, <em>normed_height=False</em>, <em>xlabel=None</em>, <em>ylabel=None</em>, <em>xlim=None</em>, <em>ylim=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>legend_loc='best'</em>, <em>legend_fontsize='medium'</em>, <em>legend_labels=None</em>, <em>facecolor=None</em>, <em>edgecolor=None</em>, <em>savefig=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.hist1d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">hist1d</code><span class="sig-paren">(</span><em>data_list</em>, <em>channel=0</em>, <em>xscale='logicle'</em>, <em>bins=256</em>, <em>histtype='stepfilled'</em>, <em>normed_area=False</em>, <em>normed_height=False</em>, <em>xlabel=None</em>, <em>ylabel=None</em>, <em>xlim=None</em>, <em>ylim=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>legend_loc='best'</em>, <em>legend_fontsize='medium'</em>, <em>legend_labels=None</em>, <em>facecolor=None</em>, <em>edgecolor=None</em>, <em>savefig=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.hist1d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot one 1D histogram from one or more flow cytometry data sets.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -411,23 +425,16 @@ channel is ignored. String channel specifications are only
 supported for data types which support string-based indexing
 (e.g. FCSData).</p>
 </div></blockquote>
-<p><strong>log</strong> : bool, optional</p>
+<p><strong>xscale</strong> : str, optional</p>
 <blockquote>
-<div><p>Flag specifying whether the x axis should be in log scale.</p>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
 </div></blockquote>
-<p><strong>div</strong> : int or float, optional</p>
+<p><strong>bins</strong> : int or array_like, optional</p>
 <blockquote>
-<div><p>Downscaling factor for the default number of bins. If <cite>bins</cite> is not
-specified, the default set of bins extracted from
-<code class="docutils literal"><span class="pre">data_list[i].domain</span></code> contains <code class="docutils literal"><span class="pre">n</span></code> bins, and <code class="docutils literal"><span class="pre">div</span> <span class="pre">!=</span> <span class="pre">1</span></code>,
-<cite>hist1d</cite> will actually use <code class="docutils literal"><span class="pre">n/div</span></code> bins, covering the same range
-as <code class="docutils literal"><span class="pre">data_list[i].domain</span></code>. <cite>div</cite> is ignored if <cite>bins</cite> is
-specified.</p>
-</div></blockquote>
-<p><strong>bins</strong> : array_like, optional</p>
-<blockquote>
-<div><p>bins argument to pass to plt.hist. If not specified, <cite>hist1d</cite>
-attempts to extract bins from <code class="docutils literal"><span class="pre">data_list[i].domain</span></code>.</p>
+<div><p>If <cite>bins</cite> is an integer, it specifies the number of bins to use.
+If <cite>bins</cite> is an array, it specifies the bin edges to use. If <cite>bins</cite>
+is None or an integer, <cite>hist1d</cite> will attempt to use
+<code class="docutils literal"><span class="pre">data.hist_bins</span></code> to generate the bins automatically.</p>
 </div></blockquote>
 <p><strong>histtype</strong> : {&#8216;bar&#8217;, &#8216;barstacked&#8217;, &#8216;step&#8217;, &#8216;stepfilled&#8217;}, str, optional</p>
 <blockquote>
@@ -525,7 +532,7 @@ passed to <code class="docutils literal"><span class="pre">plt.hist</span></code
 
 <dl class="function">
 <dt id="FlowCal.plot.scatter2d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter2d</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1], xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, color=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter2d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter2d</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1], xscale='logicle', yscale='logicle', xlabel=None, ylabel=None, xlim=None, ylim=None, title=None, color=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot 2D scatter plot from one or more FCSData objects or numpy arrays.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -546,7 +553,15 @@ passed to <code class="docutils literal"><span class="pre">plt.hist</span></code
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xlabel</strong> : str, optional</p>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>yscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>xlabel</strong> : str, optional</p>
 <blockquote>
 <div><p>Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
@@ -559,12 +574,12 @@ name from last data object.</p>
 <p><strong>xlim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the x axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>ylim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the y axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>title</strong> : str, optional</p>
 <blockquote>
@@ -593,7 +608,7 @@ passed directly to <code class="docutils literal"><span class="pre">plt.scatter<
 
 <dl class="function">
 <dt id="FlowCal.plot.scatter3d">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter3d</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1, 2], xlabel=None, ylabel=None, zlabel=None, xlim=None, ylim=None, zlim=None, title=None, color=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter3d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter3d</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1, 2], xscale='logicle', yscale='logicle', zscale='logicle', xlabel=None, ylabel=None, zlabel=None, xlim=None, ylim=None, zlim=None, title=None, color=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter3d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot 3D scatter plot from one or more FCSData objects or numpy arrays.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -614,7 +629,19 @@ passed directly to <code class="docutils literal"><span class="pre">plt.scatter<
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xlabel</strong> : str, optional</p>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>yscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>zscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>xlabel</strong> : str, optional</p>
 <blockquote>
 <div><p>Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
@@ -632,17 +659,17 @@ name from last data object.</p>
 <p><strong>xlim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the x axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>ylim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the y axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>zlim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the z axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>title</strong> : str, optional</p>
 <blockquote>
@@ -671,7 +698,7 @@ directly to <code class="docutils literal"><span class="pre">scatter</span></cod
 
 <dl class="function">
 <dt id="FlowCal.plot.scatter3d_and_projections">
-<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter3d_and_projections</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1, 2], xlabel=None, ylabel=None, zlabel=None, xlim=None, ylim=None, zlim=None, color=None, figsize=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter3d_and_projections" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.plot.</code><code class="descname">scatter3d_and_projections</code><span class="sig-paren">(</span><em>data_list, channels=[0, 1, 2], xscale='logicle', yscale='logicle', zscale='logicle', xlabel=None, ylabel=None, zlabel=None, xlim=None, ylim=None, zlim=None, color=None, figsize=None, savefig=None, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.plot.scatter3d_and_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a 3D scatter plot and 2D projections from FCSData objects.</p>
 <p><cite>scatter3d_and_projections</cite> creates a 3D scatter plot and three 2D
 projected scatter plots in four different axes for each FCSData object
@@ -695,7 +722,19 @@ in <cite>data_list</cite>, in the same figure.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xlabel</strong> : str, optional</p>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>yscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>zscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</div></blockquote>
+<p><strong>xlabel</strong> : str, optional</p>
 <blockquote>
 <div><p>Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
@@ -713,17 +752,17 @@ name from last data object.</p>
 <p><strong>xlim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the x axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>ylim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the y axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>zlim</strong> : tuple, optional</p>
 <blockquote>
 <div><p>Limits for the z axis. If None, attempts to extract limits from the
-domain of the last data object.</p>
+range of the last data object.</p>
 </div></blockquote>
 <p><strong>color</strong> : matplotlib color or list of matplotlib colors, optional</p>
 <blockquote>
@@ -772,7 +811,7 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -794,7 +833,7 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

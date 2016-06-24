@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Outputs of the Excel UI &mdash; FlowCal 1.0.0 documentation</title>
+  <title>Outputs of the Excel UI &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Excel UI" href="index.html"/>
         <link rel="next" title="Command Line Interface (Advanced)" href="cmd_interface.html"/>
         <link rel="prev" title="Analysis Performed by the Excel UI" href="analysis.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -159,38 +159,50 @@
 <div><ol class="loweralpha simple">
 <li><code class="docutils literal"><span class="pre">density_hist_&lt;ID&gt;.png</span></code>: A forward/side scatter 2D density diagram of the calibration particle sample, and a histogram for each relevant fluorescence channel.</li>
 </ol>
-<img alt="https://www.dropbox.com/s/2o1oej5p4sn30x9/output_beads_density.png?raw=1" src="https://www.dropbox.com/s/2o1oej5p4sn30x9/output_beads_density.png?raw=1" />
+<img alt="https://www.dropbox.com/s/qbnudtz1cfej7wg/output_beads_density.png?raw=1" src="https://www.dropbox.com/s/qbnudtz1cfej7wg/output_beads_density.png?raw=1" />
 <ol class="loweralpha simple" start="2">
-<li><code class="docutils literal"><span class="pre">clustering_&lt;ID&gt;.png</span></code>: A plot of the sub-populations identified during the clustering step, where the different sub-populations are shown in different colors. Depending on the number of channels used for clustering, this plot is a histogram (when using only one channel), a 2D scatter plot (when using two channels), or a 3D scatter plot with three 2D projections (when using three channels or more). If the populations have been identified incorrectly, changing the number of channels used for clustering or the density gate fraction can improve the results. These two parameters can be changed in the <strong>Beads</strong> sheet of the input Excel file.</li>
+<li><code class="docutils literal"><span class="pre">clustering_&lt;ID&gt;.png</span></code>: A plot of the sub-populations identified during the clustering step, where the different sub-populations are shown in different colors. Depending on the number of channels used for clustering, this plot is a histogram (when using only one channel), a 2D scatter plot (when using two channels), or a 3D scatter plot with three 2D projections (when using three channels or more).</li>
 </ol>
-<img alt="https://www.dropbox.com/s/nzxtmwzto3ab1iv/output_beads_clustering.png?raw=1" src="https://www.dropbox.com/s/nzxtmwzto3ab1iv/output_beads_clustering.png?raw=1" />
+<img alt="https://www.dropbox.com/s/omvr8t6qatuo64v/output_beads_clustering.png?raw=1" src="https://www.dropbox.com/s/omvr8t6qatuo64v/output_beads_clustering.png?raw=1" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It is normally easy to distinguish the different bead populations in this plot, and the different colors should correspond to this expectation. If the populations have been identified incorrectly, changing the number of channels used for clustering or the density gate fraction can improve the results. These two parameters can be changed in the <strong>Beads</strong> sheet of the input Excel file.</p>
+</div>
 <ol class="loweralpha simple" start="3">
 <li><code class="docutils literal"><span class="pre">populations_&lt;channel&gt;_&lt;ID&gt;.png</span></code>: A histogram showing the identified microbead sub-populations in different colors, for each fluorescence channel in which a MEF standard curve is to be calculated. In addition, a vertical line is shown representing the median of each population, which is later used to calculate the standard curve. Sub-populations that were not used to generate the standard curve are shown in gray.</li>
 </ol>
-<img alt="https://www.dropbox.com/s/bz14p0zfijvrqne/output_beads_populations.png?raw=1" src="https://www.dropbox.com/s/bz14p0zfijvrqne/output_beads_populations.png?raw=1" />
+<img alt="https://www.dropbox.com/s/j8ac6reg6uxbbz5/output_beads_populations.png?raw=1" src="https://www.dropbox.com/s/j8ac6reg6uxbbz5/output_beads_populations.png?raw=1" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All populations should be unimodal. Bimodal populations indicate incorrect clustering. This can be fixed by changing the number of channels used for clustering or the density gate fraction in the <strong>Beads</strong> sheet of the input Excel file.</p>
+</div>
 <ol class="loweralpha simple" start="4">
 <li><code class="docutils literal"><span class="pre">std_crv_&lt;channel&gt;_&lt;ID&gt;.png</span></code>: A plot of the fitted standard curve, for each channel in which MEF values were specified.</li>
 </ol>
-<img alt="https://www.dropbox.com/s/slst4exz1sp0h9x/output_beads_sc.png?raw=1" src="https://www.dropbox.com/s/slst4exz1sp0h9x/output_beads_sc.png?raw=1" />
+<img alt="https://www.dropbox.com/s/e1mp3woslx32rev/output_beads_sc.png?raw=1" src="https://www.dropbox.com/s/e1mp3woslx32rev/output_beads_sc.png?raw=1" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All the blue dots should line almost perfectly on the green line, otherwise the estimation of the standard curve might not be good. If this is not the case, you should make sure that clustering is being performed correctly by looking at the previous plots. If one dot differs significantly from the curve despite perfect clustering, you might want to manually remove it. This can be done by replacing its MEF value with the word &#8220;None&#8221; in the <strong>Beads</strong> sheet of the input Excel file.</p>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">The folder <code class="docutils literal"><span class="pre">plot_samples</span></code> contains plots of the experimental cell samples. Each experimental sample of name “ID” as specified in the Excel input sheet results in a file named <code class="docutils literal"><span class="pre">&lt;ID&gt;.png</span></code>. This image contains a forward/side scatter 2D density diagram with the gated region indicated, and a histogram for each user-specified fluorescence channel.</p>
 </li>
 </ol>
-<img alt="https://www.dropbox.com/s/ieew8wk88zcq91z/output_sample.png?raw=1" src="https://www.dropbox.com/s/ieew8wk88zcq91z/output_sample.png?raw=1" />
+<img alt="https://www.dropbox.com/s/mlkc6t22bzxz9k0/output_sample.png?raw=1" src="https://www.dropbox.com/s/mlkc6t22bzxz9k0/output_sample.png?raw=1" />
 </div>
 <div class="section" id="output-excel-file">
 <span id="excel-ui-outputs-excel"></span><h2>Output Excel File<a class="headerlink" href="#output-excel-file" title="Permalink to this headline">¶</a></h2>
 <p>The file <code class="docutils literal"><span class="pre">&lt;Name</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">Excel</span> <span class="pre">file&gt;_output.xlsx</span></code> contains calculated statistics for beads and samples. To produce this file, <code class="docutils literal"><span class="pre">FlowCal</span></code> copies the <strong>Instruments</strong>, <strong>Beads</strong>, and <strong>Samples</strong> sheets from the <a class="reference internal" href="input_format.html"><em>input Excel</em></a> file, unmodified, to the output file, and adds columns to the <strong>Beads</strong> and <strong>Samples</strong> sheet with statistics.</p>
 <p>In both sheets, the number of events after gating and the acquisition time are reported for each sample. In addition, a column named <strong>Analysis Notes</strong> indicates the user about any errors that occurred during processing.</p>
-<p>Statistics per beads file, per fluorescence channel include: the channel gain, the amplifier type, the equation of the beads fluorescence model used, and the values of the fitted parameters</p>
-<img alt="https://www.dropbox.com/s/uar7zo73crvu0je/output_spreadsheet_beads.png?raw=1" src="https://www.dropbox.com/s/uar7zo73crvu0je/output_spreadsheet_beads.png?raw=1" />
+<p>Statistics per beads file, per fluorescence channel include: the channel gain, the amplifier type, the equation of the beads fluorescence model used, and the values of the fitted parameters.</p>
+<img alt="https://www.dropbox.com/s/grgops0e5pt03ci/output_spreadsheet_beads.png?raw=1" src="https://www.dropbox.com/s/grgops0e5pt03ci/output_spreadsheet_beads.png?raw=1" />
 <p>Statistics per cell sample, per fluorescence channel include: channel gain, mean, geometric mean, median, mode, arithmetic and geometric standard deviation, arithmetic and geometric coefficient of variation (CV), interquartile range (IQR), and robust coefficient of variation (RCV). Note that if an error has been found, the <strong>Analysis Notes</strong> field will be populated, and statistics and plots will not be reported.</p>
-<img alt="https://www.dropbox.com/s/xpowct9dig8acgh/output_spreadsheet_samples.png?raw=1" src="https://www.dropbox.com/s/xpowct9dig8acgh/output_spreadsheet_samples.png?raw=1" />
+<img alt="https://www.dropbox.com/s/kjxpln97s42low8/output_spreadsheet_samples.png?raw=1" src="https://www.dropbox.com/s/kjxpln97s42low8/output_spreadsheet_samples.png?raw=1" />
 <p>In addition, a <strong>Histograms</strong> tab is generated, with bin/counts pairs for each sample and relevant fluorescence channel in the specified units.</p>
-<img alt="https://www.dropbox.com/s/o62wj53w75b7jeh/output_spreadsheet_histograms.png?raw=1" src="https://www.dropbox.com/s/o62wj53w75b7jeh/output_spreadsheet_histograms.png?raw=1" />
+<img alt="https://www.dropbox.com/s/t4xq6rbm6jpri9d/output_spreadsheet_histograms.png?raw=1" src="https://www.dropbox.com/s/t4xq6rbm6jpri9d/output_spreadsheet_histograms.png?raw=1" />
 <p>One last tab named <strong>About Analysis</strong> is added with information about the corresponding input Excel file, the date and time of the run, and the FlowCal version used.</p>
-<img alt="https://www.dropbox.com/s/q8pu4s2he3jjwp2/output_spreadsheet_about.png?raw=1" src="https://www.dropbox.com/s/q8pu4s2he3jjwp2/output_spreadsheet_about.png?raw=1" />
+<img alt="https://www.dropbox.com/s/hyi7k97cofqiibl/output_spreadsheet_about.png?raw=1" src="https://www.dropbox.com/s/hyi7k97cofqiibl/output_spreadsheet_about.png?raw=1" />
 </div>
 </div>
 
@@ -213,7 +225,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -235,7 +247,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

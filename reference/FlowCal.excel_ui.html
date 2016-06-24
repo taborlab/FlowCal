@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.excel_ui module &mdash; FlowCal 1.0.0 documentation</title>
+  <title>FlowCal.excel_ui module &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.gate module" href="FlowCal.gate.html"/>
         <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -259,8 +259,7 @@ module&#8217;s documentation.</p>
 <p><strong>beads_samples</strong> : list</p>
 <blockquote>
 <div><p>FCSData objects from which to calculate statistics.
-<code class="docutils literal"><span class="pre">beads_samples[i]</span></code> should correspond to
-<code class="docutils literal"><span class="pre">beads_table.values()[i]</span></code>.</p>
+<code class="docutils literal"><span class="pre">beads_samples[i]</span></code> should correspond to <code class="docutils literal"><span class="pre">beads_table.iloc[i]</span></code>.</p>
 </div></blockquote>
 <p><strong>mef_outputs</strong> : list, optional</p>
 <blockquote class="last">
@@ -269,8 +268,7 @@ transformation functions, as given by <code class="docutils literal"><span class
 This is used to populate the fields <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Model</span></code>,
 <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Names</span></code>, and
 <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Values</span></code>. If specified,
-<code class="docutils literal"><span class="pre">mef_outputs[i]</span></code> should correspond to
-<code class="docutils literal"><span class="pre">beads_table.values()[i]</span></code>.</p>
+<code class="docutils literal"><span class="pre">mef_outputs[i]</span></code> should correspond to <code class="docutils literal"><span class="pre">beads_table.iloc[i]</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -298,10 +296,12 @@ which fluorescence units have been specified:</p>
 <li>Amplification type</li>
 <li>Mean</li>
 <li>Geometric Mean</li>
-<li>Media</li>
+<li>Median</li>
 <li>Mode</li>
 <li>Standard Deviation</li>
 <li>Coefficient of Variation (CV)</li>
+<li>Geometric Standard Deviation</li>
+<li>Geometric Coefficient of Variation</li>
 <li>Inter-Quartile Range</li>
 <li>Robust Coefficient of Variation (RCV)</li>
 </ul>
@@ -319,12 +319,18 @@ documentation.</p>
 <p><strong>samples</strong> : list</p>
 <blockquote class="last">
 <div><p>FCSData objects from which to calculate statistics. <code class="docutils literal"><span class="pre">samples[i]</span></code>
-should correspond to <code class="docutils literal"><span class="pre">samples_table.values()[i]</span></code></p>
+should correspond to <code class="docutils literal"><span class="pre">samples_table.iloc[i]</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>Geometric statistics (geometric mean, standard deviation, and geometric
+coefficient of variation) are defined only for positive data. If there
+are negative events in any relevant channel of any member of <cite>samples</cite>,
+geometric statistics will only be calculated on the positive events,
+and a warning message will be written to the &#8220;Analysis Notes&#8221; field.</p>
 </dd></dl>
 
 <dl class="function">
@@ -356,7 +362,7 @@ version, and date and time of analysis. Keywords and values from
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.generate_histograms_table">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">generate_histograms_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>samples</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.generate_histograms_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">generate_histograms_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>samples</em>, <em>max_bins=1024</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.generate_histograms_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a table of histograms as a DataFrame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -372,6 +378,10 @@ documentation.</p>
 <blockquote>
 <div><p>FCSData objects from which to calculate histograms. <code class="docutils literal"><span class="pre">samples[i]</span></code>
 should correspond to <code class="docutils literal"><span class="pre">samples_table.iloc[i]</span></code></p>
+</div></blockquote>
+<p><strong>max_bins</strong> : int, optional</p>
+<blockquote>
+<div><p>Maximum number of bins to use.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -390,14 +400,15 @@ and whether the row corresponds to bins or counts.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.process_beads_table">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_beads_table</code><span class="sig-paren">(</span><em>beads_table</em>, <em>instruments_table</em>, <em>base_dir=''</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir=''</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_beads_table" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load and process FCS files corresponding to beads.</p>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_beads_table</code><span class="sig-paren">(</span><em>beads_table</em>, <em>instruments_table</em>, <em>base_dir='.'</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir='.'</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_beads_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process calibration bead samples, as specified by an input table.</p>
 <p>This function processes the entries in <cite>beads_table</cite>. For each row, the
 function does the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li>Load the FCS file specified in the field &#8220;File Path&#8221;.</li>
-<li>Transform the forward scatter/side scatter channels if needed.</li>
+<li>Transform the forward scatter/side scatter and fluorescence
+channels to RFI</li>
 <li>Remove the 250 first and 100 last events.</li>
 <li>Remove saturated events in the forward scatter and side scatter
 channels.</li>
@@ -432,7 +443,7 @@ required in this table, please consult the module&#8217;s documentation.</p>
 <blockquote>
 <div><p>Directory from where all the other paths are specified.</p>
 </div></blockquote>
-<p><strong>verbose: bool, optional</strong></p>
+<p><strong>verbose</strong> : bool, optional</p>
 <blockquote>
 <div><p>Whether to print information messages during the execution of this
 function.</p>
@@ -479,21 +490,21 @@ included if <cite>full_output</cite> is True.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.process_samples_table">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_samples_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>instruments_table</em>, <em>mef_transform_fxns=None</em>, <em>beads_table=None</em>, <em>base_dir=''</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir=''</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_samples_table" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load and process FCS files corresponding to samples.</p>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">process_samples_table</code><span class="sig-paren">(</span><em>samples_table</em>, <em>instruments_table</em>, <em>mef_transform_fxns=None</em>, <em>beads_table=None</em>, <em>base_dir='.'</em>, <em>verbose=False</em>, <em>plot=False</em>, <em>plot_dir='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.process_samples_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process flow cytometry samples, as specified by an input table.</p>
 <p>The function processes each entry in <cite>samples_table</cite>, and does the
 following:</p>
 <blockquote>
 <div><ul class="simple">
 <li>Load the FCS file specified in the field &#8220;File Path&#8221;.</li>
-<li>Transform the forward scatter/side scatter channels if needed.</li>
+<li>Transform the forward scatter/side scatter to RFI.</li>
+<li>Transform the fluorescence channels to the units specified in the
+column &#8220;&lt;Channel name&gt; Units&#8221;.</li>
 <li>Remove the 250 first and 100 last events.</li>
 <li>Remove saturated events in the forward scatter and side scatter
 channels.</li>
 <li>Apply density gating on the forward scatter/side scatter
 channels.</li>
-<li>Transform the fluorescence channels to the units specified in the
-column &#8220;&lt;Channel name&gt; Units&#8221;.</li>
 <li>Plot combined forward/side scatter density plots and fluorescence
 historgrams, if <cite>plot</cite> = True.</li>
 </ul>
@@ -537,7 +548,7 @@ checking will be performed.</p>
 <blockquote>
 <div><p>Directory from where all the other paths are specified.</p>
 </div></blockquote>
-<p><strong>verbose: bool, optional</strong></p>
+<p><strong>verbose</strong> : bool, optional</p>
 <blockquote>
 <div><p>Whether to print information messages during the execution of this
 function.</p>
@@ -640,7 +651,7 @@ select an input file.</p>
 <p><strong>output_path</strong> : str</p>
 <blockquote>
 <div><p>Path to which to save the output Excel file. If None, use
-&#8220;<a href="#id1"><span class="problematic" id="id2">`</span></a>input_path`_output&#8221;.</p>
+&#8220;&lt;input_path&gt;_output&#8221;.</p>
 </div></blockquote>
 <p><strong>verbose</strong> : bool, optional</p>
 <blockquote>
@@ -687,7 +698,7 @@ was chosen.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.write_workbook">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">write_workbook</code><span class="sig-paren">(</span><em>filename</em>, <em>table_list</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.write_workbook" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">write_workbook</code><span class="sig-paren">(</span><em>filename</em>, <em>table_list</em>, <em>column_width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.write_workbook" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write an Excel workbook from a list of tables.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -698,10 +709,16 @@ was chosen.</p>
 <div><p>Name of the Excel file to write.</p>
 </div></blockquote>
 <p><strong>table_list</strong> : list of <code class="docutils literal"><span class="pre">(str,</span> <span class="pre">DataFrame)</span></code> tuples</p>
-<blockquote class="last">
+<blockquote>
 <div><p>Tables to be saved as individual sheets in the Excel table. Each
 tuple contains two values: the name of the sheet to be saved as a
 string, and the contents of the table as a DataFrame.</p>
+</div></blockquote>
+<p><strong>column_width: int, optional</strong></p>
+<blockquote class="last">
+<div><p>The column width to use when saving the spreadsheet. If None,
+calculate width automatically from the maximum number of characters
+in each column.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -730,7 +747,7 @@ string, and the contents of the table as a DataFrame.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -752,7 +769,7 @@ string, and the contents of the table as a DataFrame.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

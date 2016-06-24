@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Calibration &mdash; FlowCal 1.0.0 documentation</title>
+  <title>Calibration &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="Fundamentals" href="index.html"/>
         <link rel="next" title="Density Gating" href="density_gate.html"/>
         <link rel="prev" title="Fundamentals" href="index.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -173,27 +173,26 @@
 <div class="section" id="measurement-of-calibration-beads">
 <h3>1. Measurement of Calibration Beads<a class="headerlink" href="#measurement-of-calibration-beads" title="Permalink to this headline">¶</a></h3>
 <p>Calibration beads must be measured in every experiment, using the same acquisition settings as when measuring cell samples. The figure below shows typical flow cytometry data from calibration beads.</p>
-<img alt="https://www.dropbox.com/s/e3md4qnqox3icj0/fundamentals_calibration_1.png?raw=1" src="https://www.dropbox.com/s/e3md4qnqox3icj0/fundamentals_calibration_1.png?raw=1" />
+<img alt="https://www.dropbox.com/s/z4atwyiba8wy3b1/fundamentals_calibration_1.png?raw=1" src="https://www.dropbox.com/s/z4atwyiba8wy3b1/fundamentals_calibration_1.png?raw=1" />
 <p>The top subfigure shows data from the forward/side scatter channels, whereas the bottom one shows one of the fluorescence channels. Note how several populations with different fluorescence values are evident in the bottom plot.</p>
 </div>
 <div class="section" id="elimination-of-bead-aggregates-and-other-debris">
 <h3>2. Elimination of Bead Aggregates and Other Debris<a class="headerlink" href="#elimination-of-bead-aggregates-and-other-debris" title="Permalink to this headline">¶</a></h3>
 <p>Notice, in the figure above, that two different populations are present in the forward/side scatter plot. The faint population on the right/upper portion of the plot corresponds to bead aggregates. These are obviously undesired, as we are only interested in single bead fluorescence. This sort of situation is normally dealt with by &#8220;gating&#8221;, which involves manually drawing a region of interest and retaining the events that fall inside. <code class="docutils literal"><span class="pre">FlowCal</span></code> performs <a class="reference internal" href="density_gate.html"><em>density gating</em></a>, an automated procedure to eliminate aggregates and other events that are clearly different from the main population of interest. The figure below shows a black contour surrounding the region identified by density gating in the forward/side scatter plot, showing that density gating can distinguish single beads from aggregates. Notice also how small peaks in the fluorescence plot disappear after density-gating, which is consistent with the eliminated population being composed of agglomerations of multiple beads.</p>
-<img alt="https://www.dropbox.com/s/qgqcbdqrrrvp7yx/fundamentals_calibration_2.png?raw=1" src="https://www.dropbox.com/s/qgqcbdqrrrvp7yx/fundamentals_calibration_2.png?raw=1" />
+<img alt="https://www.dropbox.com/s/95ph8z8ajdn5wta/fundamentals_calibration_2.png?raw=1" src="https://www.dropbox.com/s/95ph8z8ajdn5wta/fundamentals_calibration_2.png?raw=1" />
 </div>
 <div class="section" id="identification-of-bead-subpopulations">
 <h3>3. Identification of Bead Subpopulations<a class="headerlink" href="#identification-of-bead-subpopulations" title="Permalink to this headline">¶</a></h3>
 <p>In order to calculate the average fluorescence of each subpopulation, the individual events corresponding to each must first be identified. The figure below shows one of the plots produced by <code class="docutils literal"><span class="pre">FlowCal</span></code> after an automated clustering algorithm has properly identified each subpopulation. Note how this can be achieved using information from several fluorescence channels at the same time.</p>
-<img alt="https://www.dropbox.com/s/2ueaelf0jmgigdh/fundamentals_calibration_3.png?raw=1" src="https://www.dropbox.com/s/2ueaelf0jmgigdh/fundamentals_calibration_3.png?raw=1" />
+<img alt="https://www.dropbox.com/s/x0gnbrhzp51ljum/fundamentals_calibration_3.png?raw=1" src="https://www.dropbox.com/s/x0gnbrhzp51ljum/fundamentals_calibration_3.png?raw=1" />
 <p>Next, the average fluorescence of each subpopulation is calculated. Some subpopulations, however, can have fluorescence values that are outside the limit of detection of the instrument, and therefore their events will show saturated fluorescence values. These subpopulations should not be considered further in the analysis. <code class="docutils literal"><span class="pre">FlowCal</span></code> discards these automatically.</p>
 <p>The figure below shows the individual subpopulations with a vertical line representing their median fluorescence. In addition, subpopulations that were automatically discarded are shown colored in gray.</p>
-<img alt="https://www.dropbox.com/s/yemed2xr84xdydj/fundamentals_calibration_4.png?raw=1" src="https://www.dropbox.com/s/yemed2xr84xdydj/fundamentals_calibration_4.png?raw=1" />
+<img alt="https://www.dropbox.com/s/r9n8s96fmj7runm/fundamentals_calibration_4.png?raw=1" src="https://www.dropbox.com/s/r9n8s96fmj7runm/fundamentals_calibration_4.png?raw=1" />
 </div>
 <div class="section" id="calculation-of-a-standard-curve">
 <h3>4. Calculation of a Standard Curve<a class="headerlink" href="#calculation-of-a-standard-curve" title="Permalink to this headline">¶</a></h3>
 <p>Having the fluorescence of the individual populations, as measured by the flow cytometer, and the MEF values provided by the manufacturer, a standard curve can be calculated to transform fluorescence of any event to MEF. The figure below shows an example of such a standard curve. <code class="docutils literal"><span class="pre">FlowCal</span></code> uses the concept of a &#8220;bead fluorescence model&#8221;, which is directly fitted to bead data but not immediately applicable to cells. However, some small mathematical manipulations turn this bead fluorescence model into a standard curve that is readily applicable to cells.</p>
-<img alt="https://www.dropbox.com/s/wpysi3gfm8lkxxz/fundamentals_calibration_5.png?raw=1" src="https://www.dropbox.com/s/wpysi3gfm8lkxxz/fundamentals_calibration_5.png?raw=1" />
-<p>Note that in this figure, the numbers produced by the flow cytometer are logarithmically related to fluorescence values. This is true in a flow cytometer that uses a logarithmic amplifier. Instruments with linear amplifiers are treated slightly differently.</p>
+<img alt="https://www.dropbox.com/s/9c6ibfo0vxa9j1a/fundamentals_calibration_5.png?raw=1" src="https://www.dropbox.com/s/9c6ibfo0vxa9j1a/fundamentals_calibration_5.png?raw=1" />
 </div>
 <div class="section" id="conversion-of-cell-fluorescence-to-mef">
 <h3>5. Conversion of Cell Fluorescence to MEF<a class="headerlink" href="#conversion-of-cell-fluorescence-to-mef" title="Permalink to this headline">¶</a></h3>
@@ -221,7 +220,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -243,7 +242,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

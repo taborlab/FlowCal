@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.gate module &mdash; FlowCal 1.0.0 documentation</title>
+  <title>FlowCal.gate module &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.io module" href="FlowCal.io.html"/>
         <link rel="prev" title="FlowCal.excel_ui module" href="FlowCal.excel_ui.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -166,7 +166,7 @@ contour surrounding the gated region, which can be used when plotting a 2D
 density diagram or scatter plot.</p>
 <dl class="function">
 <dt id="FlowCal.gate.density2d">
-<code class="descclassname">FlowCal.gate.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], bins=None, gate_fraction=0.65, sigma=10.0, full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.density2d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.gate.</code><code class="descname">density2d</code><span class="sig-paren">(</span><em>data, channels=[0, 1], bins=1024, gate_fraction=0.65, xscale='logicle', yscale='logicle', sigma=10.0, full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.density2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gate that preserves events in the region with highest density.</p>
 <p>Gate out all events in <cite>data</cite> but those near regions of highest
 density for the two specified channels.</p>
@@ -185,13 +185,46 @@ the number of parameters (aka channels).</p>
 </div></blockquote>
 <p><strong>bins</strong> : int or array_like or [int, int] or [array, array], optional</p>
 <blockquote>
-<div><p><cite>bins</cite> argument passed to <cite>np.histogram2d</cite>. If <cite>None</cite>, extracted
-from <cite>FCSData</cite> if possible. <cite>bins</cite> parameter supercedes <cite>FCSData</cite>
-attribute.</p>
+<div><p>Bins used for gating:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If None, use <code class="docutils literal"><span class="pre">data.hist_bins</span></code> to obtain bin edges for both
+axes. None is not allowed if <code class="docutils literal"><span class="pre">data.hist_bins</span></code> is not
+available.</li>
+<li>If int, <cite>bins</cite> specifies the number of bins to use for both
+axes. If <code class="docutils literal"><span class="pre">data.hist_bins</span></code> exists, it will be used to generate
+a number <cite>bins</cite> of bins.</li>
+<li>If array_like, <cite>bins</cite> directly specifies the bin edges to use
+for both axes.</li>
+<li>If [int, int], each element of <cite>bins</cite> specifies the number of
+bins for each axis. If <code class="docutils literal"><span class="pre">data.hist_bins</span></code> exists, use it to
+generate <code class="docutils literal"><span class="pre">bins[0]</span></code> and <code class="docutils literal"><span class="pre">bins[1]</span></code> bin edges, respectively.</li>
+<li>If [array, array], each element of <cite>bins</cite> directly specifies
+the bin edges to use for each axis.</li>
+<li>Any combination of the above, such as [int, array], [None,
+int], or [array, int]. In this case, None indicates to generate
+bin edges using <code class="docutils literal"><span class="pre">data.hist_bins</span></code> as above, int indicates the
+number of bins to generate, and an array directly indicates the
+bin edges. Note that None is not allowed if <code class="docutils literal"><span class="pre">data.hist_bins</span></code>
+does not exist.</li>
+</ul>
+</div></blockquote>
 </div></blockquote>
 <p><strong>gate_fraction</strong> : float, optional</p>
 <blockquote>
 <div><p>Fraction of events to retain after gating.</p>
+</div></blockquote>
+<p><strong>xscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the bins generated for the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>,
+<code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>. <cite>xscale</cite> is ignored in <cite>bins</cite> is an array
+or a list of arrays.</p>
+</div></blockquote>
+<p><strong>yscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the bins generated for the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>,
+<code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>. <cite>yscale</cite> is ignored in <cite>bins</cite> is an array
+or a list of arrays.</p>
 </div></blockquote>
 <p><strong>sigma</strong> : scalar or sequence of scalars, optional</p>
 <blockquote>
@@ -354,8 +387,8 @@ the number of parameters (aka channels).</p>
 <p><strong>high, low</strong> : int, float, optional</p>
 <blockquote>
 <div><p>High and low threshold values. If None, <cite>high</cite> and <cite>low</cite> will be
-taken from <code class="docutils literal"><span class="pre">data.domain</span></code> if available, otherwise
-<code class="docutils literal"><span class="pre">np.Inf</span></code> and <code class="docutils literal"><span class="pre">-np.Inf</span></code> will be used.</p>
+taken from <code class="docutils literal"><span class="pre">data.range</span></code> if available, otherwise
+<code class="docutils literal"><span class="pre">np.inf</span></code> and <code class="docutils literal"><span class="pre">-np.inf</span></code> will be used.</p>
 </div></blockquote>
 <p><strong>full_output</strong> : bool, optional</p>
 <blockquote>
@@ -446,7 +479,7 @@ number of events in <cite>data</cite>.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -468,7 +501,7 @@ number of events in <cite>data</cite>.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

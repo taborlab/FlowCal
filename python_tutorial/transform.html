@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Transforming Flow Cytometry Data &mdash; FlowCal 1.0.0 documentation</title>
+  <title>Transforming Flow Cytometry Data &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="Plotting Flow Cytometry Data" href="plot.html"/>
         <link rel="prev" title="Reading Flow Cytometry Data" href="read.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -152,14 +152,14 @@
   <div class="section" id="transforming-flow-cytometry-data">
 <h1>Transforming Flow Cytometry Data<a class="headerlink" href="#transforming-flow-cytometry-data" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial focuses on how to perform basic transformations to flow cytometry data using <code class="docutils literal"><span class="pre">FlowCal</span></code>, particularly by using the module <a class="reference internal" href="../reference/FlowCal.transform.html#module-FlowCal.transform" title="FlowCal.transform"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.transform</span></code></a></p>
-<p>To start, navigate to the <code class="docutils literal"><span class="pre">examples/FCFiles</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
+<p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <div class="section" id="transforming-to-arbitrary-fluorescence-units-a-u">
 <h2>Transforming to Arbitrary Fluorescence Units (a.u.)<a class="headerlink" href="#transforming-to-arbitrary-fluorescence-units-a-u" title="Permalink to this headline">¶</a></h2>
-<p>Start by loading file <code class="docutils literal"><span class="pre">data_001.fcs</span></code> into an <code class="docutils literal"><span class="pre">FCSData</span></code> object called <code class="docutils literal"><span class="pre">s</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;data_001.fcs&#39;</span><span class="p">)</span>
+<p>Start by loading file <code class="docutils literal"><span class="pre">Data001.fcs</span></code> into an <code class="docutils literal"><span class="pre">FCSData</span></code> object called <code class="docutils literal"><span class="pre">s</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Let&#8217;s now visualize the contents of the <code class="docutils literal"><span class="pre">FL1</span></code> channel. We will explore <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s plotting functions in the <a class="reference internal" href="plot.html"><em>plotting tutorial</em></a>, but for now let&#8217;s just use <code class="docutils literal"><span class="pre">matplotlib</span></code>&#8216;s <code class="docutils literal"><span class="pre">hist</span></code> function.</p>
@@ -168,7 +168,7 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="https://www.dropbox.com/s/nh5nnfxijut3s20/python_tutorial_transform_1.png?raw=1" src="https://www.dropbox.com/s/nh5nnfxijut3s20/python_tutorial_transform_1.png?raw=1" />
+<img alt="https://www.dropbox.com/s/c481hlzcq0k2wzp/python_tutorial_transform_1.png?raw=1" src="https://www.dropbox.com/s/c481hlzcq0k2wzp/python_tutorial_transform_1.png?raw=1" />
 <p>Note that the range of the x axis is from 0 to 1024. However, our acquisition software showed fluorescence values from 1 to 10000. Where does the difference come from? An FCS file normally stores raw numbers as they are are reported by the instrument sensors. These are referred to as &#8220;channel numbers&#8221;. The FCS file also contains enough information to transform these numbers back to proper fluorescence units, called Relative Fluorescence Intensities (RFI), or more commonly, arbitrary fluorescence units (a.u.). Depending on the instrument used, this conversion sometimes involves a simple scaling factor, but other times requires a non-straigthforward exponential transformation. The latter is our case.</p>
 <p>Fortunately, <code class="docutils literal"><span class="pre">FlowCal</span></code> includes <a class="reference internal" href="../reference/FlowCal.transform.html#FlowCal.transform.to_rfi" title="FlowCal.transform.to_rfi"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.transform.to_rfi()</span></code></a>, a function that reads all the necessary paremeters from the FCS file and figures out how to convert data back to a.u.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_transformed</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">)</span>
@@ -182,16 +182,17 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="https://www.dropbox.com/s/eduoahe6qgnu9fe/python_tutorial_transform_2.png?raw=1" src="https://www.dropbox.com/s/eduoahe6qgnu9fe/python_tutorial_transform_2.png?raw=1" />
+<img alt="https://www.dropbox.com/s/u1wzrlfjdo3af14/python_tutorial_transform_2.png?raw=1" src="https://www.dropbox.com/s/u1wzrlfjdo3af14/python_tutorial_transform_2.png?raw=1" />
 <p>We will explore a more convenient way to plot transformed data in the <a class="reference internal" href="plot.html"><em>plotting tutorial</em></a>.</p>
-<p><a class="reference internal" href="../reference/FlowCal.transform.html#FlowCal.transform.to_rfi" title="FlowCal.transform.to_rfi"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.transform.to_rfi()</span></code></a> can transform several channels at the same time. For example, to transform the forward scatter and side scatted channels, we can use the following.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_transformed</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">])</span>
+<p><a class="reference internal" href="../reference/FlowCal.transform.html#FlowCal.transform.to_rfi" title="FlowCal.transform.to_rfi"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.transform.to_rfi()</span></code></a> can transform several channels at the same time. In fact, all channels will be transformed if no channel is specified.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_transformed</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>We will use this throughout the whole tutorial right after loading an FCSData object.</p>
 </div>
 <div class="section" id="transforming-to-molecules-of-equivalent-fluorophore-mef">
 <h2>Transforming to Molecules of Equivalent Fluorophore (MEF)<a class="headerlink" href="#transforming-to-molecules-of-equivalent-fluorophore-mef" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">FlowCal</span></code> includes the ability to transform flow cytometry data to <a class="reference internal" href="../fundamentals/calibration.html"><em>Molecules of Equivalent Fluorophore (MEF)</em></a>, a unit independent of the acquisition settings. However, doing so is slightly more complex. For more information, consult the <a class="reference internal" href="mef.html"><em>MEF tutorial</em></a>.</p>
+<p><code class="docutils literal"><span class="pre">FlowCal</span></code> includes the ability to transform flow cytometry data to <a class="reference internal" href="../fundamentals/calibration.html"><em>Molecules of Equivalent Fluorophore (MEF)</em></a>, a unit independent of the acquisition settings. However, doing so is slightly more complex. We will see how to do this in the <a class="reference internal" href="mef.html"><em>MEF tutorial</em></a>.</p>
 </div>
 </div>
 
@@ -214,7 +215,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -236,7 +237,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

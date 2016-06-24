@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.transform module &mdash; FlowCal 1.0.0 documentation</title>
+  <title>FlowCal.transform module &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="Contribute" href="../contribute/index.html"/>
         <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -158,8 +158,8 @@ representing N events with D channels, <cite>channels</cite> indicate the channe
 which to apply the transformation, and <cite>args</cite> and <cite>kwargs</cite> are
 transformation-specific parameters. Each transformation function can apply
 its own restrictions or defaults on <cite>channels</cite>.</p>
-<p>If <cite>data</cite> is an FCSData object, <cite>transform</cite> should rescale <code class="docutils literal"><span class="pre">data.domain</span></code>
-and <code class="docutils literal"><span class="pre">data.hist_bin_edges</span></code> if necessary.</p>
+<p>If <cite>data</cite> is an FCSData object, <cite>transform</cite> should rescale <code class="docutils literal"><span class="pre">data.range</span></code>
+if necessary.</p>
 <dl class="function">
 <dt id="FlowCal.transform.to_mef">
 <code class="descclassname">FlowCal.transform.</code><code class="descname">to_mef</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>sc_list</em>, <em>sc_channels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_mef" title="Permalink to this definition">¶</a></dt>
@@ -220,19 +220,27 @@ None, use all channels in <cite>data</cite>.</p>
 
 <dl class="function">
 <dt id="FlowCal.transform.to_rfi">
-<code class="descclassname">FlowCal.transform.</code><code class="descname">to_rfi</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em>, <em>max_range=None</em>, <em>amplification_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_rfi" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.transform.</code><code class="descname">to_rfi</code><span class="sig-paren">(</span><em>data</em>, <em>channels=None</em>, <em>amplification_type=None</em>, <em>amplifier_gain=None</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.transform.to_rfi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform flow cytometry data to Relative Fluorescence Units (RFI).</p>
-<p>This function applies the following transformation:</p>
+<p>If <code class="docutils literal"><span class="pre">amplification_type[0]</span></code> is different from zero, data has been
+taken using a log amplifier. Therefore, to transform to RFI, the
+following operation is applied:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">r</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal"><span class="pre">x</span></code> and <code class="docutils literal"><span class="pre">y</span></code> are the original and transformed data,
-respectively; <code class="docutils literal"><span class="pre">a</span></code> is the amplification type argument, and <code class="docutils literal"><span class="pre">r</span></code> is
-the max range argument. This will transform flow cytometry data taken
-with a log amplifier and an ADC of range <code class="docutils literal"><span class="pre">r</span></code> to linear scale, such
+respectively; <code class="docutils literal"><span class="pre">a</span></code> is <cite>amplification_type</cite> argument, and <code class="docutils literal"><span class="pre">r</span></code> is
+<cite>resolution</cite>. This will transform flow cytometry data taken with a log
+amplifier and an ADC of range <code class="docutils literal"><span class="pre">r</span></code> to linear RFIs, such
 that it covers <code class="docutils literal"><span class="pre">a[0]</span></code> decades of signal with a minimum value of
-<code class="docutils literal"><span class="pre">a[1]</span></code>. If <code class="docutils literal"><span class="pre">a[0]==0</span></code>, however, data is already in linear scale and
-no transformation is applied.</p>
+<code class="docutils literal"><span class="pre">a[1]</span></code>.</p>
+<p>If <code class="docutils literal"><span class="pre">amplification_type[0]==0</span></code>, however, a linear amplifier has been
+used and the following operation is applied instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">/</span><span class="n">g</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal"><span class="pre">g</span></code> is <cite>amplifier_gain</cite>. This will transform flow cytometry
+data taken with a linear amplifier of gain <code class="docutils literal"><span class="pre">g</span></code> back to RFIs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -247,20 +255,28 @@ the number of parameters (aka channels).</p>
 <div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
 None, perform transformation in all channels.</p>
 </div></blockquote>
-<p><strong>max_range</strong> : int, float, or list of int or float</p>
-<blockquote>
-<div><p>Maximum range, for each specified channel. If None, take
-<cite>max_range</cite> from <code class="docutils literal"><span class="pre">len(data.domain(channel))</span></code>.</p>
-</div></blockquote>
 <p><strong>amplification_type</strong> : tuple or list of tuple</p>
 <blockquote>
 <div><p>The amplification type of the specified channel(s). This should be
 reported as a tuple, in which the first element indicates how many
 decades the logarithmic amplifier covers, and the second indicates
 the linear value that corresponds to a channel value of zero. If
-the first element is zero, the amplification type is linear. If
-None, take <cite>amplification_type</cite> from
-<code class="docutils literal"><span class="pre">data.amplification_type(channel)</span></code>.</p>
+the first element is zero, the amplification type is linear. This
+is similar to the $PnE keyword from the FCS standard. If None, take
+<cite>amplification_type</cite> from <code class="docutils literal"><span class="pre">data.amplification_type(channel)</span></code>.</p>
+</div></blockquote>
+<p><strong>amplifier_gain</strong> : float or list of floats, optional</p>
+<blockquote>
+<div><p>The linear amplifier gain of the specified channel(s). Only used if
+<code class="docutils literal"><span class="pre">amplification_type[0]==0</span></code> (linear amplifier). If None,
+take <cite>amplifier_gain</cite> from <code class="docutils literal"><span class="pre">data.amplifier_gain(channel)</span></code>. If
+<cite>data</cite> does not contain <code class="docutils literal"><span class="pre">amplifier_gain()</span></code>, use 1.0.</p>
+</div></blockquote>
+<p><strong>resolution</strong> : int, float, or list of int or float, optional</p>
+<blockquote>
+<div><p>Maximum range, for each specified channel. Only needed if
+<code class="docutils literal"><span class="pre">amplification_type[0]!=0</span></code> (log amplifier). If None, take
+<cite>resolution</cite> from <code class="docutils literal"><span class="pre">len(data.domain(channel))</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -281,8 +297,8 @@ None, take <cite>amplification_type</cite> from
 <p>This function is a template transformation function, intended to be
 used by other specific transformation functions. It performs basic
 checks on <cite>channels</cite> and <cite>data</cite>. It then applies <cite>transform_fxn</cite> to the
-specified channels. Finally, it rescales  <code class="docutils literal"><span class="pre">data.domain</span></code> and
-<code class="docutils literal"><span class="pre">data.hist_bin_edges</span></code> if necessary.</p>
+specified channels. Finally, it rescales  <code class="docutils literal"><span class="pre">data.range</span></code> and if
+necessary.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -339,7 +355,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -361,7 +377,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

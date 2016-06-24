@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.mef module &mdash; FlowCal 1.0.0 documentation</title>
+  <title>FlowCal.mef module &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.plot module" href="FlowCal.plot.html"/> 
 
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -150,15 +150,17 @@
 <p>Functions for transforming flow cytometer data to MEF units.</p>
 <dl class="function">
 <dt id="FlowCal.mef.clustering_gmm">
-<code class="descclassname">FlowCal.mef.</code><code class="descname">clustering_gmm</code><span class="sig-paren">(</span><em>data</em>, <em>n_clusters</em>, <em>tol=1e-07</em>, <em>min_covar=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.clustering_gmm" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.mef.</code><code class="descname">clustering_gmm</code><span class="sig-paren">(</span><em>data</em>, <em>n_clusters</em>, <em>tol=1e-07</em>, <em>min_covar=5e-05</em>, <em>scale='logicle'</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.clustering_gmm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find clusters in an array using Gaussian Mixture Models (GMM).</p>
+<p>Before clustering, <cite>data</cite> can be automatically rescaled as specified by
+the <cite>scale</cite> argument.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : array_like</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or array_like</p>
 <blockquote>
-<div><p>NxD array to cluster.</p>
+<div><p>Data to cluster.</p>
 </div></blockquote>
 <p><strong>n_clusters</strong> : int</p>
 <blockquote>
@@ -172,6 +174,11 @@
 <p><strong>min_covar</strong> : float, optional</p>
 <blockquote>
 <div><p>Minimum covariance. Passed directly to <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s GMM.</p>
+</div></blockquote>
+<p><strong>scale</strong> : str, optional</p>
+<blockquote>
+<div><p>Rescaling applied to <cite>data</cite> before performing clustering. Can be
+either <code class="docutils literal"><span class="pre">linear</span></code> (no rescaling), <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -190,11 +197,12 @@ Gaussian probability density functions (pdf) to <cite>data</cite> using
 Expectation Maximization (EM).</p>
 <p>GMM can be fairly sensitive to the initial parameter choice. To
 generate a reasonable set of initial conditions, <cite>clustering_gmm</cite>
-first divides all samples in <cite>data</cite> into <cite>n_clusters</cite> groups of the
-same size based on their Euclidean distance to the origin. Then, for
-each group, the 50% samples farther away from the mean are discarded.
-The mean and covariance are calculated from the remaining samples of
-each group, and used as initial conditions for the GMM EM algorithm.</p>
+first divides all points in <cite>data</cite> into <cite>n_clusters</cite> groups of the
+same size based on their Euclidean distance to the minimum value. Then,
+for each group, the 50% samples farther away from the mean are
+discarded. The mean and covariance are calculated from the remaining
+samples of each group, and used as initial conditions for the GMM EM
+algorithm.</p>
 <p><cite>clustering_gmm</cite> internally uses <cite>GMM</cite> from the <code class="docutils literal"><span class="pre">scikit-learn</span></code>
 library, with full covariance matrices for each cluster and a fixed,
 uniform set of weights. This means that <cite>clustering_gmm</cite> implicitly
@@ -204,15 +212,16 @@ events. For more information, consult <code class="docutils literal"><span class
 
 <dl class="function">
 <dt id="FlowCal.mef.fit_beads_autofluorescence">
-<code class="descclassname">FlowCal.mef.</code><code class="descname">fit_beads_autofluorescence</code><span class="sig-paren">(</span><em>fl_channel</em>, <em>fl_mef</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.fit_beads_autofluorescence" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.mef.</code><code class="descname">fit_beads_autofluorescence</code><span class="sig-paren">(</span><em>fl_rfi</em>, <em>fl_mef</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.fit_beads_autofluorescence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit a standard curve using a beads model with autofluorescence.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_channel</strong> : array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_rfi</strong> : array</p>
 <blockquote>
-<div><p>Fluorescence values of bead populations in channel units.</p>
+<div><p>Fluorescence values of bead populations in units of Relative
+Fluorescence Intensity (RFI).</p>
 </div></blockquote>
 <p><strong>fl_mef</strong> : array</p>
 <blockquote>
@@ -222,17 +231,17 @@ events. For more information, consult <code class="docutils literal"><span class
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>std_crv</strong> : function</p>
 <blockquote>
-<div><p>Standard curve that transforms arbitrary fluorescence values from
-channel units to MEF units. This function has the signature <code class="docutils literal"><span class="pre">y</span> <span class="pre">=</span>
-<span class="pre">std_crv(x)</span></code>, where <cite>x</cite> is some fluorescence value in channel units
-and <cite>y</cite> is the same fluorescence expressed in MEF units.</p>
+<div><p>Standard curve that transforms fluorescence values from RFI to MEF
+units. This function has the signature <code class="docutils literal"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">std_crv(x)</span></code>, where
+<cite>x</cite> is some fluorescence value in RFI and <cite>y</cite> is the same
+fluorescence expressed in MEF units.</p>
 </div></blockquote>
 <p><strong>beads_model</strong> : function</p>
 <blockquote>
 <div><p>Fluorescence model of calibration beads. This function has the
 signature <code class="docutils literal"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">beads_model(x)</span></code>, where <cite>x</cite> is the fluorescence of
-some bead population in channel units and <cite>y</cite> is the same
-fluorescence expressed in MEF units, without autofluorescence.</p>
+some bead population in RFI units and <cite>y</cite> is the same fluorescence
+expressed in MEF units, without autofluorescence.</p>
 </div></blockquote>
 <p><strong>beads_params</strong> : array</p>
 <blockquote>
@@ -254,29 +263,54 @@ given in <cite>beads_params</cite>.</p>
 </table>
 <p class="rubric">Notes</p>
 <p>The following model is used to describe bead fluorescence:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="o">*</span><span class="n">fl_channel</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">fl_mef_auto</span> <span class="o">+</span> <span class="n">fl_mef</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">fl_rfi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">b</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">fl_mef_auto</span> <span class="o">+</span> <span class="n">fl_mef</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal"><span class="pre">fl_channel[i]</span></code> is the fluorescence of bead subpopulation
-<code class="docutils literal"><span class="pre">i</span></code> in channel units and <code class="docutils literal"><span class="pre">fl_mef[i]</span></code> is the corresponding
-fluorescence in MEF units. The model includes 3 parameters: <code class="docutils literal"><span class="pre">m</span></code>
-(slope), <code class="docutils literal"><span class="pre">b</span></code> (intercept), and <code class="docutils literal"><span class="pre">fl_mef_auto</span></code> (bead
-autofluorescence).</p>
-<p>The bead fluorescence model is fit in a log-MEF space using nonlinear
-least squares regression (as opposed to fitting an exponential model in
-MEF space). In our experience, fitting in the log-MEF space weights the
-residuals more evenly, whereas fitting an exponential vastly overvalues
-the brighter beads.</p>
+<p>where <code class="docutils literal"><span class="pre">fl_rfi[i]</span></code> is the fluorescence of bead subpopulation <code class="docutils literal"><span class="pre">i</span></code> in
+RFI units and <code class="docutils literal"><span class="pre">fl_mef[i]</span></code> is the corresponding fluorescence in MEF
+units. The model includes 3 parameters: <code class="docutils literal"><span class="pre">m</span></code> (slope), <code class="docutils literal"><span class="pre">b</span></code>
+(intercept), and <code class="docutils literal"><span class="pre">fl_mef_auto</span></code> (bead autofluorescence). The last term
+is constrained to be greater or equal to zero.</p>
+<p>The bead fluorescence model is fit in log space using nonlinear least
+squares regression. In our experience, fitting in log space weights
+the residuals more evenly, whereas fitting in linear space vastly
+overvalues the brighter beads.</p>
 <p>A standard curve is constructed by solving for <code class="docutils literal"><span class="pre">fl_mef</span></code>. As cell
 samples may not have the same autofluorescence as beads, the bead
 autofluorescence term (<code class="docutils literal"><span class="pre">fl_mef_auto</span></code>) is omitted from the standard
 curve; the user is expected to use an appropriate white cell sample to
 account for cellular autofluorescence if necessary. The returned
-standard curve mapping fluorescence in channel units to MEF units is
-thus of the following form:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fl_mef</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">fl_channel</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+standard curve mapping fluorescence in RFI units to MEF units is thus
+of the following form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fl_mef</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">fl_rfi</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>This is equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fl_mef</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">fl_rfi</span><span class="o">**</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This works for positive <code class="docutils literal"><span class="pre">fl_rfi</span></code> values, but it is undefined for
+<code class="docutils literal"><span class="pre">fl_rfi</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> and non-integer <code class="docutils literal"><span class="pre">m</span></code> (general case).</p>
+<p>To extend this standard curve to negative values of <code class="docutils literal"><span class="pre">fl_rfi</span></code>, we
+define <code class="docutils literal"><span class="pre">s(fl_rfi)</span></code> to be equal to the standard curve above when
+<code class="docutils literal"><span class="pre">fl_rfi</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>. Next, we require this function to be odd, that is,
+<code class="docutils literal"><span class="pre">s(fl_rfi)</span> <span class="pre">=</span> <span class="pre">-</span> <span class="pre">s(-fl_rfi)</span></code>. This extends the domain to negative
+<code class="docutils literal"><span class="pre">fl_rfi</span></code> values and results in <code class="docutils literal"><span class="pre">s(fl_rfi)</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> for any negative
+<code class="docutils literal"><span class="pre">fl_rfi</span></code>. Finally, we make <code class="docutils literal"><span class="pre">fl_mef</span> <span class="pre">=</span> <span class="pre">s(fl_rfi)</span></code> our new
+standard curve. In this way,:</p>
+<div class="highlight-python"><div class="highlight"><pre>s(fl_rfi) =   exp(b) * (  fl_rfi **m),    fl_rfi &gt;= 0
+            - exp(b) * ((-fl_rfi)**m),    fl_rfi &lt;  0
+</pre></div>
+</div>
+<p>This satisfies the definition of an odd function. In addition,
+<code class="docutils literal"><span class="pre">s(0)</span> <span class="pre">=</span> <span class="pre">0</span></code>, and <code class="docutils literal"><span class="pre">s(fl_rfi)</span></code> converges to zero when <code class="docutils literal"><span class="pre">fl_rfi</span> <span class="pre">-&gt;</span> <span class="pre">0</span></code>
+from both sides. Therefore, the function is continuous at
+<code class="docutils literal"><span class="pre">fl_rfi</span> <span class="pre">=</span> <span class="pre">0</span></code>. The definition of <code class="docutils literal"><span class="pre">s(fl_rfi)</span></code> can be expressed more
+conveniently as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">s</span><span class="p">(</span><span class="n">fl_rfi</span><span class="p">)</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">fl_rfi</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">fl_rfi</span><span class="p">)</span><span class="o">**</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is the equation implemented.</p>
 </dd></dl>
 
 <dl class="function">
@@ -330,7 +364,7 @@ the function only returns the calculated transformation function.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>transform_fxn</strong> : function</p>
 <blockquote>
-<div><p>Transformation function to convert flow cytometry data from channel
+<div><p>Transformation function to convert flow cytometry data from RFI
 units to MEF. This function has the same basic signature as the
 general transformation function specified in <code class="docutils literal"><span class="pre">FlowCal.transform</span></code>.</p>
 </div></blockquote>
@@ -364,9 +398,9 @@ subpopulation, for each channel in <cite>mef_channels</cite>.</p>
 <div><p>Results of the subpopulation selection step, containing the
 following fields:</p>
 <dl class="docutils">
-<dt>channel <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dt>rfi <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
 <dd><p class="first last">The fluorescence values of each selected subpopulation in
-channel units, for each channel in <cite>mef_channels</cite>.</p>
+RFI units, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
 <dt>mef <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
 <dd><p class="first last">The fluorescence values of each selected subpopulation in
@@ -463,7 +497,7 @@ procedure.</p>
 standard curve. Must have the following signature:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">std_crv</span><span class="p">,</span> <span class="n">beads_model</span><span class="p">,</span> <span class="n">beads_params</span><span class="p">,</span> \
 <span class="n">beads_model_str</span><span class="p">,</span> <span class="n">beads_params_names</span> <span class="o">=</span> <span class="n">fitting_fxn</span><span class="p">(</span>
-    <span class="n">fl_channel</span><span class="p">,</span> <span class="n">fl_mef</span><span class="p">,</span> <span class="o">**</span><span class="n">fitting_params</span><span class="p">)</span>
+    <span class="n">fl_rfi</span><span class="p">,</span> <span class="n">fl_mef</span><span class="p">,</span> <span class="o">**</span><span class="n">fitting_params</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>where <cite>std_crv</cite> is a function implementing the standard curve,
@@ -472,8 +506,8 @@ model, <cite>beads_params</cite> is an array containing the fitted parameters
 of the beads model, <cite>beads_model_str</cite> is a string representation
 of the beads model used, <cite>beads_params_names</cite> is a list with the
 parameter names in the same order as they are given in
-<cite>beads_params</cite>, and <cite>fl_channel</cite> and <cite>fl_mef</cite> are the fluorescence
-values of the beads in channel units and MEF units, respectively.
+<cite>beads_params</cite>, and <cite>fl_rfi</cite> and <cite>fl_mef</cite> are the fluorescence
+values of the beads in RFI units and MEF units, respectively.
 Note that the standard curve and the fitted beads model are not
 necessarily the same.</p>
 </div></blockquote>
@@ -487,18 +521,25 @@ necessarily the same.</p>
 </table>
 <p class="rubric">Notes</p>
 <p>The steps involved in generating the MEF transformation function are:</p>
-<ol class="arabic simple">
-<li>The individual subpopulations of beads are first identified using a
-clustering method of choice.</li>
-<li>The fluorescence of each subpopulation is calculated, for each
-channel in <cite>mef_channels</cite>.</li>
-<li>Some subpopulations are then discarded if they are close to either
-the minimum or the maximum channel value. In addition, if the MEF
-value of some subpopulation is unknown (represented as a <code class="docutils literal"><span class="pre">np.nan</span></code>
-in <cite>mef_values</cite>), the whole subpopulation is also discarded.</li>
-<li>The measured fluorescence of each subpopulation is compared with
+<ol class="arabic">
+<li><p class="first">The individual subpopulations of beads are first identified using a
+clustering method of choice.</p>
+</li>
+<li><p class="first">The fluorescence of each subpopulation is calculated, for each
+channel in <cite>mef_channels</cite>.</p>
+</li>
+<li><p class="first">Some subpopulations are then discarded if they are close to either
+the minimum or the maximum channel range limits. In addition, if the
+MEF value of some subpopulation is unknown (represented as a
+<code class="docutils literal"><span class="pre">np.nan</span></code> in <cite>mef_values</cite>), the whole subpopulation is also</p>
+<blockquote>
+<div><p>discarded.</p>
+</div></blockquote>
+</li>
+<li><p class="first">The measured fluorescence of each subpopulation is compared with
 the known MEF values in <cite>mef_values</cite>, and a standard curve function
-is generated using the appropriate MEF model.</li>
+is generated using the appropriate MEF model.</p>
+</li>
 </ol>
 <p>At the end, a transformation function is generated using the calculated
 standard curves, <cite>mef_channels</cite>, and <code class="docutils literal"><span class="pre">FlowCal.transform.to_mef()</span></code>.</p>
@@ -510,16 +551,16 @@ in <cite>mef_channels</cite>.</p>
 
 <dl class="function">
 <dt id="FlowCal.mef.plot_standard_curve">
-<code class="descclassname">FlowCal.mef.</code><code class="descname">plot_standard_curve</code><span class="sig-paren">(</span><em>fl_channel</em>, <em>fl_mef</em>, <em>beads_model</em>, <em>std_crv</em>, <em>xlim=None</em>, <em>ylim=(1.0</em>, <em>100000000.0)</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.plot_standard_curve" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.mef.</code><code class="descname">plot_standard_curve</code><span class="sig-paren">(</span><em>fl_rfi</em>, <em>fl_mef</em>, <em>beads_model</em>, <em>std_crv</em>, <em>xscale='linear'</em>, <em>yscale='linear'</em>, <em>xlim=None</em>, <em>ylim=(1.0</em>, <em>100000000.0)</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.plot_standard_curve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a standard curve with fluorescence of calibration beads.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_channel</strong> : array_like</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_rfi</strong> : array_like</p>
 <blockquote>
-<div><p>Fluorescence of the calibration beads&#8217; subpopulations, in channel
-numbers.</p>
+<div><p>Fluorescence of the calibration beads&#8217; subpopulations, in RFI
+units.</p>
 </div></blockquote>
 <p><strong>fl_mef</strong> : array_like</p>
 <blockquote>
@@ -531,8 +572,28 @@ units.</p>
 <div><p>Fluorescence model of the calibration beads.</p>
 </div></blockquote>
 <p><strong>std_crv</strong> : function</p>
+<blockquote>
+<div><p>The standard curve, mapping relative fluorescence (RFI) units to
+MEF units.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
+</div></blockquote>
+<p><strong>yscale</strong> : str, optional</p>
+<blockquote>
+<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
+</div></blockquote>
+<p><strong>xlim</strong> : tuple, optional</p>
+<blockquote>
+<div><p>Limits for the x axis.</p>
+</div></blockquote>
+<p><strong>ylim</strong> : tuple, optional</p>
 <blockquote class="last">
-<div><p>The standard curve, mapping channel units to MEF units).</p>
+<div><p>Limits for the y axis.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -542,11 +603,14 @@ units.</p>
 
 <dl class="function">
 <dt id="FlowCal.mef.selection_std">
-<code class="descclassname">FlowCal.mef.</code><code class="descname">selection_std</code><span class="sig-paren">(</span><em>populations</em>, <em>low=None</em>, <em>high=None</em>, <em>n_std_low=2.5</em>, <em>n_std_high=2.5</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.selection_std" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.mef.</code><code class="descname">selection_std</code><span class="sig-paren">(</span><em>populations</em>, <em>low=None</em>, <em>high=None</em>, <em>n_std_low=2.5</em>, <em>n_std_high=2.5</em>, <em>scale='logicle'</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.selection_std" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select populations if most of their elements are between two values.</p>
 <p>This function selects populations from <cite>populations</cite> if their means are
 more than <cite>n_std_low</cite> standard deviations greater than <cite>low</cite> and
 <cite>n_std_high</cite> standard deviations lower than <cite>high</cite>.</p>
+<p>Optionally, all elements in <cite>populations</cite> can be rescaled as specified
+by the <cite>scale</cite> argument before calculating means and standard
+deviations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -559,13 +623,19 @@ more than <cite>n_std_low</cite> standard deviations greater than <cite>low</cit
 <blockquote>
 <div><p>Low and high thresholds. Required if the elements in <cite>populations</cite>
 are numpy arrays. If not specified, and the elements in
-<cite>populations</cite> are FCSData objects, use 0.015 of the lowest value
-and 0.0985 of the highest value in <code class="docutils literal"><span class="pre">populations[0].domain</span></code>.</p>
+<cite>populations</cite> are FCSData objects, use 1.5% and 98.5% of the range
+in <code class="docutils literal"><span class="pre">populations[0].range</span></code>.</p>
 </div></blockquote>
 <p><strong>n_std_low, n_std_high</strong> : float, optional</p>
 <blockquote>
 <div><p>Number of standard deviations from <cite>low</cite> and <cite>high</cite>, respectively,
 that a population&#8217;s mean has to be closer than to be discarded.</p>
+</div></blockquote>
+<p><strong>scale</strong> : str, optional</p>
+<blockquote>
+<div><p>Rescaling applied to <cite>populations</cite> before calculating means and
+standard deviations. Can be either <code class="docutils literal"><span class="pre">linear</span></code> (no rescaling),
+<code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -598,7 +668,7 @@ that a population&#8217;s mean has to be closer than to be discarded.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -620,7 +690,7 @@ that a population&#8217;s mean has to be closer than to be discarded.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

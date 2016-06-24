@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reading Flow Cytometry Data &mdash; FlowCal 1.0.0 documentation</title>
+  <title>Reading Flow Cytometry Data &mdash; FlowCal 1.1.0 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
 
   
-    <link rel="top" title="FlowCal 1.0.0 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="Transforming Flow Cytometry Data" href="transform.html"/>
         <link rel="prev" title="FlowCal’s Python API Tutorial" href="index.html"/> 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0.0
+                1.1.0
               </div>
             
           
@@ -148,18 +148,18 @@
   <div class="section" id="reading-flow-cytometry-data">
 <h1>Reading Flow Cytometry Data<a class="headerlink" href="#reading-flow-cytometry-data" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial focuses on how to open FCS files and manipulate the data therein using <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
-<p>To start, navigate to the <code class="docutils literal"><span class="pre">examples/FCFiles</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
+<p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <p>FCS files are standard files in which flow cytometry data is stored. Normally, one FCS file corresponds to one sample.</p>
-<p>The object <a class="reference internal" href="../reference/FlowCal.io.html#FlowCal.io.FCSData" title="FlowCal.io.FCSData"><code class="xref py py-class docutils literal"><span class="pre">FlowCal.io.FCSData</span></code></a> allows a user to open an FCS file. The following instruction opens the file <code class="docutils literal"><span class="pre">data_001.fcs</span></code>, loads the information into an <code class="docutils literal"><span class="pre">FCSData</span></code> object, and assigns it to a variable <code class="docutils literal"><span class="pre">s</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;data_001.fcs&#39;</span><span class="p">)</span>
+<p>The object <a class="reference internal" href="../reference/FlowCal.io.html#FlowCal.io.FCSData" title="FlowCal.io.FCSData"><code class="xref py py-class docutils literal"><span class="pre">FlowCal.io.FCSData</span></code></a> allows a user to open an FCS file. The following instruction opens the file <code class="docutils literal"><span class="pre">Data001.fcs</span></code> from the <code class="docutils literal"><span class="pre">FCFiles</span></code> folder, loads the information into an <code class="docutils literal"><span class="pre">FCSData</span></code> object, and assigns it to a variable <code class="docutils literal"><span class="pre">s</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>An <code class="docutils literal"><span class="pre">FCSData</span></code> object is a 2D <code class="docutils literal"><span class="pre">numpy</span></code> array with a few additional features. The first dimension indexes the event number, and the second dimension indexes the flow cytometry channel (or &#8220;parameter&#8221;, as called by the FCS standard). We can see the number of events and channels using the standard <code class="docutils literal"><span class="pre">numpy</span></code>&#8216;s <code class="docutils literal"><span class="pre">shape</span></code> property:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">s</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(15319, 8)</span>
+<span class="go">(30000, 8)</span>
 </pre></div>
 </div>
 <p>As with any <code class="docutils literal"><span class="pre">numpy</span></code> array, we can slice an <code class="docutils literal"><span class="pre">FCSData</span></code> object. For example, let&#8217;s obtain the first 100 events.</p>
@@ -171,12 +171,12 @@
 <p>Note that the product of slicing an FCSData object is also an FCSData object. We can also get all the events in a subset of channels by slicing in the second dimension.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_sub_ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">s_sub_ch</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(15319, 3)</span>
+<span class="go">(30000, 3)</span>
 </pre></div>
 </div>
 <p>However, it is not immediately obvious what channels we are getting. Fortunately, the <code class="docutils literal"><span class="pre">FCSData</span></code> object contains some additional information about the acquisition settings. In particular, we can check the name of the channels with the <code class="docutils literal"><span class="pre">channels</span></code> property.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">s</span><span class="o">.</span><span class="n">channels</span>
-<span class="go">(&#39;TIME&#39;, &#39;FSC&#39;, &#39;SSC&#39;, &#39;FL1&#39;, &#39;FL2&#39;, &#39;FL3&#39;, &#39;SSCW&#39;, &#39;SSCA&#39;)</span>
+<span class="go">(&#39;TIME&#39;, &#39;FSC&#39;, &#39;SSC&#39;, &#39;FL1&#39;, &#39;FL2&#39;, &#39;FL3&#39;, &#39;FL1W&#39;, &#39;FL1A&#39;)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">s_sub_ch</span><span class="o">.</span><span class="n">channels</span>
 <span class="go">(&#39;FL1&#39;, &#39;FL2&#39;, &#39;FL3&#39;)</span>
 </pre></div>
@@ -216,7 +216,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor.
+        &copy; Copyright 2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, O. Igoshin, J. Tabor.
 
     </p>
   </div>
@@ -238,7 +238,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'1.1.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
