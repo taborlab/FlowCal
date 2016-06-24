@@ -1,5 +1,5 @@
 """
-Classes and utiliy functions for interpreting FCS files.
+Classes and utiliy functions for reading FCS files.
 
 """
 
@@ -10,6 +10,8 @@ import datetime
 import warnings
 
 import numpy as np
+
+import FlowCal.plot
 
 ###
 # Utility functions for importing segments of FCS files
@@ -43,8 +45,7 @@ def read_fcs_header_segment(buf, begin=0):
     -----
     Blank ANALYSIS segment offsets are converted to zeros.
 
-    OTHER segment offsets are ignored (see FCS standards for more
-    information about OTHER segments).
+    OTHER segment offsets are ignored (see [1]_, [2]_, and [3]_).
 
     References
     ----------
@@ -132,10 +133,10 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     this function can also be used to parse ANALYSIS segments.
 
     This function does not automatically parse supplemental TEXT
-    segments (see FCS3.0 [2]_). Supplemental TEXT segments and regular
-    TEXT segments are parsed the same way, though, so this function
-    can be manually directed to parse a supplemental TEXT segment by
-    providing the appropriate `begin` and `end` values.
+    segments (see FCS3.0 [2] and FCS3.1 [3]). Supplemental TEXT segments
+    and regular TEXT segments are parsed the same way, though, so this
+    function can be manually directed to parse a supplemental TEXT segment
+    by providing the appropriate `begin` and `end` values.
 
     References
     ----------
@@ -165,25 +166,57 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
 
+    # If segment is empty, return empty dictionary as text
+    if not raw:
+        return {}, delim
+
+    # Check that the first character of the TEXT segment is equal to the
+    # delimiter.
+    if raw[0] != delim:
+        raise ValueError("segment should start with delimiter")
+
+    # Look for the last delimiter in the segment string, and retain everything
+    # from one character after the first delimiter to one character before the
+    # last delimiter.
+    end_index = raw.rfind(delim)
+    raw = raw[1: end_index]
+
     pairs_list = raw.split(delim)
 
-    # The first and last list items should be empty because the TEXT
-    # segment starts and ends with the delimiter
-    if pairs_list[0] != '' or pairs_list[-1] != '':
-        raise ValueError("segment should start and end with delimiter")
-    else:
-        del pairs_list[0]
-        del pairs_list[-1]
-
-    # Detect if delimiter was used in keyword or value (which, according to
-    # the standards, is technically legal). According to the FCS2.0 standard,
-    # "If the separator appears in a keyword or in a keyword value, it must be
-    # 'quoted' by being repeated" and "null (zero length) keywords or keyword
-    # values are not permitted", so this issue should manifest itself as an
-    # empty element in the list.
-    if any(x=='' for x in pairs_list):
-        raise NotImplementedError("use of delimiter in keywords or keyword"
-            + " values is not supported")
+    # According to the FCS2.0 standard, "If the separator appears in a keyword
+    # or in a keyword value, it must be 'quoted' by being repeated" and "null
+    # (zero length) keywords or keyword values are not permitted", so this
+    # issue should manifest itself as an empty element in the list.
+    # The following scans the list of pairs for empty elements and appends a
+    # delimiter character to the previous element when an empty element is
+    # found.
+    pairs_list_delim = []
+    pairs_list_idx = 0
+    while pairs_list_idx < len(pairs_list):
+        if pairs_list[pairs_list_idx] != '':
+            # Non-empty element, just append
+            pairs_list_delim.append(pairs_list[pairs_list_idx])
+        else:
+            # Empty element
+            # Accumulate delimiters in a temporary string as long as more empty
+            # elements are found, until the last element
+            s = ''
+            while True:
+                s += delim
+                pairs_list_idx += 1
+                if pairs_list_idx >= len(pairs_list):
+                    break
+                if pairs_list[pairs_list_idx] != '':
+                    s += pairs_list[pairs_list_idx]
+                    break
+            # Append temporary string to previous element if pairs_list_delim
+            # is not empty, otherwise make it the first element.
+            if pairs_list_delim:
+                pairs_list_delim[-1] += s
+            else:
+                pairs_list_delim.append(s)
+        pairs_list_idx += 1
+    pairs_list = pairs_list_delim
 
     # List length should be even since all key-value entries should be pairs
     if len(pairs_list) % 2 != 0:
@@ -302,7 +335,12 @@ def read_fcs_data_segment(buf,
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
-            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+            # In some FCS files, the offset to the last byte (end) actually
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
+            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
+                    (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
                     + " {0} bytes,".format(shape[0]*shape[1]*(num_bits/8))
@@ -340,7 +378,12 @@ def read_fcs_data_segment(buf,
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
-            if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin):
+            # In some FCS files, the offset to the last byte (end) actually
+            # points to the first byte of the next segment, in which case the #
+            # of bytes specified in the header exceeds the # of bytes that we
+            # should read by one.
+            if (byte_shape[0]*byte_shape[1]) != ((end+1)-begin) and \
+                    (byte_shape[0]*byte_shape[1]) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
                     + " {0} bytes,".format(byte_shape[0]*byte_shape[1])
@@ -412,7 +455,12 @@ def read_fcs_data_segment(buf,
 
         # Sanity check that the total # of bytes that we're about to interpret
         # is exactly the # of bytes in the DATA segment.
-        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin):
+        # In some FCS files, the offset to the last byte (end) actually points
+        # to the first byte of the next segment, in which case the # of bytes
+        # specified in the header exceeds the # of bytes that we should read by
+        # one.
+        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
+            (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
                 + " (array size = {0}".format(shape[0]*shape[1]*(num_bits/8))
                 + " bytes, DATA segment size ="
@@ -494,13 +542,10 @@ class FCSFile(object):
         If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
         endian ('1,2,3,4', '1,2').
     ValueError
-        If TEXT-like segment does not start and end with delimiter.
+        If TEXT-like segment does not start with delimiter.
     ValueError
         If TEXT-like segment has odd number of total extracted keys and
         values (indicating an unpaired key or value).
-    NotImplementedError
-        If the TEXT segment delimiter is used in a TEXT-like segment
-        keyword or value.
     ValueError
         If calculated DATA segment size (as determined from the number
         of events, the number of parameters, and the number of bytes per
@@ -508,6 +553,8 @@ class FCSFile(object):
         offsets.
     Warning
         If more than one data set is detected in the same file.
+    Warning
+        If the ANALYSIS segment was not successfully parsed.
     
     Notes
     -----
@@ -538,7 +585,7 @@ class FCSFile(object):
         - One data set per file.
 
     For more information on the TEXT segment keywords (e.g. $MODE,
-    $DATATYPE, etc.), consult the FCS standards.
+    $DATATYPE, etc.), see [1]_, [2]_, and [3]_.
 
     References
     ----------
@@ -628,27 +675,37 @@ class FCSFile(object):
         if self._header.analysis_begin and self._header.analysis_end:
             # Prioritize ANALYSIS segment offsets specified in HEADER over
             # offsets specified in TEXT segment.
-            self._analysis = read_fcs_text_segment(
-                buf=f,
-                begin=self._header.analysis_begin,
-                end=self._header.analysis_end,
-                delim=delim)[0]
+            try:
+                self._analysis = read_fcs_text_segment(
+                    buf=f,
+                    begin=self._header.analysis_begin,
+                    end=self._header.analysis_end,
+                    delim=delim)[0]
+            except Exception as e:
+                warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                    format(str(e)))
+                self._analysis = {}
         elif self._header.version in ('FCS3.0', 'FCS3.1'):
             analysis_begin = int(self._text['$BEGINANALYSIS'])
             analysis_end = int(self._text['$ENDANALYSIS'])
             if analysis_begin and analysis_end:
-                self._analysis = read_fcs_text_segment(
-                    buf=f,
-                    begin=analysis_begin,
-                    end=analysis_end,
-                    delim=delim)[0]
+                try:
+                    self._analysis = read_fcs_text_segment(
+                        buf=f,
+                        begin=analysis_begin,
+                        end=analysis_end,
+                        delim=delim)[0]
+                except Exception as e:
+                    warnings.warn("ANALYSIS segment could not be parsed ({})".\
+                        format(str(e)))
+                    self._analysis = {}
             else:
                 self._analysis = {}
         else:
             self._analysis = {}
         
         # Import DATA segment
-        param_ranges = [int(self._text['$P{0}R'.format(p)])
+        param_ranges = [float(self._text['$P{0}R'.format(p)])
                         for p in xrange(1,D+1)]
         if self._header.data_begin and self._header.data_end:
             # Prioritize DATA segment offsets specified in HEADER over
@@ -787,11 +844,13 @@ class FCSData(np.ndarray):
     infile : str or file-like
         Reference to associated FCS file.
     text : dict
-        Dictionary of keyword-value entries from TEXT segment and optional
-        supplemental TEXT segment of FCS file.
-    analysis : dict
-        Dictionary of keyword-value entries from ANALYSIS segment of FCS
+        Dictionary of keyword-value entries from TEXT segment of the FCS
         file.
+    analysis : dict
+        Dictionary of keyword-value entries from ANALYSIS segment of the
+        FCS file.
+    data_type : str
+        Type of data in the FCS file's DATA segment.
     time_step : float
         Time step of the time channel.
     acquisition_start_time : time or datetime
@@ -805,15 +864,17 @@ class FCSData(np.ndarray):
 
     Methods
     -------
-    amplification_type(channels=None)
+    amplification_type
         Get the amplification type used for the specified channel(s).
-    detector_voltage(channels=None)
+    detector_voltage
         Get the detector voltage used for the specified channel(s).
-    amplifier_gain(channels=None)
+    amplifier_gain
         Get the amplifier gain used for the specified channel(s).
-    domain(channels=None)
-        Get the domain of the specified channel(s).
-    hist_bin_edges(channels=None)
+    range
+        Get the range of the specified channel(s).
+    resolution
+        Get the resolution of the specified channel(s).
+    hist_bins
         Get histogram bin edges for the specified channel(s).
 
     Notes
@@ -821,6 +882,8 @@ class FCSData(np.ndarray):
     `FCSData` uses `FCSFile` to parse an FCS file. All restrictions on the
     FCS file format and the Exceptions spcecified for FCSFile also apply
     to FCSData.
+
+    Parsing of some non-standard files is supported [4]_.
 
     References
     ----------
@@ -837,35 +900,41 @@ class FCSData(np.ndarray):
     .. [3] J. Spidlen, et al, "Data File Standard for Flow Cytometry,
        version FCS 3.1," Cytometry A vol 77A, pp 97-100, 2009, PMID
        19937951.
-    
+
     .. [4] R. Hicks, "BD$WORD file header fields,"
        https://lists.purdue.edu/pipermail/cytometry/2001-October/020624.html
 
     Examples
     --------
     Load an FCS file into an FCSData object
+
     >>> import FlowCal
     >>> d = FlowCal.io.FCSData('test/Data001.fcs')
 
     Check channel names
+
     >>> print d.channels
     ('FSC-H', 'SSC-H', 'FL1-H', 'FL2-H', 'FL3-H', 'Time')
 
     Check the size of FCSData
+
     >>> print d.shape
     (20949, 6)
 
     Get the first 100 events
+
     >>> d_sub = d[:100]
     >>> print d_sub.shape
     (100, 6)
 
     Retain only fluorescence channels
+
     >>> d_fl = d[:, ['FL1-H', 'FL2-H', 'FL3-H']]
     >>> d_fl.channels
     ('FL1-H', 'FL2-H', 'FL3-H')
 
     Channel slicing can also be done with integer indices
+
     >>> d_fl_2 = d[:, [2, 3, 4]]
     >>> print d_fl_2.channels
     ('FL1-H', 'FL2-H', 'FL3-H')
@@ -890,7 +959,9 @@ class FCSData(np.ndarray):
     @property
     def text(self):
         """
-        Dictionary of key-value entries from TEXT segment and optional
+        Dictionary of key-value entries from the TEXT segment.
+
+        `text` includes items from the TEXT segment and optional
         supplemental TEXT segment.
 
         """
@@ -899,10 +970,21 @@ class FCSData(np.ndarray):
     @property
     def analysis(self):
         """
-        Dictionary of key-value entries from ANALYSIS segment.
+        Dictionary of key-value entries from the ANALYSIS segment.
 
         """
         return self._analysis
+
+    @property
+    def data_type(self):
+        """
+        Type of data in the FCS file's DATA segment.
+
+        `data_type` is 'I' if the data type is integer, 'F' for floating
+        point, and 'D' for double.
+
+        """
+        return self._data_type
 
     @property
     def time_step(self):
@@ -991,15 +1073,21 @@ class FCSData(np.ndarray):
         Get the amplification type used for the specified channel(s).
 
         Each channel uses one of two amplification types: linear or
-        logarithmic. The amplification type for channel "n" is extracted
-        from the required $PnE parameter.
+        logarithmic. This function returns, for each channel, a tuple of
+        two numbers, in which the first number indicates the number of
+        decades covered by the logarithmic amplifier, and the second
+        indicates the linear value corresponding to the channel value zero.
+        If the first value is zero, the amplifier used is linear
+
+        The amplification type for channel "n" is extracted from the
+        required $PnE parameter.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
             Channel(s) for which to get the amplification type. If None,
             return a list with the amplification type of all channels, in
-            the order of the `channels` attribute.
+            the order of ``FCSData.channels``.
 
         Return
         ------
@@ -1037,7 +1125,7 @@ class FCSData(np.ndarray):
         channels : int, str, list of int, list of str
             Channel(s) for which to get the detector voltage. If None,
             return a list with the detector voltage of all channels, in the
-            order of the `channels` attribute.
+            order of ``FCSData.channels``.
 
         Return
         ------
@@ -1072,7 +1160,7 @@ class FCSData(np.ndarray):
         channels : int, str, list of int, list of str
             Channel(s) for which to get the amplifier gain. If None,
             return a list with the amplifier gain of all channels, in the
-            order of the `channels` attribute.
+            order of ``FCSData.channels``.
 
         Return
         ------
@@ -1095,25 +1183,32 @@ class FCSData(np.ndarray):
         else:
             return self._amplifier_gain[channels]
 
-    def domain(self, channels=None):
+    def range(self, channels=None):
         """
-        Get the domain of the specified channel(s).
+        Get the range of the specified channel(s).
 
-        The domain is inferred from the $PnR parameter, as
-        ``np.arange($PnR)``. The domain should be transformed along with
-        the data when passed through a transformation function.
+        The range is a two-element list specifying the smallest and largest
+        values that an event in a channel should have. Note that with
+        floating point data, some events could have values outside the
+        range in either direction due to instrument compensation.
+
+        The range should be transformed along with the data when passed
+        through a transformation function.
+
+        The range of channel "n" is extracted from the $PnR parameter as
+        ``[0, $PnR - 1]``.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the domain. If None, return a list
-            with the domain of all channels, in the order of the `channels`
-            attribute.
+            Channel(s) for which to get the range. If None, return a list
+            with the range of all channels, in the order of
+            ``FCSData.channels``.
 
         Return
         ------
         array or list of arrays
-            The domain of the specified channel(s).
+            The range of the specified channel(s).
 
         """
         # Check default
@@ -1123,48 +1218,197 @@ class FCSData(np.ndarray):
         # Get numerical indices of channels
         channels = self._name_to_index(channels)
 
-        # Get detector type of the specified channels
+        # Get the range of the specified channels
         if hasattr(channels, '__iter__'):
-            return [self._domain[ch] for ch in channels]
+            return [self._range[ch] for ch in channels]
         else:
-            return self._domain[channels]
+            return self._range[channels]
 
-    def hist_bin_edges(self, channels=None):
+    def resolution(self, channels=None):
+        """
+        Get the resolution of the specified channel(s).
+
+        The resolution specifies the number of different values that the
+        events can take. The resolution is directly obtained from the $PnR
+        parameter.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the resolution. If None, return a
+            list with the resolution of all channels, in the order of
+            ``FCSData.channels``.
+
+        Return
+        ------
+        int or list of ints
+            Resolution of the specified channel(s).
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get resolution of the specified channels
+        if hasattr(channels, '__iter__'):
+            return [self._resolution[ch] for ch in channels]
+        else:
+            return self._resolution[channels]
+
+    def hist_bins(self, channels=None, nbins=None, scale='logicle', **kwargs):
         """
         Get histogram bin edges for the specified channel(s).
 
-        This is a convenient set of histogram bin edges, such that each
-        element of the domain is in the center of one bin. More precisely,
-        bin edges are inferred from the $PnR parameter, as
-        ``np.arange($PnR + 1) - 0.5``. These bin edges should be
-        transformed along with the data when passed through a
-        transformation function.
+        These cover the range specified in ``FCSData.range(channels)`` with
+        a number of bins `nbins`, with linear, logarithmic, or logicle
+        spacing.
 
         Parameters
         ----------
         channels : int, str, list of int, list of str
-            Channel(s) for which to get the bin edges. If None, return a
-            list with bin edges for all channels, in the order of the
-            `channels` attribute.
+            Channel(s) for which to generate histogram bins. If None,
+            return a list with bins for all channels, in the order of
+            ``FCSData.channels``.
+        nbins : int or list of ints, optional
+            The number of bins to calculate. If `channels` specifies a list
+            of channels, `nbins` should be a list of integers. If `nbins`
+            is None, use ``FCSData.resolution(channel)``.
+        scale : str, optional
+            Scale in which to generate bins. Can be either ``linear``,
+            ``log``, or ``logicle``.
+        kwargs : optional
+            Keyword arguments specific to the selected bin scaling. Linear
+            and logarithmic scaling do not use additional arguments.
+            For logicle scaling, the following parameters can be provided:
+
+            T : float, optional
+                Maximum range of data. If not provided, use ``range[1]``.
+            M : float, optional
+                (Asymptotic) number of decades in scaled units. If not
+                provided, calculate from the following::
+
+                    max(4.5, 4.5 / np.log10(262144) * np.log10(T))
+
+            W : float, optional
+                Width of linear range in scaled units. If not provided,
+                calculate using the following relationship::
+
+                    W = (M - log10(T / abs(r))) / 2
+
+                Where ``r`` is the minimum negative event. If no negative
+                events are present, W is set to zero.
 
         Return
         ------
         array or list of arrays
-            Bin edges for the specified channel(s).
+            Histogram bin edges for the specified channel(s).
+
+        Notes
+        -----
+        If ``range[0]`` is equal or less than zero and `scale` is  ``log``,
+        the lower limit of the range is replaced with one.
+
+        Logicle scaling uses the LogicleTransform class in the plot module.
+
+        References
+        ----------
+        .. [1] D.R. Parks, M. Roederer, W.A. Moore, "A New Logicle Display
+        Method Avoids Deceptive Effects of Logarithmic Scaling for Low
+        Signals and Compensated Data," Cytometry Part A 69A:541-551, 2006,
+        PMID 16604519.
 
         """
-        # Check default
+        # Default: all channels
         if channels is None:
-            channels = self._channels
+            channels = list(self._channels)
 
         # Get numerical indices of channels
         channels = self._name_to_index(channels)
 
-        # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
-            return [self._hist_bin_edges[ch] for ch in channels]
-        else:
-            return self._hist_bin_edges[channels]
+        # Convert to list if necessary
+        channel_list = channels
+        if not isinstance(channel_list, list):
+            channel_list = [channel_list]
+        if not isinstance(nbins, list):
+            nbins = [nbins]*len(channel_list)
+        if not isinstance(scale, list):
+            scale = [scale]*len(channel_list)
+
+        # Iterate
+        bins = []
+        for channel, nbins_channel, scale_channel in \
+                zip(channel_list, nbins, scale):
+            # Get channel resolution
+            res_channel = self.resolution(channel)
+            # Get default nbins
+            if nbins_channel is None:
+                nbins_channel = res_channel
+            # Get range of channel
+            range_channel = self.range(channel)
+            # Generate bins according to specified scale
+            if scale_channel == 'linear':
+                # We will now generate ``nbins`` uniformly spaced bins centered
+                # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
+                # do so, we need to generate ``nbins + 1`` uniformly spaced
+                # points.
+                delta_res = (range_channel[1] - range_channel[0]) / \
+                    (res_channel - 1)
+                bins_channel = np.linspace(range_channel[0] - delta_res/2,
+                                           range_channel[1] + delta_res/2,
+                                           nbins_channel + 1)
+
+            elif scale_channel == 'log':
+                # Check if the lower limit is equal or less than zero. If so,
+                # change the lower limit to one or some lower value, such that
+                # the range covers at least five decades.
+                if range_channel[0] <= 0:
+                    range_channel[0] = min(1., range_channel[1]/1e5)
+                # Log range
+                range_channel = [np.log10(range_channel[0]),
+                                 np.log10(range_channel[1])]
+                # We will now generate ``nbins`` uniformly spaced bins centered
+                # at ``linspace(range_channel[0], range_channel[1], nbins)``. To
+                # do so, we need to generate ``nbins + 1`` uniformly spaced
+                # points.
+                delta_res = (range_channel[1] - range_channel[0]) / \
+                    (res_channel - 1)
+                bins_channel = np.linspace(range_channel[0] - delta_res/2,
+                                           range_channel[1] + delta_res/2,
+                                           nbins_channel + 1)
+                # Exponentiate bins
+                bins_channel = 10**(bins_channel)
+
+            elif scale_channel == 'logicle':
+                # Create transform class
+                # Use the LogicleTransform class from the plot module
+                t = FlowCal.plot._LogicleTransform(data=self,
+                                                   channel=channel,
+                                                   **kwargs)
+                # We now generate ``nbins`` uniformly spaced bins centered at
+                # ``linspace(0, M, nbins)``. To do so, we need to generate
+                # ``nbins + 1`` uniformly spaced points.
+                delta_res = float(t.M) / (res_channel - 1)
+                s = np.linspace(- delta_res/2.,
+                                t.M + delta_res/2.,
+                                nbins_channel + 1)
+                # Finally, apply the logicle transformation to generate bins
+                bins_channel = t.transform_non_affine(s)
+
+            else:
+                # Scale not supported
+                raise ValueError('scale "{}" not supported'.format(
+                    scale_channel))
+            # Accumulate
+            bins.append(bins_channel)
+
+        # Extract from list if channels was not a list
+        if not isinstance(channels, list):
+            bins = bins[0]
+
+        return bins
 
     ###
     # Functions overriding inherited np.ndarray functions
@@ -1194,6 +1438,9 @@ class FCSData(np.ndarray):
             time_step = float(fcs_file.text['TIMETICKS'])/1000.
         else:
             time_step = None
+
+        # Data type
+        data_type = fcs_file.text.get('$DATATYPE')
 
         # Extract the acquisition date.
         acquisition_date = cls._parse_date_string(fcs_file.text.get('$DATE'))
@@ -1253,21 +1500,16 @@ class FCSData(np.ndarray):
             amplification_type.append(ati)
         amplification_type = tuple(amplification_type)
 
-        # Domain and hist_bin_edges: These are extracted from the requried $PnR
-        # keyword parameter, and are assumed to be np.arange($PnR) and 
-        # np.arange($PnR + 1) - 0.5, respectively.
-        r = []
+        # range and resolution: These are extracted from the required $PnR
+        # keyword parameter. `range` is assumed to be [0, $PnR-1]. `resolution`
+        # is always equal to $PnR.
+        data_range = []
+        resolution = []
         for ch_idx, ch in enumerate(channels):
-            if ch.lower() == 'time':
-                r.append(None)
-            else:
-                r.append(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
-        domain = [np.arange(float(ri))
-                  if ri is not None else None
-                  for ri in r]
-        hist_bin_edges = [np.arange(float(ri) + 1) - 0.5
-                          if ri is not None else None
-                          for ri in r]
+            PnR = float(fcs_file.text.get('$P{}R'.format(ch_idx + 1)))
+            data_range.append([0., PnR - 1])
+            resolution.append(int(PnR))
+        resolution = tuple(resolution)
 
         # Detector voltage: Stored in the keyword parameter $PnV for channel n.
         # The CellQuest Pro software saves the detector voltage in keyword
@@ -1302,6 +1544,7 @@ class FCSData(np.ndarray):
         obj._analysis = fcs_file.analysis
 
         # Add channel-independent attributes
+        obj._data_type = data_type
         obj._time_step = time_step
         obj._acquisition_start_time = acquisition_start_time
         obj._acquisition_end_time = acquisition_end_time
@@ -1311,8 +1554,8 @@ class FCSData(np.ndarray):
         obj._amplification_type = amplification_type
         obj._detector_voltage = detector_voltage
         obj._amplifier_gain = amplifier_gain
-        obj._domain = domain
-        obj._hist_bin_edges = hist_bin_edges
+        obj._range = data_range
+        obj._resolution = resolution
 
         return obj
 
@@ -1333,6 +1576,8 @@ class FCSData(np.ndarray):
             self._analysis = copy.deepcopy(obj._analysis)
 
         # Channel-independent attributes
+        if hasattr(obj, '_data_type'):
+            self._data_type = copy.deepcopy(obj._data_type)
         if hasattr(obj, '_time_step'):
             self._time_step = copy.deepcopy(obj._time_step)
         if hasattr(obj, '_acquisition_start_time'):
@@ -1351,10 +1596,10 @@ class FCSData(np.ndarray):
             self._detector_voltage = copy.deepcopy(obj._detector_voltage)
         if hasattr(obj, '_amplifier_gain'):
             self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
-        if hasattr(obj, '_domain'):
-            self._domain = copy.deepcopy(obj._domain)
-        if hasattr(obj, '_hist_bin_edges'):
-            self._hist_bin_edges = copy.deepcopy(obj._hist_bin_edges)
+        if hasattr(obj, '_range'):
+            self._range = copy.deepcopy(obj._range)
+        if hasattr(obj, '_resolution'):
+            self._resolution = copy.deepcopy(obj._resolution)
 
     # Helper functions
     @staticmethod
@@ -1399,12 +1644,20 @@ class FCSData(np.ndarray):
             else:
                 # 'hh:mm:ss' format
                 time_str = time_str + ':0'
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         elif len(time_l) == 4:
             # 'hh:mm:ss:tt' format
             time_l[3] = '{:06d}'.format(int(float(time_l[3])*1e6/60))
             time_str = ':'.join(time_l)
-            t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            # Attempt to parse string, return None if not possible
+            try:
+                t = datetime.datetime.strptime(time_str, '%H:%M:%S:%f').time()
+            except:
+                t = None
         else:
             # Unknown format
             t = None
@@ -1564,10 +1817,10 @@ class FCSData(np.ndarray):
                     [new_arr._detector_voltage[kc] for kc in key_channel])
                 new_arr._amplifier_gain = tuple(
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
-                new_arr._domain = \
-                    [new_arr._domain[kc] for kc in key_channel]
-                new_arr._hist_bin_edges = \
-                    [new_arr._hist_bin_edges[kc] for kc in key_channel]
+                new_arr._range = \
+                    [new_arr._range[kc] for kc in key_channel]
+                new_arr._resolution = tuple(\
+                    [new_arr._resolution[kc] for kc in key_channel])
             elif isinstance(key_channel, slice):
                 new_arr._channels = new_arr._channels[key_channel]
                 new_arr._amplification_type = \
@@ -1576,10 +1829,10 @@ class FCSData(np.ndarray):
                     new_arr._detector_voltage[key_channel]
                 new_arr._amplifier_gain = \
                     new_arr._amplifier_gain[key_channel]
-                new_arr._domain = \
-                    new_arr._domain[key_channel]
-                new_arr._hist_bin_edges = \
-                    new_arr._hist_bin_edges[key_channel]
+                new_arr._range = \
+                    new_arr._range[key_channel]
+                new_arr._resolution = \
+                    new_arr._resolution[key_channel]
             else:
                 new_arr._channels = tuple([new_arr._channels[key_channel]])
                 new_arr._amplification_type = \
@@ -1588,10 +1841,10 @@ class FCSData(np.ndarray):
                     tuple([new_arr._detector_voltage[key_channel]])
                 new_arr._amplifier_gain = \
                     tuple([new_arr._amplifier_gain[key_channel]])
-                new_arr._domain = \
-                    [new_arr._domain[key_channel]]
-                new_arr._hist_bin_edges = \
-                    [new_arr._hist_bin_edges[key_channel]]
+                new_arr._range = \
+                    [new_arr._range[key_channel]]
+                new_arr._resolution = \
+                    tuple([new_arr._resolution[key_channel]])
 
         elif isinstance(key, tuple) and len(key) == 2 \
             and (key[0] is None or key[1] is None):

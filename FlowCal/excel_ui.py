@@ -1,12 +1,71 @@
 """
-`FlowCal`'s Microsoft Excel User Interface.
+``FlowCal``'s Microsoft Excel User Interface.
 
 This module contains functions to read, gate, and transform data from a set
-of FCS files, according to an input Microsoft Excel file. This file should
-contain the following tables:
-    - "Instruments" table (TODO: describe fields of the table)
-    - "Beads" table (TODO: describe fields of the table)
-    - "Samples" table (TODO: describe fields of the table)
+of FCS files, as specified by an input Microsoft Excel file. This file
+should contain the following tables:
+    - **Instruments**: Describes the instruments used to acquire the
+      samples listed in the other tables. Each instrument is specified by a
+      row containing at least the following fields:
+
+      - **ID**: Short string identifying the instrument. Will be referenced
+        by samples in the other tables.
+      - **Forward Scatter Channel**: Name of the forward scatter channel,
+        as specified by the ``$PnN`` keyword in the associated FCS files.
+      - **Side Scatter Channel**: Name of the side scatter channel, as
+        specified by the ``$PnN`` keyword in the associated FCS files.
+      - **Fluorescence Channels**: Name of the fluorescence channels in a
+        comma-separated list, as specified by the ``$PnN`` keyword in the
+        associated FCS files.
+      - **Time Channel**: Name of the time channel, as specified by the
+        ``$PnN`` keyword in the associated FCS files.
+
+    - **Beads**: Describes the calibration beads samples that will be used
+      to calibrate cell samples in the **Samples** table. The following
+      information should be available for each beads sample:
+
+      - **ID**: Short string identifying the beads sample. Will be
+        referenced by cell samples in the **Samples** table.
+      - **Instrument ID**: ID of the instrument used to acquire the sample.
+        Must match one of the rows in the **Instruments** table.
+      - **File Path**: Path of the FCS file containing the sample's data.
+      - **<Fluorescence Channel Name> MEF Values**: The fluorescence in MEF
+        of each bead subpopulation, as given by the manufacturer, as a
+        comma-separated list of numbers. Any element of this list can be
+        replaced with the word ``None``, in which case the corresponding
+        subpopulation will not be used when fitting the beads fluorescence
+        model. Note that the number of elements in this list (including
+        the elements equal to ``None``) are the number of subpopulations
+        that ``FlowCal`` will try to find.
+      - **Gate fraction**: The fraction of events to keep from the sample
+        after density-gating in the forward/side scatter channels.
+      - **Clustering Channels**: The fluorescence channels used to identify
+        the different bead subpopulations.
+
+    - **Samples**: Describes the biological samples to be processed. The
+      following information should be available for each sample:
+
+      - **ID**: Short string identifying the sample. Will be used as part
+        of the plot's filenames and in the **Histograms** table in the
+        output Excel file.
+      - **Instrument ID**: ID of the instrument used to acquire the sample.
+        Must match one of the rows in the **Instruments** table.
+      - **Beads ID**: ID of the beads sample used to convert data to
+        calibrated MEF.
+      - **File Path**: Path of the FCS file containing the sample's data.
+      - **<Fluorescence Channel Name> Units**: Units to which the event
+        list in the specified fluorescence channel should be converted, and
+        all the subsequent plots and statistics should be reported. Should
+        be one of the following: "Channel" (raw units), "a.u." or "RFI"
+        (arbitrary units) or "MEF" (calibrated Molecules of Equivalent
+        Fluorophore). If "MEF" is specified, the **Beads ID** should be
+        populated, and should correspond to a beads sample with the
+        **MEF Values** specified for the same channel.
+      - **Gate fraction**: The fraction of events to keep from the sample
+        after density-gating in the forward/side scatter channels.
+
+Any columns other than the ones specified above can be present, but will be
+ignored by ``FlowCal``.
 
 """
 
@@ -19,6 +78,7 @@ import subprocess
 import time
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+import warnings
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -88,25 +148,35 @@ def read_table(filename, sheetname, index_col=None):
 
     return table
 
-def write_workbook(filename, table_list):
+def write_workbook(filename, table_list, column_width=None):
     """
     Write an Excel workbook from a list of tables.
 
     Parameters
     ----------
-    filename: str
+    filename : str
         Name of the Excel file to write.
-    table_list: list of ``(str, DataFrame)`` tuples
+    table_list : list of ``(str, DataFrame)`` tuples
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
+    column_width: int, optional
+        The column width to use when saving the spreadsheet. If None,
+        calculate width automatically from the maximum number of characters
+        in each column.
 
     """
     # Modify default header format
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
-    old_header_style = pd.core.format.header_style
-    pd.core.format.header_style = {"font": {"bold": True}}
+    # The format module is in pd.core.format in pandas<=0.18.0,
+    # pd.formats.format in pandas>=0.18.1.
+    try:
+        format_module = pd.core.format
+    except AttributeError as e:
+        format_module = pd.formats.format
+    old_header_style = format_module.header_style
+    format_module.header_style = {"font": {"bold": True}}
 
     # Generate output writer object
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -118,28 +188,43 @@ def write_workbook(filename, table_list):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        writer.sheets[sheet_name].set_column(0, len(df.columns) - 1, width=15)
+        if column_width is None:
+            for i, (col_name, column) in enumerate(df.iteritems()):
+                # Get the maximum number of characters in a column
+                max_chars_col = column.astype(str).str.len().max()
+                max_chars_col = max(len(col_name), max_chars_col)
+                # Write width
+                writer.sheets[sheet_name].set_column(
+                    i,
+                    i,
+                    width=1.*max_chars_col)
+        else:
+            writer.sheets[sheet_name].set_column(
+                0,
+                len(df.columns) - 1,
+                width=column_width)
 
     # Write excel file
     writer.save()
 
     # Restore previous header format
-    pd.core.format.header_style = old_header_style
+    format_module.header_style = old_header_style
 
 def process_beads_table(beads_table,
                         instruments_table,
-                        base_dir="",
+                        base_dir=".",
                         verbose=False,
                         plot=False,
-                        plot_dir="",
+                        plot_dir=".",
                         full_output=False):
     """
-    Load and process FCS files corresponding to beads.
+    Process calibration bead samples, as specified by an input table.
 
     This function processes the entries in `beads_table`. For each row, the
     function does the following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter and fluorescence
+          channels to RFI
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
@@ -166,7 +251,7 @@ def process_beads_table(beads_table,
         required in this table, please consult the module's documentation.
     base_dir : str, optional
         Directory from where all the other paths are specified.
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
@@ -263,8 +348,9 @@ def process_beads_table(beads_table,
             ###
             if verbose:
                 print("Performing data transformation...")
-            # Transform FSC/SSC to linear scale
-            beads_sample = FlowCal.transform.to_rfi(beads_sample, sc_channels)
+            # Transform FSC/SSC and fluorescence channels to linear scale
+            beads_sample = FlowCal.transform.to_rfi(beads_sample,
+                                                    sc_channels + fl_channels)
 
             # Parse clustering channels data
             cluster_channels = beads_row['Clustering Channels'].split(',')
@@ -280,37 +366,60 @@ def process_beads_table(beads_table,
             beads_sample_gated = FlowCal.gate.start_end(beads_sample,
                                                         num_start=250,
                                                         num_end=100)
-            # Remove saturating events in forward/side scatter. The value of a
-            # saturating event is taken automatically from
-            # `beads_sample_gated.domain`.
-            beads_sample_gated = FlowCal.gate.high_low(beads_sample_gated,
-                                                       channels=sc_channels)
+            # Remove saturating events in forward/side scatter, if the FCS data
+            # type is integer. The value of a saturating event is taken
+            # automatically from `beads_sample_gated.range`.
+            if beads_sample_gated.data_type == 'I':
+                beads_sample_gated = FlowCal.gate.high_low(
+                    beads_sample_gated,
+                    channels=sc_channels)
             # Density gating
             beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=beads_sample_gated,
                 channels=sc_channels,
                 gate_fraction=beads_row['Gate Fraction'],
+                xscale='logicle',
+                yscale='logicle',
+                sigma=5.,
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xlog'] = bool(
-                    beads_sample_gated.amplification_type(sc_channels[0])[0])
-                density_params['ylog'] = bool(
-                    beads_sample_gated.amplification_type(sc_channels[1])[0])
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     beads_id,
                     beads_sample_gated.shape[0] * 100. / beads_sample.shape[0])
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
+                # Beads have a tight distribution, so axis limits will be set
+                # from 0.75 decades below the 5th percentile to 0.75 decades
+                # above the 95th percentile.
+                density_params['xlim'] = \
+                    (np.percentile(beads_sample_gated[:, sc_channels[0]],
+                                   5) / (10**0.75),
+                     np.percentile(beads_sample_gated[:, sc_channels[0]],
+                                   95) * (10**0.75),
+                     )
+                density_params['ylim'] = \
+                    (np.percentile(beads_sample_gated[:, sc_channels[1]],
+                                   5) / (10**0.75),
+                     np.percentile(beads_sample_gated[:, sc_channels[1]],
+                                   95) * (10**0.75),
+                     )
+                # Beads have a tight distribution, so less smoothing should be
+                # applied for visualization
+                density_params['sigma'] = 5.
+                # Histogram plot parameters
+                hist_params = {'xscale': 'logicle'}
                 # Plot
                 figname = os.path.join(base_dir,
                                        plot_dir,
                                        "density_hist_{}.png".format(beads_id))
-                plt.figure(figsize = (6,4))
+                plt.figure(figsize=(6,4))
                 FlowCal.plot.density_and_hist(
                     beads_sample,
                     beads_sample_gated,
@@ -318,7 +427,7 @@ def process_beads_table(beads_table,
                     hist_channels=cluster_channels,
                     gate_contour=gate_contour,
                     density_params=density_params,
-                    hist_params={'div': 4},
+                    hist_params=hist_params,
                     savefig=figname)
 
             ###
@@ -408,24 +517,24 @@ def process_samples_table(samples_table,
                           instruments_table,
                           mef_transform_fxns=None,
                           beads_table=None,
-                          base_dir="",
+                          base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir=""):
+                          plot_dir="."):
     """
-    Load and process FCS files corresponding to samples.
+    Process flow cytometry samples, as specified by an input table.
 
     The function processes each entry in `samples_table`, and does the
     following:
         - Load the FCS file specified in the field "File Path".
-        - Transform the forward scatter/side scatter channels if needed.
+        - Transform the forward scatter/side scatter to RFI.
+        - Transform the fluorescence channels to the units specified in the
+          column "<Channel name> Units".
         - Remove the 250 first and 100 last events.
         - Remove saturated events in the forward scatter and side scatter
           channels.
         - Apply density gating on the forward scatter/side scatter
           channels.
-        - Transform the fluorescence channels to the units specified in the
-          column "<Channel name> Units".
         - Plot combined forward/side scatter density plots and fluorescence
           historgrams, if `plot` = True.
     
@@ -457,7 +566,7 @@ def process_samples_table(samples_table,
         checking will be performed.
     base_dir : str, optional
         Directory from where all the other paths are specified.
-    verbose: bool, optional
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
@@ -607,7 +716,9 @@ def process_samples_table(samples_table,
                             # Detector voltage
                             beads_dv = beads_row['{} Detector Volt.'. \
                                 format(fl_channel)]
-                            if beads_dv != sample.detector_voltage(fl_channel):
+                            if sample.detector_voltage(fl_channel) is not None \
+                                    and beads_dv != sample.detector_voltage(
+                                        fl_channel):
                                 raise ExcelUIException("Detector voltage for "
                                     "acquisition of beads and samples in "
                                     "channel {} are not the same (beads {}'s "
@@ -618,7 +729,9 @@ def process_samples_table(samples_table,
                                         beads_dv,
                                         sample.detector_voltage(fl_channel)))
 
-                        # Attempt to transform
+                        # First, transform to RFI
+                        sample = FlowCal.transform.to_rfi(sample, fl_channel)
+                        # Attempt to transform to MEF
                         # Transformation function raises a ValueError if a
                         # standard curve does not exist for a channel
                         try:
@@ -647,39 +760,44 @@ def process_samples_table(samples_table,
                                                   num_start=250,
                                                   num_end=100)
             # Remove saturating events in forward/side scatter, and fluorescent
-            # channels to report. The value of a saturating event is taken
-            # automatically from `sample_gated.domain`.
-            sample_gated = FlowCal.gate.high_low(sample_gated,
-                                                 sc_channels + report_channels)
+            # channels to report, if the FCS data type is integer. The value of
+            # a saturating event is taken automatically from
+            # `sample_gated.range`.
+            if sample_gated.data_type == 'I':
+                sample_gated = FlowCal.gate.high_low(
+                    sample_gated,
+                    sc_channels + report_channels)
             # Density gating
             sample_gated, __, gate_contour = FlowCal.gate.density2d(
                 data=sample_gated,
                 channels=sc_channels,
                 gate_fraction=sample_row['Gate Fraction'],
+                xscale='logicle',
+                yscale='logicle',
                 full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
                 if verbose:
                     print("Plotting density plot and histogram...")
-                # Define density plot parameters
+                # Density plot parameters
                 density_params = {}
                 density_params['mode'] = 'scatter'
-                density_params['xlog'] = bool(
-                    sample_gated.amplification_type(sc_channels[0])[0])
-                density_params['ylog'] = bool(
-                    sample_gated.amplification_type(sc_channels[1])[0])
                 density_params["title"] = "{} ({:.1f}% retained)".format(
                     sample_id,
                     sample_gated.shape[0] * 100. / sample.shape[0])
-                # Define histogram plot parameters
+                density_params['xscale'] = 'logicle'
+                density_params['yscale'] = 'logicle'
+                # Histogram plot parameters
                 hist_params = []
                 for rc, ru in zip(report_channels, report_units):
                     param = {}
-                    param['div'] = 4
                     param['xlabel'] = '{} ({})'.format(rc, ru)
-                    param['log'] = (ru != 'Channel Number') and \
-                        bool(sample_gated.amplification_type(rc)[0])
+                    # Only channel numbers are plotted in linear scale
+                    if (ru == 'Channel Number'):
+                        param['xscale'] = 'linear'
+                    else:
+                        param['xscale'] = 'logicle'
                     hist_params.append(param)
                     
                 # Plot
@@ -714,12 +832,14 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     Add stats fields to beads table.
 
     The following information is added to each row:
+
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
 
     The following information is added for each row, for each channel in
     which MEF values have been specified:
+
         - Detector voltage (gain)
         - Amplification type
         - Bead model fitted parameters
@@ -732,14 +852,14 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         module's documentation.
     beads_samples : list
         FCSData objects from which to calculate statistics.
-        ``beads_samples[i]`` should correspond to
-        ``beads_table.values()[i]``.
+        ``beads_samples[i]`` should correspond to ``beads_table.iloc[i]``.
     mef_outputs : list, optional
         A list with the intermediate results of the generation of the MEF
         transformation functions, as given by ``mef.get_transform_fxn()``.
-        This is used to populate the field ``<channel> Bead Model Params``.
-        If specified, ``mef_outputs[i]`` should correspond to
-        ``beads_table.values()[i]``.
+        This is used to populate the fields ``<channel> Beads Model``,
+        ``<channel> Beads Params. Names``, and
+        ``<channel> Beads Params. Values``. If specified,
+        ``mef_outputs[i]`` should correspond to ``beads_table.iloc[i]``.
 
     """
     # Add per-row info
@@ -839,20 +959,24 @@ def add_samples_stats(samples_table, samples):
     Add stats fields to samples table.
 
     The following information is added to each row:
+
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
     
     The following information is added for each row, for each channel in
     which fluorescence units have been specified:
+
         - Detector voltage (gain)
         - Amplification type
         - Mean
         - Geometric Mean
-        - Media
+        - Median
         - Mode
         - Standard Deviation
         - Coefficient of Variation (CV)
+        - Geometric Standard Deviation
+        - Geometric Coefficient of Variation
         - Inter-Quartile Range
         - Robust Coefficient of Variation (RCV)
 
@@ -864,7 +988,15 @@ def add_samples_stats(samples_table, samples):
         documentation.
     samples : list
         FCSData objects from which to calculate statistics. ``samples[i]``
-        should correspond to ``samples_table.values()[i]``
+        should correspond to ``samples_table.iloc[i]``.
+
+    Notes
+    -----
+    Geometric statistics (geometric mean, standard deviation, and geometric
+    coefficient of variation) are defined only for positive data. If there
+    are negative events in any relevant channel of any member of `samples`,
+    geometric statistics will only be calculated on the positive events,
+    and a warning message will be written to the "Analysis Notes" field.
 
     """
     # Add per-row info
@@ -932,9 +1064,6 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' Mean',
                                         FlowCal.stats.mean(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Mean',
-                                        FlowCal.stats.gmean(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' Median',
                                         FlowCal.stats.median(sample, channel))
                 samples_table.set_value(row_id,
@@ -947,19 +1076,45 @@ def add_samples_stats(samples_table, samples):
                                         channel + ' CV',
                                         FlowCal.stats.cv(sample, channel))
                 samples_table.set_value(row_id,
-                                        channel + ' Geom. Std',
-                                        FlowCal.stats.gstd(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Geom. CV',
-                                        FlowCal.stats.gcv(sample, channel))
-                samples_table.set_value(row_id,
                                         channel + ' IQR',
                                         FlowCal.stats.iqr(sample, channel))
                 samples_table.set_value(row_id,
                                         channel + ' RCV',
                                         FlowCal.stats.rcv(sample, channel))
 
-def generate_histograms_table(samples_table, samples):
+                # For geometric statistics, first check for non-positive events.
+                # If found, throw a warning and calculate statistics on positive
+                # events only.
+                if np.any(sample[:, channel] <= 0):
+                    # Separate positive events
+                    sample_positive = sample[sample[:, channel] > 0]
+                    # Throw warning
+                    msg = "Geometric statistics for channel" + \
+                        " {} calculated on positive events".format(channel) + \
+                        " only ({:.1f}%). ".format(
+                            100.*sample_positive.shape[0]/sample.shape[0])
+                    warnings.warn("On sample {}: {}".format(row_id, msg))
+                    # Write warning message to table
+                    if samples_table.loc[row_id, 'Analysis Notes']:
+                        msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
+                    samples_table.set_value(row_id, 'Analysis Notes', msg)
+                else:
+                    sample_positive = sample
+                # Calculate and write geometric statistics
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Mean',
+                    FlowCal.stats.gmean(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. Std',
+                    FlowCal.stats.gstd(sample_positive, channel))
+                samples_table.set_value(
+                    row_id,
+                    channel + ' Geom. CV',
+                    FlowCal.stats.gcv(sample_positive, channel))
+
+def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
     Generate a table of histograms as a DataFrame.
 
@@ -972,10 +1127,12 @@ def generate_histograms_table(samples_table, samples):
     samples : list
         FCSData objects from which to calculate histograms. ``samples[i]``
         should correspond to ``samples_table.iloc[i]``
+    max_bins : int, optional
+        Maximum number of bins to use.
     
     Returns
     -------
-    hist_table: DataFrame
+    hist_table : DataFrame
         A multi-indexed DataFrame. Rows cotain the histogram bins and
         counts for every sample and channel specified in samples_table.
         `hist_table` is indexed by the sample's ID, the channel name,
@@ -997,9 +1154,11 @@ def generate_histograms_table(samples_table, samples):
             continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
-                bins = sample.domain(channel)
-                if n_columns < len(bins):
-                    n_columns = len(bins)
+                if n_columns < sample.resolution(channel):
+                    n_columns = sample.resolution(channel)
+    # Saturate at max_bins
+    if n_columns > max_bins:
+        n_columns = max_bins
 
     # Declare multi-indexed DataFrame
     index = pd.MultiIndex.from_arrays([[],[],[]],
@@ -1015,17 +1174,30 @@ def generate_histograms_table(samples_table, samples):
             if pd.notnull(samples_table[header][sample_id]):
                 # Get units in which bins are being reported
                 unit = samples_table[header][sample_id]
-                # Store bins
-                bins = sample.domain(channel)
+                # Decide which scale to use
+                # Channel units result in linear scale. Otherwise, use logicle.
+                if unit == 'Channel':
+                    scale = 'linear'
+                else:
+                    scale = 'logicle'
+                # Define number of bins
+                nbins = min(sample.resolution(channel), max_bins)
+                # Calculate bin edges and centers
+                # We generate twice the necessary number of bins. We then take
+                # every other value as the proper bin edges, and the remaining
+                # values as the bin centers.
+                bins_extended = sample.hist_bins(channel, 2*nbins, scale)
+                bin_edges = bins_extended[::2]
+                bin_centers = bins_extended[1::2]
+                # Store bin centers
                 hist_table.loc[(sample_id,
                                 channel,
-                                'Bin Values ({})'.format(unit)),
-                               columns[0:len(bins)]] = bins
+                                'Bin Centers ({})'.format(unit)),
+                                columns[0:len(bin_centers)]] = bin_centers
                 # Calculate and store histogram counts
-                bin_edges = sample.hist_bin_edges(channel)
                 hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
                 hist_table.loc[(sample_id, channel, 'Counts'),
-                               columns[0:len(bins)]] = hist
+                               columns[0:len(bin_centers)]] = hist
 
     return hist_table
 
@@ -1040,7 +1212,7 @@ def generate_about_table(extra_info={}):
 
     Returns
     -------
-    about_table: DataFrame
+    about_table : DataFrame
         Table with information about FlowCal and the current analysis, as
         keyword:value pairs. The following keywords are included: FlowCal
         version, and date and time of analysis. Keywords and values from
@@ -1085,7 +1257,7 @@ def show_open_file_dialog(filetypes):
 
     Returns
     -------
-    filename: str
+    filename : str
         The path of the filename selected, or an empty string if no file
         was chosen.
 
@@ -1110,19 +1282,30 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     """
     Run the MS Excel User Interface.
 
-    This function shows a dialog to open an input Excel workbook, loads FCS
-    files and processes them as specified in the spreadsheet, and
-    generates plots and an output workbook with statistics for each sample.
+    This function performs the following:
+
+     1. If `input_path` is not specified, show a dialog to choose an input
+        Excel file.
+     2. Extract data from the Instruments, Beads, and Samples tables.
+     3. Process all the bead samples specified in the Beads table.
+     4. Generate statistics for each bead sample.
+     5. Process all the cell samples in the Samples table.
+     6. Generate statistics for each sample.
+     7. Generate a histogram table for each fluorescent channel specified
+        for each sample.
+     8. Generate a table with run time, date, FlowCal version, among
+        others.
+     9. Save statistics and histograms in an output Excel file.
 
     Parameters
     ----------
-    input_path: str
+    input_path : str
         Path to the Excel file to use as input. If None, show a dialog to
         select an input file.
-    output_path: str
+    output_path : str
         Path to which to save the output Excel file. If None, use
-        "`input_path`_output".
-    verbose: bool, optional
+        "<input_path>_output".
+    verbose : bool, optional
         Whether to print information messages during the execution of this
         function.
     plot : bool, optional
