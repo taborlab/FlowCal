@@ -54,7 +54,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'FlowCal'
-copyright = u'2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor'
+copyright = u'2015, S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, ' +\
+  'O. Igoshin, J. Tabor'
 author = u'S. Castillo-Hair, J. Sexton, B. Landry, E. Olson, J. Tabor'
 
 # The version info for the project you're documenting, acts as replacement for

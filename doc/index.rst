@@ -18,6 +18,13 @@ Most importantly, ``FlowCal`` automatically processes calibration beads data in 
 
 Finally, ``FlowCal`` includes a user-fiendly Excel User Interface to perform all of these operations automatically, without the need to write any code.
 
+Cite FlowCal
+============
+
+If you use ``FlowCal`` in your research, we would appreciate citations to the following article:
+
+   Castillo-Hair S.M., Sexton J.T., *et al*. `FlowCal: A User-Friendly, Open Source Software Tool for Automatically Converting Flow Cytometry Data from Arbitrary to Calibrated Units. <http://pubs.acs.org/doi/abs/10.1021/acssynbio.5b00284>`_. ACS Synth. Biol. 2016.
+
 
 Table of Contents
 =================
