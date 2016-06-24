@@ -212,10 +212,10 @@ def write_workbook(filename, table_list, column_width=None):
 
 def process_beads_table(beads_table,
                         instruments_table,
-                        base_dir="",
+                        base_dir=".",
                         verbose=False,
                         plot=False,
-                        plot_dir="",
+                        plot_dir=".",
                         full_output=False):
     """
     Process calibration bead samples, as specified by an input table.
@@ -517,10 +517,10 @@ def process_samples_table(samples_table,
                           instruments_table,
                           mef_transform_fxns=None,
                           beads_table=None,
-                          base_dir="",
+                          base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir=""):
+                          plot_dir="."):
     """
     Process flow cytometry samples, as specified by an input table.
 
