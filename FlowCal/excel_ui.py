@@ -169,8 +169,14 @@ def write_workbook(filename, table_list, column_width=None):
     # Modify default header format
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
-    old_header_style = pd.core.format.header_style
-    pd.core.format.header_style = {"font": {"bold": True}}
+    # The format module is in pd.core.format in pandas<=0.18.0,
+    # pd.formats.format in pandas>=0.18.1.
+    try:
+        format_module = pd.core.format
+    except AttributeError as e:
+        format_module = pd.formats.format
+    old_header_style = format_module.header_style
+    format_module.header_style = {"font": {"bold": True}}
 
     # Generate output writer object
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -202,7 +208,7 @@ def write_workbook(filename, table_list, column_width=None):
     writer.save()
 
     # Restore previous header format
-    pd.core.format.header_style = old_header_style
+    format_module.header_style = old_header_style
 
 def process_beads_table(beads_table,
                         instruments_table,
