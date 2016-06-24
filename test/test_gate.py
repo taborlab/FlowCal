@@ -511,7 +511,9 @@ class TestDensity2dGate1(unittest.TestCase):
     def test_density2d(self):
         gated_data = FlowCal.gate.density2d(self.ungated_data,
                                             channels = ['FSC', 'SSC'],
-                                            gate_fraction = 0.3)
+                                            gate_fraction = 0.3,
+                                            xscale='linear',
+                                            yscale='linear')
         np.testing.assert_array_equal(gated_data, self.gated_data)
 
 class TestDensity2dGate2(unittest.TestCase):
