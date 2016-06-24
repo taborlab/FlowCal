@@ -3,20 +3,20 @@ Reading Flow Cytometry Data
 
 This tutorial focuses on how to open FCS files and manipulate the data therein using ``FlowCal``.
 
-To start, navigate to the ``examples/FCFiles`` directory included with FlowCal, and open a ``python`` session therein. Then, import ``FlowCal`` as with any other python module.
+To start, navigate to the ``examples`` directory included with FlowCal, and open a ``python`` session therein. Then, import ``FlowCal`` as with any other python module.
 
 >>> import FlowCal
 
 FCS files are standard files in which flow cytometry data is stored. Normally, one FCS file corresponds to one sample.
 
-The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The following instruction opens the file ``data_001.fcs``, loads the information into an ``FCSData`` object, and assigns it to a variable ``s``.
+The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The following instruction opens the file ``Data001.fcs`` from the ``FCFiles`` folder, loads the information into an ``FCSData`` object, and assigns it to a variable ``s``.
 
->>> s = FlowCal.io.FCSData('data_001.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/Data001.fcs')
 
 An ``FCSData`` object is a 2D ``numpy`` array with a few additional features. The first dimension indexes the event number, and the second dimension indexes the flow cytometry channel (or "parameter", as called by the FCS standard). We can see the number of events and channels using the standard ``numpy``'s ``shape`` property:
 
 >>> print s.shape
-(15319, 8)
+(30000, 8)
 
 As with any ``numpy`` array, we can slice an ``FCSData`` object. For example, let's obtain the first 100 events.
 
@@ -28,12 +28,12 @@ Note that the product of slicing an FCSData object is also an FCSData object. We
 
 >>> s_sub_ch = s[:, [3, 4, 5]]
 >>> print s_sub_ch.shape
-(15319, 3)
+(30000, 3)
 
 However, it is not immediately obvious what channels we are getting. Fortunately, the ``FCSData`` object contains some additional information about the acquisition settings. In particular, we can check the name of the channels with the ``channels`` property.
 
 >>> print s.channels
-('TIME', 'FSC', 'SSC', 'FL1', 'FL2', 'FL3', 'SSCW', 'SSCA')
+('TIME', 'FSC', 'SSC', 'FL1', 'FL2', 'FL3', 'FL1W', 'FL1A')
 >>> print s_sub_ch.channels
 ('FL1', 'FL2', 'FL3')
 
