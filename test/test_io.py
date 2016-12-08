@@ -350,7 +350,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         - Data001.fcs: [None, None, None, None, None, None]
         - Data002.fcs: [None, None, None, None, None, None, None, None,
                         None]
-        - Data003.fcs: [None, None, None, None, None, None, None, None]
+        - Data003.fcs: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         - Data004.fcs: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                         1.0, 1.0, 1.0, 0.01]
 
@@ -368,7 +368,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         self.assertEqual(self.d[1].amplifier_gain(),
                          [None, None, None, None, None, None, None, None, None])
         self.assertEqual(self.d[2].amplifier_gain(),
-                         [None, None, None, None, None, None, None, None])
+                         [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
         self.assertEqual(self.d[3].amplifier_gain(),
                          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                           1.0, 1.0, 0.01])
@@ -380,7 +380,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         """
         self.assertEqual(self.d[0].amplifier_gain('FSC-H'), None)
         self.assertEqual(self.d[1].amplifier_gain('FITC-A'), None)
-        self.assertEqual(self.d[2].amplifier_gain('SSC'), None)
+        self.assertEqual(self.d[2].amplifier_gain('SSC'), 1.0)
         self.assertEqual(self.d[3].amplifier_gain('GFP-A'), 1.0)
 
     def test_attribute_many(self):
@@ -399,7 +399,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         self.assertEqual(self.d[2].amplifier_gain(['FSC',
                                                    'SSC',
                                                    'FL1']),
-                         [None, None, None])
+                         [1.0, 1.0, 1.0])
         self.assertEqual(self.d[3].amplifier_gain(['FSC PMT-A',
                                                    'FSC PMT-H',
                                                    'FSC PMT-W']),
@@ -412,7 +412,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         """
         self.assertEqual(self.d[0][:, 'FSC-H'].amplifier_gain(), [None])
         self.assertEqual(self.d[1][:, 'FITC-A'].amplifier_gain(), [None])
-        self.assertEqual(self.d[2][:, 'SSC'].amplifier_gain(), [None])
+        self.assertEqual(self.d[2][:, 'SSC'].amplifier_gain(), [1.0])
         self.assertEqual(self.d[3][:, 'GFP-A'].amplifier_gain(), [1.0])
 
     def test_slice_many_str(self):
@@ -431,7 +431,7 @@ class TestFCSAttributesAmplifierGain(unittest.TestCase):
         self.assertEqual(self.d[2][:, ['FSC',
                                        'SSC',
                                        'FL1']].amplifier_gain(),
-                         [None, None, None])
+                         [1.0, 1.0, 1.0])
         self.assertEqual(self.d[3][:, ['FSC PMT-A',
                                        'FSC PMT-H',
                                        'Time']].amplifier_gain(),
