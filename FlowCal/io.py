@@ -1527,16 +1527,20 @@ class FCSData(np.ndarray):
         detector_voltage = tuple(detector_voltage)
 
         # Amplifier gain: Stored in the keyword parameter $PnG for channel n.
-        # The FlowJo Collector's Edition software saves the amplifier gain in
-        # keyword parameters CytekP01G, CytekP02G, CytekP03G, ... for channels
-        # 1, 2, 3, ...
-        if 'CREATOR' in fcs_file.text and \
-                'FlowJoCollectorsEdition' in fcs_file.text.get('CREATOR'):
-            amplifier_gain = [fcs_file.text.get('CytekP{:02d}G'.format(i))
-                              for i in range(1, num_channels + 1)]
-        else:
-            amplifier_gain = [fcs_file.text.get('$P{}G'.format(i))
-                              for i in range(1, num_channels + 1)]
+        amplifier_gain = []
+        for i in range(1, num_channels + 1):
+            channel_amp_gain = fcs_file.text.get('$P{}G'.format(i))
+
+            # The FlowJo Collector's Edition version 7.5.110.7 software saves
+            # the amplifier gain in keyword parameters CytekP01G, CytekP02G,
+            # CytekP03G, ... for channels 1, 2, 3, ...
+            if channel_amp_gain is None and 'CREATOR' in fcs_file.text and \
+                    'FlowJoCollectorsEdition' in fcs_file.text.get('CREATOR'):
+                try:
+                    channel_amp_gain = fcs_file.text['CytekP{:02d}G'.format(i)]
+                except KeyError:
+                    pass
+            amplifier_gain.append(channel_amp_gain)
         amplifier_gain = [float(agi) if agi is not None else None
                           for agi in amplifier_gain]
         amplifier_gain = tuple(amplifier_gain)
