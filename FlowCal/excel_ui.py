@@ -215,7 +215,7 @@ def process_beads_table(beads_table,
                         base_dir=".",
                         verbose=False,
                         plot=False,
-                        plot_dir=".",
+                        plot_dir=None,
                         full_output=False):
     """
     Process calibration bead samples, as specified by an input table.
@@ -259,7 +259,8 @@ def process_beads_table(beads_table,
         sample, and each beads sample.
     plot_dir : str, optional
         Directory relative to `base_dir` into which plots are saved. If
-        `plot` is False, this parameter is ignored.
+        `plot` is False, this parameter is ignored. If ``plot==True`` and
+        ``plot_dir is None``, plot without saving.
     full_output : bool, optional
         Flag indicating whether to include an additional output, containing
         intermediate results from the generation of the MEF transformation
@@ -298,7 +299,8 @@ def process_beads_table(beads_table,
         print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
-    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+    if plot and plot_dir is not None \
+            and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which MEF values are specified.
@@ -416,9 +418,13 @@ def process_beads_table(beads_table,
                 # Histogram plot parameters
                 hist_params = {'xscale': 'logicle'}
                 # Plot
-                figname = os.path.join(base_dir,
-                                       plot_dir,
-                                       "density_hist_{}.png".format(beads_id))
+                if plot_dir is not None:
+                    figname = os.path.join(
+                        base_dir,
+                        plot_dir,
+                        "density_hist_{}.png".format(beads_id))
+                else:
+                    figname = None
                 plt.figure(figsize=(6,4))
                 FlowCal.plot.density_and_hist(
                     beads_sample,
@@ -477,7 +483,8 @@ def process_beads_table(beads_table,
                     verbose=False,
                     plot=plot,
                     plot_filename=beads_id,
-                    plot_dir=os.path.join(base_dir, plot_dir),
+                    plot_dir=os.path.join(base_dir, plot_dir) \
+                             if plot_dir is not None else None,
                     full_output=full_output)
 
                 if full_output:
