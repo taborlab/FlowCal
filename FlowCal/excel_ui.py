@@ -527,7 +527,7 @@ def process_samples_table(samples_table,
                           base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir="."):
+                          plot_dir=None):
     """
     Process flow cytometry samples, as specified by an input table.
 
@@ -581,7 +581,8 @@ def process_samples_table(samples_table,
         sample, and each beads sample.
     plot_dir : str, optional
         Directory relative to `base_dir` into which plots are saved. If
-        `plot` is False, this parameter is ignored.
+        `plot` is False, this parameter is ignored. If ``plot==True`` and
+        ``plot_dir is None``, plot without saving.
 
     Returns
     -------
@@ -604,7 +605,8 @@ def process_samples_table(samples_table,
         print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
-    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+    if plot and plot_dir is not None \
+            and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which units are specified.
@@ -808,9 +810,13 @@ def process_samples_table(samples_table,
                     hist_params.append(param)
                     
                 # Plot
-                figname = os.path.join(base_dir,
-                                       plot_dir,
-                                       "{}.png".format(sample_id))
+                if plot_dir is not None:
+                    figname = os.path.join(
+                        base_dir,
+                        plot_dir,
+                        "{}.png".format(sample_id))
+                else:
+                    figname = None
                 FlowCal.plot.density_and_hist(
                     sample,
                     sample_gated,
