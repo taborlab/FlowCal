@@ -212,6 +212,7 @@ def write_workbook(filename, table_list, column_width=None):
 
 def process_beads_table(beads_table,
                         instruments_table,
+                        get_transform_fxn_kwargs={},
                         base_dir=".",
                         verbose=False,
                         plot=False,
@@ -249,6 +250,9 @@ def process_beads_table(beads_table,
     instruments_table : DataFrame
         Table specifying instruments. For more information about the fields
         required in this table, please consult the module's documentation.
+    get_transform_fxn_kwargs : dict, optional
+        Additional parameters passed directly to internal
+        ``mef.get_transform_fxn()`` function call.
     base_dir : str, optional
         Directory from where all the other paths are specified.
     verbose : bool, optional
@@ -478,7 +482,8 @@ def process_beads_table(beads_table,
                     plot=plot,
                     plot_filename=beads_id,
                     plot_dir=os.path.join(base_dir, plot_dir),
-                    full_output=full_output)
+                    full_output=full_output,
+                    **get_transform_fxn_kwargs)
 
                 if full_output:
                     mef_transform_fxn = mef_output.transform_fxn
