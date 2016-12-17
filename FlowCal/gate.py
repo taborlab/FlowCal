@@ -39,6 +39,7 @@ def start_end(data, num_start=250, num_end=100, full_output=False):
         the number of parameters (aka channels).
     num_start, num_end : int, optional
         Number of events to gate out from beginning and end of `data`.
+        Ignored if less than 0.
     full_output : bool, optional
         Flag specifying to return additional outputs. If true, the outputs
         are given as a namedtuple.
@@ -58,13 +59,22 @@ def start_end(data, num_start=250, num_end=100, full_output=False):
         number of events in `data`.
 
     """
+
+    if num_start < 0:
+        num_start = 0
+    if num_end < 0:
+        num_end = 0
+
     if data.shape[0] < (num_start + num_end):
         raise ValueError('Number of events to discard greater than total' + 
             ' number of events.')
     
     mask = np.ones(shape=data.shape[0],dtype=bool)
     mask[:num_start] = False
-    mask[-num_end:] = False
+    if num_end > 0:
+        # catch the edge case where `num_end=0` causes mask[-num_end:] to mask
+        # off all events
+        mask[-num_end:] = False
     gated_data = data[mask]
 
     if full_output:
