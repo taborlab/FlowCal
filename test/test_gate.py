@@ -55,6 +55,44 @@ class TestStartEndGate(unittest.TestCase):
             np.array([0,0,1,1,1,1,1,0,0,0], dtype=bool)
             )
 
+    def test_0_end_gated_data_1(self):
+        np.testing.assert_array_equal(
+            FlowCal.gate.start_end(self.d, num_start=2, num_end=0),
+            np.array([
+                [3, 9, 4],
+                [4, 10, 5],
+                [5, 1, 6],
+                [6, 2, 7],
+                [7, 3, 8],
+                [8, 4, 9],
+                [9, 5, 10],
+                [10, 6, 1],
+                ])
+            )
+
+    def test_0_end_gated_data_2(self):
+        np.testing.assert_array_equal(
+            FlowCal.gate.start_end(
+                self.d, num_start=2, num_end=0, full_output=True).gated_data,
+            np.array([
+                [3, 9, 4],
+                [4, 10, 5],
+                [5, 1, 6],
+                [6, 2, 7],
+                [7, 3, 8],
+                [8, 4, 9],
+                [9, 5, 10],
+                [10, 6, 1],
+                ])
+            )
+
+    def test_0_end_mask(self):
+        np.testing.assert_array_equal(
+            FlowCal.gate.start_end(
+                self.d, num_start=2, num_end=0, full_output=True).mask,
+            np.array([0,0,1,1,1,1,1,1,1,1], dtype=bool)
+            )
+
     def test_error(self):
         with self.assertRaises(ValueError):
             FlowCal.gate.start_end(self.d, num_start=5, num_end=7)
