@@ -1536,10 +1536,7 @@ class FCSData(np.ndarray):
             # CytekP03G, ... for channels 1, 2, 3, ...
             if channel_amp_gain is None and 'CREATOR' in fcs_file.text and \
                     'FlowJoCollectorsEdition' in fcs_file.text.get('CREATOR'):
-                try:
-                    channel_amp_gain = fcs_file.text['CytekP{:02d}G'.format(i)]
-                except KeyError:
-                    pass
+                channel_amp_gain = fcs_file.text.get('CytekP{:02d}G'.format(i))
             amplifier_gain.append(channel_amp_gain)
         amplifier_gain = [float(agi) if agi is not None else None
                           for agi in amplifier_gain]
