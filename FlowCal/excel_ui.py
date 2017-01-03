@@ -216,7 +216,8 @@ def process_beads_table(beads_table,
                         verbose=False,
                         plot=False,
                         plot_dir=".",
-                        full_output=False):
+                        full_output=False,
+                        get_transform_fxn_kwargs={}):
     """
     Process calibration bead samples, as specified by an input table.
 
@@ -264,6 +265,9 @@ def process_beads_table(beads_table,
         Flag indicating whether to include an additional output, containing
         intermediate results from the generation of the MEF transformation
         functions.
+    get_transform_fxn_kwargs : dict, optional
+        Additional parameters passed directly to internal
+        ``mef.get_transform_fxn()`` function call.
 
     Returns
     -------
@@ -478,7 +482,8 @@ def process_beads_table(beads_table,
                     plot=plot,
                     plot_filename=beads_id,
                     plot_dir=os.path.join(base_dir, plot_dir),
-                    full_output=full_output)
+                    full_output=full_output,
+                    **get_transform_fxn_kwargs)
 
                 if full_output:
                     mef_transform_fxn = mef_output.transform_fxn
