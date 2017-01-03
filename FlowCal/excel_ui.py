@@ -212,12 +212,12 @@ def write_workbook(filename, table_list, column_width=None):
 
 def process_beads_table(beads_table,
                         instruments_table,
-                        get_transform_fxn_kwargs={},
                         base_dir=".",
                         verbose=False,
                         plot=False,
                         plot_dir=".",
-                        full_output=False):
+                        full_output=False,
+                        get_transform_fxn_kwargs={}):
     """
     Process calibration bead samples, as specified by an input table.
 
@@ -250,9 +250,6 @@ def process_beads_table(beads_table,
     instruments_table : DataFrame
         Table specifying instruments. For more information about the fields
         required in this table, please consult the module's documentation.
-    get_transform_fxn_kwargs : dict, optional
-        Additional parameters passed directly to internal
-        ``mef.get_transform_fxn()`` function call.
     base_dir : str, optional
         Directory from where all the other paths are specified.
     verbose : bool, optional
@@ -268,6 +265,9 @@ def process_beads_table(beads_table,
         Flag indicating whether to include an additional output, containing
         intermediate results from the generation of the MEF transformation
         functions.
+    get_transform_fxn_kwargs : dict, optional
+        Additional parameters passed directly to internal
+        ``mef.get_transform_fxn()`` function call.
 
     Returns
     -------
