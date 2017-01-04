@@ -1523,9 +1523,12 @@ class FCSData(np.ndarray):
                    and 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
                 channel_detector_voltage = fcs_file.text.get('BD$WORD{}' \
                                                              .format(12+i))
+            if channel_detector_voltage is not None:
+                try:
+                    channel_detector_voltage = float(channel_detector_voltage)
+                except ValueError:
+                    channel_detector_voltage = None
             detector_voltage.append(channel_detector_voltage)
-        detector_voltage = [float(dvi) if dvi is not None else None
-                            for dvi in detector_voltage]
         detector_voltage = tuple(detector_voltage)
 
         # Amplifier gain: Stored in the keyword parameter $PnG for channel n.
@@ -1539,9 +1542,12 @@ class FCSData(np.ndarray):
             if channel_amp_gain is None and 'CREATOR' in fcs_file.text and \
                     'FlowJoCollectorsEdition' in fcs_file.text.get('CREATOR'):
                 channel_amp_gain = fcs_file.text.get('CytekP{:02d}G'.format(i))
+            if channel_amp_gain is not None:
+                try:
+                    channel_amp_gain = float(channel_amp_gain)
+                except ValueError:
+                    channel_amp_gain = None
             amplifier_gain.append(channel_amp_gain)
-        amplifier_gain = [float(agi) if agi is not None else None
-                          for agi in amplifier_gain]
         amplifier_gain = tuple(amplifier_gain)
 
         # Get data from fcs_file object, and change writeable flag.
