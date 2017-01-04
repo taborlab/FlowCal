@@ -1512,16 +1512,18 @@ class FCSData(np.ndarray):
         resolution = tuple(resolution)
 
         # Detector voltage: Stored in the keyword parameter $PnV for channel n.
-        # The CellQuest Pro software saves the detector voltage in keyword
-        # parameters BD$WORD13, BD$WORD14, BD$WORD15... for channels 1, 2,
-        # 3...
-        if 'CREATOR' in fcs_file.text and \
-                'CellQuest Pro' in fcs_file.text.get('CREATOR'):
-            detector_voltage = [fcs_file.text.get('BD$WORD{}'.format(12 + i))
-                                for i in range(1, num_channels + 1)]
-        else:
-            detector_voltage = [fcs_file.text.get('$P{}V'.format(i))
-                            for i in range(1, num_channels + 1)]
+        detector_voltage = []
+        for i in range(1, num_channels + 1):
+            channel_detector_voltage = fcs_file.text.get('$P{}V'.format(i))
+
+            # The CellQuest Pro software saves the detector voltage in keyword
+            # parameters BD$WORD13, BD$WORD14, BD$WORD15... for channels 1, 2,
+            # 3...
+            if channel_detector_voltage is None and 'CREATOR' in fcs_file.text \
+                   and 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
+                channel_detector_voltage = fcs_file.text.get('BD$WORD{}' \
+                                                             .format(12+i))
+            detector_voltage.append(channel_detector_voltage)
         detector_voltage = [float(dvi) if dvi is not None else None
                             for dvi in detector_voltage]
         detector_voltage = tuple(detector_voltage)
