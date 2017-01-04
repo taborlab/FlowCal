@@ -1330,7 +1330,6 @@ def scatter3d(data_list,
                       marker='o',
                       alpha=0.1,
                       color=color[i],
-                      c=color[i],
                       **kwargs)
 
     # Remove tick labels
