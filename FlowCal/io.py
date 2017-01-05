@@ -1523,6 +1523,10 @@ class FCSData(np.ndarray):
                    and 'CellQuest Pro' in fcs_file.text.get('CREATOR'):
                 channel_detector_voltage = fcs_file.text.get('BD$WORD{}' \
                                                              .format(12+i))
+
+            # Attempt to cast extracted value to float
+            # The FCS3.1 standard restricts $PnV to be a floating-point value
+            # only. Any value that cannot be casted will be replaced with None.
             if channel_detector_voltage is not None:
                 try:
                     channel_detector_voltage = float(channel_detector_voltage)
@@ -1542,6 +1546,10 @@ class FCSData(np.ndarray):
             if channel_amp_gain is None and 'CREATOR' in fcs_file.text and \
                     'FlowJoCollectorsEdition' in fcs_file.text.get('CREATOR'):
                 channel_amp_gain = fcs_file.text.get('CytekP{:02d}G'.format(i))
+
+            # Attempt to cast extracted value to float
+            # The FCS3.1 standard restricts $PnG to be a floating-point value
+            # only. Any value that cannot be casted will be replaced with None.
             if channel_amp_gain is not None:
                 try:
                     channel_amp_gain = float(channel_amp_gain)
