@@ -880,6 +880,10 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         ``mef_outputs[i]`` should correspond to ``beads_table.iloc[i]``.
 
     """
+    # The index name is not preserved if beads_table is empty.
+    # Save the index name for later
+    beads_table_index_name = beads_table.index.name
+
     # Add per-row info
     notes = []
     n_events = []
@@ -971,6 +975,9 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                                               channel + ' Beads Params. Values',
                                               params_str)
 
+    # Restore index name if table is empty
+    if len(beads_table) == 0:
+        beads_table.index.name = beads_table_index_name
 
 def add_samples_stats(samples_table, samples):
     """
@@ -1017,6 +1024,10 @@ def add_samples_stats(samples_table, samples):
     and a warning message will be written to the "Analysis Notes" field.
 
     """
+    # The index name is not preserved if samples_table is empty.
+    # Save the index name for later
+    samples_table_index_name = samples_table.index.name
+
     # Add per-row info
     notes = []
     n_events = []
@@ -1131,6 +1142,10 @@ def add_samples_stats(samples_table, samples):
                     row_id,
                     channel + ' Geom. CV',
                     FlowCal.stats.gcv(sample_positive, channel))
+
+    # Restore index name if table is empty
+    if len(samples_table) == 0:
+        samples_table.index.name = samples_table_index_name
 
 def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
