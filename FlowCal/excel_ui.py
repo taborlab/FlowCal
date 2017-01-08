@@ -215,8 +215,9 @@ def process_beads_table(beads_table,
                         base_dir=".",
                         verbose=False,
                         plot=False,
-                        plot_dir=".",
-                        full_output=False):
+                        plot_dir=None,
+                        full_output=False,
+                        get_transform_fxn_kwargs={}):
     """
     Process calibration bead samples, as specified by an input table.
 
@@ -259,11 +260,15 @@ def process_beads_table(beads_table,
         sample, and each beads sample.
     plot_dir : str, optional
         Directory relative to `base_dir` into which plots are saved. If
-        `plot` is False, this parameter is ignored.
+        `plot` is False, this parameter is ignored. If ``plot==True`` and
+        ``plot_dir is None``, plot without saving.
     full_output : bool, optional
         Flag indicating whether to include an additional output, containing
         intermediate results from the generation of the MEF transformation
         functions.
+    get_transform_fxn_kwargs : dict, optional
+        Additional parameters passed directly to internal
+        ``mef.get_transform_fxn()`` function call.
 
     Returns
     -------
@@ -298,7 +303,8 @@ def process_beads_table(beads_table,
         print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
-    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+    if plot and plot_dir is not None \
+            and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which MEF values are specified.
@@ -416,9 +422,13 @@ def process_beads_table(beads_table,
                 # Histogram plot parameters
                 hist_params = {'xscale': 'logicle'}
                 # Plot
-                figname = os.path.join(base_dir,
-                                       plot_dir,
-                                       "density_hist_{}.png".format(beads_id))
+                if plot_dir is not None:
+                    figname = os.path.join(
+                        base_dir,
+                        plot_dir,
+                        "density_hist_{}.png".format(beads_id))
+                else:
+                    figname = None
                 plt.figure(figsize=(6,4))
                 FlowCal.plot.density_and_hist(
                     beads_sample,
@@ -477,8 +487,10 @@ def process_beads_table(beads_table,
                     verbose=False,
                     plot=plot,
                     plot_filename=beads_id,
-                    plot_dir=os.path.join(base_dir, plot_dir),
-                    full_output=full_output)
+                    plot_dir=os.path.join(base_dir, plot_dir) \
+                             if plot_dir is not None else None,
+                    full_output=full_output,
+                    **get_transform_fxn_kwargs)
 
                 if full_output:
                     mef_transform_fxn = mef_output.transform_fxn
@@ -520,7 +532,7 @@ def process_samples_table(samples_table,
                           base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir="."):
+                          plot_dir=None):
     """
     Process flow cytometry samples, as specified by an input table.
 
@@ -574,7 +586,8 @@ def process_samples_table(samples_table,
         sample, and each beads sample.
     plot_dir : str, optional
         Directory relative to `base_dir` into which plots are saved. If
-        `plot` is False, this parameter is ignored.
+        `plot` is False, this parameter is ignored. If ``plot==True`` and
+        ``plot_dir is None``, plot without saving.
 
     Returns
     -------
@@ -597,7 +610,8 @@ def process_samples_table(samples_table,
         print("="*len(msg))
 
     # Check that plotting directory exist, create otherwise
-    if plot and not os.path.exists(os.path.join(base_dir, plot_dir)):
+    if plot and plot_dir is not None \
+            and not os.path.exists(os.path.join(base_dir, plot_dir)):
         os.makedirs(os.path.join(base_dir, plot_dir))
 
     # Extract header and channel names for which units are specified.
@@ -801,9 +815,13 @@ def process_samples_table(samples_table,
                     hist_params.append(param)
                     
                 # Plot
-                figname = os.path.join(base_dir,
-                                       plot_dir,
-                                       "{}.png".format(sample_id))
+                if plot_dir is not None:
+                    figname = os.path.join(
+                        base_dir,
+                        plot_dir,
+                        "{}.png".format(sample_id))
+                else:
+                    figname = None
                 FlowCal.plot.density_and_hist(
                     sample,
                     sample_gated,
@@ -862,6 +880,10 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         ``mef_outputs[i]`` should correspond to ``beads_table.iloc[i]``.
 
     """
+    # The index name is not preserved if beads_table is empty.
+    # Save the index name for later
+    beads_table_index_name = beads_table.index.name
+
     # Add per-row info
     notes = []
     n_events = []
@@ -953,6 +975,9 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                                               channel + ' Beads Params. Values',
                                               params_str)
 
+    # Restore index name if table is empty
+    if len(beads_table) == 0:
+        beads_table.index.name = beads_table_index_name
 
 def add_samples_stats(samples_table, samples):
     """
@@ -999,6 +1024,10 @@ def add_samples_stats(samples_table, samples):
     and a warning message will be written to the "Analysis Notes" field.
 
     """
+    # The index name is not preserved if samples_table is empty.
+    # Save the index name for later
+    samples_table_index_name = samples_table.index.name
+
     # Add per-row info
     notes = []
     n_events = []
@@ -1113,6 +1142,10 @@ def add_samples_stats(samples_table, samples):
                     row_id,
                     channel + ' Geom. CV',
                     FlowCal.stats.gcv(sample_positive, channel))
+
+    # Restore index name if table is empty
+    if len(samples_table) == 0:
+        samples_table.index.name = samples_table_index_name
 
 def generate_histograms_table(samples_table, samples, max_bins=1024):
     """
