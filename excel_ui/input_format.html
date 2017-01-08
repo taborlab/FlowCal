@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Format of the Input Excel File &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Format of the Input Excel File &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Excel UI" href="index.html"/>
         <link rel="next" title="Analysis Performed by the Excel UI" href="analysis.html"/>
         <link rel="prev" title="How to use FlowCal’s Excel UI" href="how_to.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -89,7 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">FlowCal&#8217;s Excel UI</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="how_to.html">How to use FlowCal&#8217;s Excel UI</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Format of the Input Excel File</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Format of the Input Excel File</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#instruments-sheet">Instruments sheet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#beads-sheet">Beads sheet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#samples-sheet">Samples sheet</a></li>
@@ -125,7 +128,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -139,7 +142,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/excel_ui/input_format.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/excel_ui/input_format.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -180,7 +183,7 @@
 <li><strong>Instrument ID</strong> (B): The ID of the instrument used to take the sample.</li>
 <li><strong>File Path</strong> (C): the name of the corresponding FCS file.</li>
 <li><strong>&lt;Channel name&gt; MEF Values</strong> (E): MEF values provided by the manufacturer, for each channel in which a standard curve must be calculated. If MEF values are provided for a channel, the corresponding instrument should include this channel name in the <strong>Fluorescence Channels</strong> field. More <strong>&lt;Channel name&gt; MEF Values</strong> columns can be added if needed, or removed if not used.</li>
-<li><strong>Gate Fraction</strong> (F): a gate fraction parameter used for <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</li>
+<li><strong>Gate Fraction</strong> (F): a gate fraction parameter used for <a class="reference internal" href="../fundamentals/density_gate.html"><span class="doc">density gating</span></a>.</li>
 <li><strong>Clustering Channels</strong> (G): the fluorescence channels used for clustering, as a comma separated list.</li>
 </ol>
 <p>Additional columns, like <strong>Beads Lot</strong> (column D), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
@@ -208,7 +211,7 @@
 </ol>
 </div></blockquote>
 </li>
-<li><p class="first"><strong>Gate Fraction</strong> (F): Fraction of samples to keep when performing <a class="reference internal" href="../fundamentals/density_gate.html"><em>density gating</em></a>.</p>
+<li><p class="first"><strong>Gate Fraction</strong> (F): Fraction of samples to keep when performing <a class="reference internal" href="../fundamentals/density_gate.html"><span class="doc">density gating</span></a>.</p>
 </li>
 </ol>
 <p>Additional columns, such as <strong>Strain</strong>, <strong>Plasmid</strong>, and <strong>IPTG (mM)</strong> (columns G, H, and I), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by <code class="docutils literal"><span class="pre">FlowCal</span></code>.</p>
@@ -260,7 +263,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

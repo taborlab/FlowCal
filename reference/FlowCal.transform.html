@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.transform module &mdash; FlowCal 1.1.0 documentation</title>
+  <title>FlowCal.transform module &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="Contribute" href="../contribute/index.html"/>
         <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -96,7 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.stats.html">FlowCal.stats module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.transform module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FlowCal.transform module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
@@ -122,7 +125,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -136,7 +139,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/reference/FlowCal.transform.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/reference/FlowCal.transform.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -150,7 +153,7 @@
 <span id="flowcal-transform-module"></span><h1>FlowCal.transform module<a class="headerlink" href="#module-FlowCal.transform" title="Permalink to this headline">¶</a></h1>
 <p>Functions for transforming flow cytometry data</p>
 <p>All transformations are of the following form:</p>
-<div class="highlight-python"><div class="highlight"><pre>data_t = transform(data, channels, *args, **kwargs):
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data_t</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </pre></div>
 </div>
 <p>where <cite>data</cite> and <cite>data_t</cite> are NxD FCSData objects or numpy arrays,
@@ -170,7 +173,7 @@ of channels to which those standard curves should be applied
 is available for each channel specified in <cite>channels</cite>, and throws an
 error otherwise.</p>
 <p>This function is intended to be reduced to the following signature:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">to_mef_reduced</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">to_mef_reduced</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>by using <code class="docutils literal"><span class="pre">functools.partial</span></code> once a list of standard curves and their
@@ -225,7 +228,7 @@ None, use all channels in <cite>data</cite>.</p>
 <p>If <code class="docutils literal"><span class="pre">amplification_type[0]</span></code> is different from zero, data has been
 taken using a log amplifier. Therefore, to transform to RFI, the
 following operation is applied:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">r</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">r</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal"><span class="pre">x</span></code> and <code class="docutils literal"><span class="pre">y</span></code> are the original and transformed data,
@@ -236,7 +239,7 @@ that it covers <code class="docutils literal"><span class="pre">a[0]</span></cod
 <code class="docutils literal"><span class="pre">a[1]</span></code>.</p>
 <p>If <code class="docutils literal"><span class="pre">amplification_type[0]==0</span></code>, however, a linear amplifier has been
 used and the following operation is applied instead:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">/</span><span class="n">g</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">/</span><span class="n">g</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal"><span class="pre">g</span></code> is <cite>amplifier_gain</cite>. This will transform flow cytometry
@@ -377,7 +380,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

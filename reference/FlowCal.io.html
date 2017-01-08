@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.io module &mdash; FlowCal 1.1.0 documentation</title>
+  <title>FlowCal.io module &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="prev" title="FlowCal.gate module" href="FlowCal.gate.html"/> 
 
@@ -62,7 +65,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -91,7 +94,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.gate.html">FlowCal.gate module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.io module</a><ul class="simple">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FlowCal.io module</a><ul class="simple">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
@@ -123,7 +126,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -137,7 +140,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/reference/FlowCal.io.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/reference/FlowCal.io.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -218,37 +221,37 @@ version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
 </table>
 <p class="rubric">Examples</p>
 <p>Load an FCS file into an FCSData object</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;test/Data001.fcs&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s1">&#39;test/Data001.fcs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Check channel names</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">channels</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">d</span><span class="o">.</span><span class="n">channels</span>
 <span class="go">(&#39;FSC-H&#39;, &#39;SSC-H&#39;, &#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;, &#39;Time&#39;)</span>
 </pre></div>
 </div>
 <p>Check the size of FCSData</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">shape</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">d</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(20949, 6)</span>
 </pre></div>
 </div>
 <p>Get the first 100 events</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_sub</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d_sub</span><span class="o">.</span><span class="n">shape</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d_sub</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">d_sub</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(100, 6)</span>
 </pre></div>
 </div>
 <p>Retain only fluorescence channels</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="s">&#39;FL1-H&#39;</span><span class="p">,</span> <span class="s">&#39;FL2-H&#39;</span><span class="p">,</span> <span class="s">&#39;FL3-H&#39;</span><span class="p">]]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="s1">&#39;FL1-H&#39;</span><span class="p">,</span> <span class="s1">&#39;FL2-H&#39;</span><span class="p">,</span> <span class="s1">&#39;FL3-H&#39;</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl</span><span class="o">.</span><span class="n">channels</span>
 <span class="go">(&#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;)</span>
 </pre></div>
 </div>
 <p>Channel slicing can also be done with integer indices</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl_2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">d_fl_2</span><span class="o">.</span><span class="n">channels</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d_fl_2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">d_fl_2</span><span class="o">.</span><span class="n">channels</span>
 <span class="go">(&#39;FL1-H&#39;, &#39;FL2-H&#39;, &#39;FL3-H&#39;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">d_fl</span> <span class="o">==</span> <span class="n">d_fl_2</span><span class="p">)</span>
 <span class="go">True</span>
 </pre></div>
@@ -477,20 +480,20 @@ is None, use <code class="docutils literal"><span class="pre">FCSData.resolution
 and logarithmic scaling do not use additional arguments.
 For logicle scaling, the following parameters can be provided:</p>
 <dl class="docutils">
-<dt>T <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
-<dd><p class="first last">Maximum range of data. If not provided, use <code class="docutils literal"><span class="pre">range[1]</span></code>.</p>
+<dt>T</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span><dd><p class="first last">Maximum range of data. If not provided, use <code class="docutils literal"><span class="pre">range[1]</span></code>.</p>
 </dd>
-<dt>M <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
-<dd><p class="first">(Asymptotic) number of decades in scaled units. If not
+<dt>M</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span><dd><p class="first">(Asymptotic) number of decades in scaled units. If not
 provided, calculate from the following:</p>
-<div class="last highlight-python"><div class="highlight"><pre><span class="nb">max</span><span class="p">(</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">4.5</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">262144</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="nb">max</span><span class="p">(</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">4.5</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">262144</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd>
-<dt>W <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
-<dd><p class="first">Width of linear range in scaled units. If not provided,
+<dt>W</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span><dd><p class="first">Width of linear range in scaled units. If not provided,
 calculate using the following relationship:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">W</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span> <span class="o">-</span> <span class="n">log10</span><span class="p">(</span><span class="n">T</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">W</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span> <span class="o">-</span> <span class="n">log10</span><span class="p">(</span><span class="n">T</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span>
 </pre></div>
 </div>
 <p class="last">Where <code class="docutils literal"><span class="pre">r</span></code> is the minimum negative event. If no negative
@@ -1117,7 +1120,7 @@ version FCS 3.1,&#8221; Cytometry A vol 77A, pp 97-100, 2009, PMID
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

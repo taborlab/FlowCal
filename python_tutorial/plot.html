@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Plotting Flow Cytometry Data &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Plotting Flow Cytometry Data &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="Gating Flow Cytometry Data" href="gate.html"/>
         <link rel="prev" title="Transforming Flow Cytometry Data" href="transform.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -91,7 +94,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">FlowCal&#8217;s Python API Tutorial</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="read.html">Reading Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transforming Flow Cytometry Data</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Plotting Flow Cytometry Data</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotting Flow Cytometry Data</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#histograms">Histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#density-plots">Density Plots</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#combined-histogram-and-density-plots">Combined Histogram and Density Plots</a></li>
@@ -127,7 +130,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -141,7 +144,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/python_tutorial/plot.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/python_tutorial/plot.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -155,39 +158,39 @@
 <h1>Plotting Flow Cytometry Data<a class="headerlink" href="#plotting-flow-cytometry-data" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial focuses on how to plot flow cytometry data using <code class="docutils literal"><span class="pre">FlowCal</span></code>, particularly by using the module <a class="reference internal" href="../reference/FlowCal.plot.html#module-FlowCal.plot" title="FlowCal.plot"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.plot</span></code></a></p>
 <p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <p>Also, import <code class="docutils literal"><span class="pre">pyplot</span></code> from <code class="docutils literal"><span class="pre">matplotlib</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 <div class="section" id="histograms">
 <h2>Histograms<a class="headerlink" href="#histograms" title="Permalink to this headline">¶</a></h2>
 <p>Let&#8217;s load the data from file <code class="docutils literal"><span class="pre">Data001.fcs</span></code> into an <code class="docutils literal"><span class="pre">FCSData</span></code> object called <code class="docutils literal"><span class="pre">s</span></code>, and tranform all channels to arbitrary units.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s1">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>One is often interested in the fluorescence distribution across a population of cells. This is represented in a histogram. Since <code class="docutils literal"><span class="pre">FCSData</span></code> is a numpy array, one could use the standard <code class="docutils literal"><span class="pre">hist</span></code> function included in matplotlib. Alternatively, <code class="docutils literal"><span class="pre">FlowCal</span></code> includes its own histogram function specifically tailored to work with <code class="docutils literal"><span class="pre">FCSData</span></code> objects. For example, one can plot the contents of the <code class="docutils literal"><span class="pre">FL1</span></code> channel with a single call to <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/lqz6blikfcmx2ub/python_tutorial_plot_hist1d_1.png?raw=1" src="https://www.dropbox.com/s/lqz6blikfcmx2ub/python_tutorial_plot_hist1d_1.png?raw=1" />
 <p><a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> behaves mostly like a regular matplotlib plotting function: it will plot in the current figure and axis. The axes labels are populated by default, but one can still use <code class="docutils literal"><span class="pre">plt.xlabel</span></code> and <code class="docutils literal"><span class="pre">plt.ylabel</span></code> to change them.</p>
 <p>By default, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> uses something called <em>logicle</em> scaling for the x axis. This scaling allows visualization of high fluorescence values with logarithmic spacing, and low fluorescence values with a more linear spacing. In some modern flow cytometers, negative events may be present, and logicle scaling allows visualization of those as well. This can be changed to a more conventional linear or logarithmic scale by using the <code class="docutils literal"><span class="pre">xscale</span></code> argument. In addition, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> uses 256 uniformly spaced bins by default. We can override the default bins using the <code class="docutils literal"><span class="pre">bins</span></code> argument. Let&#8217;s try using 1024 logarithmically-spaced bins.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">,</span> <span class="n">xscale</span><span class="o">=</span><span class="s">&#39;log&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="n">xscale</span><span class="o">=</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/nvlp43qz85th4al/python_tutorial_plot_hist1d_2.png?raw=1" src="https://www.dropbox.com/s/nvlp43qz85th4al/python_tutorial_plot_hist1d_2.png?raw=1" />
 <p>Finally, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> can plot several FCSData objects at the same time. Let&#8217;s now load 3 FCSData objects, transform all channels to a.u., and plot the <code class="docutils literal"><span class="pre">FL1</span></code> channel of all three with transparency.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;FCFiles/Data{:03d}.fcs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;FCFiles/Data</span><span class="si">{:03d}</span><span class="s1">.fcs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">di</span><span class="p">)</span> <span class="k">for</span> <span class="n">di</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper left&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -197,34 +200,34 @@
 <h2>Density Plots<a class="headerlink" href="#density-plots" title="Permalink to this headline">¶</a></h2>
 <p>It is also common to look at the forward scatter and side scatter values in a 2D histogram, scatter plot, or density diagram. From those, the user can extract size and shape information that would allow him to differentiate between cells and debris. <code class="docutils literal"><span class="pre">FlowCal</span></code> includes the function <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> for this purpose.</p>
 <p>Let&#8217;s look at the <code class="docutils literal"><span class="pre">FSC</span></code> and <code class="docutils literal"><span class="pre">SSC</span></code> channels in our sample <code class="docutils literal"><span class="pre">s</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/l041acoupnlb5os/python_tutorial_plot_density_2d_1.png?raw=1" src="https://www.dropbox.com/s/l041acoupnlb5os/python_tutorial_plot_density_2d_1.png?raw=1" />
 <p>The color indicates the number of events in the region, with red indicating a bigger number than yellow and blue, in that order, by default. Similarly to <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a>, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> uses logicle scaling by default. In addition, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> applies, by default, gaussian smoothing to the density plot.</p>
 <p><a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> includes two visualization modes: <code class="docutils literal"><span class="pre">mesh</span></code> (seen above), and <code class="docutils literal"><span class="pre">scatter</span></code>. The last one is good for distinguishing regions with few events.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;scatter&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/j2fe7f7drib5nvs/python_tutorial_plot_density_2d_2.png?raw=1" src="https://www.dropbox.com/s/j2fe7f7drib5nvs/python_tutorial_plot_density_2d_2.png?raw=1" />
-<p>The last plot shows three distinct populations. The one in the middle corresponds to cells, whereas the ones at the left and below correspond to non-biological debris. We will see how to &#8220;gate&#8221;, or select only one population, in the <a class="reference internal" href="gate.html"><em>gating tutorial</em></a>.</p>
+<p>The last plot shows three distinct populations. The one in the middle corresponds to cells, whereas the ones at the left and below correspond to non-biological debris. We will see how to &#8220;gate&#8221;, or select only one population, in the <a class="reference internal" href="gate.html"><span class="doc">gating tutorial</span></a>.</p>
 </div>
 <div class="section" id="combined-histogram-and-density-plots">
 <h2>Combined Histogram and Density Plots<a class="headerlink" href="#combined-histogram-and-density-plots" title="Permalink to this headline">¶</a></h2>
 <p>FlowCal also includes &#8220;complex plot&#8221; functions, which produce their own figure and a set of axes, and use simple <code class="docutils literal"><span class="pre">matplotlib</span></code> or <code class="docutils literal"><span class="pre">FlowCal</span></code> plotting functions to populate them.</p>
 <p>In particular, <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density_and_hist" title="FlowCal.plot.density_and_hist"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density_and_hist()</span></code></a> uses <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> and <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> to produce a combined density plot/histogram that allow the user to quickly see information about one sample. For example, let&#8217;s plot the <code class="docutils literal"><span class="pre">FSC</span></code> and <code class="docutils literal"><span class="pre">SSC</span></code> channels in a density plot, and the <code class="docutils literal"><span class="pre">FL1</span></code> channel in a histogram. In the following, <code class="docutils literal"><span class="pre">density_params</span></code> and <code class="docutils literal"><span class="pre">hist_params</span></code> are dictionaries that are directly passed to <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.hist1d" title="FlowCal.plot.hist1d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.hist1d()</span></code></a> and <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density2d" title="FlowCal.plot.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density2d()</span></code></a> as keyword arguments.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density_and_hist</span><span class="p">(</span><span class="n">s</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;mode&#39;</span><span class="p">:</span><span class="s">&#39;scatter&#39;</span><span class="p">},</span>
-<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FL1&#39;</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density_and_hist</span><span class="p">(</span><span class="n">s</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mode&#39;</span><span class="p">:</span><span class="s1">&#39;scatter&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/apb0ep5xp1idnht/python_tutorial_plot_density_and_hist_1.png?raw=1" src="https://www.dropbox.com/s/apb0ep5xp1idnht/python_tutorial_plot_density_and_hist_1.png?raw=1" />
-<p><a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density_and_hist" title="FlowCal.plot.density_and_hist"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density_and_hist()</span></code></a> can also plot data before and after applying gates. We will see this in the <a class="reference internal" href="gate.html"><em>gating tutorial</em></a>.</p>
+<p><a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density_and_hist" title="FlowCal.plot.density_and_hist"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density_and_hist()</span></code></a> can also plot data before and after applying gates. We will see this in the <a class="reference internal" href="gate.html"><span class="doc">gating tutorial</span></a>.</p>
 </div>
 <div class="section" id="other-plotting-functions">
 <h2>Other Plotting Functions<a class="headerlink" href="#other-plotting-functions" title="Permalink to this headline">¶</a></h2>
@@ -273,7 +276,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

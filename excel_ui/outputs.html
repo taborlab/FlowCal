@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Outputs of the Excel UI &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Outputs of the Excel UI &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Excel UI" href="index.html"/>
         <link rel="next" title="Command Line Interface (Advanced)" href="cmd_interface.html"/>
         <link rel="prev" title="Analysis Performed by the Excel UI" href="analysis.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -91,7 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="how_to.html">How to use FlowCal&#8217;s Excel UI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="input_format.html">Format of the Input Excel File</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analysis.html">Analysis Performed by the Excel UI</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Outputs of the Excel UI</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Outputs of the Excel UI</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#plots">Plots</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#output-excel-file">Output Excel File</a></li>
 </ul>
@@ -124,7 +127,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -138,7 +141,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/excel_ui/outputs.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/excel_ui/outputs.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -150,7 +153,7 @@
             
   <div class="section" id="outputs-of-the-excel-ui">
 <h1>Outputs of the Excel UI<a class="headerlink" href="#outputs-of-the-excel-ui" title="Permalink to this headline">¶</a></h1>
-<p>During processing of the calibration beads and cell samples, <code class="docutils literal"><span class="pre">FlowCal</span></code> creates two folders with images and an output Excel file in the same location as the <a class="reference internal" href="input_format.html"><em>input Excel file</em></a>. Here we describe these. In what follows, &lt;ID&gt; refers to the value specified in the ID column of the input Excel file.</p>
+<p>During processing of the calibration beads and cell samples, <code class="docutils literal"><span class="pre">FlowCal</span></code> creates two folders with images and an output Excel file in the same location as the <a class="reference internal" href="input_format.html"><span class="doc">input Excel file</span></a>. Here we describe these. In what follows, &lt;ID&gt; refers to the value specified in the ID column of the input Excel file.</p>
 <div class="section" id="plots">
 <span id="excel-ui-outputs-plots"></span><h2>Plots<a class="headerlink" href="#plots" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
@@ -193,7 +196,7 @@
 </div>
 <div class="section" id="output-excel-file">
 <span id="excel-ui-outputs-excel"></span><h2>Output Excel File<a class="headerlink" href="#output-excel-file" title="Permalink to this headline">¶</a></h2>
-<p>The file <code class="docutils literal"><span class="pre">&lt;Name</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">Excel</span> <span class="pre">file&gt;_output.xlsx</span></code> contains calculated statistics for beads and samples. To produce this file, <code class="docutils literal"><span class="pre">FlowCal</span></code> copies the <strong>Instruments</strong>, <strong>Beads</strong>, and <strong>Samples</strong> sheets from the <a class="reference internal" href="input_format.html"><em>input Excel</em></a> file, unmodified, to the output file, and adds columns to the <strong>Beads</strong> and <strong>Samples</strong> sheet with statistics.</p>
+<p>The file <code class="docutils literal"><span class="pre">&lt;Name</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">Excel</span> <span class="pre">file&gt;_output.xlsx</span></code> contains calculated statistics for beads and samples. To produce this file, <code class="docutils literal"><span class="pre">FlowCal</span></code> copies the <strong>Instruments</strong>, <strong>Beads</strong>, and <strong>Samples</strong> sheets from the <a class="reference internal" href="input_format.html"><span class="doc">input Excel</span></a> file, unmodified, to the output file, and adds columns to the <strong>Beads</strong> and <strong>Samples</strong> sheet with statistics.</p>
 <p>In both sheets, the number of events after gating and the acquisition time are reported for each sample. In addition, a column named <strong>Analysis Notes</strong> indicates the user about any errors that occurred during processing.</p>
 <p>Statistics per beads file, per fluorescence channel include: the channel gain, the amplifier type, the equation of the beads fluorescence model used, and the values of the fitted parameters.</p>
 <img alt="https://www.dropbox.com/s/grgops0e5pt03ci/output_spreadsheet_beads.png?raw=1" src="https://www.dropbox.com/s/grgops0e5pt03ci/output_spreadsheet_beads.png?raw=1" />
@@ -247,7 +250,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

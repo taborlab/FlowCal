@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing FlowCal in an Existing Python Evironment &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Installing FlowCal in an Existing Python Evironment &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="Getting Started" href="index.html"/>
         <link rel="next" title="Fundamentals" href="../fundamentals/index.html"/>
         <link rel="prev" title="Installing FlowCal with Anaconda" href="install_anaconda.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -88,7 +91,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">Download FlowCal!</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install_anaconda.html">Installing FlowCal with Anaconda</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Installing FlowCal in an Existing Python Evironment</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing FlowCal in an Existing Python Evironment</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
@@ -118,7 +121,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -132,7 +135,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/getting_started/install_python.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/getting_started/install_python.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -145,7 +148,7 @@
   <div class="section" id="installing-flowcal-in-an-existing-python-evironment">
 <h1>Installing FlowCal in an Existing Python Evironment<a class="headerlink" href="#installing-flowcal-in-an-existing-python-evironment" title="Permalink to this headline">¶</a></h1>
 <p>Python 2.7 is required, along with <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">setuptools</span></code>. The easiest way is to install <code class="docutils literal"><span class="pre">FlowCal</span></code> is to use <code class="docutils literal"><span class="pre">pip</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre>pip install FlowCal
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">FlowCal</span>
 </pre></div>
 </div>
 <p>This should take care of all the requirements automatically. Linux and Mac OSX users may need to request administrative permissions by preceding this command with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
@@ -161,11 +164,11 @@
 <li><code class="docutils literal"><span class="pre">XlsxWriter</span></code> (&gt;=0.5.2)</li>
 </ul>
 <p>If you have <code class="docutils literal"><span class="pre">pip</span></code>, a <code class="docutils literal"><span class="pre">requirements.txt</span></code> file is provided, such that the required packages can be installed by running:</p>
-<div class="highlight-python"><div class="highlight"><pre>pip install -r requirements.txt
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 <p>To install <code class="docutils literal"><span class="pre">FlowCal</span></code>, run the following in <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s root directory:</p>
-<div class="highlight-python"><div class="highlight"><pre>python setup.py install
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 <p>Again, some users may need to precede the previous commands with <code class="docutils literal"><span class="pre">sudo</span></code>.</p>
@@ -184,11 +187,11 @@
 <li><code class="docutils literal"><span class="pre">python-pip</span></code></li>
 </ul>
 <p>All of these can be installed using:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo apt-get install &lt;package-name&gt;
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">&lt;</span><span class="n">package</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>Next, <code class="docutils literal"><span class="pre">pip</span></code> should be upgraded by using:</p>
-<div class="highlight-python"><div class="highlight"><pre>sudo pip install --upgrade pip
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span>
 </pre></div>
 </div>
 <p class="last">After this, you may install <code class="docutils literal"><span class="pre">FlowCal</span></code> by following the steps above.</p>
@@ -236,7 +239,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

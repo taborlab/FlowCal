@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing FCS Files with the Excel UI &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Processing FCS Files with the Excel UI &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="FlowCal (Python API) Reference" href="../reference/modules.html"/>
         <link rel="prev" title="Calibrating Flow Cytometry Data to MEF" href="mef.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -94,7 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="plot.html">Plotting Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gate.html">Gating Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mef.html">Calibrating Flow Cytometry Data to MEF</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Processing FCS Files with the Excel UI</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Processing FCS Files with the Excel UI</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#processing-samples-with-the-excel-ui">Processing Samples with the Excel UI</a></li>
 </ul>
@@ -125,7 +128,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -139,7 +142,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/python_tutorial/excel_ui.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/python_tutorial/excel_ui.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -151,14 +154,14 @@
             
   <div class="section" id="processing-fcs-files-with-the-excel-ui">
 <h1>Processing FCS Files with the Excel UI<a class="headerlink" href="#processing-fcs-files-with-the-excel-ui" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial focuses on how to obtain processed flow cytometry data from <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI into python. This document assumes that the reader is familiar with <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI. For more information, please refer to the <a class="reference internal" href="../excel_ui/index.html"><em>Excel UI documentation</em></a>.</p>
+<p>This tutorial focuses on how to obtain processed flow cytometry data from <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI into python. This document assumes that the reader is familiar with <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI. For more information, please refer to the <a class="reference internal" href="../excel_ui/index.html"><span class="doc">Excel UI documentation</span></a>.</p>
 <p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">FlowCal</span></code> is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the <a class="reference internal" href="mef.html"><em>MEF tutorial</em></a>, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might simply want to follow a procedure similar to this:</p>
+<p><code class="docutils literal"><span class="pre">FlowCal</span></code> is a very flexible package that allows the user to perform different gating and transformation operations on flow cytometry data. As we saw in the <a class="reference internal" href="mef.html"><span class="doc">MEF tutorial</span></a>, the process of transformation to MEF units also allows for a lot of customization. However, for most experiments the user might simply want to follow a procedure similar to this:</p>
 <ol class="arabic simple">
 <li>Open calibration beads files</li>
 <li>Perform density gating in forward/side scatter to eliminate bead aggregates</li>
@@ -172,37 +175,37 @@
 </div>
 <div class="section" id="processing-samples-with-the-excel-ui">
 <h2>Processing Samples with the Excel UI<a class="headerlink" href="#processing-samples-with-the-excel-ui" title="Permalink to this headline">¶</a></h2>
-<p>For this tutorial, we will analyze all the data in the <code class="docutils literal"><span class="pre">examples/FCFiles</span></code> folder using the input Excel file, <code class="docutils literal"><span class="pre">examples/experiment.xlsx</span></code>. This is the same file described in the <a class="reference internal" href="../excel_ui/index.html"><em>Excel UI documentation</em></a>.</p>
+<p>For this tutorial, we will analyze all the data in the <code class="docutils literal"><span class="pre">examples/FCFiles</span></code> folder using the input Excel file, <code class="docutils literal"><span class="pre">examples/experiment.xlsx</span></code>. This is the same file described in the <a class="reference internal" href="../excel_ui/index.html"><span class="doc">Excel UI documentation</span></a>.</p>
 <p>First, load the necessary tables from this file.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">input_file</span> <span class="o">=</span> <span class="s">&#39;experiment.xlsx&#39;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_file</span> <span class="o">=</span> <span class="s1">&#39;experiment.xlsx&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">instruments_table</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span>
-<span class="gp">... </span>                                                <span class="n">sheetname</span><span class="o">=</span><span class="s">&#39;Instruments&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                                <span class="n">index_col</span><span class="o">=</span><span class="s">&#39;ID&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                                                <span class="n">sheetname</span><span class="o">=</span><span class="s1">&#39;Instruments&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                                <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">beads_table</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span>
-<span class="gp">... </span>                                          <span class="n">sheetname</span><span class="o">=</span><span class="s">&#39;Beads&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                          <span class="n">index_col</span><span class="o">=</span><span class="s">&#39;ID&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                                          <span class="n">sheetname</span><span class="o">=</span><span class="s1">&#39;Beads&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                          <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">samples_table</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span>
-<span class="gp">... </span>                                            <span class="n">sheetname</span><span class="o">=</span><span class="s">&#39;Samples&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                            <span class="n">index_col</span><span class="o">=</span><span class="s">&#39;ID&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                                            <span class="n">sheetname</span><span class="o">=</span><span class="s1">&#39;Samples&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                            <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;ID&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="../reference/FlowCal.excel_ui.html#FlowCal.excel_ui.read_table" title="FlowCal.excel_ui.read_table"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.excel_ui.read_table()</span></code></a> returns the contents of a sheet from an Excel file as a <code class="docutils literal"><span class="pre">pandas</span></code> <code class="docutils literal"><span class="pre">DataFrame</span></code>. The file name is specified as the first argument, and the <code class="docutils literal"><span class="pre">index_col</span></code> argument specified which column to use as the <code class="docutils literal"><span class="pre">DataFrame</span></code>&#8216;s index. For more information about <code class="docutils literal"><span class="pre">DataFrames</span></code>, consult <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/dsintro.html">pandas&#8217; documentation</a>.</p>
 <p>From there, one can obtain the file name and analysis options of each beads file, and call all the necessary <code class="docutils literal"><span class="pre">FlowCal</span></code> functions to perform density gating and standard curve calculation. Or one could let the Excel UI do all that with the following instruction:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">beads_samples</span><span class="p">,</span> <span class="n">mef_transform_fxns</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">process_beads_table</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">beads_samples</span><span class="p">,</span> <span class="n">mef_transform_fxns</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">process_beads_table</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">beads_table</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">instruments_table</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">FlowCal.excel_ui.process_beads_table</span></code> uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags <code class="docutils literal"><span class="pre">verbose</span></code> and <code class="docutils literal"><span class="pre">plot</span></code> instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the <a class="reference internal" href="mef.html"><em>MEF tutorial</em></a>. The ouput arguments are <code class="docutils literal"><span class="pre">beads_samples</span></code>, a list of transformed and gated FCSData objects, and <code class="docutils literal"><span class="pre">mef_transform_fxns</span></code>, a dictionary of MEF transformation functions, indexed by the ID of the beads files.</p>
+<p><code class="docutils literal"><span class="pre">FlowCal.excel_ui.process_beads_table</span></code> uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags <code class="docutils literal"><span class="pre">verbose</span></code> and <code class="docutils literal"><span class="pre">plot</span></code> instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the <a class="reference internal" href="mef.html"><span class="doc">MEF tutorial</span></a>. The ouput arguments are <code class="docutils literal"><span class="pre">beads_samples</span></code>, a list of transformed and gated FCSData objects, and <code class="docutils literal"><span class="pre">mef_transform_fxns</span></code>, a dictionary of MEF transformation functions, indexed by the ID of the beads files.</p>
 <p>In a similar way, <code class="docutils literal"><span class="pre">FlowCal</span></code>&#8216;s Excel UI can automatically density-gate and transform cell samples using a single instruction:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">samples</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">process_samples_table</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">samples</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">excel_ui</span><span class="o">.</span><span class="n">process_samples_table</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">samples_table</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">instruments_table</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">mef_transform_fxns</span><span class="o">=</span><span class="n">mef_transform_fxns</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">FlowCal.excel_ui.process_samples_table</span></code> uses the instruments and samples tables to open, density-gate, and transform cell samples as specified, and return the processed data as a list of FCSData objects. If the input Excel file specifies that some samples should be transformed to MEF, <code class="docutils literal"><span class="pre">FlowCal.excel_ui.process_samples_table</span></code> also requires a dictionary with the respective MEF transformation functions (<code class="docutils literal"><span class="pre">mef_transform_fxns</span></code>), which was provided in the previous step by <code class="docutils literal"><span class="pre">FlowCal.excel_ui.process_beads_table</span></code>.</p>
@@ -251,7 +254,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

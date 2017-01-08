@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Calibrating Flow Cytometry Data to MEF &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Calibrating Flow Cytometry Data to MEF &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="Processing FCS Files with the Excel UI" href="excel_ui.html"/>
         <link rel="prev" title="Gating Flow Cytometry Data" href="gate.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -93,7 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transforming Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot.html">Plotting Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gate.html">Gating Flow Cytometry Data</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Calibrating Flow Cytometry Data to MEF</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Calibrating Flow Cytometry Data to MEF</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-calibration-beads">Working with Calibration Beads</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mef-transformation-in-flowcal">MEF Transformation in <code class="docutils literal"><span class="pre">FlowCal</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#generation-of-a-mef-transformation-function">Generation of a MEF Transformation Function</a><ul>
@@ -132,7 +135,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -146,7 +149,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/python_tutorial/mef.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/python_tutorial/mef.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -158,33 +161,33 @@
             
   <div class="section" id="calibrating-flow-cytometry-data-to-mef">
 <h1>Calibrating Flow Cytometry Data to MEF<a class="headerlink" href="#calibrating-flow-cytometry-data-to-mef" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial focuses on how to transform flow cytometry data to Molecules of Equivalent Fluorophore (MEF) using <code class="docutils literal"><span class="pre">FlowCal</span></code>, particularly by using the module <a class="reference internal" href="../reference/FlowCal.mef.html#module-FlowCal.mef" title="FlowCal.mef"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.mef</span></code></a>. For more information on MEF calibration, see the section on <a class="reference internal" href="../fundamentals/calibration.html"><em>fundamentals of calibration</em></a>.</p>
+<p>This tutorial focuses on how to transform flow cytometry data to Molecules of Equivalent Fluorophore (MEF) using <code class="docutils literal"><span class="pre">FlowCal</span></code>, particularly by using the module <a class="reference internal" href="../reference/FlowCal.mef.html#module-FlowCal.mef" title="FlowCal.mef"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.mef</span></code></a>. For more information on MEF calibration, see the section on <a class="reference internal" href="../fundamentals/calibration.html"><span class="doc">fundamentals of calibration</span></a>.</p>
 <p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <p>Also, import <code class="docutils literal"><span class="pre">pyplot</span></code> from <code class="docutils literal"><span class="pre">matplotlib</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 <div class="section" id="working-with-calibration-beads">
 <h2>Working with Calibration Beads<a class="headerlink" href="#working-with-calibration-beads" title="Permalink to this headline">¶</a></h2>
-<p>As mentioned in the <a class="reference internal" href="../fundamentals/calibration.html"><em>fundamentals</em></a> section, conversion to MEF requires measuring calibration beads. <code class="docutils literal"><span class="pre">Beads006.fcs</span></code> in the <code class="docutils literal"><span class="pre">FCFiles</span></code> folder contains beads data. Let&#8217;s examine it.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Beads006.fcs&#39;</span><span class="p">)</span>
+<p>As mentioned in the <a class="reference internal" href="../fundamentals/calibration.html"><span class="doc">fundamentals</span></a> section, conversion to MEF requires measuring calibration beads. <code class="docutils literal"><span class="pre">Beads006.fcs</span></code> in the <code class="docutils literal"><span class="pre">FCFiles</span></code> folder contains beads data. Let&#8217;s examine it.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s1">&#39;FCFiles/Beads006.fcs&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b_g</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">b</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
 <span class="gp">... </span>                                    <span class="n">gate_fraction</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">full_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span>                                    <span class="n">full_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density_and_hist</span><span class="p">(</span><span class="n">b</span><span class="p">,</span>
 <span class="gp">... </span>                              <span class="n">gated_data</span><span class="o">=</span><span class="n">b_g</span><span class="p">,</span>
 <span class="gp">... </span>                              <span class="n">gate_contour</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;mode&#39;</span><span class="p">:</span><span class="s">&#39;scatter&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                              <span class="s">&#39;xlim&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e2</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">],</span>
-<span class="gp">... </span>                                              <span class="s">&#39;ylim&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e2</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">],</span>
-<span class="gp">... </span>                                              <span class="s">&#39;sigma&#39;</span><span class="p">:</span> <span class="mf">5.</span><span class="p">},</span>
-<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FL1&#39;</span><span class="p">])</span>
+<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mode&#39;</span><span class="p">:</span><span class="s1">&#39;scatter&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                              <span class="s1">&#39;xlim&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="n">e2</span><span class="p">,</span> <span class="mi">1</span><span class="n">e3</span><span class="p">],</span>
+<span class="gp">... </span>                                              <span class="s1">&#39;ylim&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="n">e2</span><span class="p">,</span> <span class="mi">1</span><span class="n">e3</span><span class="p">],</span>
+<span class="gp">... </span>                                              <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="mf">5.</span><span class="p">},</span>
+<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -194,35 +197,35 @@
 </div>
 <div class="section" id="mef-transformation-in-flowcal">
 <h2>MEF Transformation in <code class="docutils literal"><span class="pre">FlowCal</span></code><a class="headerlink" href="#mef-transformation-in-flowcal" title="Permalink to this headline">¶</a></h2>
-<p>We saw in the <a class="reference internal" href="transform.html"><em>transformation tutorial</em></a> that a transformation function is needed to convert flow cytometry data from raw sensor numbers, as stored in FCS files, to fluorescence values in a.u. Similarly, <code class="docutils literal"><span class="pre">FlowCal</span></code> uses transformation functions to convert these to MEF. However, these functions have to be generated during analysis using a calibration bead sample. Once a function is generated, though, it can be used to convert many cell samples to MEF, provided that beads and samples have been acquired using the same settings.</p>
+<p>We saw in the <a class="reference internal" href="transform.html"><span class="doc">transformation tutorial</span></a> that a transformation function is needed to convert flow cytometry data from raw sensor numbers, as stored in FCS files, to fluorescence values in a.u. Similarly, <code class="docutils literal"><span class="pre">FlowCal</span></code> uses transformation functions to convert these to MEF. However, these functions have to be generated during analysis using a calibration bead sample. Once a function is generated, though, it can be used to convert many cell samples to MEF, provided that beads and samples have been acquired using the same settings.</p>
 <p>Generating a transformation function from calibration beads data is a complicated process, therefore <code class="docutils literal"><span class="pre">FlowCal</span></code> has an entire module dedicated to it: <a class="reference internal" href="../reference/FlowCal.mef.html#module-FlowCal.mef" title="FlowCal.mef"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.mef</span></code></a>. The main function in this module, <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a>, requires at least the following information: calibration beads data, the names of the channels for which a MEF transformation function should be generated, and manufacturer-provided MEF values of each subpopulation for each channel. Let&#8217;s now use <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> to obtain a transformation function.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Obtain transformation function</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># The following MEFL values were provided by the beads&#39; manufacturer</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Obtain transformation function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The following MEFL values were provided by the beads&#39; manufacturer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mefl_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">646</span><span class="p">,</span> <span class="mi">1704</span><span class="p">,</span> <span class="mi">4827</span><span class="p">,</span> <span class="mi">15991</span><span class="p">,</span> <span class="mi">47609</span><span class="p">,</span> <span class="mi">135896</span><span class="p">,</span> <span class="mi">273006</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">to_mef</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">mef</span><span class="o">.</span><span class="n">get_transform_fxn</span><span class="p">(</span><span class="n">b_g</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">mef_values</span><span class="o">=</span><span class="n">mefl_values</span><span class="p">,</span>
-<span class="gp">... </span>                                       <span class="n">mef_channels</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                       <span class="n">plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span>                                       <span class="n">mef_channels</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                       <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The argument <code class="docutils literal"><span class="pre">plot</span></code> instructs <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> to generate and save plots showing the individual steps of bead data analysis. We will look at these plots and how to interpret them in the next section. We recommend to always generate these plots to confirm that the standard curve was generated properly.</p>
 <p>Let&#8217;s now use <code class="docutils literal"><span class="pre">to_mef</span></code> to transform fluroescence data to MEF.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Load sample</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load sample</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s1">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># Transform all channels to a.u., and then FL1 to MEF.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Transform all channels to a.u., and then FL1 to MEF.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">to_mef</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">to_mef</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># Gate</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s_g</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Gate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_g</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s_g</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                             <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
 <span class="gp">... </span>                             <span class="n">gate_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># Plot histogram of transformed channel</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s_g</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s">&#39;FL1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Plot histogram of transformed channel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist1d</span><span class="p">(</span><span class="n">s_g</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s1">&#39;FL1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -231,7 +234,7 @@
 </div>
 <div class="section" id="generation-of-a-mef-transformation-function">
 <h2>Generation of a MEF Transformation Function<a class="headerlink" href="#generation-of-a-mef-transformation-function" title="Permalink to this headline">¶</a></h2>
-<p>We will now give a short description of the process that <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> uses to generate a transformation function from beads data. We will also examine the plots produced by <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> and discuss how these plots can reveal problems with the analysis. In the following, <code class="docutils literal"><span class="pre">&lt;beads_filename&gt;</span></code> refers to the file name of the FSC cotaining beads data, which was provided to <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a>. This discussion is parallel to the one in the <a class="reference internal" href="../fundamentals/calibration.html"><em>fundamentals of calibration</em></a> document, but at a higher technical level.</p>
+<p>We will now give a short description of the process that <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> uses to generate a transformation function from beads data. We will also examine the plots produced by <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> and discuss how these plots can reveal problems with the analysis. In the following, <code class="docutils literal"><span class="pre">&lt;beads_filename&gt;</span></code> refers to the file name of the FSC cotaining beads data, which was provided to <a class="reference internal" href="../reference/FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a>. This discussion is parallel to the one in the <a class="reference internal" href="../fundamentals/calibration.html"><span class="doc">fundamentals of calibration</span></a> document, but at a higher technical level.</p>
 <p>Generating a MEF transformation function involves four steps:</p>
 <div class="section" id="identification-of-bead-subpopulations">
 <h3>1. Identification of Bead Subpopulations<a class="headerlink" href="#identification-of-bead-subpopulations" title="Permalink to this headline">¶</a></h3>
@@ -306,7 +309,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

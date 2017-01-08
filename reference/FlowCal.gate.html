@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.gate module &mdash; FlowCal 1.1.0 documentation</title>
+  <title>FlowCal.gate module &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.io module" href="FlowCal.io.html"/>
         <link rel="prev" title="FlowCal.excel_ui module" href="FlowCal.excel_ui.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -91,7 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_tutorial/index.html">FlowCal&#8217;s Python API Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">FlowCal (Python API) Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.excel_ui.html">FlowCal.excel_ui module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">FlowCal.gate module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FlowCal.gate module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.io.html">FlowCal.io module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.mef.html">FlowCal.mef module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FlowCal.plot.html">FlowCal.plot module</a></li>
@@ -122,7 +125,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -136,7 +139,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/reference/FlowCal.gate.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/reference/FlowCal.gate.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -150,10 +153,10 @@
 <span id="flowcal-gate-module"></span><h1>FlowCal.gate module<a class="headerlink" href="#module-FlowCal.gate" title="Permalink to this headline">¶</a></h1>
 <p>Functions for gating flow cytometry data.</p>
 <p>All gate functions are of the following form:</p>
-<div class="highlight-python"><div class="highlight"><pre>gated_data = gate(data, channels, *args, **kwargs)
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">gated_data</span> <span class="o">=</span> <span class="n">gate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-(gated_data, mask, contour, ...) = gate(data, channels, *args,
-                                        **kwargs, full_output=True)
+<span class="p">(</span><span class="n">gated_data</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">=</span> <span class="n">gate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>where <cite>data</cite> is a NxD FCSData object or numpy array describing N cytometry
@@ -303,7 +306,7 @@ retained at a time, not individual events).</li>
 <code class="descclassname">FlowCal.gate.</code><code class="descname">ellipse</code><span class="sig-paren">(</span><em>data</em>, <em>channels</em>, <em>center</em>, <em>a</em>, <em>b</em>, <em>theta=0</em>, <em>log=False</em>, <em>full_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.gate.ellipse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gate that preserves events inside an ellipse-shaped region.</p>
 <p>Events are kept if they satisfy the following relationship:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 <p>where <cite>x</cite> and <cite>y</cite> are the coordinates of the event list, after
@@ -427,7 +430,8 @@ the number of parameters (aka channels).</p>
 </div></blockquote>
 <p><strong>num_start, num_end</strong> : int, optional</p>
 <blockquote>
-<div><p>Number of events to gate out from beginning and end of <cite>data</cite>.</p>
+<div><p>Number of events to gate out from beginning and end of <cite>data</cite>.
+Ignored if less than 0.</p>
 </div></blockquote>
 <p><strong>full_output</strong> : bool, optional</p>
 <blockquote>
@@ -501,7 +505,7 @@ number of events in <cite>data</cite>.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

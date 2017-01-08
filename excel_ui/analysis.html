@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Analysis Performed by the Excel UI &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Analysis Performed by the Excel UI &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Excel UI" href="index.html"/>
         <link rel="next" title="Outputs of the Excel UI" href="outputs.html"/>
         <link rel="prev" title="Format of the Input Excel File" href="input_format.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -90,7 +93,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">FlowCal&#8217;s Excel UI</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="how_to.html">How to use FlowCal&#8217;s Excel UI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="input_format.html">Format of the Input Excel File</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Analysis Performed by the Excel UI</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Analysis Performed by the Excel UI</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#processing-of-calibration-beads">Processing of Calibration Beads</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#processing-of-cell-samples">Processing of Cell Samples</a></li>
 </ul>
@@ -124,7 +127,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -138,7 +141,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/excel_ui/analysis.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/excel_ui/analysis.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -153,26 +156,26 @@
 <p>The analysis that FlowCal&#8217;s Excel UI performs is divided roughly in two phases: processing of calibration beads and processing of samples. We will now describe the steps involved in each.</p>
 <div class="section" id="processing-of-calibration-beads">
 <h2>Processing of Calibration Beads<a class="headerlink" href="#processing-of-calibration-beads" title="Permalink to this headline">¶</a></h2>
-<p>The following steps are performed for each calibration beads sample specified in the <strong>Beads</strong> sheet of the <a class="reference internal" href="input_format.html"><em>input Excel file</em></a>:</p>
+<p>The following steps are performed for each calibration beads sample specified in the <strong>Beads</strong> sheet of the <a class="reference internal" href="input_format.html"><span class="doc">input Excel file</span></a>:</p>
 <ol class="arabic simple">
-<li><a class="reference internal" href="../fundamentals/density_gate.html"><em>Density gating</em></a> is applied in the forward/side scatter channels. This is an automated procedure that eliminates microbead aggregates and debris.</li>
+<li><a class="reference internal" href="../fundamentals/density_gate.html"><span class="doc">Density gating</span></a> is applied in the forward/side scatter channels. This is an automated procedure that eliminates microbead aggregates and debris.</li>
 <li>The individual microbead subpopulations are identified using automated clustering.</li>
 <li>For each subpopulation, the median fluorescence is calculated.</li>
 <li>Microbead subpopulations are discarded if they are found to be close to the saturation limits of the detector. Only populations that are not saturating are retained.</li>
 <li>Using the fluorescence values of the retained populations in channel units and the corresponding MEF values provided by the user, a standard curve is generated. This standard curve is used to transform cell fluorescence from raw units to MEF.</li>
 </ol>
-<p><a class="reference internal" href="outputs.html#excel-ui-outputs-plots"><span>Plots</span></a> are generated for each one of these steps, and some intermediate results are saved to the <a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span>output Excel file</span></a>.</p>
-<p>For an introductory discussion of flow cytometry calibration, go to the <a class="reference internal" href="../fundamentals/calibration.html"><em>fundamentals of calibration</em></a> section.</p>
+<p><a class="reference internal" href="outputs.html#excel-ui-outputs-plots"><span class="std std-ref">Plots</span></a> are generated for each one of these steps, and some intermediate results are saved to the <a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span class="std std-ref">output Excel file</span></a>.</p>
+<p>For an introductory discussion of flow cytometry calibration, go to the <a class="reference internal" href="../fundamentals/calibration.html"><span class="doc">fundamentals of calibration</span></a> section.</p>
 </div>
 <div class="section" id="processing-of-cell-samples">
 <h2>Processing of Cell Samples<a class="headerlink" href="#processing-of-cell-samples" title="Permalink to this headline">¶</a></h2>
-<p>The following steps are performed for each cell sample specified in the <strong>Samples</strong> sheet of the <a class="reference internal" href="input_format.html"><em>input Excel file</em></a>:</p>
+<p>The following steps are performed for each cell sample specified in the <strong>Samples</strong> sheet of the <a class="reference internal" href="input_format.html"><span class="doc">input Excel file</span></a>:</p>
 <ol class="arabic simple">
-<li><a class="reference internal" href="../fundamentals/density_gate.html"><em>Density gating</em></a> is applied in the forward/side scatter channels.</li>
-<li>Fluorescence data for each specified fluorescence channel is transformed to the units specified in the <strong>Units</strong> column of the <a class="reference internal" href="input_format.html"><em>input Excel file</em></a>.</li>
-<li><a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span>Statistics</span></a> of the specified fluorescence channels are calculated, including mean, standard deviation, and others. A histogram of each fluorescence channel is also generated.</li>
+<li><a class="reference internal" href="../fundamentals/density_gate.html"><span class="doc">Density gating</span></a> is applied in the forward/side scatter channels.</li>
+<li>Fluorescence data for each specified fluorescence channel is transformed to the units specified in the <strong>Units</strong> column of the <a class="reference internal" href="input_format.html"><span class="doc">input Excel file</span></a>.</li>
+<li><a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span class="std std-ref">Statistics</span></a> of the specified fluorescence channels are calculated, including mean, standard deviation, and others. A histogram of each fluorescence channel is also generated.</li>
 </ol>
-<p>Statistics and histograms are saved to the <a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span>output Excel file</span></a>.</p>
+<p>Statistics and histograms are saved to the <a class="reference internal" href="outputs.html#excel-ui-outputs-excel"><span class="std std-ref">output Excel file</span></a>.</p>
 </div>
 </div>
 
@@ -217,7 +220,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gating Flow Cytometry Data &mdash; FlowCal 1.1.0 documentation</title>
+  <title>Gating Flow Cytometry Data &mdash; FlowCal 1.1.1 documentation</title>
   
 
   
@@ -32,7 +32,10 @@
   
 
   
-    <link rel="top" title="FlowCal 1.1.0 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal’s Python API Tutorial" href="index.html"/>
         <link rel="next" title="Calibrating Flow Cytometry Data to MEF" href="mef.html"/>
         <link rel="prev" title="Plotting Flow Cytometry Data" href="plot.html"/> 
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                1.1.0
+                1.1.1
               </div>
             
           
@@ -92,7 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="read.html">Reading Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transforming Flow Cytometry Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="plot.html">Plotting Flow Cytometry Data</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Gating Flow Cytometry Data</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Gating Flow Cytometry Data</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#removing-saturated-events">Removing Saturated Events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ellipse-gate">Ellipse Gate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#density-gate">Density Gate</a></li>
@@ -127,7 +130,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -141,7 +144,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/python_tutorial/gate.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/python_tutorial/gate.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -155,38 +158,38 @@
 <h1>Gating Flow Cytometry Data<a class="headerlink" href="#gating-flow-cytometry-data" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial focuses on how to gate flow cytometry data using <code class="docutils literal"><span class="pre">FlowCal</span></code>, particularly by using the module <a class="reference internal" href="../reference/FlowCal.gate.html#module-FlowCal.gate" title="FlowCal.gate"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.gate</span></code></a>. Gating is the process of retaining events that satisfy some criteria, and discarding the ones that do not.</p>
 <p>To start, navigate to the <code class="docutils literal"><span class="pre">examples</span></code> directory included with FlowCal, and open a <code class="docutils literal"><span class="pre">python</span></code> session therein. Then, import <code class="docutils literal"><span class="pre">FlowCal</span></code> as with any other python module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">FlowCal</span>
 </pre></div>
 </div>
 <p>Also, import <code class="docutils literal"><span class="pre">numpy</span></code> and <code class="docutils literal"><span class="pre">pyplot</span></code> from <code class="docutils literal"><span class="pre">matplotlib</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 <div class="section" id="removing-saturated-events">
 <h2>Removing Saturated Events<a class="headerlink" href="#removing-saturated-events" title="Permalink to this headline">¶</a></h2>
 <p>We&#8217;ll start by loading the data from file <code class="docutils literal"><span class="pre">Data001.fcs</span></code> into an <code class="docutils literal"><span class="pre">FCSData</span></code> object called <code class="docutils literal"><span class="pre">s</span></code>. Then, transform all channels into a.u.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">FCSData</span><span class="p">(</span><span class="s1">&#39;FCFiles/Data001.fcs&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">to_rfi</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In the <a class="reference internal" href="plot.html"><em>plotting tutorial</em></a> we looked at a density plot of the forward scatter/side scatter (<code class="docutils literal"><span class="pre">FSC</span></code>/<code class="docutils literal"><span class="pre">SSC</span></code>) channels and identified several clusters of particles (events). This density plot is repeated below for convenience.</p>
+<p>In the <a class="reference internal" href="plot.html"><span class="doc">plotting tutorial</span></a> we looked at a density plot of the forward scatter/side scatter (<code class="docutils literal"><span class="pre">FSC</span></code>/<code class="docutils literal"><span class="pre">SSC</span></code>) channels and identified several clusters of particles (events). This density plot is repeated below for convenience.</p>
 <img alt="https://www.dropbox.com/s/j2fe7f7drib5nvs/python_tutorial_plot_density_2d_2.png?raw=1" src="https://www.dropbox.com/s/j2fe7f7drib5nvs/python_tutorial_plot_density_2d_2.png?raw=1" />
 <p>From these clusters, the faint one in the low-middle portion corresponds to non-cellular debris, and the one above corresponds to cells. One additional group on the left corresponds to saturated events, with the lowest possible forward scatter value: 1 a.u..</p>
 <p>Some flow cytometers will capture events outside of their range and assign them either the lowest or highest possible values of a channel, depending on which side of the range they fall on. We call these events &#8220;saturated&#8221;. Including them in the analysis results, most of the time, in distorted distribution shapes and incorrect statistics. Therefore, it is generally advised to remove saturated events. To do so, <code class="docutils literal"><span class="pre">FlowCal</span></code> incorporates the function <a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.high_low" title="FlowCal.gate.high_low"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.high_low()</span></code></a>. This function retains all the events in the specified channels between two specified values: a high and a low threshold. If these values are not specified, however, the function uses the saturating values.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g1</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g1</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s">&#39;scatter&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/55wge5a0jb40m5z/python_tutorial_gate_high_low_1.png?raw=1" src="https://www.dropbox.com/s/55wge5a0jb40m5z/python_tutorial_gate_high_low_1.png?raw=1" />
 <p>We successfully removed the events on the left. We can go one step further and use <a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.high_low" title="FlowCal.gate.high_low"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.high_low()</span></code></a> again to remove the cluster in the lower middle of the plot, which as we said before corresponds to debris.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g2</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="s">&#39;SSC&#39;</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g2</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">high_low</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="s1">&#39;SSC&#39;</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g2</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s">&#39;scatter&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -196,16 +199,16 @@
 <div class="section" id="ellipse-gate">
 <h2>Ellipse Gate<a class="headerlink" href="#ellipse-gate" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">FlowCal</span></code> includes an ellipse-shaped gate, in which events are retained if they fall inside an ellipse with a specified center and dimensions. Let&#8217;s try to obtain the densest region of the cell cluster.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g3</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
-<span class="gp">... </span>                            <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                            <span class="n">log</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g3</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
+<span class="gp">... </span>                            <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                            <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mf">2.4</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">),</span>
 <span class="gp">... </span>                            <span class="n">a</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
 <span class="gp">... </span>                            <span class="n">b</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
 <span class="gp">... </span>                            <span class="n">theta</span><span class="o">=</span><span class="mi">30</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g3</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s">&#39;scatter&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -216,36 +219,36 @@
 <div class="section" id="density-gate">
 <h2>Density Gate<a class="headerlink" href="#density-gate" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.density2d" title="FlowCal.gate.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.density2d()</span></code></a> automatically identifies the region with the highest density of events in a two-dimensional diagram, and calculates how big it should be to capture a certain percentage of the total event count. One advantage is that the number of user-defined parameters is reduced to one. Let&#8217;s now try to separate cells from debris using this method.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g4</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g4</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
 <span class="gp">... </span>                              <span class="n">gate_fraction</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g4</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s">&#39;scatter&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                       <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="https://www.dropbox.com/s/k8dr87do3avt2df/python_tutorial_gate_density_1.png?raw=1" src="https://www.dropbox.com/s/k8dr87do3avt2df/python_tutorial_gate_density_1.png?raw=1" />
 <p>We can see that <a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.density2d" title="FlowCal.gate.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.density2d()</span></code></a> automatically identified the region that contains cells, and defined a shape that more closely resembles what the ungated density map looks like. The parameter <code class="docutils literal"><span class="pre">gating_fraction</span></code> allows the user to control the fraction of events to retain, and it is the only parameter that the user is required to specify.</p>
-<p>For more details on how <a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.density2d" title="FlowCal.gate.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.density2d()</span></code></a> works, consult the section on <a class="reference internal" href="../fundamentals/density_gate.html"><em>fundamentals of density gating</em></a>.</p>
+<p>For more details on how <a class="reference internal" href="../reference/FlowCal.gate.html#FlowCal.gate.density2d" title="FlowCal.gate.density2d"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.gate.density2d()</span></code></a> works, consult the section on <a class="reference internal" href="../fundamentals/density_gate.html"><span class="doc">fundamentals of density gating</span></a>.</p>
 </div>
 <div class="section" id="plotting-2d-gates">
 <h2>Plotting 2D Gates<a class="headerlink" href="#plotting-2d-gates" title="Permalink to this headline">¶</a></h2>
 <p>Finally, we will see a better way to visualize the result of applying a 2D gate. First, we will use density gating again, but this time we will do it a little differently.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g5</span><span class="p">,</span> <span class="n">m_g5</span><span class="p">,</span> <span class="n">contour</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
-<span class="gp">... </span>                                             <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s_g5</span><span class="p">,</span> <span class="n">m_g5</span><span class="p">,</span> <span class="n">contour</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">density2d</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
+<span class="gp">... </span>                                             <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
 <span class="gp">... </span>                                             <span class="n">gate_fraction</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
-<span class="gp">... </span>                                             <span class="n">full_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">... </span>                                             <span class="n">full_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The extra argument, <code class="docutils literal"><span class="pre">full_output</span></code>, is available in every function in <a class="reference internal" href="../reference/FlowCal.gate.html#module-FlowCal.gate" title="FlowCal.gate"><code class="xref py py-mod docutils literal"><span class="pre">FlowCal.gate</span></code></a>. It instructs a gating function to return some additional output arguments with information about the gating process. The second output argument is always a mask, a boolean array that indicates which events on the original FCSData object are being retained by the gate. 2-dimensional gating functions have a third output argument: a contour surrounding the gated region, which we will now use for plotting.</p>
-<p>The function <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density_and_hist" title="FlowCal.plot.density_and_hist"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density_and_hist()</span></code></a> was introduced in the <a class="reference internal" href="plot.html"><em>plotting tutorial</em></a> to produce plots of a single FCSData object. But it can also be used to plot the result of a gating step, showing the data before and after gating, and the gating contour. Let&#8217;s use this ability to show the result of the density gating process.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density_and_hist</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
+<p>The function <a class="reference internal" href="../reference/FlowCal.plot.html#FlowCal.plot.density_and_hist" title="FlowCal.plot.density_and_hist"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.plot.density_and_hist()</span></code></a> was introduced in the <a class="reference internal" href="plot.html"><span class="doc">plotting tutorial</span></a> to produce plots of a single FCSData object. But it can also be used to plot the result of a gating step, showing the data before and after gating, and the gating contour. Let&#8217;s use this ability to show the result of the density gating process.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">FlowCal</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">density_and_hist</span><span class="p">(</span><span class="n">s_g1</span><span class="p">,</span>
 <span class="gp">... </span>                              <span class="n">gated_data</span><span class="o">=</span><span class="n">s_g5</span><span class="p">,</span>
 <span class="gp">... </span>                              <span class="n">gate_contour</span><span class="o">=</span><span class="n">contour</span><span class="p">,</span>
-<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FSC&#39;</span><span class="p">,</span> <span class="s">&#39;SSC&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;mode&#39;</span><span class="p">:</span><span class="s">&#39;scatter&#39;</span><span class="p">},</span>
-<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;FL1&#39;</span><span class="p">])</span>
+<span class="gp">... </span>                              <span class="n">density_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FSC&#39;</span><span class="p">,</span> <span class="s1">&#39;SSC&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                              <span class="n">density_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mode&#39;</span><span class="p">:</span><span class="s1">&#39;scatter&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                              <span class="n">hist_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -296,7 +299,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.0',
+            VERSION:'1.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
