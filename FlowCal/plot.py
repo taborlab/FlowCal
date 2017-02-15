@@ -380,7 +380,7 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                                              smin=0,
                                              smax=self._M)
 
-class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
+class _LogicleLocator(matplotlib.ticker.Locator):
     """
     Determine the tick locations for logicle axes.
 
@@ -393,6 +393,40 @@ class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
         subticks.
 
     """
+
+    def __init__(self, transform, subs=None):
+        self._transform = transform
+        if subs is None:
+            self._subs = [1.0]
+        else:
+            self._subs = subs
+        self.numticks = 15
+
+    def set_params(self, subs=None, numticks=None):
+        """
+        Set parameters within this locator.
+
+        Parameters
+        ----------
+        subs : array, optional
+            Subtick values, as multiples of the main ticks.
+        numticks : array, optional
+            Number of ticks.
+
+        """
+        if numticks is not None:
+            self.numticks = numticks
+        if subs is not None:
+            self._subs = subs
+
+    def __call__(self):
+        """
+        Return the locations of the ticks.
+
+        """
+        # Note, these are untransformed coordinates
+        vmin, vmax = self.axis.get_view_interval()
+        return self.tick_values(vmin, vmax)
 
     def tick_values(self, vmin, vmax):
         """
@@ -482,6 +516,37 @@ class _LogicleLocator(matplotlib.ticker.SymmetricalLogLocator):
             ticklocs = decades
 
         return self.raise_if_exceeds(np.array(ticklocs))
+
+
+    def view_limits(self, vmin, vmax):
+        """
+        Try to choose the view limits intelligently.
+
+        """
+        b = self._transform.base
+        if vmax < vmin:
+            vmin, vmax = vmax, vmin
+
+        if not matplotlib.ticker.is_decade(abs(vmin), b):
+            if vmin < 0:
+                vmin = -matplotlib.ticker.decade_up(-vmin, b)
+            else:
+                vmin = matplotlib.ticker.decade_down(vmin, b)
+        if not matplotlib.ticker.is_decade(abs(vmax), b):
+            if vmax < 0:
+                vmax = -matplotlib.ticker.decade_down(-vmax, b)
+            else:
+                vmax = matplotlib.ticker.decade_up(vmax, b)
+
+        if vmin == vmax:
+            if vmin < 0:
+                vmin = -matplotlib.ticker.decade_up(-vmin, b)
+                vmax = -matplotlib.ticker.decade_down(-vmax, b)
+            else:
+                vmin = matplotlib.ticker.decade_down(vmin, b)
+                vmax = matplotlib.ticker.decade_up(vmax, b)
+        result = matplotlib.transforms.nonsingular(vmin, vmax)
+        return result
 
 class _LogicleScale(matplotlib.scale.ScaleBase):
     """
