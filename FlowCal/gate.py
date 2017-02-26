@@ -284,7 +284,8 @@ def density2d(data,
             bin edges. Note that None is not allowed if ``data.hist_bins``
             does not exist.
     gate_fraction : float, optional
-        Fraction of events to retain after gating.
+        Fraction of events to retain after gating. Should be greater than 0
+        and lower or equal to 1.
     xscale : str, optional
         Scale of the bins generated for the x axis, either ``linear``,
         ``log``, or ``logicle``. `xscale` is ignored in `bins` is an array
@@ -349,10 +350,15 @@ def density2d(data,
 
     # Extract channels in which to gate
     if len(channels) != 2:
-        raise ValueError('2 channels should be specified.')
+        raise ValueError('2 channels should be specified')
     data_ch = data[:,channels]
     if data_ch.ndim == 1:
         data_ch = data_ch.reshape((-1,1))
+
+    # Check gating fraction
+    if gate_fraction <= 0 or gate_fraction > 1:
+        raise ValueError('gate fraction should be positive and no greater '
+            'than one')
 
     # Check dimensions
     if data_ch.ndim < 2:
