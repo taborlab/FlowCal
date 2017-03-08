@@ -13,5 +13,6 @@ import excel_ui
 import gate
 import transform
 import mef
+import compensate
 import plot
 import stats
