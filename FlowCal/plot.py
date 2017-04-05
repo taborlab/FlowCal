@@ -751,12 +751,16 @@ def hist1d(data_list,
         data_list = [data_list]
 
     # Default colors
-    if histtype == 'stepfilled' and edgecolor is None and facecolor is None:
-        facecolor = [cmap_default(i)
-                     for i in np.linspace(0, 1, len(data_list))]
-    elif histtype == 'step' and edgecolor is None and facecolor is None:
-        edgecolor = [cmap_default(i)
-                     for i in np.linspace(0, 1, len(data_list))]
+    if histtype == 'stepfilled':
+        if facecolor is None:
+            facecolor = [cmap_default(i)
+                         for i in np.linspace(0, 1, len(data_list))]
+        if edgecolor is None:
+            edgecolor = ['black']*len(data_list)
+    elif histtype == 'step':
+        if edgecolor is None:
+            edgecolor = [cmap_default(i)
+                         for i in np.linspace(0, 1, len(data_list))]
 
     # Convert colors to lists if necessary
     if not isinstance(edgecolor, list):
