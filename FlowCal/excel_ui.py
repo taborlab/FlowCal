@@ -379,15 +379,45 @@ def process_beads_table(beads_table,
                 beads_sample_gated = FlowCal.gate.high_low(
                     beads_sample_gated,
                     channels=sc_channels)
-            # Density gating
-            beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=beads_sample_gated,
-                channels=sc_channels,
-                gate_fraction=beads_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                sigma=5.,
-                full_output=True)
+
+            # Scatter gate
+            if 'Scatter Gate' in beads_row.index:
+                # Parse gate method
+                # An empty cell will be seen here as a NaN. Therefore, this has
+                # to be checked for explicitly.
+                if pd.isnull(beads_row['Scatter Gate']):
+                    gate_method = ''
+                else:
+                    gate_method = str(beads_row['Scatter Gate'])
+
+                if gate_method.lower().strip() == 'density':
+                    # Density gate by default
+                    beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                        data=beads_sample_gated,
+                        channels=sc_channels,
+                        gate_fraction=beads_row['Gate Fraction'],
+                        xscale='logicle',
+                        yscale='logicle',
+                        sigma=5.,
+                        full_output=True)
+                elif gate_method.lower().strip() in ['', 'none']:
+                    # No additional scatter gate
+                    gate_contour = None
+                else:
+                    # Not recognized, raise error.
+                    raise ExcelUIException(
+                        "scatter gate method \"{}\" not recognized".format(
+                            gate_method))
+            else:
+                # Density gate by default
+                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=beads_sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=beads_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    sigma=5.,
+                    full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -781,14 +811,43 @@ def process_samples_table(samples_table,
                 sample_gated = FlowCal.gate.high_low(
                     sample_gated,
                     sc_channels + report_channels)
-            # Density gating
-            sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=sample_gated,
-                channels=sc_channels,
-                gate_fraction=sample_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                full_output=True)
+
+            # Scatter gate
+            if 'Scatter Gate' in sample_row.index:
+                # Parse gate method
+                # An empty cell will be seen here as a NaN. Therefore, this has
+                # to be checked for explicitly.
+                if pd.isnull(sample_row['Scatter Gate']):
+                    gate_method = ''
+                else:
+                    gate_method = str(sample_row['Scatter Gate'])
+
+                if gate_method.lower().strip() == 'density':
+                    # Density gate
+                    sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                        data=sample_gated,
+                        channels=sc_channels,
+                        gate_fraction=sample_row['Gate Fraction'],
+                        xscale='logicle',
+                        yscale='logicle',
+                        full_output=True)
+                elif gate_method.lower().strip() in ['', 'none']:
+                    # No additional scatter gate
+                    gate_contour = None
+                else:
+                    # Not recognized, raise error.
+                    raise ExcelUIException(
+                        "scatter gate method \"{}\" not recognized".format(
+                            gate_method))
+            else:
+                # Density gate by default
+                sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=sample_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    full_output=True)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
