@@ -380,14 +380,17 @@ def process_beads_table(beads_table,
                     beads_sample_gated,
                     channels=sc_channels)
             # Density gating
-            beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=beads_sample_gated,
-                channels=sc_channels,
-                gate_fraction=beads_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                sigma=5.,
-                full_output=True)
+            try:
+                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=beads_sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=beads_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    sigma=5.,
+                    full_output=True)
+            except ValueError as ve:
+                raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -782,13 +785,16 @@ def process_samples_table(samples_table,
                     sample_gated,
                     sc_channels + report_channels)
             # Density gating
-            sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=sample_gated,
-                channels=sc_channels,
-                gate_fraction=sample_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                full_output=True)
+            try:
+                sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=sample_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    full_output=True)
+            except ValueError as ve:
+                raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
