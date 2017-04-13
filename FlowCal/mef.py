@@ -6,11 +6,17 @@ Functions for transforming flow cytometer data to MEF units.
 import os
 import functools
 import collections
+import packaging
 
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from sklearn.mixture import GMM
+import sklearn
+if packaging.version.parse(sklearn.__version__) \
+        >= packaging.version.parse('0.18'):
+    from sklearn.mixture import GaussianMixture
+else:
+    from sklearn.mixture import GMM
 
 import FlowCal.plot
 import FlowCal.transform
@@ -148,13 +154,24 @@ def clustering_gmm(data,
     # Run Gaussian Mixture Model Clustering
     ###
 
-    # Initialize GMM object
-    gmm = GMM(n_components=n_clusters,
-              tol=tol,
-              min_covar=min_covar,
-              covariance_type='full',
-              params='mc',
-              init_params='')
+
+    if packaging.version.parse(sklearn.__version__) \
+            >= packaging.version.parse('0.18'):
+        # Initialize GaussianMixture object
+        gmm = GaussianMixture(n_components=n_clusters,
+                              tol=tol,
+                              reg_covar=min_covar,
+                              covariance_type='full',
+                              init_params='kmeans')
+
+    else:
+        # Initialize GMM object
+        gmm = GMM(n_components=n_clusters,
+                  tol=tol,
+                  min_covar=min_covar,
+                  covariance_type='full',
+                  params='mc',
+                  init_params='')
 
     # Set initial parameters
     gmm.weight_ = weights
@@ -165,8 +182,8 @@ def clustering_gmm(data,
     gmm.fit(data)
 
     # Get labels by sampling from the responsibilities
-    # This avoids the complete elimination of a cluster if two or more clusters
-    # have very similar means.
+    # This avoids the complete elimination of a cluster if two or more 
+    # clusters have very similar means.
     resp = gmm.predict_proba(data)
     labels = [np.random.choice(range(n_clusters), p=ri) for ri in resp]
 
