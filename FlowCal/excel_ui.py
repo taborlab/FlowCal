@@ -1311,7 +1311,11 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(input_path=None, output_path=None, verbose=True, plot=True, hist_sheet=False):
+def run(input_path=None,
+        output_path=None,
+        verbose=True,
+        plot=True,
+        hist_sheet=False):
     """
     Run the MS Excel User Interface.
 
@@ -1324,11 +1328,12 @@ def run(input_path=None, output_path=None, verbose=True, plot=True, hist_sheet=F
      4. Generate statistics for each bead sample.
      5. Process all the cell samples in the Samples table.
      6. Generate statistics for each sample.
-     7. If specified, generate a histogram table for each fluorescent channel
-        specified for each sample.
+     7. If requested, generate a histogram table for each fluorescent
+        channel specified for each sample.
      8. Generate a table with run time, date, FlowCal version, among
         others.
-     9. Save statistics and (if specified) histograms in an output Excel file.
+     9. Save statistics and (if requested) histograms in an output Excel
+        file.
 
     Parameters
     ----------
