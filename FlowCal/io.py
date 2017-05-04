@@ -93,7 +93,7 @@ def read_fcs_header_segment(buf, begin=0):
     header = FCSHeader._make(field_values)
     return header
 
-def read_fcs_text_segment(buf, begin, end, delim=None):
+def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
     """
     Read TEXT segment of FCS file.
 
@@ -107,8 +107,12 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
         Offset (in bytes) to last byte of TEXT segment in `buf`.
     delim : str, optional
         1-byte delimiter character which delimits key-value entries of
-        TEXT segment. If None, will extract delimiter as first byte
-        of TEXT segment.
+        TEXT segment. If None and ``supplemental==False``, will extract
+        delimiter as first byte of TEXT segment.
+    supplemental : bool, optional
+        Flag specifying that segment is a supplemental TEXT segment (see
+        FCS3.0 and FCS3.1), in which case a delimiter (``delim``) must be
+        specified.
 
     Returns
     -------
@@ -120,23 +124,29 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     Raises
     ------
     ValueError
-        If TEXT segment does not start and end with delimiter.
+        If supplemental TEXT segment (``supplemental==True``) but ``delim`` is
+        not specified.
     ValueError
-        If function detects odd number of total extracted keys and
-        values (indicating an unpaired key or value).
-    NotImplementedError
-        If delimiter is used in a keyword or value.
+        If primary TEXT segment (``supplemental==False``) does not start with
+        delimiter.
+    ValueError
+        If first keyword starts with delimiter (e.g. a primary TEXT segment
+        with the following contents: ///k1/v1/k2/v2/).
+    ValueError
+        If odd number of keys + values detected (indicating an unpaired key or
+        value).
+    ValueError
+        If TEXT segment is ill-formed (unable to be parsed according to the
+        FCS standards).
 
     Notes
     -----
-    ANALYSIS segments and TEXT segments are parsed the same way, so
-    this function can also be used to parse ANALYSIS segments.
+    ANALYSIS segments and supplemental TEXT segments are parsed the same way,
+    so this function can also be used to parse ANALYSIS segments.
 
-    This function does not automatically parse supplemental TEXT
-    segments (see FCS3.0 [2] and FCS3.1 [3]). Supplemental TEXT segments
-    and regular TEXT segments are parsed the same way, though, so this
-    function can be manually directed to parse a supplemental TEXT segment
-    by providing the appropriate `begin` and `end` values.
+    This function does *not* automatically parse and accumulate additional
+    TEXT-like segments (e.g. supplemental TEXT segments or ANALYSIS segments)
+    referenced in the originally specified TEXT segment.
 
     References
     ----------
@@ -156,8 +166,12 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
 
     """
     if delim is None:
-        buf.seek(begin)
-        delim = str(buf.read(1))
+        if supplemental:
+            raise ValueError("must specify ``delim`` if reading supplemental"
+                             + " TEXT segment")
+        else:
+            buf.seek(begin)
+            delim = str(buf.read(1))
 
     # The offsets are inclusive (meaning they specify first and last byte
     # WITHIN segment) and seeking is inclusive (read() after seek() reads the
@@ -170,10 +184,12 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     if not raw:
         return {}, None
 
-    # Check that the first character of the TEXT segment is equal to the
-    # delimiter.
-    if raw[0] != delim:
-        raise ValueError("segment should start with delimiter")
+    if not supplemental:
+        # Check that the first character of the TEXT segment is equal to the
+        # delimiter.
+        if raw[0] != delim:
+            raise ValueError("primary TEXT segment should start with"
+                             + " delimiter")
 
     # The FCS standards indicate that keyword values must be flanked by the
     # delimiter character, but they do not require that the TEXT segment end
@@ -182,7 +198,13 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     # TEXT segment characters which occur after the last instance of the
     # delimiter).
     end_index = raw.rfind(delim)
-    raw = raw[:end_index]
+    if supplemental and end_index == -1:
+        # Delimiter was not found. This should only be permitted for an empty
+        # supplemental TEXT segment (primary TEXT segment should fail above
+        # if first character doesn't match delimiter).
+        return {}, delim
+    else:
+        raw = raw[:end_index]
 
     pairs_list = raw.split(delim)
 
@@ -236,7 +258,9 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
                     # delimiter (which is permitted for supplemental TEXT
                     # segments) and starting the first keyword with one or
                     # more delimiters, which is prohibited.
-                    #
+                    if supplemental:
+                        raise ValueError("starting a TEXT segment keyword"
+                                         + " with a delimiter is prohibited")
                     # If this is a primary TEXT segment, this is an ill-formed
                     # segment. Rationale: 1 empty element will always be
                     # consumed as the initial delimiter which a primary TEXT
