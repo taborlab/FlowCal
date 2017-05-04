@@ -657,7 +657,7 @@ class FCSFile(object):
         If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
         endian ('1,2,3,4', '1,2').
     ValueError
-        If TEXT-like segment does not start with delimiter.
+        If primary TEXT segment does not start with delimiter.
     ValueError
         If TEXT-like segment has odd number of total extracted keys and
         values (indicating an unpaired key or value).
@@ -738,7 +738,8 @@ class FCSFile(object):
         self._text, delim = read_fcs_text_segment(
             buf=f,
             begin=self._header.text_begin,
-            end=self._header.text_end)
+            end=self._header.text_end,
+            supplemental=False)
 
         if self._header.version in ('FCS3.0','FCS3.1'):
             stext_begin = int(self._text['$BEGINSTEXT'])   # required keyword
@@ -748,7 +749,8 @@ class FCSFile(object):
                     buf=f,
                     begin=stext_begin,
                     end=stext_end,
-                    delim=delim)[0]
+                    delim=delim,
+                    supplemental=True)[0]
                 self._text.update(stext)
 
         # Confirm FCS file assumptions. All queried keywords are required
@@ -795,7 +797,8 @@ class FCSFile(object):
                     buf=f,
                     begin=self._header.analysis_begin,
                     end=self._header.analysis_end,
-                    delim=delim)[0]
+                    delim=delim,
+                    supplemental=True)[0]
             except Exception as e:
                 warnings.warn("ANALYSIS segment could not be parsed ({})".\
                     format(str(e)))
@@ -809,7 +812,8 @@ class FCSFile(object):
                         buf=f,
                         begin=analysis_begin,
                         end=analysis_end,
-                        delim=delim)[0]
+                        delim=delim,
+                        supplemental=True)[0]
                 except Exception as e:
                     warnings.warn("ANALYSIS segment could not be parsed ({})".\
                         format(str(e)))
