@@ -107,7 +107,7 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
         Offset (in bytes) to last byte of TEXT segment in `buf`.
     delim : str, optional
         1-byte delimiter character which delimits key-value entries of
-        TEXT segment. If None, will extract delimter as first byte
+        TEXT segment. If None, will extract delimiter as first byte
         of TEXT segment.
 
     Returns
@@ -242,7 +242,7 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
                     # consumed as the initial delimiter which a primary TEXT
                     # segment is required to start with. After that delimiter
                     # is accounted for, you now have either an unescaped
-                    # delimter, which is prohibited, or a boundary delimiter,
+                    # delimiter, which is prohibited, or a boundary delimiter,
                     # which would imply that the entire first keyword was
                     # composed of delimiters, which is prohibited because
                     # keywords are not allowed to start with the delimiter).
@@ -290,12 +290,12 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
                     # number of delimiters.
                     #
                     # The accumulator should always have at least 1 element in
-                    # it. If it doesn't, the last value ends with the
-                    # delimiter, which will result in two consecutive empty
-                    # elements, which won't fall into this case. Only 1 empty
-                    # element indicates an ill-formed TEXT segment with an
-                    # unpaired non-boundary delimiter (e.g. /k1/v1//), which
-                    # is not permitted.
+                    # it at this point. If it doesn't, the last value ends
+                    # with the delimiter, which will result in two consecutive
+                    # empty elements, which won't fall into this case. Only 1
+                    # empty element indicates an ill-formed TEXT segment with
+                    # an unpaired non-boundary delimiter (e.g. /k1/v1//),
+                    # which is not permitted.
                     if len(reconstructed_KV_accumulator) == 0:
                         raise ValueError("ill-formed TEXT segment")
                     reconstructed_KV_accumulator[-1] = pairs_list[idx] + \
