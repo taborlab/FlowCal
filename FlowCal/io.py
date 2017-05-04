@@ -114,8 +114,8 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
     -------
     text : dict
         Dictionary of key-value entries extracted from TEXT segment.
-    delim : str
-        String containing delimiter character.
+    delim : str or None
+        String containing delimiter or None if TEXT segment is empty.
 
     Raises
     ------
@@ -168,61 +168,152 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
 
     # If segment is empty, return empty dictionary as text
     if not raw:
-        return {}, delim
+        return {}, None
 
     # Check that the first character of the TEXT segment is equal to the
     # delimiter.
     if raw[0] != delim:
         raise ValueError("segment should start with delimiter")
 
-    # Look for the last delimiter in the segment string, and retain everything
-    # from one character after the first delimiter to one character before the
-    # last delimiter.
+    # The FCS standards indicate that keyword values must be flanked by the
+    # delimiter character, but they do not require that the TEXT segment end
+    # with the delimiter. As such, look for the last instance of the delimiter
+    # in the segment and retain everything before it (potentially removing
+    # TEXT segment characters which occur after the last instance of the
+    # delimiter).
     end_index = raw.rfind(delim)
-    raw = raw[1: end_index]
+    raw = raw[:end_index]
 
     pairs_list = raw.split(delim)
 
-    # According to the FCS2.0 standard, "If the separator appears in a keyword
-    # or in a keyword value, it must be 'quoted' by being repeated" and "null
-    # (zero length) keywords or keyword values are not permitted", so this
-    # issue should manifest itself as an empty element in the list.
-    # The following scans the list of pairs for empty elements and appends a
-    # delimiter character to the previous element when an empty element is
-    # found.
-    pairs_list_delim = []
-    pairs_list_idx = 0
-    while pairs_list_idx < len(pairs_list):
-        if pairs_list[pairs_list_idx] != '':
-            # Non-empty element, just append
-            pairs_list_delim.append(pairs_list[pairs_list_idx])
-        else:
-            # Empty element
-            # Accumulate delimiters in a temporary string as long as more empty
-            # elements are found, until the last element
-            s = ''
-            while True:
-                s += delim
-                pairs_list_idx += 1
-                if pairs_list_idx >= len(pairs_list):
+    ###
+    # Reconstruct Keys and Values By Aggregating Escaped Delimiters
+    ###
+    # According to the FCS standards, delimiter characters are permitted in
+    # keywords and keyword values as long as they are escaped by being
+    # immediately repeated. Delimiter characters are not permitted as the
+    # first character of a keyword or keyword value, however. Null (zero
+    # length) keywords or keyword values are also not permitted. According to
+    # these restrictions, a delimiter character should manifest itself as an
+    # empty element in ``pairs_list``. As such, scan through ``pairs_list``
+    # looking for empty elements and reconstruct keywords or keyword values
+    # containing delimiters.
+    ###
+
+    # Start scanning from the end of the list since the end of the list is
+    # well defined (i.e. doesn't depend on whether the TEXT segment is a
+    # primary segment, which MUST start with the delimiter, or a supplemental
+    # segment, which is not required to start with the delimiter).
+    reconstructed_KV_accumulator = []
+    idx = len(pairs_list) - 1
+    while idx >= 0:
+        if pairs_list[idx] == '':
+            # Count the number of consecutive empty elements to determine how
+            # many escaped delimiters exist and whether or not a true boundary
+            # delimiter exists.
+            num_empty_elements = 1
+            idx = idx - 1
+            while idx >=0 and pairs_list[idx] == '':
+                num_empty_elements = num_empty_elements + 1
+                idx = idx - 1
+            # Need to differentiate between rolling off the bottom of the list
+            # and hitting a non-empty element. Assessing pairs_list[-1] can
+            # still be evaluated (by wrapping around the list, which is not
+            # what we want to check) so check if we've finished scanning the
+            # list first.
+            if idx < 0:
+                # We rolled off the bottom of the list.
+                if num_empty_elements == 1:
+                    # If we only hit 1 empty element before rolling off the
+                    # list, then there were no escaped delimiters and the
+                    # segment started with a delimiter.
                     break
-                if pairs_list[pairs_list_idx] != '':
-                    s += pairs_list[pairs_list_idx]
-                    break
-            # Append temporary string to previous element if pairs_list_delim
-            # is not empty, otherwise make it the first element.
-            if pairs_list_delim:
-                pairs_list_delim[-1] += s
+                elif (num_empty_elements % 2) == 0:
+                    # Even number of empty elements.
+                    #
+                    # If this is a supplemental TEXT segment, this can be
+                    # interpreted as *not* starting the TEXT segment with the
+                    # delimiter (which is permitted for supplemental TEXT
+                    # segments) and starting the first keyword with one or
+                    # more delimiters, which is prohibited.
+                    #
+                    # If this is a primary TEXT segment, this is an ill-formed
+                    # segment. Rationale: 1 empty element will always be
+                    # consumed as the initial delimiter which a primary TEXT
+                    # segment is required to start with. After that delimiter
+                    # is accounted for, you now have either an unescaped
+                    # delimter, which is prohibited, or a boundary delimiter,
+                    # which would imply that the entire first keyword was
+                    # composed of delimiters, which is prohibited because
+                    # keywords are not allowed to start with the delimiter).
+                    raise ValueError("ill-formed TEXT segment")
+                else:
+                    # Odd number of empty elements. This can be interpreted as
+                    # starting the segment with a delimiter and then having
+                    # one or more delimiters starting the first keyword, which
+                    # is prohibited.
+                    raise ValueError("starting a TEXT segment keyword with a"
+                                     + " delimiter is prohibited")
             else:
-                pairs_list_delim.append(s)
-        pairs_list_idx += 1
-    pairs_list = pairs_list_delim
+                # We encountered a non-empty element. Calculate the number of
+                # escaped delimiters and whether or not a true boundary
+                # delimiter is present.
+                num_delim      = (num_empty_elements+1)/2
+                boundary_delim = (num_empty_elements % 2) == 0
+
+                if boundary_delim:
+                    # A boundary delimiter exists. We know that the boundary
+                    # has to be on the right side (end of the sequence),
+                    # because keywords and keyword values are prohibited from
+                    # starting with a delimiter, which would be the case if the
+                    # boundary delimiter was anywhere BUT the last character.
+                    # This means we need to postpend the appropriate number of
+                    # delim characters to the end of the non-empty list
+                    # element that ``idx`` currently points to.
+                    pairs_list[idx] = pairs_list[idx] + (num_delim*delim)
+
+                    # We can now add the reconstructed keyword or keyword
+                    # value to the accumulator and move on. It's possible that
+                    # this keyword or keyword value is incompletely
+                    # reconstructed (e.g. /key//1///value1/
+                    # => {'key/1/':'value1'}; there are other delimiters in
+                    # this keyword or keyword value), but that case is now
+                    # handled independently of this case and just like any
+                    # other instance of escaped delimiters *without* a
+                    # boundary delimiter.
+                    reconstructed_KV_accumulator.append(pairs_list[idx])
+                    idx = idx - 1
+                else:
+                    # No boundary delimiters exist, so we need to glue the
+                    # list elements before and after this sequence of
+                    # consecutive delimiters together with the appropriate
+                    # number of delimiters.
+                    #
+                    # The accumulator should always have at least 1 element in
+                    # it. If it doesn't, the last value ends with the
+                    # delimiter, which will result in two consecutive empty
+                    # elements, which won't fall into this case. Only 1 empty
+                    # element indicates an ill-formed TEXT segment with an
+                    # unpaired non-boundary delimiter (e.g. /k1/v1//), which
+                    # is not permitted.
+                    if len(reconstructed_KV_accumulator) == 0:
+                        raise ValueError("ill-formed TEXT segment")
+                    reconstructed_KV_accumulator[-1] = pairs_list[idx] + \
+                        (num_delim*delim) + reconstructed_KV_accumulator[-1]
+                    idx = idx - 1
+        else:
+            # Non-empty element, just append
+            reconstructed_KV_accumulator.append(pairs_list[idx])
+            idx = idx - 1
+
+    pairs_list_reconstructed = list(reversed(reconstructed_KV_accumulator))
 
     # List length should be even since all key-value entries should be pairs
-    if len(pairs_list) % 2 != 0:
+    if len(pairs_list_reconstructed) % 2 != 0:
         raise ValueError("odd # of (keys + values); unpaired key or value")
 
-    text = dict(zip(pairs_list[0::2], pairs_list[1::2]))
+    text = dict(zip(pairs_list_reconstructed[0::2],
+                    pairs_list_reconstructed[1::2]))
 
     return text, delim
 

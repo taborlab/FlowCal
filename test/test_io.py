@@ -166,7 +166,7 @@ class TestReadTextSegment(unittest.TestCase):
                 end=len(raw_text_segment)-1),
             (text_dict, delim))
 
-    def test_primary_delim_fail_1(self):
+    def test_primary_delim_mismatch(self):
         """
         Test that primary TEXT segment delimiter mismatch fails.
 
@@ -182,75 +182,39 @@ class TestReadTextSegment(unittest.TestCase):
             FlowCal.io.read_fcs_text_segment,
             buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
 
-    def test_primary_delim_fail_2(self):
+    def test_primary_delim_in_keyword_1(self):
         """
-        Test that primary segment fails if delim is not first character.
-
-        This test fails because 'k' is deduced to be the delimiter, but upon
-        splitting on 'k', there are not an even number of pairs remaining.
+        Test that delimiter in keyword still parses correctly.
         
         """
-        raw_text_segment = 'k1/v1/'
+        raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
+        text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
         buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
 
-    def test_primary_delim_fail_3(self):
+    def test_primary_delim_in_value_1(self):
         """
-        Test that primary segment fails if delim is not first character.
-
-        This test fails because, upon specifying the correct delimiter ('/'),
-        the delimiter does not match the first character of the primary TEXT
-        segment. Note, this same test should succeed for a supplemental TEXT
-        segment.
-
-        """
-        raw_text_segment = 'k1/v1/'
-        delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
-
-    def test_primary_bad_segment_1(self):
-        """
-        Test that read_fcs_text_segment() fails to parse minimal TEXT segment.
-
-        Test that read_fcs_text_segment() fails to parse a minimal TEXT
-        segment because it's either classified as having empty keywords and
-        values (which is prohibited by the standards), or it is perceived as
-        having keywords or values that start with the delimiter (also
-        prohibited by the standards).
-        """
-        raw_text_segment = '///'
-        delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
-
-    def test_primary_bad_segment_2(self):
-        """
-        Test that read_fcs_text_segment() fails to parse minimal TEXT segment.
-
-        This test fails to parse because there is no keyword, only a value
-        flanked by delimiters.
+        Test that delimiter in keyword value still parses correctly.
         
         """
-        raw_text_segment = '/str/ing'
+        raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
+        text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
         buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
 
-    def test_primary_delim_in_keyword(self):
+    def test_primary_delim_in_keyword_2(self):
         """
         Test that delimiter in keyword still parses correctly.
         
@@ -266,7 +230,7 @@ class TestReadTextSegment(unittest.TestCase):
                 end=len(raw_text_segment)-1),
             (text_dict, delim))
 
-    def test_primary_delim_in_value(self):
+    def test_primary_delim_in_value_2(self):
         """
         Test that delimiter in keyword value still parses correctly.
         
@@ -282,40 +246,14 @@ class TestReadTextSegment(unittest.TestCase):
                 end=len(raw_text_segment)-1),
             (text_dict, delim))
 
-    def test_primary_delim_in_keyword_fail(self):
-        """
-        Test that delimiter at start of keyword fails.
-        
-        """
-        raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
-        delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
-
-    def test_primary_delim_in_value_fail(self):
-        """
-        Test that delimiter at start of keyword value fails.
-        
-        """
-        raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
-        delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
-
-    def test_primary_multi_delim_in_keyword(self):
+    def test_primary_delim_in_keyword_3(self):
         """
         Test that delimiter in keyword still parses correctly.
         
         """
-        raw_text_segment = '/k1/v1/key//////2/value2/k3/v3/'
+        raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
-        text_dict        = {'k1':'v1','key///2':'value2','k3':'v3'}
+        text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
         buf              = StringIO.StringIO(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
@@ -323,7 +261,270 @@ class TestReadTextSegment(unittest.TestCase):
                 begin=0,
                 end=len(raw_text_segment)-1),
             (text_dict, delim))
-    
+
+    def test_primary_delim_in_value_3(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_first_keyword_delim_fail(self):
+        """
+        Test that delimiter at start of first keyword fails.
+        
+        """
+        raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+
+    def test_primary_delim_in_keyword_4(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_4(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_5(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_5(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_6(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_6(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_bad_segment(self):
+        """
+        Test edge case with unpaired non-boundary delimiter in last value.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
+        delim            = '/'
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+
+    def test_primary_multi_delim_in_keyword_1(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_1(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_2(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_2(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_3(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_3(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_4(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_fail(self):
+        """
+        Test that multiple delimiters at start of first keyword fails.
+        
+        """
+        raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = StringIO.StringIO(raw_text_segment)
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+   
     ###
     # Supplemental TEXT Segment Tests
     ###
