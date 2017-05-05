@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.excel_ui module &mdash; FlowCal 1.1.1 documentation</title>
+  <title>FlowCal.excel_ui module &mdash; FlowCal 1.1.3 documentation</title>
   
 
+  
+  
   
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.3 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.gate module" href="FlowCal.gate.html"/>
         <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html"/> 
@@ -47,6 +49,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -66,7 +69,7 @@
             
             
               <div class="version">
-                1.1.1
+                1.1.3
               </div>
             
           
@@ -87,7 +90,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
@@ -115,8 +121,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">FlowCal</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FlowCal</a>
+        
       </nav>
 
 
@@ -125,25 +133,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="modules.html">FlowCal (Python API) Reference</a> &raquo;</li>
-      
-    <li>FlowCal.excel_ui module</li>
+        
+      <li>FlowCal.excel_ui module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../_sources/reference/FlowCal.excel_ui.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -630,7 +655,7 @@ is empty will not be present in <cite>table</cite>.</p>
 
 <dl class="function">
 <dt id="FlowCal.excel_ui.run">
-<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">run</code><span class="sig-paren">(</span><em>input_path=None</em>, <em>output_path=None</em>, <em>verbose=True</em>, <em>plot=True</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">run</code><span class="sig-paren">(</span><em>input_path=None</em>, <em>output_path=None</em>, <em>verbose=True</em>, <em>plot=True</em>, <em>hist_sheet=False</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the MS Excel User Interface.</p>
 <p>This function performs the following:</p>
 <blockquote>
@@ -642,11 +667,12 @@ Excel file.</li>
 <li>Generate statistics for each bead sample.</li>
 <li>Process all the cell samples in the Samples table.</li>
 <li>Generate statistics for each sample.</li>
-<li>Generate a histogram table for each fluorescent channel specified
-for each sample.</li>
+<li>If requested, generate a histogram table for each fluorescent
+channel specified for each sample.</li>
 <li>Generate a table with run time, date, FlowCal version, among
 others.</li>
-<li>Save statistics and histograms in an output Excel file.</li>
+<li>Save statistics and (if requested) histograms in an output Excel
+file.</li>
 </ol>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -669,9 +695,14 @@ select an input file.</p>
 function.</p>
 </div></blockquote>
 <p><strong>plot</strong> : bool, optional</p>
-<blockquote class="last">
+<blockquote>
 <div><p>Whether to generate and save density/histogram plots of each
 sample, and each beads sample.</p>
+</div></blockquote>
+<p><strong>hist_sheet</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Whether to generate a sheet in the output Excel file specifying
+histogram bin information.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -740,15 +771,18 @@ in each column.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="FlowCal.gate.html" class="btn btn-neutral float-right" title="FlowCal.gate module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="FlowCal.gate.html" class="btn btn-neutral float-right" title="FlowCal.gate module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="modules.html" class="btn btn-neutral" title="FlowCal (Python API) Reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral" title="FlowCal (Python API) Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -779,10 +813,11 @@ in each column.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.1',
+            VERSION:'1.1.3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

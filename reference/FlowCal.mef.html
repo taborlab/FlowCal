@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.mef module &mdash; FlowCal 1.1.1 documentation</title>
+  <title>FlowCal.mef module &mdash; FlowCal 1.1.3 documentation</title>
   
 
+  
+  
   
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.3 documentation" href="../index.html"/>
         <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
         <link rel="next" title="FlowCal.plot module" href="FlowCal.plot.html"/> 
 
@@ -46,6 +48,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                1.1.1
+                1.1.3
               </div>
             
           
@@ -86,7 +89,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Fundamentals</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../excel_ui/index.html">FlowCal&#8217;s Excel UI</a></li>
@@ -114,8 +120,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">FlowCal</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">FlowCal</a>
+        
       </nav>
 
 
@@ -124,25 +132,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="modules.html">FlowCal (Python API) Reference</a> &raquo;</li>
-      
-    <li>FlowCal.mef module</li>
+        
+      <li>FlowCal.mef module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../_sources/reference/FlowCal.mef.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -380,8 +405,8 @@ Directly copied from the <cite>mef_channels</cite> argument.</p>
 <blockquote>
 <div><p>Results of the clustering step, containing the following fields:</p>
 <dl class="docutils">
-<dt>labels</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">array</span><dd><p class="first last">Labels for each event in <cite>data_beads</cite>.</p>
+<dt>labels <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Labels for each event in <cite>data_beads</cite>.</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -390,8 +415,8 @@ Directly copied from the <cite>mef_channels</cite> argument.</p>
 <div><p>Results of the calculation of bead subpopulations&#8217; fluorescence,
 containing the following fields:</p>
 <dl class="docutils">
-<dt>values</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">The representative fluorescence values of each
+<dt>values <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">The representative fluorescence values of each
 subpopulation, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
 </dl>
@@ -401,12 +426,12 @@ subpopulation, for each channel in <cite>mef_channels</cite>.</p>
 <div><p>Results of the subpopulation selection step, containing the
 following fields:</p>
 <dl class="docutils">
-<dt>rfi</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">The fluorescence values of each selected subpopulation in
+<dt>rfi <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">The fluorescence values of each selected subpopulation in
 RFI units, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
-<dt>mef</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">The fluorescence values of each selected subpopulation in
+<dt>mef <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">The fluorescence values of each selected subpopulation in
 MEF units, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
 </dl>
@@ -415,24 +440,24 @@ MEF units, for each channel in <cite>mef_channels</cite>.</p>
 <blockquote>
 <div><p>Results of the model fitting step, containing the following fields:</p>
 <dl class="docutils">
-<dt>std_crv</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">Functions encoding the standard curves, for each channel in
+<dt>std_crv <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Functions encoding the standard curves, for each channel in
 <cite>mef_channels</cite>.</p>
 </dd>
-<dt>beads_model</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">Functions encoding the fluorescence model of the
+<dt>beads_model <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Functions encoding the fluorescence model of the
 calibration beads, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
-<dt>beads_params</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">Fitted parameters of the bead fluorescence model, for each
+<dt>beads_params <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Fitted parameters of the bead fluorescence model, for each
 channel in <cite>mef_chanels</cite>.</p>
 </dd>
-<dt>beads_model_str</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">String representation of the bead models used, for each channel
+<dt>beads_model_str <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">String representation of the bead models used, for each channel
 in <cite>mef_channels</cite>.</p>
 </dd>
-<dt>beads_params_names</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list</span><dd><p class="first last">Names of the parameters given in <cite>beads_params</cite>, for each
+<dt>beads_params_names <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Names of the parameters given in <cite>beads_params</cite>, for each
 channel in <cite>mef_channels</cite>.</p>
 </dd>
 </dl>
@@ -440,7 +465,7 @@ channel in <cite>mef_channels</cite>.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>clustering_fxn</strong> : function, optional</p>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body"><p class="first"><strong>clustering_fxn</strong> : function, optional</p>
 <blockquote>
 <div><p>Function used for clustering, or identification of subpopulations.
 Must have the following signature:</p>
@@ -582,7 +607,7 @@ MEF units.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
 <blockquote>
 <div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
 </div></blockquote>
@@ -656,12 +681,15 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="FlowCal.plot.html" class="btn btn-neutral float-right" title="FlowCal.plot module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="FlowCal.plot.html" class="btn btn-neutral float-right" title="FlowCal.plot module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -693,10 +721,11 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.1',
+            VERSION:'1.1.3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
