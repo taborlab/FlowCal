@@ -380,14 +380,17 @@ def process_beads_table(beads_table,
                     beads_sample_gated,
                     channels=sc_channels)
             # Density gating
-            beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=beads_sample_gated,
-                channels=sc_channels,
-                gate_fraction=beads_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                sigma=5.,
-                full_output=True)
+            try:
+                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=beads_sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=beads_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    sigma=5.,
+                    full_output=True)
+            except ValueError as ve:
+                raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -782,13 +785,16 @@ def process_samples_table(samples_table,
                     sample_gated,
                     sc_channels + report_channels)
             # Density gating
-            sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                data=sample_gated,
-                channels=sc_channels,
-                gate_fraction=sample_row['Gate Fraction'],
-                xscale='logicle',
-                yscale='logicle',
-                full_output=True)
+            try:
+                sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                    data=sample_gated,
+                    channels=sc_channels,
+                    gate_fraction=sample_row['Gate Fraction'],
+                    xscale='logicle',
+                    yscale='logicle',
+                    full_output=True)
+            except ValueError as ve:
+                raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -1311,7 +1317,11 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(input_path=None, output_path=None, verbose=True, plot=True):
+def run(input_path=None,
+        output_path=None,
+        verbose=True,
+        plot=True,
+        hist_sheet=False):
     """
     Run the MS Excel User Interface.
 
@@ -1324,11 +1334,12 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
      4. Generate statistics for each bead sample.
      5. Process all the cell samples in the Samples table.
      6. Generate statistics for each sample.
-     7. Generate a histogram table for each fluorescent channel specified
-        for each sample.
+     7. If requested, generate a histogram table for each fluorescent
+        channel specified for each sample.
      8. Generate a table with run time, date, FlowCal version, among
         others.
-     9. Save statistics and histograms in an output Excel file.
+     9. Save statistics and (if requested) histograms in an output Excel
+        file.
 
     Parameters
     ----------
@@ -1344,6 +1355,9 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     plot : bool, optional
         Whether to generate and save density/histogram plots of each
         sample, and each beads sample.
+    hist_sheet : bool, optional
+        Whether to generate a sheet in the output Excel file specifying
+        histogram bin information.
 
     """
 
@@ -1406,9 +1420,10 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     add_samples_stats(samples_table, samples)
 
     # Generate histograms
-    if verbose:
-        print("Generating histograms table...")
-    histograms_table = generate_histograms_table(samples_table, samples)
+    if hist_sheet:
+        if verbose:
+            print("Generating histograms table...")
+        histograms_table = generate_histograms_table(samples_table, samples)
 
     # Generate about table
     about_table = generate_about_table({'Input file path': input_path})
@@ -1418,7 +1433,8 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     table_list.append(('Instruments', instruments_table))
     table_list.append(('Beads', beads_table))
     table_list.append(('Samples', samples_table))
-    table_list.append(('Histograms', histograms_table))
+    if hist_sheet:
+        table_list.append(('Histograms', histograms_table))
     table_list.append(('About Analysis', about_table))
 
     # Write output excel file
@@ -1459,10 +1475,16 @@ if __name__ == '__main__':
         "--plot",
         action="store_true",
         help="generate and save density plots/histograms of beads and samples")
+    parser.add_argument(
+        "-H",
+        "--histogram-sheet",
+        action="store_true",
+        help="generate sheet in output Excel file specifying histogram bins")
     args = parser.parse_args()
 
     # Run Excel UI
     run(input_path=args.inputpath,
         output_path=args.outputpath,
         verbose=args.verbose,
-        plot=args.plot)
+        plot=args.plot,
+        hist_sheet=args.histogram_sheet)

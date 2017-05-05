@@ -892,6 +892,30 @@ class TestDensity2dGate2(unittest.TestCase):
                 0,0,0,0,0,0], dtype=bool)
             )
 
+    # Test error when gate_fraction outside [0,1]
+
+    def test_gate_fraction_2_error_negative_gate_fraction(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        self.assertRaises(
+            ValueError,
+            FlowCal.gate.density2d,
+            self.pyramid,
+            bins=bins,
+            gate_fraction=-0.1,
+            sigma=0.0,
+            )
+
+    def test_gate_fraction_2_error_large_gate_fraction(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        self.assertRaises(
+            ValueError,
+            FlowCal.gate.density2d,
+            self.pyramid,
+            bins=bins,
+            gate_fraction=1.1,
+            sigma=0.0,
+            )
+
     # Test implicit gating (when values exist outside specified bins)
     #
     # The expected behavior is that density2d() should mimic
