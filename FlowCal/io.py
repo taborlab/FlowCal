@@ -312,18 +312,25 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
                     # list elements before and after this sequence of
                     # consecutive delimiters together with the appropriate
                     # number of delimiters.
-                    #
-                    # The accumulator should always have at least 1 element in
-                    # it at this point. If it doesn't, the last value ends
-                    # with the delimiter, which will result in two consecutive
-                    # empty elements, which won't fall into this case. Only 1
-                    # empty element indicates an ill-formed TEXT segment with
-                    # an unpaired non-boundary delimiter (e.g. /k1/v1//),
-                    # which is not permitted.
                     if len(reconstructed_KV_accumulator) == 0:
-                        raise ValueError("ill-formed TEXT segment")
-                    reconstructed_KV_accumulator[-1] = pairs_list[idx] + \
-                        (num_delim*delim) + reconstructed_KV_accumulator[-1]
+                        # Edge Case: The accumulator should always have at
+                        # least 1 element in it at this point. If it doesn't,
+                        # the last value ends with the delimiter, which will
+                        # result in two consecutive empty elements, which
+                        # won't fall into this case. Only 1 empty element
+                        # indicates an ill-formed TEXT segment with an
+                        # unpaired non-boundary delimiter (e.g. /k1/v1//),
+                        # which is not permitted. The ill-formed TEXT segment
+                        # implied by 1 empty element is recoverable, though,
+                        # and a use case which is known to exist, so throw a
+                        # warning and ignore the 2nd copy of the delimiter.
+                        warnings.warn("detected ill-formed TEXT segment (ends"
+                                      + " with two delimiter characters)."
+                                      + " Ignoring last delimiter character")
+                        reconstructed_KV_accumulator.append(pairs_list[idx])
+                    else:
+                        reconstructed_KV_accumulator[-1] = pairs_list[idx] + \
+                            (num_delim*delim) + reconstructed_KV_accumulator[-1]
                     idx = idx - 1
         else:
             # Non-empty element, just append

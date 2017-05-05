@@ -394,11 +394,14 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
 
     def test_primary_multi_delim_in_keyword_1(self):
         """
@@ -1124,12 +1127,16 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
-                supplemental=True)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
 
     def test_supp_bad_segment_s(self):
         """
@@ -1138,12 +1145,16 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = 'k1/v1/k2/v2/k3/v3//'
         delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = StringIO.StringIO(raw_text_segment)
-        self.assertRaises(
-            ValueError,
-            FlowCal.io.read_fcs_text_segment,
-            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
-                supplemental=True)
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
 
     def test_supp_multi_delim_in_keyword_1(self):
         """
