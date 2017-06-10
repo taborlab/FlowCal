@@ -72,6 +72,8 @@ ignored by ``FlowCal``.
 import collections
 import os
 import os.path
+import packaging
+import packaging.version
 import platform
 import re
 import subprocess
@@ -170,13 +172,27 @@ def write_workbook(filename, table_list, column_width=None):
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
     # The format module is in pd.core.format in pandas<=0.18.0,
-    # pd.formats.format in pandas>=0.18.1.
+    # pd.formats.format in pandas>=0.18.1, and pd.io.formats.excel in
+    # pandas>=0.20.
+    # Also, wrap in a try-except block in case format module is not found.
+    format_module_found = False
     try:
-        format_module = pd.core.format
+        # Get format module
+        if packaging.version.parse(pd.__version__) \
+                <= packaging.version.parse('0.18'):
+            format_module = pd.core.format
+        elif packaging.version.parse(pd.__version__) \
+                < packaging.version.parse('0.20'):
+            format_module = pd.formats.format
+        else:
+            import pandas.io.formats.excel as format_module
+        # Save previous style, replace, and indicate that previous style should
+        # be restored at the end
+        old_header_style = format_module.header_style
+        format_module.header_style = {"font": {"bold": True}}
+        format_module_found = True
     except AttributeError as e:
-        format_module = pd.formats.format
-    old_header_style = format_module.header_style
-    format_module.header_style = {"font": {"bold": True}}
+        pass
 
     # Generate output writer object
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -208,7 +224,8 @@ def write_workbook(filename, table_list, column_width=None):
     writer.save()
 
     # Restore previous header format
-    format_module.header_style = old_header_style
+    if format_module_found:
+        format_module.header_style = old_header_style
 
 def process_beads_table(beads_table,
                         instruments_table,
