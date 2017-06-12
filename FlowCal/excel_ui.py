@@ -480,7 +480,8 @@ def process_beads_table(beads_table,
                     raise ExcelUIException("Must specify the same number of"
                                            + " MEF Values for each channel."
                                            + " Use 'None' to instruct FlowCal"
-                                           + " to ignore a detected peak.")
+                                           + " to ignore a detected"
+                                           + " subpopulation.")
             mef_values = np.array(mef_values)
 
             # Obtain standard curve transformation
