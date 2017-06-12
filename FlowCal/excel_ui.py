@@ -171,10 +171,10 @@ def write_workbook(filename, table_list, column_width=None):
     # Modify default header format
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
-    # The format module is in pd.core.format in pandas<=0.18.0,
-    # pd.formats.format in pandas>=0.18.1, and pd.io.formats.excel in
+    # The header style structure is in pd.core.format in pandas<=0.18.0,
+    # pd.formats.format in 0.18.1<=pandas<0.20, and pd.io.formats.excel in
     # pandas>=0.20.
-    # Also, wrap in a try-except block in case format module is not found.
+    # Also, wrap in a try-except block in case style structure is not found.
     format_module_found = False
     try:
         # Get format module
