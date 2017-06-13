@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing FlowCal with Anaconda &mdash; FlowCal 1.1.3 documentation</title>
+  <title>Installing FlowCal with Anaconda &mdash; FlowCal 1.1.4 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.3 documentation" href="../index.html"/>
+    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
         <link rel="up" title="Getting Started" href="index.html"/>
         <link rel="next" title="Installing FlowCal in an Existing Python Evironment" href="install_python.html"/>
         <link rel="prev" title="Getting Started" href="index.html"/> 
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                1.1.3
+                1.1.4
               </div>
             
           
@@ -175,7 +175,19 @@
 <p>To install Anaconda and <code class="docutils literal"><span class="pre">FlowCal</span></code>, do the following:</p>
 <ol class="arabic simple">
 <li>Navigate to <a class="reference external" href="https://www.continuum.io/downloads">https://www.continuum.io/downloads</a>. If you are using Windows, click on “Windows 64-bit Graphical Installer” or “Windows 32-bit Graphical Installer” under the “Python 2.7” column, depending on whether your computer is 32-bit or 64-bit. The 64-bit version is strongly recommended. Similarly, if you are using OS X, click on “Mac OS X 64-bit Graphical Installer” under the “Python 2.7” column. This will download the installer.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Make sure to download the installer for Python 2.7 and not 3.x. <code class="docutils literal"><span class="pre">FlowCal</span></code> is not currently compatible with Python 3.</p>
+</div>
+<ol class="arabic simple" start="2">
 <li>Double click the installer (.exe in Windows, .pkg in OS X) and follow the instructions on screen.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Windows</strong>: During installation, on the &#8220;Advanced Installation Options&#8221; screen, make sure to check both &#8220;Add Anaconda to my PATH environment variable&#8221; and &#8220;Register Anaconda as my default Python 2.7&#8221;. Recent versions of Anaconda suggest to keep the first option unchecked. However, this option is necessary for the installation script on step 4 to work.</p>
+</div>
+<ol class="arabic simple" start="3">
 <li>Download <code class="docutils literal"><span class="pre">FlowCal</span></code> from <a class="reference external" href="https://github.com/taborlab/FlowCal/archive/master.zip">here</a>. A file called <code class="docutils literal"><span class="pre">FlowCal-master.zip</span></code> will be downloaded. Unzip this file.</li>
 <li>Inside the unzipped folder, double click on <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(Windows).bat</span></code> or <code class="docutils literal"><span class="pre">Install</span> <span class="pre">FlowCal</span> <span class="pre">(OSX)</span></code> if you are using Windows or OS X, respectively. This will open a terminal window and install <code class="docutils literal"><span class="pre">FlowCal</span></code>. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. If the installation was successful, your terminal should look like the figure below. Press Enter to close the terminal window.</li>
 </ol>
@@ -235,7 +247,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.3',
+            VERSION:'1.1.4',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
