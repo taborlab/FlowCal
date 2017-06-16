@@ -94,8 +94,8 @@ import FlowCal.stats
 import FlowCal.mef
 
 # Regular expressions for headers that specify some fluorescence channel
-re_mef_values = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
-re_units = re.compile(r'^\s*(\S*)\s*Units\s*$')
+re_mef_values = re.compile(r'^\s*(\S(.*\S)*)\s*MEF\s*Values\s*$')
+re_units      = re.compile(r'^\s*(\S(.*\S)*)\s*Units\s*$')
 
 class ExcelUIException(Exception):
     """
@@ -327,7 +327,7 @@ def process_beads_table(beads_table,
     # Extract header and channel names for which MEF values are specified.
     headers = list(beads_table.columns)
     mef_headers_all = [h for h in headers if re_mef_values.match(h)]
-    mef_channels_all = [re_mef_values.search(h).group(1)
+    mef_channels_all = [re_mef_values.match(h).group(1)
                         for h in mef_headers_all]
 
     # Iterate through table
@@ -637,7 +637,7 @@ def process_samples_table(samples_table,
     # Extract header and channel names for which units are specified.
     headers = list(samples_table.columns)
     report_headers_all = [h for h in headers if re_units.match(h)]
-    report_channels_all = [re_units.search(h).group(1)
+    report_channels_all = [re_units.match(h).group(1)
                            for h in report_headers_all]
 
     # Iterate through table
@@ -930,7 +930,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     # List of channels that require stats columns
     headers = list(beads_table.columns)
     stats_headers = [h for h in headers if re_mef_values.match(h)]
-    stats_channels = [re_mef_values.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_mef_values.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -1074,7 +1074,7 @@ def add_samples_stats(samples_table, samples):
     # List of channels that require stats columns
     headers = list(samples_table.columns)
     stats_headers = [h for h in headers if re_units.match(h)]
-    stats_channels = [re_units.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_units.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -1198,7 +1198,7 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
     # Extract channels that require stats histograms
     headers = list(samples_table.columns)
     hist_headers = [h for h in headers if re_units.match(h)]
-    hist_channels = [re_units.search(h).group(1) for h in hist_headers]
+    hist_channels = [re_units.match(h).group(1) for h in hist_headers]
 
     # The number of columns in the DataFrame has to be set to the maximum
     # number of bins of any of the histograms about to be generated.
