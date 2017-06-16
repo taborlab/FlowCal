@@ -297,8 +297,12 @@ def process_beads_table(beads_table,
         ``beads_table.index``.
     mef_outputs : list
         A list with intermediate results of the generation of the MEF
-        transformation functions, indexed by ``beads_table.index``. Only
-        included if `full_output` is True.
+        transformation functions. More precisely, each element of this list
+        is the unmodified output of calling ``mef.get_transform_fxn()``
+        with ``full_output=True``, for each processed and gated beads
+        sample. Each element of `mef_outputs` is a named tuple, as
+        specified in the documentation of ``mef.get_transform_fxn()``.
+        `mef_outputs` is only included if `full_output` is True.
 
     """
     # Initialize output variables
