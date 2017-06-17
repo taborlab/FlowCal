@@ -498,7 +498,7 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             numticks_log = 0
 
         # Calculate extended ranges and step size for tick location
-        # Extended ranges take into account discretization
+        # Extended ranges take into account discretization.
         # Logarithmic region
         if has_log:
             # The logarithmic region's range will include from the decade
@@ -507,6 +507,20 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             # Note that this may extend the logarithmic region to the left.
             log_ext_range = [np.floor(np.log(max(vmin, t)) / np.log(b)),
                              np.ceil(np.log(vmax) / np.log(b))]
+            # Since a major tick will be located at the lower end of the
+            # extended range, make sure that it is not too close to zero.
+            if vmin <= 0:
+                zero_s = self._transform.inverted().\
+                    transform_non_affine(0)
+                min_tick_space = 1./self.numticks
+                while True:
+                    min_tick_s = self._transform.inverted().\
+                        transform_non_affine(b**log_ext_range[0])
+                    if (min_tick_s - zero_s)/(vmaxs - vmins) < min_tick_space \
+                            and ((log_ext_range[0] + 1) < log_ext_range[1]):
+                        log_ext_range[0] += 1
+                    else:
+                        break
             # Number of decades in the extended region
             log_decades = log_ext_range[1] - log_ext_range[0]
             # The step is at least one decade.
