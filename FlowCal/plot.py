@@ -499,7 +499,6 @@ class _LogicleLocator(matplotlib.ticker.Locator):
 
         # Calculate extended ranges and step size for tick location
         # Extended ranges take into account discretization.
-        # Logarithmic region
         if has_log:
             # The logarithmic region's range will include from the decade
             # immediately below the lower end of the region to the decade
@@ -528,29 +527,17 @@ class _LogicleLocator(matplotlib.ticker.Locator):
                 log_step = max(np.floor(float(log_decades)/(numticks_log-1)), 1)
             else:
                 log_step = 1
-
-        # Linear region
-        if has_linear:
-            # If log region is present, use the lower end of the log range as
-            # the upper end of the linear range. Otherwise, use vmax
-            if has_log:
-                linear_range = [vmin, b**log_ext_range[0]]
-            else:
-                linear_range = [vmin, vmax]
-            # Step size will be at least one decade below the max absolute limit
-            # of the linear range
-            vmax_abs = max(abs(linear_range[0]), abs(linear_range[1]))
-            linear_step_min = matplotlib.ticker.decade_down(vmax_abs, b)
-            # Maximum number of steps is obtained when using the minimum step
-            # size
-            n_steps_max = (linear_range[1] - linear_range[0]) / \
-                linear_step_min
+        else:
+            # Linear region only
+            linear_range = [vmin, vmax]
+            # Initial step size will be one decade below the maximum whole
+            # decade in the range
+            linear_step = matplotlib.ticker.decade_down(
+                linear_range[1] - linear_range[0], b) / b
             # Reduce the step size according to specified number of ticks
-            if numticks_linear > 1:
-                linear_step = linear_step_min / max(
-                    np.floor(n_steps_max / (numticks_linear - 1)), 1)
-            else:
-                linear_step = linear_step_min
+            while (linear_range[1] - linear_range[0])/linear_step > \
+                    numticks_linear:
+                linear_step *= b
             # Get extended range by discretizing the region limits
             vmin_ext = np.floor(linear_range[0]/linear_step)*linear_step
             vmax_ext = np.ceil(linear_range[1]/linear_step)*linear_step
@@ -566,16 +553,20 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             if has_linear:
                 major_ticklocs.append(- b**log_ext_range[0])
                 major_ticklocs.append(0)
+            # Use nextafter to pick the next floating point number, and try to
+            # include the upper limit in the generated range.
             major_ticklocs.extend(b ** (np.arange(
                 log_ext_range[0],
-                log_ext_range[1],
+                np.nextafter(log_ext_range[1], np.inf),
                 log_step)))
         else:
             # Only linear region present
-            # Draw ticks according to step calculated above.
+            # Draw ticks according to linear step calculated above.
+            # Use nextafter to pick the next floating point number, and try to
+            # include the upper limit in the generated range.
             major_ticklocs.extend(np.arange(
                 linear_range_ext[0],
-                linear_range_ext[1],
+                np.nextafter(linear_range_ext[1], np.inf),
                 linear_step))
         major_ticklocs = np.array(major_ticklocs)
 
@@ -596,11 +587,18 @@ class _LogicleLocator(matplotlib.ticker.Locator):
                 # Subticks for the negative linear range
                 if vmin < 0:
                     ticklocs.extend([(-ti) for ti in ticklocs if ti < -vmin ])
-                # Sort
-                sorted(ticklocs)
             else:
-                # Only linear region present, don't add minor ticks
-                ticklocs = major_ticklocs
+                ticklocs = list(major_ticklocs)
+                # If zero is present, add ticks from a decade below the lowest
+                if (vmin < 0) and (vmax > 0):
+                    major_ticklocs_nonzero = major_ticklocs[
+                        np.nonzero(major_ticklocs)]
+                    tickloc_next_low = np.min(np.abs(major_ticklocs_nonzero))/b
+                    ticklocs.append(tickloc_next_low)
+                    ticklocs.extend(subs * tickloc_next_low)
+                    ticklocs.append(-tickloc_next_low)
+                    ticklocs.extend(subs * - tickloc_next_low)
+
         else:
             # Subticks not requested
             ticklocs = major_ticklocs
@@ -700,7 +698,8 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
         axis.set_major_locator(_LogicleLocator(self._transform))
         axis.set_minor_locator(_LogicleLocator(self._transform,
                                                subs=np.arange(2.0, 10.)))
-        axis.set_major_formatter(matplotlib.ticker.LogFormatterSciNotation())
+        axis.set_major_formatter(matplotlib.ticker.LogFormatterSciNotation(
+            labelOnlyBase=True))
 
     def limit_range_for_scale(self, vmin, vmax, minpos):
         """
