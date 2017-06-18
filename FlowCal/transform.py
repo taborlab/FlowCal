@@ -59,7 +59,7 @@ def transform(data, channels, transform_fxn, def_channels = None):
             channels = def_channels
 
     # Convert channels to iterable
-    if not hasattr(channels, '__iter__'):
+    if not (hasattr(channels, '__iter__') and not isinstance(channels, str)):
         channels = [channels]
 
     # Apply transformation
@@ -141,7 +141,7 @@ def to_rfi(data,
     if channels is None:
         channels = range(data.shape[1])
 
-    if not hasattr(channels, '__iter__'):
+    if not (hasattr(channels, '__iter__') and not isinstance(channels, str)):
         # If channels is not an iterable, convert it, along with resolution,
         # amplification_type, and amplifier_gain.
         channels = [channels]
@@ -305,7 +305,7 @@ def to_mef(data, channels, sc_list, sc_channels = None):
     if channels is None:
         channels = sc_channels
     # Convert channels to iterable
-    if not hasattr(channels, '__iter__'):
+    if not (hasattr(channels, '__iter__') and not isinstance(channels, str)):
         channels = [channels]
     # Convert channels to index
     if hasattr(data, '_name_to_index'):

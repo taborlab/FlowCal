@@ -5,7 +5,21 @@ Unit tests for the `io` module.
 
 import datetime
 import unittest
-import StringIO
+import sys
+
+# In Python 2.7, StringIO mimics the output of a file stream in 'rb' more (the
+# output of .read() is a string). In Python 3, a file stream's output in 'rb'
+# mode is a bytearray, so the corresponding in-memory stream is BytesIO.
+# However, a BytesIO cannot be created from a string directly, which is why we
+# need to call .encode().
+if sys.version_info.major == 2:
+    from StringIO import StringIO
+    def get_buffered_stream(s):
+        return StringIO(s)
+elif sys.version_info.major == 3:
+    from io import BytesIO
+    def get_buffered_stream(s):
+        return BytesIO(s.encode())
 
 import numpy as np
 
@@ -123,7 +137,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/'
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -139,7 +153,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -158,7 +172,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/     '
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -176,7 +190,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '/k1/v1/'
         delim            = '|'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -190,7 +204,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -206,7 +220,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -222,7 +236,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -238,7 +252,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -254,7 +268,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -270,7 +284,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -285,7 +299,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -299,7 +313,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -315,7 +329,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -331,7 +345,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -347,7 +361,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -363,7 +377,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -379,7 +393,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -395,7 +409,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -411,7 +425,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -427,7 +441,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -443,7 +457,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -459,7 +473,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -475,7 +489,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -491,7 +505,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -507,7 +521,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -522,7 +536,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -540,7 +554,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/'
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -558,7 +572,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/'
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -576,7 +590,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/'
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -590,7 +604,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -608,7 +622,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -629,7 +643,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/     '
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -650,7 +664,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/     '
         delim            = '/'
         text_dict        = {'k1':'v1'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -668,7 +682,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -686,7 +700,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -704,7 +718,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -722,7 +736,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -740,7 +754,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -758,7 +772,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -776,7 +790,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -794,7 +808,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -812,7 +826,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -830,7 +844,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -848,7 +862,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -866,7 +880,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -883,7 +897,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -897,7 +911,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '//key1/value1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -912,7 +926,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -930,7 +944,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'key1///value1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -948,7 +962,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -966,7 +980,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1///key2/value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -984,7 +998,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1002,7 +1016,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/key2///value2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1020,7 +1034,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1038,7 +1052,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2///key3/value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1056,7 +1070,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1074,7 +1088,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/key3///value3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1092,7 +1106,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1110,7 +1124,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k3/v3///'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1128,7 +1142,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1146,7 +1160,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k3/v3//'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1164,7 +1178,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1182,7 +1196,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1200,7 +1214,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1218,7 +1232,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1236,7 +1250,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1254,7 +1268,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1272,7 +1286,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1290,7 +1304,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1308,7 +1322,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1326,7 +1340,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1344,7 +1358,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1362,7 +1376,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1380,7 +1394,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1398,7 +1412,7 @@ class TestReadTextSegment(unittest.TestCase):
         raw_text_segment = 'k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertEqual(
             FlowCal.io.read_fcs_text_segment(
                 buf=buf,
@@ -1415,7 +1429,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,
@@ -1429,7 +1443,7 @@ class TestReadTextSegment(unittest.TestCase):
         """
         raw_text_segment = '////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
-        buf              = StringIO.StringIO(raw_text_segment)
+        buf              = get_buffered_stream(raw_text_segment)
         self.assertRaises(
             ValueError,
             FlowCal.io.read_fcs_text_segment,

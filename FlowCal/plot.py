@@ -59,7 +59,7 @@ from matplotlib.font_manager import FontProperties
 # Use default colors from palettable if available
 try:
     import palettable
-except ImportError, e:
+except ImportError as e:
     cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
 else:
     cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap

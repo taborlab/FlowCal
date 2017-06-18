@@ -77,10 +77,18 @@ import packaging.version
 import platform
 import re
 import subprocess
+import sys
 import time
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
 import warnings
+
+# Tkinter is imported differently depending on which version of python we're
+# using.
+if sys.version_info.major == 2:
+    from Tkinter import Tk
+    from tkFileDialog import askopenfilename
+elif sys.version_info.major == 3:
+    from tkinter import Tk
+    from tkinter.filedialog import askopenfilename
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -133,7 +141,8 @@ def read_table(filename, sheetname, index_col=None):
 
     """
     # Catch sheetname as list or None
-    if sheetname is None or hasattr(sheetname, '__iter__'):
+    if sheetname is None or \
+        (hasattr(sheetname, '__iter__') and not isinstance(sheetname, str)):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
@@ -205,7 +214,7 @@ def write_workbook(filename, table_list, column_width=None):
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
         if column_width is None:
-            for i, (col_name, column) in enumerate(df.iteritems()):
+            for i, (col_name, column) in enumerate(iter(df.items())):
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
@@ -1287,7 +1296,7 @@ def generate_about_table(extra_info={}):
     keywords.append('Time of analysis')
     values.append(time.strftime("%I:%M:%S%p"))
     # Add additional keyword:value pairs
-    for k, v in extra_info.items():
+    for k, v in iter(extra_info.items()):
         keywords.append(k)
         values.append(v)
 

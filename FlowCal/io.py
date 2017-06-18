@@ -7,6 +7,7 @@ import os
 import copy
 import collections
 import datetime
+import sys
 import warnings
 
 import numpy as np
@@ -171,7 +172,9 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
                              + " TEXT segment")
         else:
             buf.seek(begin)
-            delim = str(buf.read(1))
+            delim = buf.read(1)
+            if sys.version_info.major >= 3:
+                delim = chr(delim[0])
 
     # The offsets are inclusive (meaning they specify first and last byte
     # WITHIN segment) and seeking is inclusive (read() after seek() reads the
@@ -179,6 +182,8 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
     # ((end+1) - begin).
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
+    if sys.version_info.major >= 3:
+        raw = "".join(map(chr, raw))
 
     # If segment is empty, return empty dictionary as text
     if not raw:
@@ -282,7 +287,7 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
                 # We encountered a non-empty element. Calculate the number of
                 # escaped delimiters and whether or not a true boundary
                 # delimiter is present.
-                num_delim      = (num_empty_elements+1)/2
+                num_delim      = (num_empty_elements+1)//2
                 boundary_delim = (num_empty_elements % 2) == 0
 
                 if boundary_delim:
@@ -461,15 +466,15 @@ def read_fcs_data_segment(buf,
             # points to the first byte of the next segment, in which case the #
             # of bytes specified in the header exceeds the # of bytes that we
             # should read by one.
-            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
-                    (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
+            if (shape[0]*shape[1]*(num_bits//8)) != ((end+1)-begin) and \
+                    (shape[0]*shape[1]*(num_bits//8)) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
-                    + " {0} bytes,".format(shape[0]*shape[1]*(num_bits/8))
+                    + " {0} bytes,".format(shape[0]*shape[1]*(num_bits//8))
                     + " DATA segment size = {0} bytes)".format((end+1)-begin))
 
             dtype = np.dtype('{0}u{1}'.format('>' if big_endian else '<',
-                                              num_bits/8))
+                                              num_bits//8))
             data = np.memmap(
                 buf,
                 dtype=dtype,
@@ -496,7 +501,7 @@ def read_fcs_data_segment(buf,
 
             # Read data in as a byte array
             byte_shape = (int(num_events),
-                          np.sum(np.array(param_bit_widths)/8))
+                          np.sum(np.array(param_bit_widths)//8))
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
@@ -526,19 +531,19 @@ def read_fcs_data_segment(buf,
             # Create new array of upcast data type and use byte data to
             # populate it. The new array will have endianness native to user's
             # machine; does not preserve endianness of stored FCS data.
-            upcast_dtype = 'u{0}'.format(upcast_bw/8)
+            upcast_dtype = 'u{0}'.format(upcast_bw//8)
             data = np.zeros(shape,dtype=upcast_dtype)
 
             # Array mapping each column of data to first corresponding column
             # in byte_data
-            byte_boundaries = np.roll(np.cumsum(param_bit_widths)/8,1)
+            byte_boundaries = np.roll(np.cumsum(param_bit_widths)//8,1)
             byte_boundaries[0] = 0
 
             # Reconstitute columns of data by bit shifting appropriate columns
             # in byte_data and accumulating them
-            for col in xrange(data.shape[1]):
-                num_bytes = param_bit_widths[col]/8
-                for b in xrange(num_bytes):
+            for col in range(data.shape[1]):
+                num_bytes = param_bit_widths[col]//8
+                for b in range(num_bytes):
                     byte_data_col = byte_boundaries[col] + b
                     byteshift = (num_bytes-b-1) if big_endian else b
 
@@ -553,7 +558,7 @@ def read_fcs_data_segment(buf,
         if param_ranges is not None:
             # To strictly follow the FCS standards, mask off the unused high bits
             # as specified by param_ranges.
-            for col in xrange(data.shape[1]):
+            for col in range(data.shape[1]):
                 # bits_used should be related to resolution of cytometer ADC
                 bits_used = int(np.ceil(np.log2(param_ranges[col])))
 
@@ -581,15 +586,15 @@ def read_fcs_data_segment(buf,
         # to the first byte of the next segment, in which case the # of bytes
         # specified in the header exceeds the # of bytes that we should read by
         # one.
-        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
-            (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
+        if (shape[0]*shape[1]*(num_bits//8)) != ((end+1)-begin) and \
+            (shape[0]*shape[1]*(num_bits//8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
-                + " (array size = {0}".format(shape[0]*shape[1]*(num_bits/8))
+                + " (array size = {0}".format(shape[0]*shape[1]*(num_bits//8))
                 + " bytes, DATA segment size ="
                 + " {0} bytes)".format((end+1)-begin))
 
         dtype = np.dtype('{0}f{1}'.format('>' if big_endian else '<',
-                                          num_bits/8))
+                                          num_bits//8))
         data = np.memmap(
             buf,
             dtype=dtype,
@@ -730,7 +735,7 @@ class FCSFile(object):
         
         self._infile = infile
 
-        if isinstance(infile, basestring):
+        if isinstance(infile, str):
             f = open(infile, 'rb')
         else:
             f = infile
@@ -773,7 +778,7 @@ class FCSFile(object):
 
         D = int(self._text['$PAR']) # total number of parameters (aka channels)
         param_bit_widths = [int(self._text['$P{0}B'.format(p)])
-                            for p in xrange(1,D+1)]
+                            for p in range(1,D+1)]
         if self._text['$DATATYPE'] == 'I':
             if not all(bw % 8 == 0 for bw in param_bit_widths):
                 raise NotImplementedError("if $DATATYPE = \'I\', only byte"
@@ -781,7 +786,7 @@ class FCSFile(object):
                     + " supported (detected {0})".format(
                         ", ".join('$P{0}B={1}'.format(
                             p,self._text['$P{0}B'.format(p)])
-                        for p in xrange(1,D+1)
+                        for p in range(1,D+1)
                         if param_bit_widths[p-1] % 8 != 0)))
 
         if self._text['$BYTEORD'] not in ('4,3,2,1', '2,1', '1,2,3,4', '1,2'):
@@ -832,7 +837,7 @@ class FCSFile(object):
         
         # Import DATA segment
         param_ranges = [float(self._text['$P{0}R'.format(p)])
-                        for p in xrange(1,D+1)]
+                        for p in range(1,D+1)]
         if self._header.data_begin and self._header.data_end:
             # Prioritize DATA segment offsets specified in HEADER over
             # offsets specified in TEXT segment.
@@ -864,7 +869,7 @@ class FCSFile(object):
             raise ValueError("DATA segment incorrectly specified")
         self._data.flags.writeable = False
 
-        if isinstance(infile, basestring):
+        if isinstance(infile, str):
             f.close()
 
     # Expose attributes as read-only properties
@@ -937,9 +942,9 @@ class FCSFile(object):
     def __hash__(self):
         return hash((self.infile,
                      self.header,
-                     frozenset(self.text.items()),
+                     frozenset(iter(self.text.items())),
                      self.data.tobytes(),
-                     frozenset(self.analysis.items())))
+                     frozenset(iter(self.analysis.items()))))
 
     def __repr__(self):
         return str(self.infile)
@@ -1234,7 +1239,7 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._amplification_type[ch] for ch in channels]
         else:
             return self._amplification_type[channels]
@@ -1269,7 +1274,7 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._detector_voltage[ch] for ch in channels]
         else:
             return self._detector_voltage[channels]
@@ -1304,7 +1309,7 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._amplifier_gain[ch] for ch in channels]
         else:
             return self._amplifier_gain[channels]
@@ -1345,7 +1350,7 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get the range of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._range[ch] for ch in channels]
         else:
             return self._range[channels]
@@ -1379,7 +1384,7 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get resolution of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._resolution[ch] for ch in channels]
         else:
             return self._resolution[channels]
@@ -1888,10 +1893,10 @@ class FCSData(np.ndarray):
 
         """
         # Check if list, then run recursively
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') and not isinstance(channels, str):
             return [self._name_to_index(ch) for ch in channels]
 
-        if isinstance(channels, basestring):
+        if isinstance(channels, str):
             # channels is a string containing a channel name
             if channels in self.channels:
                 return self.channels.index(channels)

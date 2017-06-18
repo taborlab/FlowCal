@@ -569,7 +569,7 @@ class TestDensity2dGate2(unittest.TestCase):
 
         # "slope" with highest density at (4,4)
         d2 = []
-        for idx in xrange(1,5):
+        for idx in range(1,5):
             d2.extend([(x,y) for x in range(idx,5) for y in range(idx,5)])
         self.slope = np.array(d2)
 
