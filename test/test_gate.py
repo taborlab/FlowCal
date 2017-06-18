@@ -100,7 +100,7 @@ class TestStartEndGate(unittest.TestCase):
 class TestHighLowGate(unittest.TestCase):
     
     def setUp(self):
-        self.d1 = np.array([range(1,11)]).T
+        self.d1 = np.array([list(range(1,11))]).T
         self.d2 = np.array([
             [1, 7, 2],
             [2, 8, 3],
@@ -1144,7 +1144,7 @@ class TestDensity2dGate2(unittest.TestCase):
     # as opposed to all other bins intervals which are half-open).
 
     def test_bins_edge_case_1_gated_data_1(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=4.0/31, sigma=0.0),
@@ -1157,7 +1157,7 @@ class TestDensity2dGate2(unittest.TestCase):
             )
 
     def test_bins_edge_case_1_gated_data_2(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=4.0/31, sigma=0.0,
@@ -1171,7 +1171,7 @@ class TestDensity2dGate2(unittest.TestCase):
             )
 
     def test_bins_edge_case_1_mask(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=4.0/31, sigma=0.0,
@@ -1181,7 +1181,7 @@ class TestDensity2dGate2(unittest.TestCase):
             )
 
     def test_bins_edge_case_2_gated_data_1(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=13.0/31, sigma=0.0),
@@ -1203,7 +1203,7 @@ class TestDensity2dGate2(unittest.TestCase):
             )
 
     def test_bins_edge_case_2_gated_data_2(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=13.0/31, sigma=0.0,
@@ -1226,7 +1226,7 @@ class TestDensity2dGate2(unittest.TestCase):
             )
 
     def test_bins_edge_case_2_mask(self):
-        bins = range(5)
+        bins = list(range(5))
         np.testing.assert_array_equal(
             FlowCal.gate.density2d(
                 self.pyramid, bins=bins, gate_fraction=13.0/31, sigma=0.0,

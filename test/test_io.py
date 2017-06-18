@@ -2489,7 +2489,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         Testing the 1D slicing with a list of a FCSData object.
 
         """
-        ds = self.d[range(10)]
+        ds = self.d[list(range(10))]
         self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
         self.assertEqual(ds.channels,
