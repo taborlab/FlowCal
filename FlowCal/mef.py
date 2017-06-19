@@ -51,9 +51,10 @@ def clustering_gmm(data,
         Number of clusters to find.
     tol : float, optional
         Tolerance for convergence of GMM method. Passed directly to
-        ``scikit-learn``'s GMM.
+        ``scikit-learn``'s GMM object.
     min_covar : float, optional
-        Minimum covariance. Passed directly to ``scikit-learn``'s GMM.
+        Minimum covariance. Passed directly to ``scikit-learn``'s GMM
+        object.
     scale : str, optional
         Rescaling applied to `data` before performing clustering. Can be
         either ``linear`` (no rescaling), ``log``, or ``logicle``.
@@ -79,11 +80,10 @@ def clustering_gmm(data,
     samples of each group, and used as initial conditions for the GMM EM
     algorithm.
 
-    `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
-    library, with full covariance matrices for each cluster and a fixed,
-    uniform set of weights. This means that `clustering_gmm` implicitly
-    assumes that all bead subpopulations have roughly the same number of
-    events. For more information, consult ``scikit-learn``'s documentation.
+    `clustering_gmm` internally uses a `GaussianMixture` object from the
+    ``scikit-learn`` library (``GMM`` if ``scikit-learn``'s version is
+    lower than 0.18), with full covariance matrices for each cluster. For
+    more information, consult ``scikit-learn``'s documentation.
 
     """
 
