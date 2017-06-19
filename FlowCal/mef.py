@@ -9,6 +9,7 @@ import collections
 import packaging
 
 import numpy as np
+import scipy
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import sklearn
@@ -34,7 +35,7 @@ else:
 def clustering_gmm(data,
                    n_clusters,
                    tol=1e-7,
-                   min_covar=5e-5,
+                   min_covar=None,
                    scale='logicle'):
     """
     Find clusters in an array using Gaussian Mixture Models (GMM).
@@ -85,6 +86,15 @@ def clustering_gmm(data,
     events. For more information, consult ``scikit-learn``'s documentation.
 
     """
+
+    # Initialize min_covar parameter
+    # Parameter is initialized differently depending on scikit's version
+    if min_covar is None:
+        if packaging.version.parse(sklearn.__version__) \
+                >= packaging.version.parse('0.18'):
+            min_covar = 1e-3
+        else:
+            min_covar = 5e-5
 
     # Copy events before rescaling
     data = data.copy()
@@ -143,11 +153,10 @@ def clustering_gmm(data,
             cov = np.cov(data_cluster.T).reshape(1,1)
         else:
             cov = np.cov(data_cluster.T)
-        # If the trace of the covariance is less than min_covar, change by a
-        # diagonal covariance with nonzero elements equal to min_covar.
-        if np.trace(cov) < min_covar:
-            cov = np.eye(data.shape[1]) * min_covar
+        # Add small number to diagonal to avoid near-singular covariances
+        cov += np.eye(data.shape[1]) * min_covar
         covars.append(cov)
+    # Means should be an array
     means = np.array(means)
 
     ###
@@ -157,12 +166,24 @@ def clustering_gmm(data,
 
     if packaging.version.parse(sklearn.__version__) \
             >= packaging.version.parse('0.18'):
+
+        # GaussianMixture uses precisions, the inverse of covariances.
+        # To get the inverse, we solve the linear equation C*P = I. We also
+        # use the fact that C is positive definite.
+        precisions = [scipy.linalg.solve(c,
+                                         np.eye(c.shape[0]),
+                                         assume_a='pos')
+                      for c in covars]
+        precisions = np.array(precisions)
+
         # Initialize GaussianMixture object
         gmm = GaussianMixture(n_components=n_clusters,
                               tol=tol,
-                              reg_covar=min_covar,
                               covariance_type='full',
-                              init_params='kmeans')
+                              weights_init=weights,
+                              means_init=means,
+                              precisions_init=precisions,
+                              max_iter=500)
 
     else:
         # Initialize GMM object
@@ -173,10 +194,10 @@ def clustering_gmm(data,
                   params='mc',
                   init_params='')
 
-    # Set initial parameters
-    gmm.weight_ = weights
-    gmm.means_ = means
-    gmm.covars_ = covars
+        # Set initial parameters
+        gmm.weight_ = weights
+        gmm.means_ = means
+        gmm.covars_ = covars
 
     # Fit 
     gmm.fit(data)
