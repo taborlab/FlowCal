@@ -14,6 +14,8 @@ import numpy as np
 
 import FlowCal.plot
 
+encoding = 'ISO-8859-1'
+
 ###
 # Utility functions for importing segments of FCS files
 ###
@@ -79,16 +81,16 @@ def read_fcs_header_segment(buf, begin=0):
     field_values = []
 
     buf.seek(begin)
-    field_values.append(buf.read(10).decode().rstrip()) # version
+    field_values.append(buf.read(10).decode(encoding).rstrip()) # version
 
-    field_values.append(int(buf.read(8)))               # text_begin
-    field_values.append(int(buf.read(8)))               # text_end
-    field_values.append(int(buf.read(8)))               # data_begin
-    field_values.append(int(buf.read(8)))               # data_end
+    field_values.append(int(buf.read(8)))                       # text_begin
+    field_values.append(int(buf.read(8)))                       # text_end
+    field_values.append(int(buf.read(8)))                       # data_begin
+    field_values.append(int(buf.read(8)))                       # data_end
 
-    fv = buf.read(8).decode()                           # analysis_begin
+    fv = buf.read(8).decode(encoding)                           # analysis_begin
     field_values.append(0 if fv == ' '*8 else int(fv))
-    fv = buf.read(8).decode()                           # analysis_end
+    fv = buf.read(8).decode(encoding)                           # analysis_end
     field_values.append(0 if fv == ' '*8 else int(fv))
 
     header = FCSHeader._make(field_values)
@@ -172,18 +174,14 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
                              + " TEXT segment")
         else:
             buf.seek(begin)
-            delim = buf.read(1)
-            if six.PY3:
-                delim = chr(delim[0])
+            delim = buf.read(1).decode(encoding)
 
     # The offsets are inclusive (meaning they specify first and last byte
     # WITHIN segment) and seeking is inclusive (read() after seek() reads the
     # byte which was seeked to). This means the length of the segment is
     # ((end+1) - begin).
     buf.seek(begin)
-    raw = buf.read((end+1)-begin)
-    if six.PY3:
-        raw = "".join(map(chr, raw))
+    raw = buf.read((end+1)-begin).decode(encoding)
 
     # If segment is empty, return empty dictionary as text
     if not raw:
