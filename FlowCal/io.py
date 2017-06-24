@@ -7,6 +7,7 @@ import os
 import copy
 import collections
 import datetime
+import six
 import sys
 import warnings
 
@@ -735,7 +736,7 @@ class FCSFile(object):
         
         self._infile = infile
 
-        if isinstance(infile, str):
+        if isinstance(infile, six.string_types):
             f = open(infile, 'rb')
         else:
             f = infile
@@ -869,7 +870,7 @@ class FCSFile(object):
             raise ValueError("DATA segment incorrectly specified")
         self._data.flags.writeable = False
 
-        if isinstance(infile, str):
+        if isinstance(infile, six.string_types):
             f.close()
 
     # Expose attributes as read-only properties
@@ -1239,7 +1240,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._amplification_type[ch] for ch in channels]
         else:
             return self._amplification_type[channels]
@@ -1274,7 +1276,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._detector_voltage[ch] for ch in channels]
         else:
             return self._detector_voltage[channels]
@@ -1309,7 +1312,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._amplifier_gain[ch] for ch in channels]
         else:
             return self._amplifier_gain[channels]
@@ -1350,7 +1354,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get the range of the specified channels
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._range[ch] for ch in channels]
         else:
             return self._range[channels]
@@ -1384,7 +1389,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get resolution of the specified channels
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._resolution[ch] for ch in channels]
         else:
             return self._resolution[channels]
@@ -1893,10 +1899,11 @@ class FCSData(np.ndarray):
 
         """
         # Check if list, then run recursively
-        if hasattr(channels, '__iter__') and not isinstance(channels, str):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._name_to_index(ch) for ch in channels]
 
-        if isinstance(channels, str):
+        if isinstance(channels, six.string_types):
             # channels is a string containing a channel name
             if channels in self.channels:
                 return self.channels.index(channels)
