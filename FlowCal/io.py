@@ -8,7 +8,6 @@ import copy
 import collections
 import datetime
 import six
-import sys
 import warnings
 
 import numpy as np
@@ -80,16 +79,16 @@ def read_fcs_header_segment(buf, begin=0):
     field_values = []
 
     buf.seek(begin)
-    field_values.append(str(buf.read(10)).rstrip())     # version
+    field_values.append(buf.read(10).decode().rstrip()) # version
 
     field_values.append(int(buf.read(8)))               # text_begin
     field_values.append(int(buf.read(8)))               # text_end
     field_values.append(int(buf.read(8)))               # data_begin
     field_values.append(int(buf.read(8)))               # data_end
 
-    fv = buf.read(8)                                    # analysis_begin
+    fv = buf.read(8).decode()                           # analysis_begin
     field_values.append(0 if fv == ' '*8 else int(fv))
-    fv = buf.read(8)                                    # analysis_end
+    fv = buf.read(8).decode()                           # analysis_end
     field_values.append(0 if fv == ' '*8 else int(fv))
 
     header = FCSHeader._make(field_values)
@@ -174,7 +173,7 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
         else:
             buf.seek(begin)
             delim = buf.read(1)
-            if sys.version_info.major >= 3:
+            if six.PY3:
                 delim = chr(delim[0])
 
     # The offsets are inclusive (meaning they specify first and last byte
@@ -183,7 +182,7 @@ def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
     # ((end+1) - begin).
     buf.seek(begin)
     raw = buf.read((end+1)-begin)
-    if sys.version_info.major >= 3:
+    if six.PY3:
         raw = "".join(map(chr, raw))
 
     # If segment is empty, return empty dictionary as text
