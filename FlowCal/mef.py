@@ -6,6 +6,7 @@ Functions for transforming flow cytometer data to MEF units.
 import os
 import functools
 import collections
+import six
 
 import numpy as np
 from scipy.optimize import minimize
@@ -725,7 +726,8 @@ def get_transform_fxn(data_beads,
         plot_filename = str(data_beads)
 
     # mef_channels and mef_values should be iterables.
-    if hasattr(mef_channels, '__iter__') and not isinstance(mef_channels, str):
+    if hasattr(mef_channels, '__iter__') \
+            and not isinstance(mef_channels, six.string_types):
         mef_channels = list(mef_channels)
         mef_values = np.array(mef_values).copy()
     else:
