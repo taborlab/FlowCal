@@ -76,6 +76,7 @@ import packaging
 import packaging.version
 import platform
 import re
+import six
 import subprocess
 import sys
 import time
@@ -142,7 +143,8 @@ def read_table(filename, sheetname, index_col=None):
     """
     # Catch sheetname as list or None
     if sheetname is None or \
-        (hasattr(sheetname, '__iter__') and not isinstance(sheetname, str)):
+            (hasattr(sheetname, '__iter__') \
+            and not isinstance(sheetname, six.string_types)):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
