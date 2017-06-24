@@ -9,12 +9,13 @@ This should take care of all the requirements automatically. Linux and Mac OSX u
 
 Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. Next, make sure that the following Python packages are present:
 
+* ``packaging`` (>=16.8)
+* ``six`` (>=1.10.0)
 * ``numpy`` (>=1.8.2)
 * ``scipy`` (>=0.14.0)
 * ``matplotlib`` (>=1.3.1)
 * ``palettable`` (>=2.1.1)
 * ``scikit-learn`` (>=0.16.0)
-* ``packaging`` (>=16.8)
 * ``pandas`` (>=0.16.1)
 * ``xlrd`` (>=0.9.2)
 * ``XlsxWriter`` (>=0.5.2)
