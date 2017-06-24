@@ -940,9 +940,9 @@ class FCSFile(object):
     def __hash__(self):
         return hash((self.infile,
                      self.header,
-                     frozenset(iter(self.text.items())),
+                     frozenset(six.iteritems(self.text)),
                      self.data.tobytes(),
-                     frozenset(iter(self.analysis.items()))))
+                     frozenset(six.iteritems(self.analysis))))
 
     def __repr__(self):
         return str(self.infile)
