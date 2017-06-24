@@ -78,16 +78,17 @@ import platform
 import re
 import six
 import subprocess
-import sys
 import time
 import warnings
 
 # Tkinter is imported differently depending on which version of python we're
 # using.
-if sys.version_info.major == 2:
+# six.PY2 is True when the code is running in python 2, False otherwise.
+# six.PY3 is the equivalent for python 3.
+if six.PY2:
     from Tkinter import Tk
     from tkFileDialog import askopenfilename
-elif sys.version_info.major == 3:
+elif six.PY3:
     from tkinter import Tk
     from tkinter.filedialog import askopenfilename
 
