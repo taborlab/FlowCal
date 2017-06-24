@@ -217,7 +217,7 @@ def write_workbook(filename, table_list, column_width=None):
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
         if column_width is None:
-            for i, (col_name, column) in enumerate(iter(df.items())):
+            for i, (col_name, column) in enumerate(six.iteritems(df)):
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
@@ -1299,7 +1299,7 @@ def generate_about_table(extra_info={}):
     keywords.append('Time of analysis')
     values.append(time.strftime("%I:%M:%S%p"))
     # Add additional keyword:value pairs
-    for k, v in iter(extra_info.items()):
+    for k, v in six.iteritems(extra_info):
         keywords.append(k)
         values.append(v)
 
