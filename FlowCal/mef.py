@@ -738,7 +738,10 @@ def get_transform_fxn(data_beads,
     # all channels).
     if not np.all([len(mef_values_channel)==len(mef_values[0])
                    for mef_values_channel in mef_values]):
-        raise ValueError("mef_values must be same length for all channels")
+        msg  = "innermost sequences of mef_values must have the same length"
+        msg += " (same number of bead subpopulations must exist for each"
+        msg += " channel)"
+        raise ValueError(msg)
 
     ###
     # 1. Clustering
