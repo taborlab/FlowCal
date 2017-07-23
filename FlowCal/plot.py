@@ -435,22 +435,27 @@ class _LogicleLocator(matplotlib.ticker.Locator):
         """
         # Extract base from transform object
         b = self._transform.base
-        # The domain is divided into two sections, only some of which may
-        # actually be present.
+        # The logicle domain is divided into two regions: A "linear" region,
+        # which may include negative numbers, and a "logarithmic" region, which
+        # only includes positive numbers. These two regions are separated by a
+        # value t, given by the logicle equations. An illustration is given
+        # below.
         #
         # -t ==0== t ========>
-        #    bbbbb   ccccccccc
+        #     lin       log
         #
-        # Where ``t`` is obtained from the logicle linear range.
+        # vmin and vmax can be anywhere in this domain, meaning that both should
+        # be greater than -t.
         #
-        # c) will have ticks at integral log positions. The number of ticks
-        # needs to be reduced if there are more than self.numticks of them.
-        #
-        # b) will have one tick at zero. Subticks will be added from the
-        # smallest integral log in c to the next smallest, all throughout
-        # b. The negative part of b will have similar subticks.
+        # The logarithmic region will only have major ticks at integral log
+        # positions. The linear region will have a major tick at zero, and one
+        # major tick at the largest absolute  integral log value in screen
+        # inside this region. Subticks will be added at multiples of the
+        # integral log positions.
 
         # If the linear range is too small, create new transformation object
+        # with slightly wider linear range. Otherwise, the number of decades
+        # below will be infinite
         if self._transform.W == 0 or \
                 self._transform.M / self._transform.W > self.numticks:
             self._transform = _LogicleTransform(
@@ -460,60 +465,143 @@ class _LogicleLocator(matplotlib.ticker.Locator):
         # Calculate t
         t = - self._transform.transform_non_affine(0)
 
+        # Swap vmin and vmax if necessary
         if vmax < vmin:
             vmin, vmax = vmax, vmin
+        # Calculate minimum and maximum limits in scale units
+        vmins = self._transform.inverted().transform_non_affine(vmin)
+        vmaxs = self._transform.inverted().transform_non_affine(vmax)
 
-        # Check whether sections b and c are present
-        has_b = has_c = False
-        if vmin < t:
-            has_b = True
+        # Check whether linear or log regions are present
+        has_linear = has_log = False
+        if vmin <= t:
+            has_linear = True
             if vmax > t:
-                has_c = True
+                has_log = True
         else:
-            has_c = True
+            has_log = True
 
-        # First, calculate all the ranges, so we can determine striding
-        if has_c:
-            log_range = [np.ceil(np.log(t) / np.log(b)),
-                         np.ceil(np.log(vmax) / np.log(b))]
+        # Calculate number of ticks in linear and log regions
+        # The number of ticks is distributed by the fraction that each region
+        # occupies in scale units
+        if has_linear:
+            fraction_linear = (min(vmaxs, 2*self._transform.W) - vmins) / \
+                (vmaxs - vmins)
+            numticks_linear = np.round(self.numticks*fraction_linear)
+        else:
+            numticks_linear = 0
+        if has_log:
+            fraction_log = (vmaxs - max(vmins, 2*self._transform.W)) / \
+                (vmaxs - vmins)
+            numticks_log = np.round(self.numticks*fraction_log)
+        else:
+            numticks_log = 0
 
-        # Number of ticks
-        # Ticks in the right logarithmic region
-        total_ticks = log_range[1] - log_range[0]
-        # One more tick for zero.
-        if has_b:
-            total_ticks += 1
+        # Calculate extended ranges and step size for tick location
+        # Extended ranges take into account discretization.
+        if has_log:
+            # The logarithmic region's range will include from the decade
+            # immediately below the lower end of the region to the decade
+            # immediately above the upper end.
+            # Note that this may extend the logarithmic region to the left.
+            log_ext_range = [np.floor(np.log(max(vmin, t)) / np.log(b)),
+                             np.ceil(np.log(vmax) / np.log(b))]
+            # Since a major tick will be located at the lower end of the
+            # extended range, make sure that it is not too close to zero.
+            if vmin <= 0:
+                zero_s = self._transform.inverted().\
+                    transform_non_affine(0)
+                min_tick_space = 1./self.numticks
+                while True:
+                    min_tick_s = self._transform.inverted().\
+                        transform_non_affine(b**log_ext_range[0])
+                    if (min_tick_s - zero_s)/(vmaxs - vmins) < min_tick_space \
+                            and ((log_ext_range[0] + 1) < log_ext_range[1]):
+                        log_ext_range[0] += 1
+                    else:
+                        break
+            # Number of decades in the extended region
+            log_decades = log_ext_range[1] - log_ext_range[0]
+            # The step is at least one decade.
+            if numticks_log > 1:
+                log_step = max(np.floor(float(log_decades)/(numticks_log-1)), 1)
+            else:
+                log_step = 1
+        else:
+            # Linear region only
+            linear_range = [vmin, vmax]
+            # Initial step size will be one decade below the maximum whole
+            # decade in the range
+            linear_step = matplotlib.ticker.decade_down(
+                linear_range[1] - linear_range[0], b) / b
+            # Reduce the step size according to specified number of ticks
+            while (linear_range[1] - linear_range[0])/linear_step > \
+                    numticks_linear:
+                linear_step *= b
+            # Get extended range by discretizing the region limits
+            vmin_ext = np.floor(linear_range[0]/linear_step)*linear_step
+            vmax_ext = np.ceil(linear_range[1]/linear_step)*linear_step
+            linear_range_ext = [vmin_ext, vmax_ext]
 
-        stride = max(np.floor(float(total_ticks) / (self.numticks - 1)), 1)
-
-        # Obtain integral decades for which ticks will be generated
-        decades = []
-        if has_b:
-            # Major tick for zero
-            decades.append(0.0)
-        if has_c:
-            decades.extend(b ** (np.arange(
-                log_range[0],
-                log_range[1],
-                stride)))
-        decades = np.array(decades)
+        # Calculate major tick positions
+        major_ticklocs = []
+        if has_log:
+            # Logarithmic region present
+            # If a linear region is present, add the negative of the lower limit
+            # of the extended log region and zero. Then, add ticks for each
+            # logarithmic step as calculated above.
+            if has_linear:
+                major_ticklocs.append(- b**log_ext_range[0])
+                major_ticklocs.append(0)
+            # Use nextafter to pick the next floating point number, and try to
+            # include the upper limit in the generated range.
+            major_ticklocs.extend(b ** (np.arange(
+                log_ext_range[0],
+                np.nextafter(log_ext_range[1], np.inf),
+                log_step)))
+        else:
+            # Only linear region present
+            # Draw ticks according to linear step calculated above.
+            # Use nextafter to pick the next floating point number, and try to
+            # include the upper limit in the generated range.
+            major_ticklocs.extend(np.arange(
+                linear_range_ext[0],
+                np.nextafter(linear_range_ext[1], np.inf),
+                linear_step))
+        major_ticklocs = np.array(major_ticklocs)
 
         # Add subticks if requested
         subs = self._subs
         if (subs is not None) and (len(subs) > 1 or subs[0] != 1.0):
             ticklocs = []
-            # Subticks for each decade present
-            for decade in decades:
-                ticklocs.extend(subs * decade)
-            # Subticks down from the lowest decade
-            decade_next_low = min(decades[np.nonzero(decades)]) / b
-            ticklocs.append(decade_next_low)
-            ticklocs.extend(subs * decade_next_low)
-            # Similar subticks for the negative range
-            ticklocs.append(- decade_next_low)
-            ticklocs.extend(- subs * decade_next_low)
+            if has_log:
+                # Subticks for each major tickloc present
+                for major_tickloc in major_ticklocs:
+                    ticklocs.extend(subs * major_tickloc)
+                # Subticks from one decade below the lowest
+                major_ticklocs_pos = major_ticklocs[major_ticklocs > 0]
+                if len(major_ticklocs_pos):
+                    tickloc_next_low = np.min(major_ticklocs_pos)/b
+                    ticklocs.append(tickloc_next_low)
+                    ticklocs.extend(subs * tickloc_next_low)
+                # Subticks for the negative linear range
+                if vmin < 0:
+                    ticklocs.extend([(-ti) for ti in ticklocs if ti < -vmin ])
+            else:
+                ticklocs = list(major_ticklocs)
+                # If zero is present, add ticks from a decade below the lowest
+                if (vmin < 0) and (vmax > 0):
+                    major_ticklocs_nonzero = major_ticklocs[
+                        np.nonzero(major_ticklocs)]
+                    tickloc_next_low = np.min(np.abs(major_ticklocs_nonzero))/b
+                    ticklocs.append(tickloc_next_low)
+                    ticklocs.extend(subs * tickloc_next_low)
+                    ticklocs.append(-tickloc_next_low)
+                    ticklocs.extend(subs * - tickloc_next_low)
+
         else:
-            ticklocs = decades
+            # Subticks not requested
+            ticklocs = major_ticklocs
 
         return self.raise_if_exceeds(np.array(ticklocs))
 
@@ -610,7 +698,8 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
         axis.set_major_locator(_LogicleLocator(self._transform))
         axis.set_minor_locator(_LogicleLocator(self._transform,
                                                subs=np.arange(2.0, 10.)))
-        axis.set_major_formatter(matplotlib.ticker.LogFormatterMathtext())
+        axis.set_major_formatter(matplotlib.ticker.LogFormatterSciNotation(
+            labelOnlyBase=True))
 
     def limit_range_for_scale(self, vmin, vmax, minpos):
         """
