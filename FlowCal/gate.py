@@ -520,8 +520,8 @@ def density2d(data,
         # just going to make sure the path codes aren't unfamiliar and then extract
         # all of the vertices and pack them into a list of 2D contours.
         cntr = []
-        num_cntrs = len(tr)/2
-        for idx in xrange(num_cntrs):
+        num_cntrs = len(tr)//2
+        for idx in range(num_cntrs):
             vertices = tr[idx]
             codes = tr[num_cntrs+idx]
 
