@@ -499,6 +499,18 @@ def process_beads_table(beads_table,
                     mef = [int(e) if e.strip().isdigit() else np.nan
                            for e in mef]
                     mef_values.append(mef)
+
+            # Ensure matching number of `mef_values` for all channels (this
+            # implies that the calibration beads have the same number of
+            # subpopulations for all channels).
+            if mef_values:
+                if not np.all([len(mef_values_channel)==len(mef_values[0])
+                               for mef_values_channel in mef_values]):
+                    raise ExcelUIException("Must specify the same number of"
+                                           + " MEF Values for each channel."
+                                           + " Use 'None' to instruct FlowCal"
+                                           + " to ignore a detected"
+                                           + " subpopulation.")
             mef_values = np.array(mef_values)
 
             # Obtain standard curve transformation

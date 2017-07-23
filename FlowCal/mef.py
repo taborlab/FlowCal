@@ -538,9 +538,11 @@ def get_transform_fxn(data_beads,
     ----------
     data_beads : FCSData object
         Flow cytometry data, taken from calibration beads.
-    mef_values : array
-        Known MEF values of the calibration beads' subpopulations, for
-        each channel specified in `mef_channels`.
+    mef_values : sequence of sequences
+        Known MEF values for the calibration bead subpopulations, for each
+        channel specified in `mef_channels`. The innermost sequences must have
+        the same length (the same number of bead subpopulations must exist for
+        each channel).
     mef_channels : int, or str, or list of int, or list of str
         Channels for which to generate transformation functions.
     verbose : bool, optional
@@ -729,10 +731,19 @@ def get_transform_fxn(data_beads,
     if hasattr(mef_channels, '__iter__') \
             and not isinstance(mef_channels, six.string_types):
         mef_channels = list(mef_channels)
-        mef_values = np.array(mef_values).copy()
     else:
         mef_channels = [mef_channels]
-        mef_values = np.array([mef_values]).copy()
+        mef_values   = [mef_values]
+
+    # Ensure matching number of `mef_values` for all channels (this implies
+    # that the calibration beads have the same number of subpopulations for
+    # all channels).
+    if not np.all([len(mef_values_channel)==len(mef_values[0])
+                   for mef_values_channel in mef_values]):
+        msg  = "innermost sequences of mef_values must have the same length"
+        msg += " (same number of bead subpopulations must exist for each"
+        msg += " channel)"
+        raise ValueError(msg)
 
     ###
     # 1. Clustering
@@ -743,7 +754,7 @@ def get_transform_fxn(data_beads,
         clustering_channels = mef_channels
 
     # Get number of clusters from number of specified MEF values
-    n_clusters = mef_values.shape[1]
+    n_clusters = len(mef_values[0])
 
     # Run clustering function
     labels = clustering_fxn(data_beads[:, clustering_channels],
