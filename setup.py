@@ -35,8 +35,9 @@ setup(
     name='FlowCal',
 
     entry_points = {
-        'console_scripts': ['FlowCal=FlowCal.excel_ui:main',
-                            'flowcal=FlowCal.excel_ui:main'],
+        'console_scripts': [
+            'flowcal=FlowCal.excel_ui:run_command_line'
+        ]
     },
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing

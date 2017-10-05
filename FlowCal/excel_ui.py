@@ -1491,7 +1491,7 @@ def run(input_path=None,
         print("\nDone.")
 
 
-def main(argv=None):
+def run_command_line(argv=None):
     """
     Entry point for the FlowCal and flowcal console scripts
 
@@ -1555,4 +1555,4 @@ def main(argv=None):
         hist_sheet=args.histogram_sheet)
 
 if __name__ == '__main__':
-    main()
+    run_command_line()
