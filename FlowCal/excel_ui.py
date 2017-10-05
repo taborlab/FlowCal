@@ -1491,7 +1491,29 @@ def run(input_path=None,
         print("\nDone.")
 
 
-def main(args=sys.argv):
+def main(argv=None):
+    """
+    Entry point for the FlowCal and flowcal console scripts
+
+    Parameters
+    ----------
+    argv: list of strings
+        argument values to parse and pass to run()
+
+    Notes
+    ----------
+    Use main(argv = ['arguments', 'you', 'want', 'to', 'test'])
+    to test entry point and argument parsing in unit tests
+
+    See Also
+    ----------
+    FlowCal.excel_ui.run()
+
+    http://amir.rachum.com/blog/2017/07/28/python-entry-points/
+
+    """
+    if argv == None:
+        argv = sys.argv
     import argparse
     # Read command line arguments
     parser = argparse.ArgumentParser(
@@ -1523,7 +1545,7 @@ def main(args=sys.argv):
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
-    args = parser.parse_args(args)
+    args = parser.parse_args(args=argv)
 
     # Run Excel UI
     run(input_path=args.inputpath,
