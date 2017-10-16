@@ -38,7 +38,7 @@ def clustering_gmm(data,
                    min_covar=None,
                    scale='logicle'):
     """
-    Find clusters in an array using Gaussian Mixture Models (GMM).
+    Find clusters in an array using a Gaussian Mixture Model.
 
     Before clustering, `data` can be automatically rescaled as specified by
     the `scale` argument.
@@ -50,11 +50,13 @@ def clustering_gmm(data,
     n_clusters : int
         Number of clusters to find.
     tol : float, optional
-        Tolerance for convergence of GMM method. Passed directly to
-        ``scikit-learn``'s GMM object.
+        Tolerance for convergence. Directly passed to either
+        ``GaussianMixture`` or ``GMM``, depending on ``scikit-learn``'s
+        version.
     min_covar : float, optional
-        Minimum covariance. Passed directly to ``scikit-learn``'s GMM
-        object.
+        The minimum trace that the initial covariance matrix will have. If
+        ``scikit-learn``'s version is older than 0.18, `min_covar` is also
+        passed directly to ``GMM``.
     scale : str, optional
         Rescaling applied to `data` before performing clustering. Can be
         either ``linear`` (no rescaling), ``log``, or ``logicle``.
@@ -67,11 +69,11 @@ def clustering_gmm(data,
 
     Notes
     -----
-    GMM finds clusters by fitting a linear combination of `n_clusters`
-    Gaussian probability density functions (pdf) to `data` using
-    Expectation Maximization (EM).
+    A Gaussian Mixture Model finds clusters by fitting a linear combination
+    of `n_clusters` Gaussian probability density functions (pdf) to `data`
+    using Expectation Maximization (EM).
 
-    GMM can be fairly sensitive to the initial parameter choice. To
+    This method can be fairly sensitive to the initial parameter choice. To
     generate a reasonable set of initial conditions, `clustering_gmm`
     first divides all points in `data` into `n_clusters` groups of the
     same size based on their Euclidean distance to the minimum value. Then,
@@ -162,7 +164,6 @@ def clustering_gmm(data,
     ###
     # Run Gaussian Mixture Model Clustering
     ###
-
 
     if packaging.version.parse(sklearn.__version__) \
             >= packaging.version.parse('0.18'):
