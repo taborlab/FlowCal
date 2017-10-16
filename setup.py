@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # setuptools setup module.
-# 
+#
 # Based on setup.py on https://github.com/pypa/sampleproject.
 
 from setuptools import setup, find_packages
@@ -33,6 +33,12 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='FlowCal',
+
+    entry_points = {
+        'console_scripts': [
+            'flowcal=FlowCal.excel_ui:run_command_line'
+        ]
+    },
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
