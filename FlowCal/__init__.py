@@ -6,13 +6,13 @@
 # Versions should comply with PEP440.  For a discussion on single-sourcing
 # the version across setup.py and the project code, see
 # https://packaging.python.org/en/latest/single_source_version.html
-__version__ = '1.1.2'
+__version__ = '1.1.4'
 
-import io
-import excel_ui
-import gate
-import transform
-import mef
-import compensate
-import plot
-import stats
+from . import io
+from . import excel_ui
+from . import gate
+from . import transform
+from . import mef
+from . import compensate
+from . import plot
+from . import stats
