@@ -72,13 +72,25 @@ ignored by ``FlowCal``.
 import collections
 import os
 import os.path
+import packaging
+import packaging.version
 import platform
 import re
+import six
 import subprocess
 import time
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
 import warnings
+
+# Tkinter is imported differently depending on which version of python we're
+# using.
+# six.PY2 is True when the code is running in python 2, False otherwise.
+# six.PY3 is the equivalent for python 3.
+if six.PY2:
+    from Tkinter import Tk
+    from tkFileDialog import askopenfilename
+elif six.PY3:
+    from tkinter import Tk
+    from tkinter.filedialog import askopenfilename
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -92,8 +104,8 @@ import FlowCal.stats
 import FlowCal.mef
 
 # Regular expressions for headers that specify some fluorescence channel
-re_mef_values = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
-re_units = re.compile(r'^\s*(\S*)\s*Units\s*$')
+re_mef_values = re.compile(r'^\s*(\S(.*\S)*)\s*MEF\s*Values\s*$')
+re_units      = re.compile(r'^\s*(\S(.*\S)*)\s*Units\s*$')
 
 class ExcelUIException(Exception):
     """
@@ -131,7 +143,9 @@ def read_table(filename, sheetname, index_col=None):
 
     """
     # Catch sheetname as list or None
-    if sheetname is None or hasattr(sheetname, '__iter__'):
+    if sheetname is None or \
+            (hasattr(sheetname, '__iter__') \
+            and not isinstance(sheetname, six.string_types)):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
@@ -169,14 +183,28 @@ def write_workbook(filename, table_list, column_width=None):
     # Modify default header format
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
-    # The format module is in pd.core.format in pandas<=0.18.0,
-    # pd.formats.format in pandas>=0.18.1.
+    # The header style structure is in pd.core.format in pandas<=0.18.0,
+    # pd.formats.format in 0.18.1<=pandas<0.20, and pd.io.formats.excel in
+    # pandas>=0.20.
+    # Also, wrap in a try-except block in case style structure is not found.
+    format_module_found = False
     try:
-        format_module = pd.core.format
+        # Get format module
+        if packaging.version.parse(pd.__version__) \
+                <= packaging.version.parse('0.18'):
+            format_module = pd.core.format
+        elif packaging.version.parse(pd.__version__) \
+                < packaging.version.parse('0.20'):
+            format_module = pd.formats.format
+        else:
+            import pandas.io.formats.excel as format_module
+        # Save previous style, replace, and indicate that previous style should
+        # be restored at the end
+        old_header_style = format_module.header_style
+        format_module.header_style = {"font": {"bold": True}}
+        format_module_found = True
     except AttributeError as e:
-        format_module = pd.formats.format
-    old_header_style = format_module.header_style
-    format_module.header_style = {"font": {"bold": True}}
+        pass
 
     # Generate output writer object
     writer = pd.ExcelWriter(filename, engine='xlsxwriter')
@@ -189,7 +217,7 @@ def write_workbook(filename, table_list, column_width=None):
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
         if column_width is None:
-            for i, (col_name, column) in enumerate(df.iteritems()):
+            for i, (col_name, column) in enumerate(six.iteritems(df)):
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
@@ -208,7 +236,8 @@ def write_workbook(filename, table_list, column_width=None):
     writer.save()
 
     # Restore previous header format
-    format_module.header_style = old_header_style
+    if format_module_found:
+        format_module.header_style = old_header_style
 
 def process_beads_table(beads_table,
                         instruments_table,
@@ -310,7 +339,7 @@ def process_beads_table(beads_table,
     # Extract header and channel names for which MEF values are specified.
     headers = list(beads_table.columns)
     mef_headers_all = [h for h in headers if re_mef_values.match(h)]
-    mef_channels_all = [re_mef_values.search(h).group(1)
+    mef_channels_all = [re_mef_values.match(h).group(1)
                         for h in mef_headers_all]
 
     # Iterate through table
@@ -391,15 +420,19 @@ def process_beads_table(beads_table,
                     gate_method = str(beads_row['Scatter Gate'])
 
                 if gate_method.lower().strip() == 'density':
-                    # Density gate by default
-                    beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                        data=beads_sample_gated,
-                        channels=sc_channels,
-                        gate_fraction=beads_row['Gate Fraction'],
-                        xscale='logicle',
-                        yscale='logicle',
-                        sigma=5.,
-                        full_output=True)
+                    # Density gate
+                    try:
+                        beads_sample_gated, __, gate_contour = \
+                            FlowCal.gate.density2d(
+                                data=beads_sample_gated,
+                                channels=sc_channels,
+                                gate_fraction=beads_row['Gate Fraction'],
+                                xscale='logicle',
+                                yscale='logicle',
+                                sigma=5.,
+                                full_output=True)
+                    except ValueError as ve:
+                        raise ExcelUIException(ve.message)
                 elif gate_method.lower().strip() in ['', 'none']:
                     # No additional scatter gate
                     gate_contour = None
@@ -410,14 +443,18 @@ def process_beads_table(beads_table,
                             gate_method))
             else:
                 # Density gate by default
-                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                    data=beads_sample_gated,
-                    channels=sc_channels,
-                    gate_fraction=beads_row['Gate Fraction'],
-                    xscale='logicle',
-                    yscale='logicle',
-                    sigma=5.,
-                    full_output=True)
+                try:
+                    beads_sample_gated, __, gate_contour = \
+                        FlowCal.gate.density2d(
+                            data=beads_sample_gated,
+                            channels=sc_channels,
+                            gate_fraction=beads_row['Gate Fraction'],
+                            xscale='logicle',
+                            yscale='logicle',
+                            sigma=5.,
+                            full_output=True)
+                except ValueError as ve:
+                    raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -497,6 +534,18 @@ def process_beads_table(beads_table,
                     mef = [int(e) if e.strip().isdigit() else np.nan
                            for e in mef]
                     mef_values.append(mef)
+
+            # Ensure matching number of `mef_values` for all channels (this
+            # implies that the calibration beads have the same number of
+            # subpopulations for all channels).
+            if mef_values:
+                if not np.all([len(mef_values_channel)==len(mef_values[0])
+                               for mef_values_channel in mef_values]):
+                    raise ExcelUIException("Must specify the same number of"
+                                           + " MEF Values for each channel."
+                                           + " Use 'None' to instruct FlowCal"
+                                           + " to ignore a detected"
+                                           + " subpopulation.")
             mef_values = np.array(mef_values)
 
             # Obtain standard curve transformation
@@ -647,7 +696,7 @@ def process_samples_table(samples_table,
     # Extract header and channel names for which units are specified.
     headers = list(samples_table.columns)
     report_headers_all = [h for h in headers if re_units.match(h)]
-    report_channels_all = [re_units.search(h).group(1)
+    report_channels_all = [re_units.match(h).group(1)
                            for h in report_headers_all]
 
     # Iterate through table
@@ -824,13 +873,16 @@ def process_samples_table(samples_table,
 
                 if gate_method.lower().strip() == 'density':
                     # Density gate
-                    sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                        data=sample_gated,
-                        channels=sc_channels,
-                        gate_fraction=sample_row['Gate Fraction'],
-                        xscale='logicle',
-                        yscale='logicle',
-                        full_output=True)
+                    try:
+                        sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                            data=sample_gated,
+                            channels=sc_channels,
+                            gate_fraction=sample_row['Gate Fraction'],
+                            xscale='logicle',
+                            yscale='logicle',
+                            full_output=True)
+                    except ValueError as ve:
+                        raise ExcelUIException(ve.message)
                 elif gate_method.lower().strip() in ['', 'none']:
                     # No additional scatter gate
                     gate_contour = None
@@ -841,13 +893,16 @@ def process_samples_table(samples_table,
                             gate_method))
             else:
                 # Density gate by default
-                sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                    data=sample_gated,
-                    channels=sc_channels,
-                    gate_fraction=sample_row['Gate Fraction'],
-                    xscale='logicle',
-                    yscale='logicle',
-                    full_output=True)
+                try:
+                    sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                        data=sample_gated,
+                        channels=sc_channels,
+                        gate_fraction=sample_row['Gate Fraction'],
+                        xscale='logicle',
+                        yscale='logicle',
+                        full_output=True)
+                except ValueError as ve:
+                    raise ExcelUIException(ve.message)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -966,7 +1021,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     # List of channels that require stats columns
     headers = list(beads_table.columns)
     stats_headers = [h for h in headers if re_mef_values.match(h)]
-    stats_channels = [re_mef_values.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_mef_values.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -1110,7 +1165,7 @@ def add_samples_stats(samples_table, samples):
     # List of channels that require stats columns
     headers = list(samples_table.columns)
     stats_headers = [h for h in headers if re_units.match(h)]
-    stats_channels = [re_units.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_units.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -1234,7 +1289,7 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
     # Extract channels that require stats histograms
     headers = list(samples_table.columns)
     hist_headers = [h for h in headers if re_units.match(h)]
-    hist_channels = [re_units.search(h).group(1) for h in hist_headers]
+    hist_channels = [re_units.match(h).group(1) for h in hist_headers]
 
     # The number of columns in the DataFrame has to be set to the maximum
     # number of bins of any of the histograms about to be generated.
@@ -1323,7 +1378,7 @@ def generate_about_table(extra_info={}):
     keywords.append('Time of analysis')
     values.append(time.strftime("%I:%M:%S%p"))
     # Add additional keyword:value pairs
-    for k, v in extra_info.items():
+    for k, v in six.iteritems(extra_info):
         keywords.append(k)
         values.append(v)
 
@@ -1370,7 +1425,11 @@ def show_open_file_dialog(filetypes):
 
     return filename
 
-def run(input_path=None, output_path=None, verbose=True, plot=True):
+def run(input_path=None,
+        output_path=None,
+        verbose=True,
+        plot=True,
+        hist_sheet=False):
     """
     Run the MS Excel User Interface.
 
@@ -1383,11 +1442,12 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
      4. Generate statistics for each bead sample.
      5. Process all the cell samples in the Samples table.
      6. Generate statistics for each sample.
-     7. Generate a histogram table for each fluorescent channel specified
-        for each sample.
+     7. If requested, generate a histogram table for each fluorescent
+        channel specified for each sample.
      8. Generate a table with run time, date, FlowCal version, among
         others.
-     9. Save statistics and histograms in an output Excel file.
+     9. Save statistics and (if requested) histograms in an output Excel
+        file.
 
     Parameters
     ----------
@@ -1403,6 +1463,9 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     plot : bool, optional
         Whether to generate and save density/histogram plots of each
         sample, and each beads sample.
+    hist_sheet : bool, optional
+        Whether to generate a sheet in the output Excel file specifying
+        histogram bin information.
 
     """
 
@@ -1465,9 +1528,10 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     add_samples_stats(samples_table, samples)
 
     # Generate histograms
-    if verbose:
-        print("Generating histograms table...")
-    histograms_table = generate_histograms_table(samples_table, samples)
+    if hist_sheet:
+        if verbose:
+            print("Generating histograms table...")
+        histograms_table = generate_histograms_table(samples_table, samples)
 
     # Generate about table
     about_table = generate_about_table({'Input file path': input_path})
@@ -1477,7 +1541,8 @@ def run(input_path=None, output_path=None, verbose=True, plot=True):
     table_list.append(('Instruments', instruments_table))
     table_list.append(('Beads', beads_table))
     table_list.append(('Samples', samples_table))
-    table_list.append(('Histograms', histograms_table))
+    if hist_sheet:
+        table_list.append(('Histograms', histograms_table))
     table_list.append(('About Analysis', about_table))
 
     # Write output excel file
@@ -1518,10 +1583,16 @@ if __name__ == '__main__':
         "--plot",
         action="store_true",
         help="generate and save density plots/histograms of beads and samples")
+    parser.add_argument(
+        "-H",
+        "--histogram-sheet",
+        action="store_true",
+        help="generate sheet in output Excel file specifying histogram bins")
     args = parser.parse_args()
 
     # Run Excel UI
     run(input_path=args.inputpath,
         output_path=args.outputpath,
         verbose=args.verbose,
-        plot=args.plot)
+        plot=args.plot,
+        hist_sheet=args.histogram_sheet)

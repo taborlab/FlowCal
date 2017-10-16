@@ -284,7 +284,8 @@ def density2d(data,
             bin edges. Note that None is not allowed if ``data.hist_bins``
             does not exist.
     gate_fraction : float, optional
-        Fraction of events to retain after gating.
+        Fraction of events to retain after gating. Should be between 0 and
+        1, inclusive.
     xscale : str, optional
         Scale of the bins generated for the x axis, either ``linear``,
         ``log``, or ``logicle``. `xscale` is ignored in `bins` is an array
@@ -349,10 +350,14 @@ def density2d(data,
 
     # Extract channels in which to gate
     if len(channels) != 2:
-        raise ValueError('2 channels should be specified.')
+        raise ValueError('2 channels should be specified')
     data_ch = data[:,channels]
     if data_ch.ndim == 1:
         data_ch = data_ch.reshape((-1,1))
+
+    # Check gating fraction
+    if gate_fraction < 0 or gate_fraction > 1:
+        raise ValueError('gate fraction should be between 0 and 1, inclusive')
 
     # Check dimensions
     if data_ch.ndim < 2:
@@ -515,8 +520,8 @@ def density2d(data,
         # just going to make sure the path codes aren't unfamiliar and then extract
         # all of the vertices and pack them into a list of 2D contours.
         cntr = []
-        num_cntrs = len(tr)/2
-        for idx in xrange(num_cntrs):
+        num_cntrs = len(tr)//2
+        for idx in range(num_cntrs):
             vertices = tr[idx]
             codes = tr[num_cntrs+idx]
 

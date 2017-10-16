@@ -3,9 +3,11 @@ Installing FlowCal with Anaconda
 
 To install Anaconda and ``FlowCal``, do the following:
 
-1. Navigate to https://www.continuum.io/downloads. If you are using Windows, click on “Windows 64-bit Graphical Installer” or “Windows 32-bit Graphical Installer” under the “Python 2.7” column, depending on whether your computer is 32-bit or 64-bit. The 64-bit version is strongly recommended. Similarly, if you are using OS X, click on “Mac OS X 64-bit Graphical Installer” under the “Python 2.7” column. This will download the installer.
+1. Navigate to https://www.continuum.io/downloads. If you are using Windows, click on “64-bit Installer” or “32-bit Installer”, depending on whether your computer is 32-bit or 64-bit. The 64-bit version is strongly recommended. Similarly, if you are using OS X, click on “Graphical Installer”. This will download the installer.
 
 2. Double click the installer (.exe in Windows, .pkg in OS X) and follow the instructions on screen.
+
+.. note:: **Windows**: During installation, on the "Advanced Installation Options" screen, make sure to check both "Add Anaconda to my PATH environment variable" and "Register Anaconda as my default Python". Recent versions of Anaconda suggest to keep the first option unchecked. However, this option is necessary for the installation script on step 4 to work.
 
 3. Download ``FlowCal`` from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. A file called ``FlowCal-master.zip`` will be downloaded. Unzip this file.
 
