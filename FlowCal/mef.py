@@ -7,11 +7,18 @@ import os
 import functools
 import collections
 import six
+import packaging
 
 import numpy as np
+import scipy
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from sklearn.mixture import GMM
+import sklearn
+if packaging.version.parse(sklearn.__version__) \
+        >= packaging.version.parse('0.18'):
+    from sklearn.mixture import GaussianMixture
+else:
+    from sklearn.mixture import GMM
 
 import FlowCal.plot
 import FlowCal.transform
@@ -29,10 +36,10 @@ else:
 def clustering_gmm(data,
                    n_clusters,
                    tol=1e-7,
-                   min_covar=5e-5,
+                   min_covar=None,
                    scale='logicle'):
     """
-    Find clusters in an array using Gaussian Mixture Models (GMM).
+    Find clusters in an array using a Gaussian Mixture Model.
 
     Before clustering, `data` can be automatically rescaled as specified by
     the `scale` argument.
@@ -44,10 +51,13 @@ def clustering_gmm(data,
     n_clusters : int
         Number of clusters to find.
     tol : float, optional
-        Tolerance for convergence of GMM method. Passed directly to
-        ``scikit-learn``'s GMM.
+        Tolerance for convergence. Directly passed to either
+        ``GaussianMixture`` or ``GMM``, depending on ``scikit-learn``'s
+        version.
     min_covar : float, optional
-        Minimum covariance. Passed directly to ``scikit-learn``'s GMM.
+        The minimum trace that the initial covariance matrix will have. If
+        ``scikit-learn``'s version is older than 0.18, `min_covar` is also
+        passed directly to ``GMM``.
     scale : str, optional
         Rescaling applied to `data` before performing clustering. Can be
         either ``linear`` (no rescaling), ``log``, or ``logicle``.
@@ -60,11 +70,11 @@ def clustering_gmm(data,
 
     Notes
     -----
-    GMM finds clusters by fitting a linear combination of `n_clusters`
-    Gaussian probability density functions (pdf) to `data` using
-    Expectation Maximization (EM).
+    A Gaussian Mixture Model finds clusters by fitting a linear combination
+    of `n_clusters` Gaussian probability density functions (pdf) to `data`
+    using Expectation Maximization (EM).
 
-    GMM can be fairly sensitive to the initial parameter choice. To
+    This method can be fairly sensitive to the initial parameter choice. To
     generate a reasonable set of initial conditions, `clustering_gmm`
     first divides all points in `data` into `n_clusters` groups of the
     same size based on their Euclidean distance to the minimum value. Then,
@@ -73,13 +83,21 @@ def clustering_gmm(data,
     samples of each group, and used as initial conditions for the GMM EM
     algorithm.
 
-    `clustering_gmm` internally uses `GMM` from the ``scikit-learn``
-    library, with full covariance matrices for each cluster and a fixed,
-    uniform set of weights. This means that `clustering_gmm` implicitly
-    assumes that all bead subpopulations have roughly the same number of
-    events. For more information, consult ``scikit-learn``'s documentation.
+    `clustering_gmm` internally uses a `GaussianMixture` object from the
+    ``scikit-learn`` library (``GMM`` if ``scikit-learn``'s version is
+    lower than 0.18), with full covariance matrices for each cluster. For
+    more information, consult ``scikit-learn``'s documentation.
 
     """
+
+    # Initialize min_covar parameter
+    # Parameter is initialized differently depending on scikit's version
+    if min_covar is None:
+        if packaging.version.parse(sklearn.__version__) \
+                >= packaging.version.parse('0.18'):
+            min_covar = 1e-3
+        else:
+            min_covar = 5e-5
 
     # Copy events before rescaling
     data = data.copy()
@@ -138,36 +156,57 @@ def clustering_gmm(data,
             cov = np.cov(data_cluster.T).reshape(1,1)
         else:
             cov = np.cov(data_cluster.T)
-        # If the trace of the covariance is less than min_covar, change by a
-        # diagonal covariance with nonzero elements equal to min_covar.
-        if np.trace(cov) < min_covar:
-            cov = np.eye(data.shape[1]) * min_covar
+        # Add small number to diagonal to avoid near-singular covariances
+        cov += np.eye(data.shape[1]) * min_covar
         covars.append(cov)
+    # Means should be an array
     means = np.array(means)
 
     ###
     # Run Gaussian Mixture Model Clustering
     ###
 
-    # Initialize GMM object
-    gmm = GMM(n_components=n_clusters,
-              tol=tol,
-              min_covar=min_covar,
-              covariance_type='full',
-              params='mc',
-              init_params='')
+    if packaging.version.parse(sklearn.__version__) \
+            >= packaging.version.parse('0.18'):
 
-    # Set initial parameters
-    gmm.weight_ = weights
-    gmm.means_ = means
-    gmm.covars_ = covars
+        # GaussianMixture uses precisions, the inverse of covariances.
+        # To get the inverse, we solve the linear equation C*P = I. We also
+        # use the fact that C is positive definite.
+        precisions = [scipy.linalg.solve(c,
+                                         np.eye(c.shape[0]),
+                                         assume_a='pos')
+                      for c in covars]
+        precisions = np.array(precisions)
+
+        # Initialize GaussianMixture object
+        gmm = GaussianMixture(n_components=n_clusters,
+                              tol=tol,
+                              covariance_type='full',
+                              weights_init=weights,
+                              means_init=means,
+                              precisions_init=precisions,
+                              max_iter=500)
+
+    else:
+        # Initialize GMM object
+        gmm = GMM(n_components=n_clusters,
+                  tol=tol,
+                  min_covar=min_covar,
+                  covariance_type='full',
+                  params='mc',
+                  init_params='')
+
+        # Set initial parameters
+        gmm.weight_ = weights
+        gmm.means_ = means
+        gmm.covars_ = covars
 
     # Fit 
     gmm.fit(data)
 
     # Get labels by sampling from the responsibilities
-    # This avoids the complete elimination of a cluster if two or more clusters
-    # have very similar means.
+    # This avoids the complete elimination of a cluster if two or more 
+    # clusters have very similar means.
     resp = gmm.predict_proba(data)
     labels = [np.random.choice(range(n_clusters), p=ri) for ri in resp]
 
