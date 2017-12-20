@@ -2709,6 +2709,14 @@ class TestFCSDataPickle(unittest.TestCase):
         attrs = set(dir(self.d))
         loaded_attrs = set(dir(test_fcs))
         self.assertEqual(attrs, loaded_attrs)
+        # Check contents of attrs affected by pickling
+        pickle_sensitive_attrs = ['_resolution', '_range', '_amplifier_gain',
+            '_detector_voltage', '_amplification_type', '_channels',
+            '_acquisition_end_time', '_acquisition_start_time', '_time_step'
+            '_data_type', '_analysis', '_text', '_infile']
+        for attr in pickle_sensitive_attrs:
+            if hasattr(self.d, attr):
+                self.assertEqual(getattr(self.d, attr), getattr(test_fcs, attr))
 
     def tearDown(self):
         os.remove(self.test_file)
