@@ -680,7 +680,7 @@ class FCSFile(object):
         If more than one data set is detected in the same file.
     Warning
         If the ANALYSIS segment was not successfully parsed.
-    
+
     Notes
     -----
     The Flow Cytometry Standard (FCS) describes the de facto standard
@@ -730,7 +730,7 @@ class FCSFile(object):
 
     """
     def __init__(self, infile):
-        
+
         self._infile = infile
 
         if isinstance(infile, six.string_types):
@@ -832,7 +832,7 @@ class FCSFile(object):
                 self._analysis = {}
         else:
             self._analysis = {}
-        
+
         # Import DATA segment
         param_ranges = [float(self._text['$P{0}R'.format(p)])
                         for p in range(1,D+1)]
@@ -962,7 +962,7 @@ class FCSData(np.ndarray):
     the detector and the amplifiers are parsed from the TEXT segment of the
     FCS file and exposed as attributes. The TEXT and ANALYSIS segments are
     also exposed as attributes.
-    
+
     Parameters
     ----------
     infile : str or file-like
@@ -1760,6 +1760,38 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_resolution'):
             self._resolution = copy.deepcopy(obj._resolution)
 
+    # override __reduce__ and __setstate__ to fix Issue #277
+    # Adapted from https://stackoverflow.com/a/26599346
+    def __reduce__(self):
+        pickled_state = super(FCSData, self).__reduce__() # parent's __reduce__ output
+        # Update the __setstate__ tuple with FCSData attrs
+        fcsdata_attrs = (self._infile, self._text, self._analysis,
+            self._data_type, self._time_step, self._acquisition_start_time,
+            self._acquisition_end_time, self._channels,
+            self._amplification_type, self._detector_voltage,
+            self._amplifier_gain, self._range, self._resolution,)
+        new_state = pickled_state[2] + fcsdata_attrs
+        # Return updated tuple with full set_state tuple
+        return (pickled_state[0], pickled_state[1], new_state)
+
+    def __setstate__(self, state):
+        # Set FCSData attributes
+        self._resolution = state[-1]
+        self._range = state[-2]
+        self._amplifier_gain = state[-3]
+        self._detector_voltage = state[-4]
+        self._amplification_type = state[-5]
+        self._channels = state[-6]
+        self._acquisition_end_time = state[-7]
+        self._acquisition_start_time = state[-8]
+        self._time_step = state[-9]
+        self._data_type = state[-10]
+        self._analysis = state[-11]
+        self._text = state[-12]
+        self._infile = state[-13]
+        # Call parent's __setstate__ with remaining attrs
+        super(FCSData, self).__setstate__(state[0:-13])
+
     # Helper functions
     @staticmethod
     def _parse_time_string(time_str):
@@ -1944,8 +1976,8 @@ class FCSData(np.ndarray):
         slicing the `channel_info` attribute.
 
         """
-        # If key is a tuple with no None, decompose and interpret key[1] as 
-        # the channel. If it contains Nones, pass directly to 
+        # If key is a tuple with no None, decompose and interpret key[1] as
+        # the channel. If it contains Nones, pass directly to
         # ndarray.__getitem__() and convert to np.ndarray. Otherwise, pass
         # directly to ndarray.__getitem__().
         if isinstance(key, tuple) and len(key) == 2 \
@@ -2030,8 +2062,8 @@ class FCSData(np.ndarray):
         channel name when writing to a FCSData object.
 
         """
-        # If key is a tuple with no Nones, decompose and interpret key[1] as 
-        # the channel. If it contains Nones, pass directly to 
+        # If key is a tuple with no Nones, decompose and interpret key[1] as
+        # the channel. If it contains Nones, pass directly to
         # ndarray.__setitem__().
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:

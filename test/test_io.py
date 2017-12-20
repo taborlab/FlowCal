@@ -6,6 +6,7 @@ Unit tests for the `io` module.
 import datetime
 import unittest
 import six
+import cPickle, os
 
 import numpy as np
 
@@ -15,7 +16,7 @@ import FlowCal.io
 Files to test:
     - Data001.fcs: FCS 2.0 from CellQuest Pro 5.1.1 / BD FACScan Flow Cytometer
     - Data002.fcs: FCS 2.0 from FACSDiva 6.1.3 / BD FACSCanto II Flow Cytometer
-    - Data003.fcs: FCS 3.0 from FlowJo Collectors Edition 7.5 / 
+    - Data003.fcs: FCS 3.0 from FlowJo Collectors Edition 7.5 /
                     BD FACScan Flow Cytometer
     - Data004.fcs: FCS 3.0 including floating-point data
 """
@@ -108,17 +109,17 @@ class TestFCSDataLoading(unittest.TestCase):
 class TestReadTextSegment(unittest.TestCase):
     """
     Test that TEXT segments are parsed correctly.
-    
+
     """
 
     ###
     # Primary TEXT Segment Tests
     ###
-    
+
     def test_primary_one_key_value(self):
         """
         Test that typical primary TEXT segment is read correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/'
         delim            = '/'
@@ -172,7 +173,7 @@ class TestReadTextSegment(unittest.TestCase):
 
         Test that a specified delimiter inconsistent with the first character
         of a primary TEXT segment fails to parse.
-        
+
         """
         raw_text_segment = '/k1/v1/'
         delim            = '|'
@@ -185,7 +186,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_1(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -201,7 +202,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_1(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
@@ -217,7 +218,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_2(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
@@ -233,7 +234,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_2(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
@@ -249,7 +250,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_3(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
@@ -265,7 +266,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_3(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
@@ -281,7 +282,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_first_keyword_delim_fail(self):
         """
         Test that delimiter at start of first keyword fails.
-        
+
         """
         raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -294,7 +295,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_4(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -310,7 +311,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_4(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
         delim            = '/'
@@ -326,7 +327,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_5(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
         delim            = '/'
@@ -342,7 +343,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_5(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
         delim            = '/'
@@ -358,7 +359,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_keyword_6(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
         delim            = '/'
@@ -374,7 +375,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_delim_in_value_6(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
         delim            = '/'
@@ -390,7 +391,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_bad_segment(self):
         """
         Test edge case with unpaired non-boundary delimiter in last value.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
@@ -406,7 +407,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_keyword_1(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -422,7 +423,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_value_1(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
@@ -438,7 +439,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_keyword_2(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
@@ -454,7 +455,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_value_2(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
@@ -470,7 +471,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_keyword_3(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
@@ -486,7 +487,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_value_3(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
@@ -502,7 +503,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_value_4(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
@@ -518,7 +519,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_primary_multi_delim_in_keyword_fail(self):
         """
         Test that multiple delimiters at start of first keyword fails.
-        
+
         """
         raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -527,15 +528,15 @@ class TestReadTextSegment(unittest.TestCase):
             ValueError,
             FlowCal.io.read_fcs_text_segment,
             buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
-   
+
     ###
     # Supplemental TEXT Segment Tests
     ###
-    
+
     def test_supp_one_key_value(self):
         """
         Test that typical supplemental TEXT segment is read correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/'
         delim            = '/'
@@ -553,7 +554,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_one_key_value_s(self):
         """
         Test that typical supplemental TEXT segment is read correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/'
         delim            = '/'
@@ -571,7 +572,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_no_delim_fail(self):
         """
         Test failure when no delimiter is specified for supplemental segment.
-        
+
         """
         raw_text_segment = '/k1/v1/'
         delim            = '/'
@@ -663,7 +664,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_1(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -681,7 +682,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_1_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'key//1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -699,7 +700,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_1(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
@@ -717,7 +718,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_1_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'key1/value//1/k2/v2/k3/v3/'
         delim            = '/'
@@ -735,7 +736,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_2(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
@@ -753,7 +754,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_2_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/key//2/value2/k3/v3/'
         delim            = '/'
@@ -771,7 +772,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_2(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
@@ -789,7 +790,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_2_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/key2/value//2/k3/v3/'
         delim            = '/'
@@ -807,7 +808,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_3(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
@@ -825,7 +826,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_3_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/key//3/value3/'
         delim            = '/'
@@ -843,7 +844,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_3(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
@@ -861,7 +862,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_3_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/key3/value//3/'
         delim            = '/'
@@ -879,7 +880,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_first_keyword_delim_fail(self):
         """
         Test that delimiter at start of first keyword fails.
-        
+
         """
         raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -893,7 +894,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_first_keyword_delim_fail_s(self):
         """
         Test that delimiter at start of first keyword fails.
-        
+
         """
         raw_text_segment = '//key1/value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -907,7 +908,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_4(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -925,7 +926,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_4_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'key1///value1/k2/v2/k3/v3/'
         delim            = '/'
@@ -943,7 +944,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_4(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
         delim            = '/'
@@ -961,7 +962,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_4_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1///key2/value2/k3/v3/'
         delim            = '/'
@@ -979,7 +980,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_5(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
         delim            = '/'
@@ -997,7 +998,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_5_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/key2///value2/k3/v3/'
         delim            = '/'
@@ -1015,7 +1016,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_5(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
         delim            = '/'
@@ -1033,7 +1034,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_5_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2///key3/value3/'
         delim            = '/'
@@ -1051,7 +1052,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_6(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
         delim            = '/'
@@ -1069,7 +1070,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_keyword_6_s(self):
         """
         Test that delimiter in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/key3///value3/'
         delim            = '/'
@@ -1087,7 +1088,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_6(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
         delim            = '/'
@@ -1105,7 +1106,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_delim_in_value_6_s(self):
         """
         Test that delimiter in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/k3/v3///'
         delim            = '/'
@@ -1123,7 +1124,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_bad_segment(self):
         """
         Test edge case with unpaired non-boundary delimiter in last value.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
         delim            = '/'
@@ -1141,7 +1142,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_bad_segment_s(self):
         """
         Test edge case with unpaired non-boundary delimiter in last value.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/k3/v3//'
         delim            = '/'
@@ -1159,7 +1160,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_1(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -1177,7 +1178,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_1_s(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k////1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -1195,7 +1196,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_1(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
@@ -1213,7 +1214,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_1_s(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v//1///k2/v2/k3/v3/'
         delim            = '/'
@@ -1231,7 +1232,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_2(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
@@ -1249,7 +1250,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_2_s(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k//2/////v2/k3/v3/'
         delim            = '/'
@@ -1267,7 +1268,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_2(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
@@ -1285,7 +1286,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_2_s(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v//////2/k3/v3/'
         delim            = '/'
@@ -1303,7 +1304,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_3(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
@@ -1321,7 +1322,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_3_s(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/k////3/v3/'
         delim            = '/'
@@ -1339,7 +1340,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_3(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
@@ -1357,7 +1358,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_3_s(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/k3/v////3/'
         delim            = '/'
@@ -1375,7 +1376,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_4(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
@@ -1393,7 +1394,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_value_4_s(self):
         """
         Test that multiple delimiters in keyword value still parses correctly.
-        
+
         """
         raw_text_segment = 'k1/v1/k2/v2/k3/v3/////'
         delim            = '/'
@@ -1411,7 +1412,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_fail(self):
         """
         Test that multiple delimiters at start of first keyword fails.
-        
+
         """
         raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -1425,7 +1426,7 @@ class TestReadTextSegment(unittest.TestCase):
     def test_supp_multi_delim_in_keyword_fail_s(self):
         """
         Test that multiple delimiters at start of first keyword fails.
-        
+
         """
         raw_text_segment = '////k1/v1/k2/v2/k3/v3/'
         delim            = '/'
@@ -2503,7 +2504,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
     def test_slicing_channel_with_int_array(self):
         """
-        Testing the channel slicing with an int array of a FCSData 
+        Testing the channel slicing with an int array of a FCSData
         object.
         """
         ds = self.d[:,[1,3]]
@@ -2513,7 +2514,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
     def test_slicing_channel_with_string_array(self):
         """
-        Testing the channel slicing with a string array of a FCSData 
+        Testing the channel slicing with a string array of a FCSData
         object.
 
         """
@@ -2556,7 +2557,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
     def test_none_slicing_1(self):
         """
-        Testing slicing with None on the first dimension of a FCSData 
+        Testing slicing with None on the first dimension of a FCSData
         object.
 
         """
@@ -2565,7 +2566,7 @@ class TestFCSDataSlicing(unittest.TestCase):
 
     def test_none_slicing_2(self):
         """
-        Testing slicing with None on the second dimension of a FCSData 
+        Testing slicing with None on the second dimension of a FCSData
         object.
 
         """
@@ -2619,7 +2620,7 @@ class TestFCSDataOperations(unittest.TestCase):
         ds_array = self.d.view(np.ndarray) + 3
         self.assertIsInstance(ds, FlowCal.io.FCSData)
         np.testing.assert_array_equal(ds, ds_array)
-        
+
     def test_sqrt(self):
         """
         Testing that the sqrt(FCSData) is consistent with sqrt(ndarray)
@@ -2672,7 +2673,7 @@ class TestFCSDataOperations(unittest.TestCase):
 
     def test_mean_axis(self):
         """
-        Testing that the mean along the axis 0 of a FCSData object 
+        Testing that the mean along the axis 0 of a FCSData object
         returns a FCSData object.
 
         """
@@ -2681,6 +2682,36 @@ class TestFCSDataOperations(unittest.TestCase):
         self.assertIsInstance(m, FlowCal.io.FCSData)
         self.assertEqual(m.shape, m_array.shape)
         np.testing.assert_array_equal(m, m_array)
-        
+
+class TestFCSDataPickle(unittest.TestCase):
+    '''See Issue #277. FCSData objects must be able to be serialized (via Pickle)
+    and deserialized correctly.'''
+
+    def setUp(self):
+        self.d = FlowCal.io.FCSData(filenames[2])
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        self.test_file = os.path.join(file_dir, 'test_fcs.p')
+
+    def test_pickle_unpickle(self):
+        """
+        Test that an FCSData instance can be pickled, then unpickled, and
+        still retain all custom attributes.
+        """
+        channels = self.d.channels # Should be fine, no error
+
+        with open(self.test_file, 'w') as outfile:
+            cPickle.dump(self.d, outfile) # serialization
+
+        with open(self.test_file, 'r') as infile:
+            test_fcs = cPickle.load(infile) # de-serialization
+
+        # Check all attributes/methods are preserved
+        attrs = set(dir(self.d))
+        loaded_attrs = set(dir(test_fcs))
+        self.assertEqual(attrs, loaded_attrs)
+
+    def tearDown(self):
+        os.remove(self.test_file)
+
 if __name__ == '__main__':
     unittest.main()
