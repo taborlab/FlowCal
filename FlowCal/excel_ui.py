@@ -104,8 +104,8 @@ import FlowCal.stats
 import FlowCal.mef
 
 # Regular expressions for headers that specify some fluorescence channel
-re_mef_values = re.compile(r'^\s*(\S(.*\S)*)\s*MEF\s*Values\s*$')
-re_units      = re.compile(r'^\s*(\S(.*\S)*)\s*Units\s*$')
+re_mef_values = re.compile(r'^\s*(\S(?:.*\S)?)\s+MEF\s+Values\s*$')
+re_units      = re.compile(r'^\s*(\S(?:.*\S)?)\s+Units\s*$')
 
 class ExcelUIException(Exception):
     """
