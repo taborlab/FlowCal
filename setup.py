@@ -34,12 +34,6 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='FlowCal',
 
-    entry_points = {
-        'console_scripts': [
-            'flowcal=FlowCal.excel_ui:run_command_line'
-        ]
-    },
-
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
@@ -127,9 +121,10 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points = {
+        'console_scripts': [
+            'flowcal=FlowCal.excel_ui:run_command_line',
+            'FlowCal=FlowCal.excel_ui:run_command_line',
+        ]
+    },
 )
