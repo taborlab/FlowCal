@@ -1491,19 +1491,15 @@ def run(input_path=None,
         print("\nDone.")
 
 
-def run_command_line(argv=None):
+def run_command_line(args=None):
     """
-    Entry point for the FlowCal and flowcal console scripts
+    Entry point for the FlowCal and flowcal console scripts.
 
     Parameters
     ----------
-    argv: list of strings
-        argument values to parse and pass to run()
-
-    Notes
-    ----------
-    Use main(argv = ['arguments', 'you', 'want', 'to', 'test'])
-    to test entry point and argument parsing in unit tests
+    args: list of strings, optional
+        Command line arguments. If None or not specified, get arguments
+        from ``sys.argv``.
 
     See Also
     ----------
@@ -1512,8 +1508,13 @@ def run_command_line(argv=None):
     http://amir.rachum.com/blog/2017/07/28/python-entry-points/
 
     """
-    if argv == None:
-        argv = sys.argv
+    # Get arguments from ``sys.argv`` if necessary.
+    # ``sys.argv`` has the name of the script as its first element. We do not
+    # need this, and in fact if present, it will later break
+    # ``parser.parse_args()``.
+    if args is None:
+        args = sys.argv[1:]
+
     import argparse
     # Read command line arguments
     parser = argparse.ArgumentParser(
@@ -1545,7 +1546,7 @@ def run_command_line(argv=None):
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
-    args = parser.parse_args(args=argv)
+    args = parser.parse_args(args=args)
 
     # Run Excel UI
     run(input_path=args.inputpath,
