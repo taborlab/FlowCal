@@ -8,10 +8,10 @@
 # https://packaging.python.org/en/latest/single_source_version.html
 __version__ = '1.1.4'
 
-import io
-import excel_ui
-import gate
-import transform
-import mef
-import plot
-import stats
+from . import io
+from . import excel_ui
+from . import gate
+from . import transform
+from . import mef
+from . import plot
+from . import stats

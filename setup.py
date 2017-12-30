@@ -70,6 +70,7 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -83,12 +84,13 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.8.2',
+    install_requires=['packaging>=16.8',
+                      'six>=1.10.0',
+                      'numpy>=1.8.2',
                       'scipy>=0.14.0',
                       'matplotlib>=1.3.1',
                       'palettable>=2.1.1',
                       'scikit-learn>=0.16.0',
-                      'packaging>=16.8',
                       'pandas>=0.16.1',
                       'xlrd>=0.9.2',
                       'XlsxWriter>=0.5.2'],
