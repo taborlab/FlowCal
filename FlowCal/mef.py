@@ -597,9 +597,10 @@ def get_transform_fxn(data_beads,
         Name to use for plot files. If None, use ``str(data_beads)``.
     full_output : bool, optional
         Flag specifying whether to include intermediate results in the
-        output. If `full_output` is True, the function returns a named
-        tuple with fields as described below. If `full_output` is False,
-        the function only returns the calculated transformation function.
+        output. If `full_output` is True, the function returns a
+        ``namedtuple`` with fields as described below. If `full_output` is
+        False, the function only returns the calculated transformation
+        function.
 
     Returns
     -------
@@ -743,7 +744,7 @@ def get_transform_fxn(data_beads,
 
             selected_mask = selection_fxn(data_list, **selection_params)
 
-        where `data_list` is a list of FCSData objects, each one cotaining
+        where `data_list` is a list of FCSData objects, each one containing
         the events of one population, and `selected_mask` is a boolean
         array indicating whether the population has been selected (True) or
         discarded (False). If None, don't use a population selection
