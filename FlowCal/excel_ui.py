@@ -1509,9 +1509,10 @@ def run_command_line(args=None):
 
     """
     # Get arguments from ``sys.argv`` if necessary.
-    # ``sys.argv`` has the name of the script as its first element. We do not
-    # need this, and in fact if present, it will later break
-    # ``parser.parse_args()``.
+    # ``sys.argv`` has the name of the script as its first element. We remove
+    # this element because it will break ``parser.parse_args()`` later. In fact,
+    # ``parser.parse_args()``, if provided with no arguments, will also use
+    # ``sys.argv`` after removing the first element.
     if args is None:
         args = sys.argv[1:]
 
