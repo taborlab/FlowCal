@@ -4,7 +4,6 @@ Command Line Interface (Advanced)
 The Excel UI can be run from a command line interpreter with one of the following equivalent statements::
 
 	flowcal [-h] [-i [INPUTPATH]] [-o [OUTPUTPATH]] [-v] [-p] [-H]
-	FlowCal [-h] [-i [INPUTPATH]] [-o [OUTPUTPATH]] [-v] [-p] [-H]
 	python -m FlowCal.excel_ui [-h] [-i [INPUTPATH]] [-o [OUTPUTPATH]] [-v] [-p] [-H]
 
 Where the flags are::

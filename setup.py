@@ -124,7 +124,6 @@ setup(
     entry_points = {
         'console_scripts': [
             'flowcal=FlowCal.excel_ui:run_command_line',
-            'FlowCal=FlowCal.excel_ui:run_command_line',
         ]
     },
 )
