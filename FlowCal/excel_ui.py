@@ -70,6 +70,7 @@ ignored by ``FlowCal``.
 """
 
 import collections
+import sys
 import os
 import os.path
 import packaging
@@ -104,8 +105,8 @@ import FlowCal.stats
 import FlowCal.mef
 
 # Regular expressions for headers that specify some fluorescence channel
-re_mef_values = re.compile(r'^\s*(\S(.*\S)*)\s*MEF\s*Values\s*$')
-re_units      = re.compile(r'^\s*(\S(.*\S)*)\s*Units\s*$')
+re_mef_values = re.compile(r'^\s*(\S(?:.*\S)?)\s+MEF\s+Values\s*$')
+re_units      = re.compile(r'^\s*(\S(?:.*\S)?)\s+Units\s*$')
 
 class ExcelUIException(Exception):
     """
@@ -266,7 +267,7 @@ def process_beads_table(beads_table,
         - Generate forward/side scatter density plots and fluorescence
           histograms, and plots of the clustering and fitting steps of
           standard curve generation, if `plot` = True.
-    
+
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
 
@@ -628,7 +629,7 @@ def process_samples_table(samples_table,
           channels.
         - Plot combined forward/side scatter density plots and fluorescence
           historgrams, if `plot` = True.
-    
+
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
 
@@ -927,7 +928,7 @@ def process_samples_table(samples_table,
                     else:
                         param['xscale'] = 'logicle'
                     hist_params.append(param)
-                    
+
                 # Plot
                 if plot_dir is not None:
                     figname = os.path.join(
@@ -1102,7 +1103,7 @@ def add_samples_stats(samples_table, samples):
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
-    
+
     The following information is added for each row, for each channel in
     which fluorescence units have been specified:
 
@@ -1276,7 +1277,7 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
         should correspond to ``samples_table.iloc[i]``
     max_bins : int, optional
         Maximum number of bins to use.
-    
+
     Returns
     -------
     hist_table : DataFrame
@@ -1556,9 +1557,34 @@ def run(input_path=None,
     if verbose:
         print("\nDone.")
 
-if __name__ == '__main__':
-    # Read command line arguments
+
+def run_command_line(args=None):
+    """
+    Entry point for the FlowCal and flowcal console scripts.
+
+    Parameters
+    ----------
+    args: list of strings, optional
+        Command line arguments. If None or not specified, get arguments
+        from ``sys.argv``.
+
+    See Also
+    ----------
+    FlowCal.excel_ui.run()
+
+    http://amir.rachum.com/blog/2017/07/28/python-entry-points/
+
+    """
+    # Get arguments from ``sys.argv`` if necessary.
+    # ``sys.argv`` has the name of the script as its first element. We remove
+    # this element because it will break ``parser.parse_args()`` later. In fact,
+    # ``parser.parse_args()``, if provided with no arguments, will also use
+    # ``sys.argv`` after removing the first element.
+    if args is None:
+        args = sys.argv[1:]
+
     import argparse
+    # Read command line arguments
     parser = argparse.ArgumentParser(
         description="process flow cytometry files with FlowCal's Excel UI.")
     parser.add_argument(
@@ -1588,7 +1614,7 @@ if __name__ == '__main__':
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     # Run Excel UI
     run(input_path=args.inputpath,
@@ -1596,3 +1622,6 @@ if __name__ == '__main__':
         verbose=args.verbose,
         plot=args.plot,
         hist_sheet=args.histogram_sheet)
+
+if __name__ == '__main__':
+    run_command_line()

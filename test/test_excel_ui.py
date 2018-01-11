@@ -213,5 +213,116 @@ class TestReadTable(unittest.TestCase):
                           sheetname,
                           index_col)
 
+class TestRegexMEFValues(unittest.TestCase):
+    """
+    Class to test the regex for finding MEF Values columns.
+
+    """
+    def setUp(self):
+        # Test dataset
+        # Each tuple consists of a string and the corresponding match solution.
+        # If the string is not expected to match, the solution is None.
+        # If the string is expected to match, the solution is the expected
+        # contents of group 1.
+        self.test_data = [('FL1 MEF Values', 'FL1'),
+                          (' FL1 MEF Values ', 'FL1'),
+                          ('   FL1 MEF Values', 'FL1'),
+                          ('FL1-H MEF Values', 'FL1-H'),
+                          ('mCherry-A MEF Values', 'mCherry-A'),
+                          ('MEF Values', None),
+                          (' MEF Values', None),
+                          ('  MEF Values', None),
+                          (' MEF Values ', None),
+                          ('test', None),
+                          (' test', None),
+                          ('  test', None),
+                          (' test ', None),
+                          ('test MEF Values', 'test'),
+                          ('Parameter 14', None),
+                          ('1', None),
+                          ('1 MEF Values', '1'),
+                          ('13', None),
+                          ('13 MEF Values', '13'),
+                          ('Parameter 14MEF Values', None),
+                          ('Parameter 14 MEFValues', None),
+                          ('Parameter 14 MEF Values', 'Parameter 14'),
+                          ('Parameter 14 MEF  Values', 'Parameter 14'),
+                          ('Parameter 14  MEF Values', 'Parameter 14'),
+                          ('Parameter  14 MEF Values', 'Parameter  14'),
+                          ('Parameter   14 MEF Values', 'Parameter   14'),
+                          ('  here is another test of ', None),
+                          ('  here is another test of MEF Values', 'here is another test of'),
+                          ('  test test MEF Values', 'test test'),
+                          ('520nm Light Intensity (umol/(m^2*s))', None),
+                          ('520nm Light Intensity (umol/(m^2*s)) MEF Values', '520nm Light Intensity (umol/(m^2*s))'),
+                          ]
+
+    def test_match(self):
+        # Get compiled regex
+        r = FlowCal.excel_ui.re_mef_values
+        # Iterate over test data
+        for s, sol in self.test_data:
+            # Match
+            m = r.match(s)
+            # Check
+            if sol is None:
+                self.assertIsNone(m)
+            else:
+                self.assertEqual(sol, m.group(1))
+
+class TestRegexUnits(unittest.TestCase):
+    """
+    Class to test the regex for finding Units columns.
+
+    """
+    def setUp(self):
+        # Test dataset
+        # Each tuple consists of a string and the corresponding match solution.
+        # If the string is not expected to match, the solution is None.
+        # If the string is expected to match, the solution is the expected
+        # contents of group 1.
+        self.test_data = [('FL1 Units', 'FL1'),
+                          (' FL1 Units ', 'FL1'),
+                          ('   FL1 Units', 'FL1'),
+                          ('FL1-H Units', 'FL1-H'),
+                          ('mCherry-A Units', 'mCherry-A'),
+                          ('Units', None),
+                          (' Units', None),
+                          ('  Units', None),
+                          (' Units ', None),
+                          ('test', None),
+                          (' test', None),
+                          ('  test', None),
+                          (' test ', None),
+                          ('test Units', 'test'),
+                          ('Parameter 14', None),
+                          ('1', None),
+                          ('1 Units', '1'),
+                          ('13', None),
+                          ('13 Units', '13'),
+                          ('Parameter 14Units', None),
+                          ('Parameter 14 Units', 'Parameter 14'),
+                          ('Parameter  14 Units', 'Parameter  14'),
+                          ('Parameter   14 Units', 'Parameter   14'),
+                          ('  here is another test of ', None),
+                          ('  here is another test of Units', 'here is another test of'),
+                          ('  test test Units', 'test test'),
+                          ('520nm Light Intensity (umol/(m^2*s))', None),
+                          ('520nm Light Intensity (umol/(m^2*s)) Units', '520nm Light Intensity (umol/(m^2*s))'),
+                          ]
+
+    def test_match(self):
+        # Get compiled regex
+        r = FlowCal.excel_ui.re_units
+        # Iterate over test data
+        for s, sol in self.test_data:
+            # Match
+            m = r.match(s)
+            # Check
+            if sol is None:
+                self.assertIsNone(m)
+            else:
+                self.assertEqual(sol, m.group(1))
+
 if __name__ == '__main__':
     unittest.main()

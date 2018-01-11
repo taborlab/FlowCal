@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # setuptools setup module.
-# 
+#
 # Based on setup.py on https://github.com/pypa/sampleproject.
 
 from setuptools import setup, find_packages
@@ -121,9 +121,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points = {
+        'console_scripts': [
+            'flowcal=FlowCal.excel_ui:run_command_line',
+        ]
+    },
 )
