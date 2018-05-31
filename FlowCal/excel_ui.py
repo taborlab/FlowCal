@@ -309,10 +309,11 @@ def process_beads_table(beads_table,
         ``beads_table.index``.
     mef_outputs : list, only if ``full_output==True``
         A list with intermediate results of the generation of the MEF
-        transformation functions. More precisely, for every processed and
-        gated beads sample, :func:`FlowCal.mef.get_transform_fxn()` is
-        called with ``full_output=True``, and the full output (a
-        ``namedtuple``) is appended to this list. Please refer to the
+        transformation functions. For every entry in `beads_table`,
+        :func:`FlowCal.mef.get_transform_fxn()` is called on the
+        corresponding processed and gated beads sample with
+        ``full_output=True``, and the full output (a `MEFOutput`
+        ``namedtuple``) is appended to `mef_outputs`. Please refer to the
         output section of :func:`FlowCal.mef.get_transform_fxn()`'s
         documentation for more information.
 

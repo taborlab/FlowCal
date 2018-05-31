@@ -576,7 +576,7 @@ def get_transform_fxn(data_beads,
     Parameters
     ----------
     data_beads : FCSData object
-        Flow cytometry data, taken from calibration beads.
+        Flow cytometry data describing calibration beads.
     mef_values : sequence of sequences
         Known MEF values for the calibration bead subpopulations, for each
         channel specified in `mef_channels`. The innermost sequences must
@@ -598,9 +598,9 @@ def get_transform_fxn(data_beads,
     full_output : bool, optional
         Flag specifying whether to include intermediate results in the
         output. If `full_output` is True, the function returns a
-        ``namedtuple`` with fields as described below. If `full_output` is
-        False, the function only returns the calculated transformation
-        function.
+        `MEFOutput` ``namedtuple`` with fields as described below. If
+        `full_output` is False, the function only returns the calculated
+        transformation function.
 
     Returns
     -------
@@ -615,8 +615,12 @@ def get_transform_fxn(data_beads,
         Directly copied from the `mef_channels` argument.
 
     clustering : dict, only if ``full_output==True``
-        Results of the clustering step. This dictionary contains the
-        following ``key : value`` pairs:
+        Results of the clustering step. The structure of this dictionary
+        is::
+
+            clustering = {"labels": np.array}
+
+        A description of each ``"key": value`` is given below.
 
         "labels" : array
             Array of length ``N``, where ``N`` is the number of events in
@@ -628,7 +632,11 @@ def get_transform_fxn(data_beads,
 
     statistic : dict, only if ``full_output==True``
         Results of the calculation of bead subpopulations' fluorescence.
-        This dictionary contains the following ``key : value`` pairs:
+        The structure of this dictionary is::
+
+            statistic = {"values": [np.array, ...]}
+
+        A description of each ``"key": value`` is given below.
 
         "values" : list of arrays
             Each array contains the representative fluorescence values of
@@ -638,8 +646,13 @@ def get_transform_fxn(data_beads,
             as the number of channels in `mef_channels`.
 
     selection : dict, only if ``full_output==True``
-        Results of the subpopulation selection step. This dictionary
-        contains the following ``key : value`` pairs:
+        Results of the subpopulation selection step. The structure of this
+        dictionary is::
+
+            selection = {"rfi": [np.array, ...],
+                         "mef": [np.array, ...]}
+
+        A description of each ``"key": value`` is given below.
 
         "rfi" : list of arrays
             Each array contains the fluorescence values of each selected
@@ -665,8 +678,16 @@ def get_transform_fxn(data_beads,
             above).
 
     fitting : dict, only if ``full_output==True``
-        Results of the model fitting step. This dictionary contains the
-        following ``key : value`` pairs:
+        Results of the model fitting step. The structure of this dictionary
+        is::
+
+            selection = {"std_crv": [func, ...],
+                         "beads_model": [func, ...],
+                         "beads_params": [np.array, ...],
+                         "beads_model_str": [str, ...],
+                         "beads_params_names": [[], ...]}
+
+        A description of each ``"key": value`` is given below.
 
         "std_crv" : list of functions
             Functions encoding the fitted standard curves, for each channel
@@ -813,7 +834,8 @@ def get_transform_fxn(data_beads,
     ...                 np.array([    0,  1614,   4035,   12025,
     ...                           31896, 95682, 353225, 1077421]],
     ...     )
-    >>> sample_mef = transform_fxn(sample_rfi, ['FL1', 'FL3'])
+    >>> sample_mef = transform_fxn(data=sample_rfi,
+    ...                            channels=['FL1', 'FL3'])
 
     Here, we first generate ``transform_fxn`` from flow cytometry data
     contained in ``FCSData`` object ``beads_data``, for channels FL1 and
@@ -834,7 +856,7 @@ def get_transform_fxn(data_beads,
     ...     full_output=True)
 
     In this case, the output ``get_transform_output`` will be a
-    ``namedtuple`` similar to the following::
+    `MEFOutput` ``namedtuple`` similar to the following::
 
         FlowCal.mef.MEFOutput(
             transform_fxn=<functools.partial object>,
