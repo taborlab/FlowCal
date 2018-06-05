@@ -150,9 +150,17 @@ def read_table(filename, sheetname, index_col=None):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
-    table = pd.read_excel(filename,
-                          sheetname=sheetname,
-                          index_col=index_col)
+    # Parameter specifying sheet name is slightly different depending on pandas'
+    # version.
+    if packaging.version.parse(pd.__version__) \
+                < packaging.version.parse('0.21'):
+        table = pd.read_excel(filename,
+                              sheetname=sheetname,
+                              index_col=index_col)
+    else:
+        table = pd.read_excel(filename,
+                              sheet_name=sheetname,
+                              index_col=index_col)
     # Eliminate rows whose index are null
     if index_col is not None:
         table = table[pd.notnull(table.index)]
