@@ -21,7 +21,7 @@ density diagram or scatter plot.
 
 import numpy as np
 import scipy.ndimage.filters
-import matplotlib._cntr         # matplotlib contour, implemented in C
+import skimage.measure
 import collections
 
 ###
@@ -506,32 +506,24 @@ def density2d(data,
     gated_data = data[mask]
 
     if full_output:
-        # Use matplotlib contour plotter (implemented in C) to generate contour(s)
-        # at the probability associated with the last accepted bin.
+        # Find contours with scikit-image
+        # x and y coordinates of each input value are its row and column
+        # indices. Output values are interpolated from the grid of row and
+        # column indices, and should be converted to associated x and y values.
         xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
         yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
-        x,y = np.meshgrid(xc, yc, indexing='ij')
-        mpl_cntr = matplotlib._cntr.Cntr(x,y,D)
-        tr = mpl_cntr.trace(vD[sidx[Nidx]])
-
-        # trace returns a list of arrays which contain vertices and path codes
-        # used in matplotlib Path objects (see http://stackoverflow.com/a/18309914
-        # and the documentation for matplotlib.path.Path for more details). I'm
-        # just going to make sure the path codes aren't unfamiliar and then extract
-        # all of the vertices and pack them into a list of 2D contours.
-        cntr = []
-        num_cntrs = len(tr)//2
-        for idx in range(num_cntrs):
-            vertices = tr[idx]
-            codes = tr[num_cntrs+idx]
-
-            # I am only expecting codes 1 and 2 ('MOVETO' and 'LINETO' codes)
-            if not np.all((codes==1)|(codes==2)):
-                raise Exception('Contour error: unrecognized path code')
-
-            cntr.append(vertices)
+        # Get contours in row/column space
+        contours_ij = skimage.measure.find_contours(D, vD[sidx[Nidx]])
+        # Transform into x/y coordinates
+        contours = [np.array([np.interp(contour_ij[:,0],
+                                        np.arange(len(xc)),
+                                        xc),
+                              np.interp(contour_ij[:,1],
+                                        np.arange(len(yc)),
+                                        yc)]).T
+                    for contour_ij in contours_ij]
 
         return Density2dGateOutput(
-            gated_data=gated_data, mask=mask, contour=cntr)
+            gated_data=gated_data, mask=mask, contour=contours)
     else:
         return gated_data
