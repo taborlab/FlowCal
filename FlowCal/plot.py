@@ -933,7 +933,10 @@ def hist1d(data_list,
                                              **kwargs)
 
     # Set scale of x axis
-    plt.gca().set_xscale(xscale, data=data_list, channel=channel)
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_list, channel=channel)
+    else:
+        plt.gca().set_xscale(xscale)
 
     ###
     # Final configuration
@@ -1190,8 +1193,14 @@ def density2d(data,
             cbar.ax.set_ylabel('Counts')
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale, data=data_plot, channel=0)
-    plt.gca().set_yscale(yscale, data=data_plot, channel=1)
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_plot, channel=0)
+    else:
+        plt.gca().set_xscale(xscale)
+    if yscale=='logicle':
+        plt.gca().set_yscale(yscale, data=data_plot, channel=1)
+    else:
+        plt.gca().set_yscale(yscale)
 
     # x and y limits
     if xlim is not None:
@@ -1331,8 +1340,14 @@ def scatter2d(data_list,
         plt.ylabel(data_plot.channels[1])
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
-    plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
+    else:
+        plt.gca().set_xscale(xscale)
+    if yscale=='logicle':
+        plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
+    else:
+        plt.gca().set_yscale(yscale)
 
     # Set plot limits if specified, else extract range from data_list.
     # ``.hist_bins`` with one bin works better for visualization that
