@@ -46,6 +46,7 @@ Functions in this module are divided in two categories:
 
 """
 
+import packaging
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
@@ -795,8 +796,10 @@ def hist1d(data_list,
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
     ylabel : str, optional
-        Label to use on the y axis. If None and ``normed==True``, use
-        'Probability'. If None and `normed==False``, use 'Counts'.
+        Label to use on the y axis. If None and ``normed_area==True``, use
+        'Probability'. If None, ``normed_area==False``, and
+        ``normed_height==True``, use 'Counts (normalized)'. If None,
+        ``normed_area==False``, and ``normed_height==False``, use 'Counts'.
     xlim : tuple, optional
         Limits for the x axis. If not specified and `bins` exists, use
         the lowest and highest values of `bins`.
@@ -891,23 +894,43 @@ def hist1d(data_list,
             weights = None
 
         # Actually plot
-        if bins is not None:
-            n, edges, patches = plt.hist(y,
-                                         bins,
-                                         weights=weights,
-                                         normed=normed_area,
-                                         histtype=histtype,
-                                         edgecolor=edgecolor[i],
-                                         facecolor=facecolor[i],
-                                         **kwargs)
+        if packaging.version.parse(matplotlib.__version__) \
+                >= packaging.version.parse('2.2'):
+            if bins is not None:
+                n, edges, patches = plt.hist(y,
+                                             bins,
+                                             weights=weights,
+                                             density=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
+            else:
+                n, edges, patches = plt.hist(y,
+                                             weights=weights,
+                                             density=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
         else:
-            n, edges, patches = plt.hist(y,
-                                         weights=weights,
-                                         normed=normed_area,
-                                         histtype=histtype,
-                                         edgecolor=edgecolor[i],
-                                         facecolor=facecolor[i],
-                                         **kwargs)
+            if bins is not None:
+                n, edges, patches = plt.hist(y,
+                                             bins,
+                                             weights=weights,
+                                             normed=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
+            else:
+                n, edges, patches = plt.hist(y,
+                                             weights=weights,
+                                             normed=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
 
     # Set scale of x axis
     plt.gca().set_xscale(xscale, data=data_list, channel=channel)
