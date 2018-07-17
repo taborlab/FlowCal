@@ -506,15 +506,23 @@ def density2d(data,
     gated_data = data[mask]
 
     if full_output:
-        # Find contours with scikit-image
-        # x and y coordinates of each input value are its row and column
-        # indices. Output values are interpolated from the grid of row and
-        # column indices, and should be converted to associated x and y values.
+        # Use scikit-image to find the contour of the gated region
+        #
+        # To find the contour of the gated region, values in the 2D probability
+        # mass function ``D`` are used to trace contours at the level of the
+        # probability associated with the last accepted bin, ``vD[sidx[Nidx]]``.
+
+        # find_contours() specifies contours as collections of row and column
+        # indices into the density matrix. The row or column index may be
+        # interpolated (i.e. non-integer) for greater precision.
+        contours_ij = skimage.measure.find_contours(D, vD[sidx[Nidx]])
+
+        # Map contours from indices into density matrix to histogram x and y
+        # coordinate spaces (assume values in the density matrix are associated
+        # with histogram bin centers).
         xc = (xe[:-1] + xe[1:]) / 2.0   # x-axis bin centers
         yc = (ye[:-1] + ye[1:]) / 2.0   # y-axis bin centers
-        # Get contours in row/column space
-        contours_ij = skimage.measure.find_contours(D, vD[sidx[Nidx]])
-        # Transform into x/y coordinates
+
         contours = [np.array([np.interp(contour_ij[:,0],
                                         np.arange(len(xc)),
                                         xc),
