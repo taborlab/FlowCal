@@ -885,7 +885,7 @@ def hist1d(data_list,
                                    **xscale_kwargs)
 
         # Decide whether to normalize
-        if normed_height:
+        if normed_height and not normed_area:
             weights = np.ones_like(y)/float(len(y))
         else:
             weights = None
