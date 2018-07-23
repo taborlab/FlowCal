@@ -7,11 +7,14 @@ import os
 import copy
 import collections
 import datetime
+import six
 import warnings
 
 import numpy as np
 
 import FlowCal.plot
+
+encoding = 'ISO-8859-1'
 
 ###
 # Utility functions for importing segments of FCS files
@@ -78,22 +81,22 @@ def read_fcs_header_segment(buf, begin=0):
     field_values = []
 
     buf.seek(begin)
-    field_values.append(str(buf.read(10)).rstrip())     # version
+    field_values.append(buf.read(10).decode(encoding).rstrip()) # version
 
-    field_values.append(int(buf.read(8)))               # text_begin
-    field_values.append(int(buf.read(8)))               # text_end
-    field_values.append(int(buf.read(8)))               # data_begin
-    field_values.append(int(buf.read(8)))               # data_end
+    field_values.append(int(buf.read(8)))                       # text_begin
+    field_values.append(int(buf.read(8)))                       # text_end
+    field_values.append(int(buf.read(8)))                       # data_begin
+    field_values.append(int(buf.read(8)))                       # data_end
 
-    fv = buf.read(8)                                    # analysis_begin
+    fv = buf.read(8).decode(encoding)                           # analysis_begin
     field_values.append(0 if fv == ' '*8 else int(fv))
-    fv = buf.read(8)                                    # analysis_end
+    fv = buf.read(8).decode(encoding)                           # analysis_end
     field_values.append(0 if fv == ' '*8 else int(fv))
 
     header = FCSHeader._make(field_values)
     return header
 
-def read_fcs_text_segment(buf, begin, end, delim=None):
+def read_fcs_text_segment(buf, begin, end, delim=None, supplemental=False):
     """
     Read TEXT segment of FCS file.
 
@@ -107,36 +110,46 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
         Offset (in bytes) to last byte of TEXT segment in `buf`.
     delim : str, optional
         1-byte delimiter character which delimits key-value entries of
-        TEXT segment. If None, will extract delimter as first byte
-        of TEXT segment.
+        TEXT segment. If None and ``supplemental==False``, will extract
+        delimiter as first byte of TEXT segment.
+    supplemental : bool, optional
+        Flag specifying that segment is a supplemental TEXT segment (see
+        FCS3.0 and FCS3.1), in which case a delimiter (``delim``) must be
+        specified.
 
     Returns
     -------
     text : dict
         Dictionary of key-value entries extracted from TEXT segment.
-    delim : str
-        String containing delimiter character.
+    delim : str or None
+        String containing delimiter or None if TEXT segment is empty.
 
     Raises
     ------
     ValueError
-        If TEXT segment does not start and end with delimiter.
+        If supplemental TEXT segment (``supplemental==True``) but ``delim`` is
+        not specified.
     ValueError
-        If function detects odd number of total extracted keys and
-        values (indicating an unpaired key or value).
-    NotImplementedError
-        If delimiter is used in a keyword or value.
+        If primary TEXT segment (``supplemental==False``) does not start with
+        delimiter.
+    ValueError
+        If first keyword starts with delimiter (e.g. a primary TEXT segment
+        with the following contents: ///k1/v1/k2/v2/).
+    ValueError
+        If odd number of keys + values detected (indicating an unpaired key or
+        value).
+    ValueError
+        If TEXT segment is ill-formed (unable to be parsed according to the
+        FCS standards).
 
     Notes
     -----
-    ANALYSIS segments and TEXT segments are parsed the same way, so
-    this function can also be used to parse ANALYSIS segments.
+    ANALYSIS segments and supplemental TEXT segments are parsed the same way,
+    so this function can also be used to parse ANALYSIS segments.
 
-    This function does not automatically parse supplemental TEXT
-    segments (see FCS3.0 [2] and FCS3.1 [3]). Supplemental TEXT segments
-    and regular TEXT segments are parsed the same way, though, so this
-    function can be manually directed to parse a supplemental TEXT segment
-    by providing the appropriate `begin` and `end` values.
+    This function does *not* automatically parse and accumulate additional
+    TEXT-like segments (e.g. supplemental TEXT segments or ANALYSIS segments)
+    referenced in the originally specified TEXT segment.
 
     References
     ----------
@@ -156,73 +169,185 @@ def read_fcs_text_segment(buf, begin, end, delim=None):
 
     """
     if delim is None:
-        buf.seek(begin)
-        delim = str(buf.read(1))
+        if supplemental:
+            raise ValueError("must specify ``delim`` if reading supplemental"
+                             + " TEXT segment")
+        else:
+            buf.seek(begin)
+            delim = buf.read(1).decode(encoding)
 
     # The offsets are inclusive (meaning they specify first and last byte
     # WITHIN segment) and seeking is inclusive (read() after seek() reads the
     # byte which was seeked to). This means the length of the segment is
     # ((end+1) - begin).
     buf.seek(begin)
-    raw = buf.read((end+1)-begin)
+    raw = buf.read((end+1)-begin).decode(encoding)
 
     # If segment is empty, return empty dictionary as text
     if not raw:
-        return {}, delim
+        return {}, None
 
-    # Check that the first character of the TEXT segment is equal to the
-    # delimiter.
-    if raw[0] != delim:
-        raise ValueError("segment should start with delimiter")
+    if not supplemental:
+        # Check that the first character of the TEXT segment is equal to the
+        # delimiter.
+        if raw[0] != delim:
+            raise ValueError("primary TEXT segment should start with"
+                             + " delimiter")
 
-    # Look for the last delimiter in the segment string, and retain everything
-    # from one character after the first delimiter to one character before the
-    # last delimiter.
+    # The FCS standards indicate that keyword values must be flanked by the
+    # delimiter character, but they do not require that the TEXT segment end
+    # with the delimiter. As such, look for the last instance of the delimiter
+    # in the segment and retain everything before it (potentially removing
+    # TEXT segment characters which occur after the last instance of the
+    # delimiter).
     end_index = raw.rfind(delim)
-    raw = raw[1: end_index]
+    if supplemental and end_index == -1:
+        # Delimiter was not found. This should only be permitted for an empty
+        # supplemental TEXT segment (primary TEXT segment should fail above
+        # if first character doesn't match delimiter).
+        return {}, delim
+    else:
+        raw = raw[:end_index]
 
     pairs_list = raw.split(delim)
 
-    # According to the FCS2.0 standard, "If the separator appears in a keyword
-    # or in a keyword value, it must be 'quoted' by being repeated" and "null
-    # (zero length) keywords or keyword values are not permitted", so this
-    # issue should manifest itself as an empty element in the list.
-    # The following scans the list of pairs for empty elements and appends a
-    # delimiter character to the previous element when an empty element is
-    # found.
-    pairs_list_delim = []
-    pairs_list_idx = 0
-    while pairs_list_idx < len(pairs_list):
-        if pairs_list[pairs_list_idx] != '':
-            # Non-empty element, just append
-            pairs_list_delim.append(pairs_list[pairs_list_idx])
-        else:
-            # Empty element
-            # Accumulate delimiters in a temporary string as long as more empty
-            # elements are found, until the last element
-            s = ''
-            while True:
-                s += delim
-                pairs_list_idx += 1
-                if pairs_list_idx >= len(pairs_list):
+    ###
+    # Reconstruct Keys and Values By Aggregating Escaped Delimiters
+    ###
+    # According to the FCS standards, delimiter characters are permitted in
+    # keywords and keyword values as long as they are escaped by being
+    # immediately repeated. Delimiter characters are not permitted as the
+    # first character of a keyword or keyword value, however. Null (zero
+    # length) keywords or keyword values are also not permitted. According to
+    # these restrictions, a delimiter character should manifest itself as an
+    # empty element in ``pairs_list``. As such, scan through ``pairs_list``
+    # looking for empty elements and reconstruct keywords or keyword values
+    # containing delimiters.
+    ###
+
+    # Start scanning from the end of the list since the end of the list is
+    # well defined (i.e. doesn't depend on whether the TEXT segment is a
+    # primary segment, which MUST start with the delimiter, or a supplemental
+    # segment, which is not required to start with the delimiter).
+    reconstructed_KV_accumulator = []
+    idx = len(pairs_list) - 1
+    while idx >= 0:
+        if pairs_list[idx] == '':
+            # Count the number of consecutive empty elements to determine how
+            # many escaped delimiters exist and whether or not a true boundary
+            # delimiter exists.
+            num_empty_elements = 1
+            idx = idx - 1
+            while idx >=0 and pairs_list[idx] == '':
+                num_empty_elements = num_empty_elements + 1
+                idx = idx - 1
+            # Need to differentiate between rolling off the bottom of the list
+            # and hitting a non-empty element. Assessing pairs_list[-1] can
+            # still be evaluated (by wrapping around the list, which is not
+            # what we want to check) so check if we've finished scanning the
+            # list first.
+            if idx < 0:
+                # We rolled off the bottom of the list.
+                if num_empty_elements == 1:
+                    # If we only hit 1 empty element before rolling off the
+                    # list, then there were no escaped delimiters and the
+                    # segment started with a delimiter.
                     break
-                if pairs_list[pairs_list_idx] != '':
-                    s += pairs_list[pairs_list_idx]
-                    break
-            # Append temporary string to previous element if pairs_list_delim
-            # is not empty, otherwise make it the first element.
-            if pairs_list_delim:
-                pairs_list_delim[-1] += s
+                elif (num_empty_elements % 2) == 0:
+                    # Even number of empty elements.
+                    #
+                    # If this is a supplemental TEXT segment, this can be
+                    # interpreted as *not* starting the TEXT segment with the
+                    # delimiter (which is permitted for supplemental TEXT
+                    # segments) and starting the first keyword with one or
+                    # more delimiters, which is prohibited.
+                    if supplemental:
+                        raise ValueError("starting a TEXT segment keyword"
+                                         + " with a delimiter is prohibited")
+                    # If this is a primary TEXT segment, this is an ill-formed
+                    # segment. Rationale: 1 empty element will always be
+                    # consumed as the initial delimiter which a primary TEXT
+                    # segment is required to start with. After that delimiter
+                    # is accounted for, you now have either an unescaped
+                    # delimiter, which is prohibited, or a boundary delimiter,
+                    # which would imply that the entire first keyword was
+                    # composed of delimiters, which is prohibited because
+                    # keywords are not allowed to start with the delimiter).
+                    raise ValueError("ill-formed TEXT segment")
+                else:
+                    # Odd number of empty elements. This can be interpreted as
+                    # starting the segment with a delimiter and then having
+                    # one or more delimiters starting the first keyword, which
+                    # is prohibited.
+                    raise ValueError("starting a TEXT segment keyword with a"
+                                     + " delimiter is prohibited")
             else:
-                pairs_list_delim.append(s)
-        pairs_list_idx += 1
-    pairs_list = pairs_list_delim
+                # We encountered a non-empty element. Calculate the number of
+                # escaped delimiters and whether or not a true boundary
+                # delimiter is present.
+                num_delim      = (num_empty_elements+1)//2
+                boundary_delim = (num_empty_elements % 2) == 0
+
+                if boundary_delim:
+                    # A boundary delimiter exists. We know that the boundary
+                    # has to be on the right side (end of the sequence),
+                    # because keywords and keyword values are prohibited from
+                    # starting with a delimiter, which would be the case if the
+                    # boundary delimiter was anywhere BUT the last character.
+                    # This means we need to postpend the appropriate number of
+                    # delim characters to the end of the non-empty list
+                    # element that ``idx`` currently points to.
+                    pairs_list[idx] = pairs_list[idx] + (num_delim*delim)
+
+                    # We can now add the reconstructed keyword or keyword
+                    # value to the accumulator and move on. It's possible that
+                    # this keyword or keyword value is incompletely
+                    # reconstructed (e.g. /key//1///value1/
+                    # => {'key/1/':'value1'}; there are other delimiters in
+                    # this keyword or keyword value), but that case is now
+                    # handled independently of this case and just like any
+                    # other instance of escaped delimiters *without* a
+                    # boundary delimiter.
+                    reconstructed_KV_accumulator.append(pairs_list[idx])
+                    idx = idx - 1
+                else:
+                    # No boundary delimiters exist, so we need to glue the
+                    # list elements before and after this sequence of
+                    # consecutive delimiters together with the appropriate
+                    # number of delimiters.
+                    if len(reconstructed_KV_accumulator) == 0:
+                        # Edge Case: The accumulator should always have at
+                        # least 1 element in it at this point. If it doesn't,
+                        # the last value ends with the delimiter, which will
+                        # result in two consecutive empty elements, which
+                        # won't fall into this case. Only 1 empty element
+                        # indicates an ill-formed TEXT segment with an
+                        # unpaired non-boundary delimiter (e.g. /k1/v1//),
+                        # which is not permitted. The ill-formed TEXT segment
+                        # implied by 1 empty element is recoverable, though,
+                        # and a use case which is known to exist, so throw a
+                        # warning and ignore the 2nd copy of the delimiter.
+                        warnings.warn("detected ill-formed TEXT segment (ends"
+                                      + " with two delimiter characters)."
+                                      + " Ignoring last delimiter character")
+                        reconstructed_KV_accumulator.append(pairs_list[idx])
+                    else:
+                        reconstructed_KV_accumulator[-1] = pairs_list[idx] + \
+                            (num_delim*delim) + reconstructed_KV_accumulator[-1]
+                    idx = idx - 1
+        else:
+            # Non-empty element, just append
+            reconstructed_KV_accumulator.append(pairs_list[idx])
+            idx = idx - 1
+
+    pairs_list_reconstructed = list(reversed(reconstructed_KV_accumulator))
 
     # List length should be even since all key-value entries should be pairs
-    if len(pairs_list) % 2 != 0:
+    if len(pairs_list_reconstructed) % 2 != 0:
         raise ValueError("odd # of (keys + values); unpaired key or value")
 
-    text = dict(zip(pairs_list[0::2], pairs_list[1::2]))
+    text = dict(zip(pairs_list_reconstructed[0::2],
+                    pairs_list_reconstructed[1::2]))
 
     return text, delim
 
@@ -339,15 +464,15 @@ def read_fcs_data_segment(buf,
             # points to the first byte of the next segment, in which case the #
             # of bytes specified in the header exceeds the # of bytes that we
             # should read by one.
-            if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
-                    (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
+            if (shape[0]*shape[1]*(num_bits//8)) != ((end+1)-begin) and \
+                    (shape[0]*shape[1]*(num_bits//8)) != (end-begin):
                 raise ValueError("DATA size does not match expected array"
                     + " size (array size ="
-                    + " {0} bytes,".format(shape[0]*shape[1]*(num_bits/8))
+                    + " {0} bytes,".format(shape[0]*shape[1]*(num_bits//8))
                     + " DATA segment size = {0} bytes)".format((end+1)-begin))
 
             dtype = np.dtype('{0}u{1}'.format('>' if big_endian else '<',
-                                              num_bits/8))
+                                              num_bits//8))
             data = np.memmap(
                 buf,
                 dtype=dtype,
@@ -374,7 +499,7 @@ def read_fcs_data_segment(buf,
 
             # Read data in as a byte array
             byte_shape = (int(num_events),
-                          np.sum(np.array(param_bit_widths)/8))
+                          np.sum(np.array(param_bit_widths)//8))
 
             # Sanity check that the total # of bytes that we're about to
             # interpret is exactly the # of bytes in the DATA segment.
@@ -404,19 +529,19 @@ def read_fcs_data_segment(buf,
             # Create new array of upcast data type and use byte data to
             # populate it. The new array will have endianness native to user's
             # machine; does not preserve endianness of stored FCS data.
-            upcast_dtype = 'u{0}'.format(upcast_bw/8)
+            upcast_dtype = 'u{0}'.format(upcast_bw//8)
             data = np.zeros(shape,dtype=upcast_dtype)
 
             # Array mapping each column of data to first corresponding column
             # in byte_data
-            byte_boundaries = np.roll(np.cumsum(param_bit_widths)/8,1)
+            byte_boundaries = np.roll(np.cumsum(param_bit_widths)//8,1)
             byte_boundaries[0] = 0
 
             # Reconstitute columns of data by bit shifting appropriate columns
             # in byte_data and accumulating them
-            for col in xrange(data.shape[1]):
-                num_bytes = param_bit_widths[col]/8
-                for b in xrange(num_bytes):
+            for col in range(data.shape[1]):
+                num_bytes = param_bit_widths[col]//8
+                for b in range(num_bytes):
                     byte_data_col = byte_boundaries[col] + b
                     byteshift = (num_bytes-b-1) if big_endian else b
 
@@ -431,7 +556,7 @@ def read_fcs_data_segment(buf,
         if param_ranges is not None:
             # To strictly follow the FCS standards, mask off the unused high bits
             # as specified by param_ranges.
-            for col in xrange(data.shape[1]):
+            for col in range(data.shape[1]):
                 # bits_used should be related to resolution of cytometer ADC
                 bits_used = int(np.ceil(np.log2(param_ranges[col])))
 
@@ -459,15 +584,15 @@ def read_fcs_data_segment(buf,
         # to the first byte of the next segment, in which case the # of bytes
         # specified in the header exceeds the # of bytes that we should read by
         # one.
-        if (shape[0]*shape[1]*(num_bits/8)) != ((end+1)-begin) and \
-            (shape[0]*shape[1]*(num_bits/8)) != (end-begin):
+        if (shape[0]*shape[1]*(num_bits//8)) != ((end+1)-begin) and \
+            (shape[0]*shape[1]*(num_bits//8)) != (end-begin):
             raise ValueError("DATA size does not match expected array size"
-                + " (array size = {0}".format(shape[0]*shape[1]*(num_bits/8))
+                + " (array size = {0}".format(shape[0]*shape[1]*(num_bits//8))
                 + " bytes, DATA segment size ="
                 + " {0} bytes)".format((end+1)-begin))
 
         dtype = np.dtype('{0}f{1}'.format('>' if big_endian else '<',
-                                          num_bits/8))
+                                          num_bits//8))
         data = np.memmap(
             buf,
             dtype=dtype,
@@ -542,7 +667,7 @@ class FCSFile(object):
         If $BYTEORD is not big endian ('4,3,2,1' or '2,1') or little
         endian ('1,2,3,4', '1,2').
     ValueError
-        If TEXT-like segment does not start with delimiter.
+        If primary TEXT segment does not start with delimiter.
     ValueError
         If TEXT-like segment has odd number of total extracted keys and
         values (indicating an unpaired key or value).
@@ -608,7 +733,7 @@ class FCSFile(object):
         
         self._infile = infile
 
-        if isinstance(infile, basestring):
+        if isinstance(infile, six.string_types):
             f = open(infile, 'rb')
         else:
             f = infile
@@ -623,7 +748,8 @@ class FCSFile(object):
         self._text, delim = read_fcs_text_segment(
             buf=f,
             begin=self._header.text_begin,
-            end=self._header.text_end)
+            end=self._header.text_end,
+            supplemental=False)
 
         if self._header.version in ('FCS3.0','FCS3.1'):
             stext_begin = int(self._text['$BEGINSTEXT'])   # required keyword
@@ -633,7 +759,8 @@ class FCSFile(object):
                     buf=f,
                     begin=stext_begin,
                     end=stext_end,
-                    delim=delim)[0]
+                    delim=delim,
+                    supplemental=True)[0]
                 self._text.update(stext)
 
         # Confirm FCS file assumptions. All queried keywords are required
@@ -649,7 +776,7 @@ class FCSFile(object):
 
         D = int(self._text['$PAR']) # total number of parameters (aka channels)
         param_bit_widths = [int(self._text['$P{0}B'.format(p)])
-                            for p in xrange(1,D+1)]
+                            for p in range(1,D+1)]
         if self._text['$DATATYPE'] == 'I':
             if not all(bw % 8 == 0 for bw in param_bit_widths):
                 raise NotImplementedError("if $DATATYPE = \'I\', only byte"
@@ -657,7 +784,7 @@ class FCSFile(object):
                     + " supported (detected {0})".format(
                         ", ".join('$P{0}B={1}'.format(
                             p,self._text['$P{0}B'.format(p)])
-                        for p in xrange(1,D+1)
+                        for p in range(1,D+1)
                         if param_bit_widths[p-1] % 8 != 0)))
 
         if self._text['$BYTEORD'] not in ('4,3,2,1', '2,1', '1,2,3,4', '1,2'):
@@ -680,7 +807,8 @@ class FCSFile(object):
                     buf=f,
                     begin=self._header.analysis_begin,
                     end=self._header.analysis_end,
-                    delim=delim)[0]
+                    delim=delim,
+                    supplemental=True)[0]
             except Exception as e:
                 warnings.warn("ANALYSIS segment could not be parsed ({})".\
                     format(str(e)))
@@ -694,7 +822,8 @@ class FCSFile(object):
                         buf=f,
                         begin=analysis_begin,
                         end=analysis_end,
-                        delim=delim)[0]
+                        delim=delim,
+                        supplemental=True)[0]
                 except Exception as e:
                     warnings.warn("ANALYSIS segment could not be parsed ({})".\
                         format(str(e)))
@@ -706,7 +835,7 @@ class FCSFile(object):
         
         # Import DATA segment
         param_ranges = [float(self._text['$P{0}R'.format(p)])
-                        for p in xrange(1,D+1)]
+                        for p in range(1,D+1)]
         if self._header.data_begin and self._header.data_end:
             # Prioritize DATA segment offsets specified in HEADER over
             # offsets specified in TEXT segment.
@@ -738,7 +867,7 @@ class FCSFile(object):
             raise ValueError("DATA segment incorrectly specified")
         self._data.flags.writeable = False
 
-        if isinstance(infile, basestring):
+        if isinstance(infile, six.string_types):
             f.close()
 
     # Expose attributes as read-only properties
@@ -811,9 +940,9 @@ class FCSFile(object):
     def __hash__(self):
         return hash((self.infile,
                      self.header,
-                     frozenset(self.text.items()),
+                     frozenset(six.iteritems(self.text)),
                      self.data.tobytes(),
-                     frozenset(self.analysis.items())))
+                     frozenset(six.iteritems(self.analysis))))
 
     def __repr__(self):
         return str(self.infile)
@@ -1108,7 +1237,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._amplification_type[ch] for ch in channels]
         else:
             return self._amplification_type[channels]
@@ -1143,7 +1273,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._detector_voltage[ch] for ch in channels]
         else:
             return self._detector_voltage[channels]
@@ -1178,7 +1309,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get detector type of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._amplifier_gain[ch] for ch in channels]
         else:
             return self._amplifier_gain[channels]
@@ -1219,7 +1351,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get the range of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._range[ch] for ch in channels]
         else:
             return self._range[channels]
@@ -1253,7 +1386,8 @@ class FCSData(np.ndarray):
         channels = self._name_to_index(channels)
 
         # Get resolution of the specified channels
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._resolution[ch] for ch in channels]
         else:
             return self._resolution[channels]
@@ -1762,10 +1896,11 @@ class FCSData(np.ndarray):
 
         """
         # Check if list, then run recursively
-        if hasattr(channels, '__iter__'):
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
             return [self._name_to_index(ch) for ch in channels]
 
-        if isinstance(channels, basestring):
+        if isinstance(channels, six.string_types):
             # channels is a string containing a channel name
             if channels in self.channels:
                 return self.channels.index(channels)

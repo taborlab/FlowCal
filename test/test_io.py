@@ -5,6 +5,7 @@ Unit tests for the `io` module.
 
 import datetime
 import unittest
+import six
 
 import numpy as np
 
@@ -103,6 +104,1337 @@ class TestFCSDataLoading(unittest.TestCase):
              'mCherry-H',
              'Time',
              ))
+
+class TestReadTextSegment(unittest.TestCase):
+    """
+    Test that TEXT segments are parsed correctly.
+    
+    """
+
+    ###
+    # Primary TEXT Segment Tests
+    ###
+    
+    def test_primary_one_key_value(self):
+        """
+        Test that typical primary TEXT segment is read correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/'
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_three_key_value(self):
+        """
+        Test that typical primary TEXT segment is read correctly.
+
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_extra_trailing_chars(self):
+        """
+        Test that extra trailing characters still parse correctly.
+
+        Test that primary TEXT segment still parses correctly even if there are
+        trailing characters after the last instance of the delimiter.
+
+        """
+        raw_text_segment = '/k1/v1/     '
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_mismatch(self):
+        """
+        Test that primary TEXT segment delimiter mismatch fails.
+
+        Test that a specified delimiter inconsistent with the first character
+        of a primary TEXT segment fails to parse.
+        
+        """
+        raw_text_segment = '/k1/v1/'
+        delim            = '|'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+
+    def test_primary_delim_in_keyword_1(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_1(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_2(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_2(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_3(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_3(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_first_keyword_delim_fail(self):
+        """
+        Test that delimiter at start of first keyword fails.
+        
+        """
+        raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+
+    def test_primary_delim_in_keyword_4(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_4(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_5(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_5(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_keyword_6(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_delim_in_value_6(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_bad_segment(self):
+        """
+        Test edge case with unpaired non-boundary delimiter in last value.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_1(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_1(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_2(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_2(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_3(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_3(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_value_4(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1),
+            (text_dict, delim))
+
+    def test_primary_multi_delim_in_keyword_fail(self):
+        """
+        Test that multiple delimiters at start of first keyword fails.
+        
+        """
+        raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim)
+   
+    ###
+    # Supplemental TEXT Segment Tests
+    ###
+    
+    def test_supp_one_key_value(self):
+        """
+        Test that typical supplemental TEXT segment is read correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/'
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_one_key_value_s(self):
+        """
+        Test that typical supplemental TEXT segment is read correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/'
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_no_delim_fail(self):
+        """
+        Test failure when no delimiter is specified for supplemental segment.
+        
+        """
+        raw_text_segment = '/k1/v1/'
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, supplemental=True)
+
+    def test_supp_three_key_value(self):
+        """
+        Test that typical supplemental TEXT segment is read correctly.
+
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_three_key_value_s(self):
+        """
+        Test that typical supplemental TEXT segment is read correctly.
+
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_extra_trailing_chars(self):
+        """
+        Test that extra trailing characters still parse correctly.
+
+        Test that supplemental TEXT segment still parses correctly even if
+        there are trailing characters after the last instance of the delimiter.
+
+        """
+        raw_text_segment = '/k1/v1/     '
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_extra_trailing_chars_s(self):
+        """
+        Test that extra trailing characters still parse correctly.
+
+        Test that supplemental TEXT segment still parses correctly even if
+        there are trailing characters after the last instance of the delimiter.
+
+        """
+        raw_text_segment = 'k1/v1/     '
+        delim            = '/'
+        text_dict        = {'k1':'v1'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_1(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/key//1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_1_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'key//1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key/1':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_1(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/key1/value//1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_1_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'key1/value//1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1':'value/1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_2(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key//2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_2_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/key//2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key/2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_2(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key2/value//2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_2_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/key2/value//2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2':'value/2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_3(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key//3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_3_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/key//3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key/3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_3(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3/value//3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_3_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/key3/value//3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3':'value/3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_first_keyword_delim_fail(self):
+        """
+        Test that delimiter at start of first keyword fails.
+        
+        """
+        raw_text_segment = '///key1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
+                supplemental=True)
+
+    def test_supp_first_keyword_delim_fail_s(self):
+        """
+        Test that delimiter at start of first keyword fails.
+        
+        """
+        raw_text_segment = '//key1/value1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
+                supplemental=True)
+
+    def test_supp_delim_in_keyword_4(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/key1///value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_4_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'key1///value1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'key1/':'value1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_4(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1///key2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_4_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1///key2/value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1/','key2':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_5(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/key2///value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_5_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/key2///value2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','key2/':'value2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_5(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2///key3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_5_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2///key3/value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2/','key3':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_6(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/key3///value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_keyword_6_s(self):
+        """
+        Test that delimiter in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/key3///value3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','key3/':'value3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_6(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3///'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_delim_in_value_6_s(self):
+        """
+        Test that delimiter in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k3/v3///'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3/'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_bad_segment(self):
+        """
+        Test edge case with unpaired non-boundary delimiter in last value.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_bad_segment_s(self):
+        """
+        Test edge case with unpaired non-boundary delimiter in last value.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k3/v3//'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_1(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k////1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_1_s(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k////1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k//1':'v1','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_1(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v//1///k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_1_s(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v//1///k2/v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v/1/','k2':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_2(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k//2/////v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_2_s(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k//2/////v2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k/2//':'v2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_2(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v//////2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_2_s(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v//////2/k3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v///2','k3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_3(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k////3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_3_s(self):
+        """
+        Test that multiple delimiters in keyword still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k////3/v3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k//3':'v3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_3(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v////3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_3_s(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k3/v////3/'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v//3'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_4(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = '/k1/v1/k2/v2/k3/v3/////'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_value_4_s(self):
+        """
+        Test that multiple delimiters in keyword value still parses correctly.
+        
+        """
+        raw_text_segment = 'k1/v1/k2/v2/k3/v3/////'
+        delim            = '/'
+        text_dict        = {'k1':'v1','k2':'v2','k3':'v3//'}
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertEqual(
+            FlowCal.io.read_fcs_text_segment(
+                buf=buf,
+                begin=0,
+                end=len(raw_text_segment)-1,
+                delim=delim,
+                supplemental=True),
+            (text_dict, delim))
+
+    def test_supp_multi_delim_in_keyword_fail(self):
+        """
+        Test that multiple delimiters at start of first keyword fails.
+        
+        """
+        raw_text_segment = '/////k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
+                supplemental=True)
+
+    def test_supp_multi_delim_in_keyword_fail_s(self):
+        """
+        Test that multiple delimiters at start of first keyword fails.
+        
+        """
+        raw_text_segment = '////k1/v1/k2/v2/k3/v3/'
+        delim            = '/'
+        buf              = six.BytesIO(six.b(raw_text_segment))
+        self.assertRaises(
+            ValueError,
+            FlowCal.io.read_fcs_text_segment,
+            buf=buf, begin=0, end=len(raw_text_segment)-1, delim=delim,
+                supplemental=True)
 
 class TestFCSParseTimeString(unittest.TestCase):
     def test_parse_none(self):
@@ -1143,7 +2475,7 @@ class TestFCSDataSlicing(unittest.TestCase):
         Testing the 1D slicing with a list of a FCSData object.
 
         """
-        ds = self.d[range(10)]
+        ds = self.d[list(range(10))]
         self.assertIsInstance(ds, FlowCal.io.FCSData)
         self.assertEqual(ds.shape, (10,6))
         self.assertEqual(ds.channels,

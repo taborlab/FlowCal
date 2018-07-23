@@ -3,13 +3,15 @@ Installing FlowCal with Anaconda
 
 To install Anaconda and ``FlowCal``, do the following:
 
-1. Navigate to https://www.continuum.io/downloads. If you are using Windows, click on “Windows 64-bit Graphical Installer” or “Windows 32-bit Graphical Installer” under the “Python 2.7” column, depending on whether your computer is 32-bit or 64-bit. The 64-bit version is strongly recommended. Similarly, if you are using OS X, click on “Mac OS X 64-bit Graphical Installer” under the “Python 2.7” column. This will download the installer.
+1. Navigate to https://www.continuum.io/downloads. Make sure that your operating system is selected (Windows, macOS, Linux). Click on the "Download" button below the "Python 3.6 version" message. This will download the installer.
 
-.. note:: Make sure to download the installer for Python 2.7 and not 3.x. ``FlowCal`` is not currently compatible with Python 3.
+.. note:: **Windows**: If your computer is a 32-bit PC, click on the message "32-Bit Graphical Installer" instead of the "Download" button. If you don't know whether yours is a 32 or 64 computer but you have purchased it in the last five years, it is probably a 64-bit computer and you can ignore this message.
+
+.. note:: Python 2.7 is also supported. However, we recommend downloading the Python 3.6 version of Anaconda.
 
 2. Double click the installer (.exe in Windows, .pkg in OS X) and follow the instructions on screen.
 
-.. note:: **Windows**: During installation, on the "Advanced Installation Options" screen, make sure to check both "Add Anaconda to my PATH environment variable" and "Register Anaconda as my default Python 2.7". Recent versions of Anaconda suggest to keep the first option unchecked. However, this option is necessary for the installation script on step 4 to work.
+.. note:: **Windows**: During installation, on the "Advanced Installation Options" screen, make sure to check both "Add Anaconda to my PATH environment variable" and "Register Anaconda as my default Python". Recent versions of Anaconda suggest to keep the first option unchecked. However, this option is necessary for the installation script on step 4 to work.
 
 3. Download ``FlowCal`` from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. A file called ``FlowCal-master.zip`` will be downloaded. Unzip this file.
 

@@ -70,17 +70,28 @@ ignored by ``FlowCal``.
 """
 
 import collections
+import sys
 import os
 import os.path
 import packaging
 import packaging.version
 import platform
 import re
+import six
 import subprocess
 import time
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
 import warnings
+
+# Tkinter is imported differently depending on which version of python we're
+# using.
+# six.PY2 is True when the code is running in python 2, False otherwise.
+# six.PY3 is the equivalent for python 3.
+if six.PY2:
+    from Tkinter import Tk
+    from tkFileDialog import askopenfilename
+elif six.PY3:
+    from tkinter import Tk
+    from tkinter.filedialog import askopenfilename
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -94,8 +105,8 @@ import FlowCal.stats
 import FlowCal.mef
 
 # Regular expressions for headers that specify some fluorescence channel
-re_mef_values = re.compile(r'^\s*(\S*)\s*MEF\s*Values\s*$')
-re_units = re.compile(r'^\s*(\S*)\s*Units\s*$')
+re_mef_values = re.compile(r'^\s*(\S(?:.*\S)?)\s+MEF\s+Values\s*$')
+re_units      = re.compile(r'^\s*(\S(?:.*\S)?)\s+Units\s*$')
 
 class ExcelUIException(Exception):
     """
@@ -133,13 +144,23 @@ def read_table(filename, sheetname, index_col=None):
 
     """
     # Catch sheetname as list or None
-    if sheetname is None or hasattr(sheetname, '__iter__'):
+    if sheetname is None or \
+            (hasattr(sheetname, '__iter__') \
+            and not isinstance(sheetname, six.string_types)):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
-    table = pd.read_excel(filename,
-                          sheetname=sheetname,
-                          index_col=index_col)
+    # Parameter specifying sheet name is slightly different depending on pandas'
+    # version.
+    if packaging.version.parse(pd.__version__) \
+                < packaging.version.parse('0.21'):
+        table = pd.read_excel(filename,
+                              sheetname=sheetname,
+                              index_col=index_col)
+    else:
+        table = pd.read_excel(filename,
+                              sheet_name=sheetname,
+                              index_col=index_col)
     # Eliminate rows whose index are null
     if index_col is not None:
         table = table[pd.notnull(table.index)]
@@ -205,7 +226,7 @@ def write_workbook(filename, table_list, column_width=None):
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
         if column_width is None:
-            for i, (col_name, column) in enumerate(df.iteritems()):
+            for i, (col_name, column) in enumerate(six.iteritems(df)):
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
@@ -254,7 +275,7 @@ def process_beads_table(beads_table,
         - Generate forward/side scatter density plots and fluorescence
           histograms, and plots of the clustering and fitting steps of
           standard curve generation, if `plot` = True.
-    
+
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
 
@@ -295,10 +316,15 @@ def process_beads_table(beads_table,
     mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
         ``beads_table.index``.
-    mef_outputs : list
+    mef_outputs : list, only if ``full_output==True``
         A list with intermediate results of the generation of the MEF
-        transformation functions, indexed by ``beads_table.index``. Only
-        included if `full_output` is True.
+        transformation functions. For every entry in `beads_table`,
+        :func:`FlowCal.mef.get_transform_fxn()` is called on the
+        corresponding processed and gated beads sample with
+        ``full_output=True``, and the full output (a `MEFOutput`
+        ``namedtuple``) is appended to `mef_outputs`. Please refer to the
+        output section of :func:`FlowCal.mef.get_transform_fxn()`'s
+        documentation for more information.
 
     """
     # Initialize output variables
@@ -327,7 +353,7 @@ def process_beads_table(beads_table,
     # Extract header and channel names for which MEF values are specified.
     headers = list(beads_table.columns)
     mef_headers_all = [h for h in headers if re_mef_values.match(h)]
-    mef_channels_all = [re_mef_values.search(h).group(1)
+    mef_channels_all = [re_mef_values.match(h).group(1)
                         for h in mef_headers_all]
 
     # Iterate through table
@@ -487,6 +513,18 @@ def process_beads_table(beads_table,
                     mef = [int(e) if e.strip().isdigit() else np.nan
                            for e in mef]
                     mef_values.append(mef)
+
+            # Ensure matching number of `mef_values` for all channels (this
+            # implies that the calibration beads have the same number of
+            # subpopulations for all channels).
+            if mef_values:
+                if not np.all([len(mef_values_channel)==len(mef_values[0])
+                               for mef_values_channel in mef_values]):
+                    raise ExcelUIException("Must specify the same number of"
+                                           + " MEF Values for each channel."
+                                           + " Use 'None' to instruct FlowCal"
+                                           + " to ignore a detected"
+                                           + " subpopulation.")
             mef_values = np.array(mef_values)
 
             # Obtain standard curve transformation
@@ -569,7 +607,7 @@ def process_samples_table(samples_table,
           channels.
         - Plot combined forward/side scatter density plots and fluorescence
           historgrams, if `plot` = True.
-    
+
     Names of forward/side scatter and fluorescence channels are taken from
     `instruments_table`.
 
@@ -637,7 +675,7 @@ def process_samples_table(samples_table,
     # Extract header and channel names for which units are specified.
     headers = list(samples_table.columns)
     report_headers_all = [h for h in headers if re_units.match(h)]
-    report_channels_all = [re_units.search(h).group(1)
+    report_channels_all = [re_units.match(h).group(1)
                            for h in report_headers_all]
 
     # Iterate through table
@@ -836,7 +874,7 @@ def process_samples_table(samples_table,
                     else:
                         param['xscale'] = 'logicle'
                     hist_params.append(param)
-                    
+
                 # Plot
                 if plot_dir is not None:
                     figname = os.path.join(
@@ -930,7 +968,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     # List of channels that require stats columns
     headers = list(beads_table.columns)
     stats_headers = [h for h in headers if re_mef_values.match(h)]
-    stats_channels = [re_mef_values.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_mef_values.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -951,19 +989,35 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
             if pd.notnull(beads_table[header][row_id]):
 
                 # Detector voltage
-                beads_table.set_value(
-                    row_id,
-                    channel + ' Detector Volt.',
-                    beads_samples[i].detector_voltage(channel))
+                # Dataframes, such as beads_table, are modified differently
+                # depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    beads_table.set_value(
+                        row_id,
+                        channel + ' Detector Volt.',
+                        beads_samples[i].detector_voltage(channel))
+                else:
+                    beads_table.at[row_id, channel + ' Detector Volt.'] = \
+                        beads_samples[i].detector_voltage(channel)
+
 
                 # Amplification type
                 if beads_samples[i].amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                beads_table.set_value(row_id,
-                                      channel + ' Amp. Type',
-                                      amplification_type)
+                # Dataframes, such as beads_table, are modified differently
+                # depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    beads_table.set_value(row_id,
+                                          channel + ' Amp. Type',
+                                          amplification_type)
+                else:
+                    beads_table.at[row_id, channel + ' Amp. Type'] = \
+                        amplification_type
+
 
                 # Bead model and parameters
                 # Only populate if mef_outputs has been provided
@@ -979,24 +1033,53 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                         # Bead model
                         beads_model_str = mef_outputs[i]. \
                             fitting['beads_model_str'][mef_channel_index]
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Model',
-                                              beads_model_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(row_id,
+                                                  channel + ' Beads Model',
+                                                  beads_model_str)
+                        else:
+                            beads_table.at[row_id, channel + ' Beads Model'] = \
+                                beads_model_str
+
                         # Bead parameter names
                         params_names = mef_outputs[i]. \
                             fitting['beads_params_names'][mef_channel_index]
                         params_names_str = ", ".join([str(p)
                                                       for p in params_names])
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Params. Names',
-                                              params_names_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(
+                                row_id,
+                                channel + ' Beads Params. Names',
+                                params_names_str)
+                        else:
+                            beads_table.at[
+                                row_id,
+                                channel + ' Beads Params. Names'] = \
+                                    params_names_str
+
                         # Bead parameter values
                         params = mef_outputs[i]. \
                             fitting['beads_params'][mef_channel_index]
                         params_str = ", ".join([str(p) for p in params])
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Params. Values',
-                                              params_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(
+                                row_id,
+                                channel + ' Beads Params. Values',
+                                params_str)
+                        else:
+                            beads_table.at[
+                                row_id,
+                                channel + ' Beads Params. Values'] = \
+                                    params_str
 
     # Restore index name if table is empty
     if len(beads_table) == 0:
@@ -1011,7 +1094,7 @@ def add_samples_stats(samples_table, samples):
         - Notes (warnings, errors) resulting from the analysis
         - Number of Events
         - Acquisition Time (s)
-    
+
     The following information is added for each row, for each channel in
     which fluorescence units have been specified:
 
@@ -1074,7 +1157,7 @@ def add_samples_stats(samples_table, samples):
     # List of channels that require stats columns
     headers = list(samples_table.columns)
     stats_headers = [h for h in headers if re_units.match(h)]
-    stats_channels = [re_units.search(h).group(1) for h in stats_headers]
+    stats_channels = [re_units.match(h).group(1) for h in stats_headers]
 
     # Iterate through channels
     for header, channel in zip(stats_headers, stats_channels):
@@ -1098,41 +1181,76 @@ def add_samples_stats(samples_table, samples):
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
                 # Acquisition settings
+
                 # Detector voltage
-                samples_table.set_value(row_id,
-                                        channel + ' Detector Volt.',
-                                        sample.detector_voltage(channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Detector Volt.',
+                                            sample.detector_voltage(channel))
+                else:
+                    samples_table.at[row_id, channel + ' Detector Volt.'] = \
+                        sample.detector_voltage(channel)
+
                 # Amplification type
                 if sample.amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                samples_table.set_value(row_id,
-                                        channel + ' Amp. Type',
-                                        amplification_type)
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Amp. Type',
+                                            amplification_type)
+                else:
+                    samples_table.at[row_id, channel + ' Amp. Type'] = \
+                        amplification_type
 
                 # Statistics from event list
-                samples_table.set_value(row_id,
-                                        channel + ' Mean',
-                                        FlowCal.stats.mean(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Median',
-                                        FlowCal.stats.median(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Mode',
-                                        FlowCal.stats.mode(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Std',
-                                        FlowCal.stats.std(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' CV',
-                                        FlowCal.stats.cv(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' IQR',
-                                        FlowCal.stats.iqr(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' RCV',
-                                        FlowCal.stats.rcv(sample, channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Mean',
+                                            FlowCal.stats.mean(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Median',
+                                            FlowCal.stats.median(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Mode',
+                                            FlowCal.stats.mode(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Std',
+                                            FlowCal.stats.std(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' CV',
+                                            FlowCal.stats.cv(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' IQR',
+                                            FlowCal.stats.iqr(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' RCV',
+                                            FlowCal.stats.rcv(sample, channel))
+                else:
+                    samples_table.at[row_id, channel + ' Mean'] = \
+                        FlowCal.stats.mean(sample, channel)
+                    samples_table.at[row_id, channel + ' Median'] = \
+                        FlowCal.stats.median(sample, channel)
+                    samples_table.at[row_id, channel + ' Mode'] = \
+                        FlowCal.stats.mode(sample, channel)
+                    samples_table.at[row_id, channel + ' Std'] = \
+                        FlowCal.stats.std(sample, channel)
+                    samples_table.at[row_id, channel + ' CV'] = \
+                        FlowCal.stats.cv(sample, channel)
+                    samples_table.at[row_id, channel + ' IQR'] = \
+                        FlowCal.stats.iqr(sample, channel)
+                    samples_table.at[row_id, channel + ' RCV'] = \
+                        FlowCal.stats.rcv(sample, channel)
 
                 # For geometric statistics, first check for non-positive events.
                 # If found, throw a warning and calculate statistics on positive
@@ -1149,22 +1267,40 @@ def add_samples_stats(samples_table, samples):
                     # Write warning message to table
                     if samples_table.loc[row_id, 'Analysis Notes']:
                         msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
-                    samples_table.set_value(row_id, 'Analysis Notes', msg)
+                    # Dataframes, such as samples_table, are modified
+                    # differently depending on pandas' version.
+                    if packaging.version.parse(pd.__version__) \
+                            < packaging.version.parse('0.21'):
+                        samples_table.set_value(row_id, 'Analysis Notes', msg)
+                    else:
+                        samples_table.at[row_id, 'Analysis Notes'] = msg
                 else:
                     sample_positive = sample
+
                 # Calculate and write geometric statistics
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. Mean',
-                    FlowCal.stats.gmean(sample_positive, channel))
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. Std',
-                    FlowCal.stats.gstd(sample_positive, channel))
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. CV',
-                    FlowCal.stats.gcv(sample_positive, channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. Mean',
+                        FlowCal.stats.gmean(sample_positive, channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. Std',
+                        FlowCal.stats.gstd(sample_positive, channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. CV',
+                        FlowCal.stats.gcv(sample_positive, channel))
+                else:
+                    samples_table.at[row_id, channel + ' Geom. Mean'] = \
+                        FlowCal.stats.gmean(sample_positive, channel)
+                    samples_table.at[row_id, channel + ' Geom. Std'] = \
+                        FlowCal.stats.gstd(sample_positive, channel)
+                    samples_table.at[row_id, channel + ' Geom. CV'] = \
+                        FlowCal.stats.gcv(sample_positive, channel)
 
     # Restore index name if table is empty
     if len(samples_table) == 0:
@@ -1185,7 +1321,7 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
         should correspond to ``samples_table.iloc[i]``
     max_bins : int, optional
         Maximum number of bins to use.
-    
+
     Returns
     -------
     hist_table : DataFrame
@@ -1198,7 +1334,7 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
     # Extract channels that require stats histograms
     headers = list(samples_table.columns)
     hist_headers = [h for h in headers if re_units.match(h)]
-    hist_channels = [re_units.search(h).group(1) for h in hist_headers]
+    hist_channels = [re_units.match(h).group(1) for h in hist_headers]
 
     # The number of columns in the DataFrame has to be set to the maximum
     # number of bins of any of the histograms about to be generated.
@@ -1287,7 +1423,7 @@ def generate_about_table(extra_info={}):
     keywords.append('Time of analysis')
     values.append(time.strftime("%I:%M:%S%p"))
     # Add additional keyword:value pairs
-    for k, v in extra_info.items():
+    for k, v in six.iteritems(extra_info):
         keywords.append(k)
         values.append(v)
 
@@ -1465,9 +1601,34 @@ def run(input_path=None,
     if verbose:
         print("\nDone.")
 
-if __name__ == '__main__':
-    # Read command line arguments
+
+def run_command_line(args=None):
+    """
+    Entry point for the FlowCal and flowcal console scripts.
+
+    Parameters
+    ----------
+    args: list of strings, optional
+        Command line arguments. If None or not specified, get arguments
+        from ``sys.argv``.
+
+    See Also
+    ----------
+    FlowCal.excel_ui.run()
+
+    http://amir.rachum.com/blog/2017/07/28/python-entry-points/
+
+    """
+    # Get arguments from ``sys.argv`` if necessary.
+    # ``sys.argv`` has the name of the script as its first element. We remove
+    # this element because it will break ``parser.parse_args()`` later. In fact,
+    # ``parser.parse_args()``, if provided with no arguments, will also use
+    # ``sys.argv`` after removing the first element.
+    if args is None:
+        args = sys.argv[1:]
+
     import argparse
+    # Read command line arguments
     parser = argparse.ArgumentParser(
         description="process flow cytometry files with FlowCal's Excel UI.")
     parser.add_argument(
@@ -1497,7 +1658,7 @@ if __name__ == '__main__':
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     # Run Excel UI
     run(input_path=args.inputpath,
@@ -1505,3 +1666,6 @@ if __name__ == '__main__':
         verbose=args.verbose,
         plot=args.plot,
         hist_sheet=args.histogram_sheet)
+
+if __name__ == '__main__':
+    run_command_line()
