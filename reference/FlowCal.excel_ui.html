@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.excel_ui module &mdash; FlowCal 1.1.4 documentation</title>
+  <title>FlowCal.excel_ui module &mdash; FlowCal 1.2.0 documentation</title>
   
 
   
@@ -25,29 +25,20 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="FlowCal.gate module" href="FlowCal.gate.html"/>
-        <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FlowCal.gate module" href="FlowCal.gate.html" />
+    <link rel="prev" title="FlowCal (Python API) Reference" href="modules.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -63,13 +54,16 @@
           
 
           
+            
+            <img src="../_static/FlowCal_logo.png" class="logo" alt="Logo"/>
+          
           </a>
 
           
             
             
               <div class="version">
-                1.1.4
+                1.2.0
               </div>
             
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">FlowCal</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -278,26 +273,25 @@ which MEF values have been specified:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>beads_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying bead samples to analyze. For more information
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beads_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying bead samples to analyze. For more information
 about the fields required in this table, please consult the
 module&#8217;s documentation.</p>
-</div></blockquote>
-<p><strong>beads_samples</strong> : list</p>
-<blockquote>
-<div><p>FCSData objects from which to calculate statistics.
+</dd>
+<dt><strong>beads_samples</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">FCSData objects from which to calculate statistics.
 <code class="docutils literal"><span class="pre">beads_samples[i]</span></code> should correspond to <code class="docutils literal"><span class="pre">beads_table.iloc[i]</span></code>.</p>
-</div></blockquote>
-<p><strong>mef_outputs</strong> : list, optional</p>
-<blockquote class="last">
-<div><p>A list with the intermediate results of the generation of the MEF
+</dd>
+<dt><strong>mef_outputs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">A list with the intermediate results of the generation of the MEF
 transformation functions, as given by <code class="docutils literal"><span class="pre">mef.get_transform_fxn()</span></code>.
 This is used to populate the fields <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Model</span></code>,
 <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Names</span></code>, and
 <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Beads</span> <span class="pre">Params.</span> <span class="pre">Values</span></code>. If specified,
 <code class="docutils literal"><span class="pre">mef_outputs[i]</span></code> should correspond to <code class="docutils literal"><span class="pre">beads_table.iloc[i]</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -338,17 +332,17 @@ which fluorescence units have been specified:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying samples to analyze. For more information about the
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>samples_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying samples to analyze. For more information about the
 fields required in this table, please consult the module&#8217;s
 documentation.</p>
-</div></blockquote>
-<p><strong>samples</strong> : list</p>
-<blockquote class="last">
-<div><p>FCSData objects from which to calculate statistics. <code class="docutils literal"><span class="pre">samples[i]</span></code>
+</dd>
+<dt><strong>samples</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">FCSData objects from which to calculate statistics. <code class="docutils literal"><span class="pre">samples[i]</span></code>
 should correspond to <code class="docutils literal"><span class="pre">samples_table.iloc[i]</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -369,19 +363,21 @@ and a warning message will be written to the &#8220;Analysis Notes&#8221; field.
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>extra_info</strong> : dict, optional</p>
-<blockquote>
-<div><p>Additional keyword:value pairs to include in the table.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>extra_info</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional keyword:value pairs to include in the table.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>about_table</strong> : DataFrame</p>
-<blockquote class="last">
-<div><p>Table with information about FlowCal and the current analysis, as
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>about_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table with information about FlowCal and the current analysis, as
 keyword:value pairs. The following keywords are included: FlowCal
 version, and date and time of analysis. Keywords and values from
 <cite>extra_info</cite> are also included.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -396,30 +392,30 @@ version, and date and time of analysis. Keywords and values from
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying samples to analyze. For more information about the
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>samples_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying samples to analyze. For more information about the
 fields required in this table, please consult the module&#8217;s
 documentation.</p>
-</div></blockquote>
-<p><strong>samples</strong> : list</p>
-<blockquote>
-<div><p>FCSData objects from which to calculate histograms. <code class="docutils literal"><span class="pre">samples[i]</span></code>
+</dd>
+<dt><strong>samples</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">FCSData objects from which to calculate histograms. <code class="docutils literal"><span class="pre">samples[i]</span></code>
 should correspond to <code class="docutils literal"><span class="pre">samples_table.iloc[i]</span></code></p>
-</div></blockquote>
-<p><strong>max_bins</strong> : int, optional</p>
-<blockquote>
-<div><p>Maximum number of bins to use.</p>
-</div></blockquote>
+</dd>
+<dt><strong>max_bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Maximum number of bins to use.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hist_table</strong> : DataFrame</p>
-<blockquote class="last">
-<div><p>A multi-indexed DataFrame. Rows cotain the histogram bins and
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hist_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">A multi-indexed DataFrame. Rows cotain the histogram bins and
 counts for every sample and channel specified in samples_table.
 <cite>hist_table</cite> is indexed by the sample&#8217;s ID, the channel name,
 and whether the row corresponds to bins or counts.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -456,66 +452,64 @@ standard curve generation, if <cite>plot</cite> = True.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>beads_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying beads samples to be processed. For more
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>beads_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying beads samples to be processed. For more
 information about the fields required in this table, please consult
 the module&#8217;s documentation.</p>
-</div></blockquote>
-<p><strong>instruments_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying instruments. For more information about the fields
+</dd>
+<dt><strong>instruments_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying instruments. For more information about the fields
 required in this table, please consult the module&#8217;s documentation.</p>
-</div></blockquote>
-<p><strong>base_dir</strong> : str, optional</p>
-<blockquote>
-<div><p>Directory from where all the other paths are specified.</p>
-</div></blockquote>
-<p><strong>verbose</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to print information messages during the execution of this
+</dd>
+<dt><strong>base_dir</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Directory from where all the other paths are specified.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to print information messages during the execution of this
 function.</p>
-</div></blockquote>
-<p><strong>plot</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to generate and save density/histogram plots of each
+</dd>
+<dt><strong>plot</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to generate and save density/histogram plots of each
 sample, and each beads sample.</p>
-</div></blockquote>
-<p><strong>plot_dir</strong> : str, optional</p>
-<blockquote>
-<div><p>Directory relative to <cite>base_dir</cite> into which plots are saved. If
+</dd>
+<dt><strong>plot_dir</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Directory relative to <cite>base_dir</cite> into which plots are saved. If
 <cite>plot</cite> is False, this parameter is ignored. If <code class="docutils literal"><span class="pre">plot==True</span></code> and
 <code class="docutils literal"><span class="pre">plot_dir</span> <span class="pre">is</span> <span class="pre">None</span></code>, plot without saving.</p>
-</div></blockquote>
-<p><strong>full_output</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to include an additional output, containing
+</dd>
+<dt><strong>full_output</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to include an additional output, containing
 intermediate results from the generation of the MEF transformation
 functions.</p>
-</div></blockquote>
-<p><strong>get_transform_fxn_kwargs</strong> : dict, optional</p>
-<blockquote>
-<div><p>Additional parameters passed directly to internal
+</dd>
+<dt><strong>get_transform_fxn_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to internal
 <code class="docutils literal"><span class="pre">mef.get_transform_fxn()</span></code> function call.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>beads_samples</strong> : list of FCSData objects</p>
-<blockquote>
-<div><p>A list of processed, gated, and transformed samples, as specified
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beads_samples</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of FCSData objects</span></dt>
+<dd><p class="first last">A list of processed, gated, and transformed samples, as specified
 in <cite>beads_table</cite>, in the order of <code class="docutils literal"><span class="pre">beads_table.index</span></code>.</p>
-</div></blockquote>
-<p><strong>mef_transform_fxns</strong> : OrderedDict</p>
-<blockquote>
-<div><p>A dictionary of MEF transformation functions, indexed by
+</dd>
+<dt><strong>mef_transform_fxns</strong> <span class="classifier-delimiter">:</span> <span class="classifier">OrderedDict</span></dt>
+<dd><p class="first last">A dictionary of MEF transformation functions, indexed by
 <code class="docutils literal"><span class="pre">beads_table.index</span></code>.</p>
-</div></blockquote>
-<p><strong>mef_outputs</strong> : list</p>
-<blockquote class="last">
-<div><p>A list with intermediate results of the generation of the MEF
-transformation functions, indexed by <code class="docutils literal"><span class="pre">beads_table.index</span></code>. Only
-included if <cite>full_output</cite> is True.</p>
-</div></blockquote>
+</dd>
+<dt><strong>mef_outputs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first last">A list with intermediate results of the generation of the MEF
+transformation functions. For every entry in <cite>beads_table</cite>,
+<a class="reference internal" href="FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a> is called on the
+corresponding processed and gated beads sample with
+<code class="docutils literal"><span class="pre">full_output=True</span></code>, and the full output (a <cite>MEFOutput</cite>
+<code class="docutils literal"><span class="pre">namedtuple</span></code>) is appended to <cite>mef_outputs</cite>. Please refer to the
+output section of <a class="reference internal" href="FlowCal.mef.html#FlowCal.mef.get_transform_fxn" title="FlowCal.mef.get_transform_fxn"><code class="xref py py-func docutils literal"><span class="pre">FlowCal.mef.get_transform_fxn()</span></code></a>&#8216;s
+documentation for more information.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -549,27 +543,24 @@ historgrams, if <cite>plot</cite> = True.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying samples to be processed. For more information
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>samples_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying samples to be processed. For more information
 about the fields required in this table, please consult the
 module&#8217;s documentation.</p>
-</div></blockquote>
-<p><strong>instruments_table</strong> : DataFrame</p>
-<blockquote>
-<div><p>Table specifying instruments. For more information about the fields
+</dd>
+<dt><strong>instruments_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">Table specifying instruments. For more information about the fields
 required in this table, please consult the module&#8217;s documentation.</p>
-</div></blockquote>
-<p><strong>mef_transform_fxns</strong> : dict or OrderedDict, optional</p>
-<blockquote>
-<div><p>Dictionary containing MEF transformation functions. If any entry
+</dd>
+<dt><strong>mef_transform_fxns</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict or OrderedDict, optional</span></dt>
+<dd><p class="first last">Dictionary containing MEF transformation functions. If any entry
 in <cite>samples_table</cite> requires transformation to MEF, a key: value
 pair must exist in mef_transform_fxns, with the key being equal to
 the contents of field &#8220;Beads ID&#8221;.</p>
-</div></blockquote>
-<p><strong>beads_table</strong> : DataFrame, optional</p>
-<blockquote>
-<div><p>Table specifying beads samples used to generate
+</dd>
+<dt><strong>beads_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame, optional</span></dt>
+<dd><p class="first last">Table specifying beads samples used to generate
 <cite>mef_transform_fxns</cite>. This is used to check if a beads sample was
 taken at the same acquisition settings as a sample to be
 transformed to MEF. For any beads sample and channel for which a
@@ -577,34 +568,32 @@ MEF transformation function has been generated, the following
 fields should be populated: <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Amp.</span> <span class="pre">Type</span></code> and
 <code class="docutils literal"><span class="pre">&lt;channel&gt;</span> <span class="pre">Detector</span> <span class="pre">Volt</span></code>. If <cite>beads_table</cite> is not specified, no
 checking will be performed.</p>
-</div></blockquote>
-<p><strong>base_dir</strong> : str, optional</p>
-<blockquote>
-<div><p>Directory from where all the other paths are specified.</p>
-</div></blockquote>
-<p><strong>verbose</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to print information messages during the execution of this
+</dd>
+<dt><strong>base_dir</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Directory from where all the other paths are specified.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to print information messages during the execution of this
 function.</p>
-</div></blockquote>
-<p><strong>plot</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to generate and save density/histogram plots of each
+</dd>
+<dt><strong>plot</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to generate and save density/histogram plots of each
 sample, and each beads sample.</p>
-</div></blockquote>
-<p><strong>plot_dir</strong> : str, optional</p>
-<blockquote>
-<div><p>Directory relative to <cite>base_dir</cite> into which plots are saved. If
+</dd>
+<dt><strong>plot_dir</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Directory relative to <cite>base_dir</cite> into which plots are saved. If
 <cite>plot</cite> is False, this parameter is ignored. If <code class="docutils literal"><span class="pre">plot==True</span></code> and
 <code class="docutils literal"><span class="pre">plot_dir</span> <span class="pre">is</span> <span class="pre">None</span></code>, plot without saving.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>samples</strong> : list of FCSData objects</p>
-<blockquote class="last">
-<div><p>A list of processed, gated, and transformed samples, as specified
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>samples</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of FCSData objects</span></dt>
+<dd><p class="first last">A list of processed, gated, and transformed samples, as specified
 in <cite>samples_table</cite>, in the order of <code class="docutils literal"><span class="pre">samples_table.index</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -619,34 +608,35 @@ in <cite>samples_table</cite>, in the order of <code class="docutils literal"><s
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : str</p>
-<blockquote>
-<div><p>Name of the Excel file to read.</p>
-</div></blockquote>
-<p><strong>sheetname</strong> : str or int</p>
-<blockquote>
-<div><p>Name or index of the sheet inside the Excel file to read.</p>
-</div></blockquote>
-<p><strong>index_col</strong> : str, optional</p>
-<blockquote>
-<div><p>Column name or index to be used as row labels of the DataFrame. If
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>filename</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of the Excel file to read.</p>
+</dd>
+<dt><strong>sheetname</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str or int</span></dt>
+<dd><p class="first last">Name or index of the sheet inside the Excel file to read.</p>
+</dd>
+<dt><strong>index_col</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Column name or index to be used as row labels of the DataFrame. If
 None, default index will be used.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>table</strong> : DataFrame</p>
-<blockquote>
-<div><p>A DataFrame containing the data in the specified Excel table. If
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">DataFrame</span></dt>
+<dd><p class="first last">A DataFrame containing the data in the specified Excel table. If
 <cite>index_col</cite> is not None, rows in which their <cite>index_col</cite> field
 is empty will not be present in <cite>table</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
-<blockquote class="last">
-<div><p>If <cite>index_col</cite> is specified and two rows contain the same
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ValueError</strong></dt>
+<dd><p class="first last">If <cite>index_col</cite> is specified and two rows contain the same
 <cite>index_col</cite> field.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -679,35 +669,60 @@ file.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_path</strong> : str</p>
-<blockquote>
-<div><p>Path to the Excel file to use as input. If None, show a dialog to
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>input_path</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Path to the Excel file to use as input. If None, show a dialog to
 select an input file.</p>
-</div></blockquote>
-<p><strong>output_path</strong> : str</p>
-<blockquote>
-<div><p>Path to which to save the output Excel file. If None, use
+</dd>
+<dt><strong>output_path</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Path to which to save the output Excel file. If None, use
 &#8220;&lt;input_path&gt;_output&#8221;.</p>
-</div></blockquote>
-<p><strong>verbose</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to print information messages during the execution of this
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to print information messages during the execution of this
 function.</p>
-</div></blockquote>
-<p><strong>plot</strong> : bool, optional</p>
-<blockquote>
-<div><p>Whether to generate and save density/histogram plots of each
+</dd>
+<dt><strong>plot</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to generate and save density/histogram plots of each
 sample, and each beads sample.</p>
-</div></blockquote>
-<p><strong>hist_sheet</strong> : bool, optional</p>
-<blockquote class="last">
-<div><p>Whether to generate a sheet in the output Excel file specifying
+</dd>
+<dt><strong>hist_sheet</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Whether to generate a sheet in the output Excel file specifying
 histogram bin information.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="FlowCal.excel_ui.run_command_line">
+<code class="descclassname">FlowCal.excel_ui.</code><code class="descname">run_command_line</code><span class="sig-paren">(</span><em>args=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.excel_ui.run_command_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point for the FlowCal and flowcal console scripts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>args: list of strings, optional</strong></dt>
+<dd><p class="first last">Command line arguments. If None or not specified, get arguments
+from <code class="docutils literal"><span class="pre">sys.argv</span></code>.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><a class="reference internal" href="#FlowCal.excel_ui.run" title="FlowCal.excel_ui.run"><code class="xref py py-obj docutils literal"><span class="pre">FlowCal.excel_ui.run</span></code></a></p>
+<dl class="last docutils">
+<dt><code class="xref py py-obj docutils literal"><span class="pre">http</span></code></dt>
+<dd>//amir.rachum.com/blog/2017/07/28/python-entry-points/</dd>
+</dl>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -718,19 +733,21 @@ histogram bin information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filetypes</strong> : list of tuples</p>
-<blockquote>
-<div><p>Types of file to show on the dialog. Each tuple on the list must
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>filetypes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of tuples</span></dt>
+<dd><p class="first last">Types of file to show on the dialog. Each tuple on the list must
 have two elements associated with a filetype: the first element is
 a description, and the second is the associated extension.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>filename</strong> : str</p>
-<blockquote class="last">
-<div><p>The path of the filename selected, or an empty string if no file
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filename</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">The path of the filename selected, or an empty string if no file
 was chosen.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -745,22 +762,21 @@ was chosen.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : str</p>
-<blockquote>
-<div><p>Name of the Excel file to write.</p>
-</div></blockquote>
-<p><strong>table_list</strong> : list of <code class="docutils literal"><span class="pre">(str,</span> <span class="pre">DataFrame)</span></code> tuples</p>
-<blockquote>
-<div><p>Tables to be saved as individual sheets in the Excel table. Each
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filename</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of the Excel file to write.</p>
+</dd>
+<dt><strong>table_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of <code class="docutils literal"><span class="pre">(str,</span> <span class="pre">DataFrame)</span></code> tuples</span></dt>
+<dd><p class="first last">Tables to be saved as individual sheets in the Excel table. Each
 tuple contains two values: the name of the sheet to be saved as a
 string, and the contents of the table as a DataFrame.</p>
-</div></blockquote>
-<p><strong>column_width: int, optional</strong></p>
-<blockquote class="last">
-<div><p>The column width to use when saving the spreadsheet. If None,
+</dd>
+<dt><strong>column_width: int, optional</strong></dt>
+<dd><p class="first last">The column width to use when saving the spreadsheet. If None,
 calculate width automatically from the maximum number of characters
 in each column.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -771,9 +787,7 @@ in each column.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -795,7 +809,7 @@ in each column.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -813,7 +827,8 @@ in each column.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.4',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -831,14 +846,11 @@ in each column.</p>
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

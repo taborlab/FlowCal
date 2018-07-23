@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.plot module &mdash; FlowCal 1.1.4 documentation</title>
+  <title>FlowCal.plot module &mdash; FlowCal 1.2.0 documentation</title>
   
 
   
@@ -25,29 +25,20 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="FlowCal.stats module" href="FlowCal.stats.html"/>
-        <link rel="prev" title="FlowCal.mef module" href="FlowCal.mef.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FlowCal.stats module" href="FlowCal.stats.html" />
+    <link rel="prev" title="FlowCal.mef module" href="FlowCal.mef.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -63,13 +54,16 @@
           
 
           
+            
+            <img src="../_static/FlowCal_logo.png" class="logo" alt="Logo"/>
+          
           </a>
 
           
             
             
               <div class="version">
-                1.1.4
+                1.2.0
               </div>
             
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">FlowCal</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -245,18 +240,16 @@ histogram can be smoothed using a Gaussian kernel by specifying
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>Flow cytometry data to plot.</p>
-</div></blockquote>
-<p><strong>channels</strong> : list of int, list of str, optional</p>
-<blockquote>
-<div><p>Two channels to use for the plot.</p>
-</div></blockquote>
-<p><strong>bins</strong> : int or array_like or [int, int] or [array, array], optional</p>
-<blockquote>
-<div><p>Bins used for plotting:</p>
-<blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">Flow cytometry data to plot.</p>
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of int, list of str, optional</span></dt>
+<dd><p class="first last">Two channels to use for the plot.</p>
+</dd>
+<dt><strong>bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or array_like or [int, int] or [array, array], optional</span></dt>
+<dd><p class="first">Bins used for plotting:</p>
+<blockquote class="last">
 <div><ul class="simple">
 <li>If None, use <code class="docutils literal"><span class="pre">data.hist_bins</span></code> to obtain bin edges for both
 axes. None is not allowed if <code class="docutils literal"><span class="pre">data.hist_bins</span></code> is not
@@ -279,75 +272,64 @@ bin edges. Note that None is not allowed if <code class="docutils literal"><span
 does not exist.</li>
 </ul>
 </div></blockquote>
-</div></blockquote>
-<p><strong>mode</strong> : {&#8216;mesh&#8217;, &#8216;scatter&#8217;}, str, optional</p>
-<blockquote>
-<div><p>Plotting mode. &#8216;mesh&#8217; produces a 2D-histogram whereas &#8216;scatter&#8217;
+</dd>
+<dt><strong>mode</strong> <span class="classifier-delimiter">:</span> <span class="classifier">{&#8216;mesh&#8217;, &#8216;scatter&#8217;}, str, optional</span></dt>
+<dd><p class="first last">Plotting mode. &#8216;mesh&#8217; produces a 2D-histogram whereas &#8216;scatter&#8217;
 produces a scatterplot colored by histogram bin value.</p>
-</div></blockquote>
-<p><strong>normed</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to plot a normed histogram (probability
+</dd>
+<dt><strong>normed</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to plot a normed histogram (probability
 mass function instead of a counts-based histogram).</p>
-</div></blockquote>
-<p><strong>smooth</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to apply Gaussian smoothing to the
+</dd>
+<dt><strong>smooth</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to apply Gaussian smoothing to the
 histogram.</p>
-</div></blockquote>
-<p><strong>colorbar</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to add a colorbar to the plot.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+</dd>
+<dt><strong>colorbar</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to add a colorbar to the plot.</p>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>sigma</strong> : float, optional</p>
-<blockquote>
-<div><p>The sigma parameter for the Gaussian kernel to use when smoothing.</p>
-</div></blockquote>
-<p><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>yscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code></p>
-</div></blockquote>
-<p><strong>xlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the x axis. If None, attempts to extract channel
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>sigma</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">The sigma parameter for the Gaussian kernel to use when smoothing.</p>
+</dd>
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>yscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code></p>
+</dd>
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the x axis. If None, attempts to extract channel
 name from <cite>data</cite>.</p>
-</div></blockquote>
-<p><strong>ylabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the y axis. If None, attempts to extract channel
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the y axis. If None, attempts to extract channel
 name from <cite>data</cite>.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis. If not specified and <cite>bins</cite> exists, use
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis. If not specified and <cite>bins</cite> exists, use
 the lowest and highest values of <cite>bins</cite>.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the y axis. If not specified and <cite>bins</cite> exists, use
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis. If not specified and <cite>bins</cite> exists, use
 the lowest and highest values of <cite>bins</cite>.</p>
-</div></blockquote>
-<p><strong>title</strong> : str, optional</p>
-<blockquote>
-<div><p>Plot title.</p>
-</div></blockquote>
-<p><strong>kwargs</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional parameters passed directly to the underlying matplotlib
+</dd>
+<dt><strong>title</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Plot title.</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to the underlying matplotlib
 functions: <code class="docutils literal"><span class="pre">plt.scatter</span></code> if <code class="docutils literal"><span class="pre">mode==scatter</span></code>, and
 <code class="docutils literal"><span class="pre">plt.pcolormesh</span></code> if <code class="docutils literal"><span class="pre">mode==mesh</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -375,59 +357,55 @@ density plot.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData object</p>
-<blockquote>
-<div><p>Flow cytometry data object to plot.</p>
-</div></blockquote>
-<p><strong>gated_data</strong> : FCSData object, optional</p>
-<blockquote>
-<div><p>Flow cytometry data object. If <cite>gated_data</cite> is specified, the
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData object</span></dt>
+<dd><p class="first last">Flow cytometry data object to plot.</p>
+</dd>
+<dt><strong>gated_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData object, optional</span></dt>
+<dd><p class="first last">Flow cytometry data object. If <cite>gated_data</cite> is specified, the
 histograms of <cite>data</cite> are plotted with an alpha value of 0.5, and
 the histograms of <cite>gated_data</cite> are plotted on top of those with
 an alpha value of 1.0.</p>
-</div></blockquote>
-<p><strong>gate_contour</strong> : list, optional</p>
-<blockquote>
-<div><p>List of Nx2 curves, representing a gate contour to be plotted in
+</dd>
+<dt><strong>gate_contour</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">List of Nx2 curves, representing a gate contour to be plotted in
 the density diagram.</p>
-</div></blockquote>
-<p><strong>density_channels</strong> : list</p>
-<blockquote>
-<div><p>Two channels to use for the density plot. If <cite>density_channels</cite> is
+</dd>
+<dt><strong>density_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Two channels to use for the density plot. If <cite>density_channels</cite> is
 None, do not plot a density plot.</p>
-</div></blockquote>
-<p><strong>density_params</strong> : dict, optional</p>
-<blockquote>
-<div><p>Parameters to pass to <cite>density2d</cite>.</p>
-</div></blockquote>
-<p><strong>hist_channels</strong> : list</p>
-<blockquote>
-<div><p>Channels to use for each histogram. If <cite>hist_channels</cite> is None,
+</dd>
+<dt><strong>density_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Parameters to pass to <cite>density2d</cite>.</p>
+</dd>
+<dt><strong>hist_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd><p class="first last">Channels to use for each histogram. If <cite>hist_channels</cite> is None,
 do not plot histograms.</p>
-</div></blockquote>
-<p><strong>hist_params</strong> : list, optional</p>
-<blockquote>
-<div><p>List of dictionaries with the parameters to pass to each call of
+</dd>
+<dt><strong>hist_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">List of dictionaries with the parameters to pass to each call of
 <cite>hist1d</cite>.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>figsize</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Figure size. If None, calculate a default based on the number of
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>figsize</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Figure size. If None, calculate a default based on the number of
 subplots.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
-<blockquote class="last">
-<div><p>If both <cite>density_channels</cite> and <cite>hist_channels</cite> are None.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ValueError</strong></dt>
+<dd><p class="first last">If both <cite>density_channels</cite> and <cite>hist_channels</cite> are None.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -442,111 +420,97 @@ subplots.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_list</strong> : FCSData or numpy array or list of FCSData or numpy array</p>
-<blockquote>
-<div><p>Flow cytometry data to plot.</p>
-</div></blockquote>
-<p><strong>channel</strong> : int or str, optional</p>
-<blockquote>
-<div><p>Channel from where to take the events to plot. If ndim == 1,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array or list of FCSData or numpy array</span></dt>
+<dd><p class="first last">Flow cytometry data to plot.</p>
+</dd>
+<dt><strong>channel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str, optional</span></dt>
+<dd><p class="first last">Channel from where to take the events to plot. If ndim == 1,
 channel is ignored. String channel specifications are only
 supported for data types which support string-based indexing
 (e.g. FCSData).</p>
-</div></blockquote>
-<p><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>bins</strong> : int or array_like, optional</p>
-<blockquote>
-<div><p>If <cite>bins</cite> is an integer, it specifies the number of bins to use.
+</dd>
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or array_like, optional</span></dt>
+<dd><p class="first last">If <cite>bins</cite> is an integer, it specifies the number of bins to use.
 If <cite>bins</cite> is an array, it specifies the bin edges to use. If <cite>bins</cite>
 is None or an integer, <cite>hist1d</cite> will attempt to use
 <code class="docutils literal"><span class="pre">data.hist_bins</span></code> to generate the bins automatically.</p>
-</div></blockquote>
-<p><strong>histtype</strong> : {&#8216;bar&#8217;, &#8216;barstacked&#8217;, &#8216;step&#8217;, &#8216;stepfilled&#8217;}, str, optional</p>
-<blockquote>
-<div><p>Histogram type. Directly passed to <code class="docutils literal"><span class="pre">plt.hist</span></code>.</p>
-</div></blockquote>
-<p><strong>normed_area</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to normalize the histogram such that the
+</dd>
+<dt><strong>histtype</strong> <span class="classifier-delimiter">:</span> <span class="classifier">{&#8216;bar&#8217;, &#8216;barstacked&#8217;, &#8216;step&#8217;, &#8216;stepfilled&#8217;}, str, optional</span></dt>
+<dd><p class="first last">Histogram type. Directly passed to <code class="docutils literal"><span class="pre">plt.hist</span></code>.</p>
+</dd>
+<dt><strong>normed_area</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to normalize the histogram such that the
 area under the curve is equal to one. The resulting plot is
 equivalent to a probability density function.</p>
-</div></blockquote>
-<p><strong>normed_height</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag indicating whether to normalize the histogram such that the
+</dd>
+<dt><strong>normed_height</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag indicating whether to normalize the histogram such that the
 sum of all bins&#8217; heights is equal to one. The resulting plot is
 equivalent to a probability mass function. <cite>normed_height</cite> is
 ignored if <cite>normed_area</cite> is True.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the x axis. If None, attempts to extract channel
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>ylabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the y axis. If None and <code class="docutils literal"><span class="pre">normed==True</span></code>, use
-&#8216;Probability&#8217;. If None and <cite>normed==False`</cite>, use &#8216;Counts&#8217;.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis. If not specified and <cite>bins</cite> exists, use
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the y axis. If None and <code class="docutils literal"><span class="pre">normed_area==True</span></code>, use
+&#8216;Probability&#8217;. If None, <code class="docutils literal"><span class="pre">normed_area==False</span></code>, and
+<code class="docutils literal"><span class="pre">normed_height==True</span></code>, use &#8216;Counts (normalized)&#8217;. If None,
+<code class="docutils literal"><span class="pre">normed_area==False</span></code>, and <code class="docutils literal"><span class="pre">normed_height==False</span></code>, use &#8216;Counts&#8217;.</p>
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis. If not specified and <cite>bins</cite> exists, use
 the lowest and highest values of <cite>bins</cite>.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the y axis.</p>
-</div></blockquote>
-<p><strong>title</strong> : str, optional</p>
-<blockquote>
-<div><p>Plot title.</p>
-</div></blockquote>
-<p><strong>legend</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag specifying whether to include a legend. If <cite>legend</cite> is True,
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis.</p>
+</dd>
+<dt><strong>title</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Plot title.</p>
+</dd>
+<dt><strong>legend</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag specifying whether to include a legend. If <cite>legend</cite> is True,
 the legend labels will be taken from <cite>legend_labels</cite> if present,
 else they will be taken from <code class="docutils literal"><span class="pre">str(data_list[i])</span></code>.</p>
-</div></blockquote>
-<p><strong>legend_loc</strong> : str, optional</p>
-<blockquote>
-<div><p>Location of the legend.</p>
-</div></blockquote>
-<p><strong>legend_fontsize</strong> : int or str, optional</p>
-<blockquote>
-<div><p>Font size for the legend.</p>
-</div></blockquote>
-<p><strong>legend_labels</strong> : list, optional</p>
-<blockquote>
-<div><p>Labels to use for the legend.</p>
-</div></blockquote>
-<p><strong>facecolor</strong> : matplotlib color or list of matplotlib colors, optional</p>
-<blockquote>
-<div><p>The histogram&#8217;s facecolor. It can be a list with the same length as
+</dd>
+<dt><strong>legend_loc</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Location of the legend.</p>
+</dd>
+<dt><strong>legend_fontsize</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str, optional</span></dt>
+<dd><p class="first last">Font size for the legend.</p>
+</dd>
+<dt><strong>legend_labels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">Labels to use for the legend.</p>
+</dd>
+<dt><strong>facecolor</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib color or list of matplotlib colors, optional</span></dt>
+<dd><p class="first last">The histogram&#8217;s facecolor. It can be a list with the same length as
 <cite>data_list</cite>. If <cite>edgecolor</cite> and <cite>facecolor</cite> are not specified, and
 <code class="docutils literal"><span class="pre">histtype</span> <span class="pre">==</span> <span class="pre">'stepfilled'</span></code>, the facecolor will be taken from the
 module-level variable <cite>cmap_default</cite>.</p>
-</div></blockquote>
-<p><strong>edgecolor</strong> : matplotlib color or list of matplotlib colors, optional</p>
-<blockquote>
-<div><p>The histogram&#8217;s edgecolor. It can be a list with the same length as
+</dd>
+<dt><strong>edgecolor</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib color or list of matplotlib colors, optional</span></dt>
+<dd><p class="first last">The histogram&#8217;s edgecolor. It can be a list with the same length as
 <cite>data_list</cite>. If <cite>edgecolor</cite> and <cite>facecolor</cite> are not specified, and
 <code class="docutils literal"><span class="pre">histtype</span> <span class="pre">==</span> <span class="pre">'step'</span></code>, the edgecolor will be taken from the
 module-level variable <cite>cmap_default</cite>.</p>
-</div></blockquote>
-<p><strong>kwargs</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">hist</span></code>.</p>
-</div></blockquote>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">hist</span></code>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -556,6 +520,11 @@ module-level variable <cite>cmap_default</cite>.</p>
 <cite>data_list</cite>. <cite>hist_type</cite>, the type of histogram to draw, is directly
 passed to <code class="docutils literal"><span class="pre">plt.hist</span></code>. Additional keyword arguments provided to
 <cite>hist1d</cite> are passed directly to <code class="docutils literal"><span class="pre">plt.hist</span></code>.</p>
+<p>If <cite>normed_area</cite> is set to True, <cite>hist1d</cite> calls <code class="docutils literal"><span class="pre">plt.hist</span></code> with
+<code class="docutils literal"><span class="pre">density</span></code> (or <code class="docutils literal"><span class="pre">normed</span></code>, if matplotlib&#8217;s version is older than
+2.2.0) set to True. There is a bug in matplotlib 2.1.0 that
+produces an incorrect plot in these conditions. We do not recommend
+using matplotlib 2.1.0 if <cite>normed_area</cite> is expected to be used.</p>
 </dd></dl>
 
 <dl class="function">
@@ -566,64 +535,56 @@ passed to <code class="docutils literal"><span class="pre">plt.hist</span></code
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_list</strong> : array or FCSData or list of array or list of FCSData</p>
-<blockquote>
-<div><p>Flow cytometry data to plot.</p>
-</div></blockquote>
-<p><strong>channels</strong> : list of int, list of str</p>
-<blockquote>
-<div><p>Two channels to use for the plot.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array or FCSData or list of array or list of FCSData</span></dt>
+<dd><p class="first last">Flow cytometry data to plot.</p>
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of int, list of str</span></dt>
+<dd><p class="first last">Two channels to use for the plot.</p>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>yscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>xlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the x axis. If None, attempts to extract channel
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>yscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>ylabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the y axis. If None, attempts to extract channel
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the y axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the y axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>title</strong> : str, optional</p>
-<blockquote>
-<div><p>Plot title.</p>
-</div></blockquote>
-<p><strong>color</strong> : matplotlib color or list of matplotlib colors, optional</p>
-<blockquote>
-<div><p>Color for the scatter plot. It can be a list with the same length
+</dd>
+<dt><strong>title</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Plot title.</p>
+</dd>
+<dt><strong>color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib color or list of matplotlib colors, optional</span></dt>
+<dd><p class="first last">Color for the scatter plot. It can be a list with the same length
 as <cite>data_list</cite>. If <cite>color</cite> is not specified, elements from
 <cite>data_list</cite> are plotted with colors taken from the module-level
 variable <cite>cmap_default</cite>.</p>
-</div></blockquote>
-<p><strong>kwargs</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
-</div></blockquote>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -642,78 +603,67 @@ passed directly to <code class="docutils literal"><span class="pre">plt.scatter<
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_list</strong> : array or FCSData or list of array or list of FCSData</p>
-<blockquote>
-<div><p>Flow cytometry data to plot.</p>
-</div></blockquote>
-<p><strong>channels</strong> : list of int, list of str</p>
-<blockquote>
-<div><p>Three channels to use for the plot.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array or FCSData or list of array or list of FCSData</span></dt>
+<dd><p class="first last">Flow cytometry data to plot.</p>
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of int, list of str</span></dt>
+<dd><p class="first last">Three channels to use for the plot.</p>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>yscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>zscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>xlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the x axis. If None, attempts to extract channel
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>yscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>zscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>ylabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the y axis. If None, attempts to extract channel
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the y axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>zlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the z axis. If None, attempts to extract channel
+</dd>
+<dt><strong>zlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the z axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the y axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>zlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the z axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>zlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the z axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>title</strong> : str, optional</p>
-<blockquote>
-<div><p>Plot title.</p>
-</div></blockquote>
-<p><strong>color</strong> : matplotlib color or list of matplotlib colors, optional</p>
-<blockquote>
-<div><p>Color for the scatter plot. It can be a list with the same length
+</dd>
+<dt><strong>title</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Plot title.</p>
+</dd>
+<dt><strong>color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib color or list of matplotlib colors, optional</span></dt>
+<dd><p class="first last">Color for the scatter plot. It can be a list with the same length
 as <cite>data_list</cite>. If <cite>color</cite> is not specified, elements from
 <cite>data_list</cite> are plotted with colors taken from the module-level
 variable <cite>cmap_default</cite>.</p>
-</div></blockquote>
-<p><strong>kwargs</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
-</div></blockquote>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -735,78 +685,67 @@ in <cite>data_list</cite>, in the same figure.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_list</strong> : FCSData object, or list of FCSData objects</p>
-<blockquote>
-<div><p>Flow cytometry data to plot.</p>
-</div></blockquote>
-<p><strong>channels</strong> : list of int, list of str</p>
-<blockquote>
-<div><p>Three channels to use for the plot.</p>
-</div></blockquote>
-<p><strong>savefig</strong> : str, optional</p>
-<blockquote>
-<div><p>The name of the file to save the figure to. If None, do not save.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData object, or list of FCSData objects</span></dt>
+<dd><p class="first last">Flow cytometry data to plot.</p>
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of int, list of str</span></dt>
+<dd><p class="first last">Three channels to use for the plot.</p>
+</dd>
+<dt><strong>savefig</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The name of the file to save the figure to. If None, do not save.</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>yscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>zscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
-<p><strong>xlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the x axis. If None, attempts to extract channel
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>yscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>zscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the z axis, either <code class="docutils literal"><span class="pre">linear</span></code>, <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
+</dd>
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the x axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>ylabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the y axis. If None, attempts to extract channel
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the y axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>zlabel</strong> : str, optional</p>
-<blockquote>
-<div><p>Label to use on the z axis. If None, attempts to extract channel
+</dd>
+<dt><strong>zlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Label to use on the z axis. If None, attempts to extract channel
 name from last data object.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the y axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>zlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the z axis. If None, attempts to extract limits from the
+</dd>
+<dt><strong>zlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the z axis. If None, attempts to extract limits from the
 range of the last data object.</p>
-</div></blockquote>
-<p><strong>color</strong> : matplotlib color or list of matplotlib colors, optional</p>
-<blockquote>
-<div><p>Color for the scatter plot. It can be a list with the same length
+</dd>
+<dt><strong>color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib color or list of matplotlib colors, optional</span></dt>
+<dd><p class="first last">Color for the scatter plot. It can be a list with the same length
 as <cite>data_list</cite>. If <cite>color</cite> is not specified, elements from
 <cite>data_list</cite> are plotted with colors taken from the module-level
 variable <cite>cmap_default</cite>.</p>
-</div></blockquote>
-<p><strong>figsize</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Figure size. If None, use matplotlib&#8217;s default.</p>
-</div></blockquote>
-<p><strong>kwargs</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
-</div></blockquote>
+</dd>
+<dt><strong>figsize</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Figure size. If None, use matplotlib&#8217;s default.</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional parameters passed directly to matploblib&#8217;s <code class="docutils literal"><span class="pre">scatter</span></code>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -822,9 +761,7 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -846,7 +783,7 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -864,7 +801,8 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.4',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -882,14 +820,11 @@ provided to <cite>scatter3d_and_projections</cite> are passed directly to
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.transform module &mdash; FlowCal 1.1.4 documentation</title>
+  <title>FlowCal.transform module &mdash; FlowCal 1.2.0 documentation</title>
   
 
   
@@ -25,29 +25,20 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="Contribute" href="../contribute/index.html"/>
-        <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contribute" href="../contribute/index.html" />
+    <link rel="prev" title="FlowCal.stats module" href="FlowCal.stats.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -63,13 +54,16 @@
           
 
           
+            
+            <img src="../_static/FlowCal_logo.png" class="logo" alt="Logo"/>
+          
           </a>
 
           
             
             
               <div class="version">
-                1.1.4
+                1.2.0
               </div>
             
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">FlowCal</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -207,39 +202,39 @@ respective channels is available.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int, str, list of int, list of str</p>
-<blockquote>
-<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, str, list of int, list of str</span></dt>
+<dd><p class="first last">Channels on which to perform the transformation. If <cite>channels</cite> is
 None, perform transformation in all channels specified on
 <cite>sc_channels</cite>.</p>
-</div></blockquote>
-<p><strong>sc_list</strong> : list of functions</p>
-<blockquote>
-<div><p>Functions implementing the standard curves for each channel in
+</dd>
+<dt><strong>sc_list</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of functions</span></dt>
+<dd><p class="first last">Functions implementing the standard curves for each channel in
 <cite>sc_channels</cite>.</p>
-</div></blockquote>
-<p><strong>sc_channels</strong> : list of int or list of str, optional</p>
-<blockquote>
-<div><p>List of channels corresponding to each function in <cite>sc_list</cite>. If
+</dd>
+<dt><strong>sc_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of int or list of str, optional</span></dt>
+<dd><p class="first last">List of channels corresponding to each function in <cite>sc_list</cite>. If
 None, use all channels in <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD transformed flow cytometry data.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>FCSData or numpy array</strong></dt>
+<dd><p class="first last">NxD transformed flow cytometry data.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
-<blockquote class="last">
-<div><p>If any channel specified in <cite>channels</cite> is not in <cite>sc_channels</cite>.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ValueError</strong></dt>
+<dd><p class="first last">If any channel specified in <cite>channels</cite> is not in <cite>sc_channels</cite>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -273,45 +268,43 @@ data taken with a linear amplifier of gain <code class="docutils literal"><span 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, str, list of int, list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to perform the transformation. If <cite>channels</cite> is
 None, perform transformation in all channels.</p>
-</div></blockquote>
-<p><strong>amplification_type</strong> : tuple or list of tuple</p>
-<blockquote>
-<div><p>The amplification type of the specified channel(s). This should be
+</dd>
+<dt><strong>amplification_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of tuple</span></dt>
+<dd><p class="first last">The amplification type of the specified channel(s). This should be
 reported as a tuple, in which the first element indicates how many
 decades the logarithmic amplifier covers, and the second indicates
 the linear value that corresponds to a channel value of zero. If
 the first element is zero, the amplification type is linear. This
 is similar to the $PnE keyword from the FCS standard. If None, take
 <cite>amplification_type</cite> from <code class="docutils literal"><span class="pre">data.amplification_type(channel)</span></code>.</p>
-</div></blockquote>
-<p><strong>amplifier_gain</strong> : float or list of floats, optional</p>
-<blockquote>
-<div><p>The linear amplifier gain of the specified channel(s). Only used if
+</dd>
+<dt><strong>amplifier_gain</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or list of floats, optional</span></dt>
+<dd><p class="first last">The linear amplifier gain of the specified channel(s). Only used if
 <code class="docutils literal"><span class="pre">amplification_type[0]==0</span></code> (linear amplifier). If None,
 take <cite>amplifier_gain</cite> from <code class="docutils literal"><span class="pre">data.amplifier_gain(channel)</span></code>. If
 <cite>data</cite> does not contain <code class="docutils literal"><span class="pre">amplifier_gain()</span></code>, use 1.0.</p>
-</div></blockquote>
-<p><strong>resolution</strong> : int, float, or list of int or float, optional</p>
-<blockquote>
-<div><p>Maximum range, for each specified channel. Only needed if
+</dd>
+<dt><strong>resolution</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, float, or list of int or float, optional</span></dt>
+<dd><p class="first last">Maximum range, for each specified channel. Only needed if
 <code class="docutils literal"><span class="pre">amplification_type[0]!=0</span></code> (log amplifier). If None, take
 <cite>resolution</cite> from <code class="docutils literal"><span class="pre">len(data.domain(channel))</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FCSData or numpy array</p>
-<blockquote class="last">
-<div><p>NxD transformed flow cytometry data.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>FCSData or numpy array</strong></dt>
+<dd><p class="first last">NxD transformed flow cytometry data.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -331,31 +324,30 @@ necessary.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int, str, list of int, list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to perform the transformation. If <cite>channels</cite> is
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, str, list of int, list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to perform the transformation. If <cite>channels</cite> is
 None, use def_channels.</p>
-</div></blockquote>
-<p><strong>transform_fxn</strong> : function</p>
-<blockquote>
-<div><p>Function that performs the actual transformation.</p>
-</div></blockquote>
-<p><strong>def_channels</strong> : int, str, list of int, list of str, optional</p>
-<blockquote>
-<div><p>Default set of channels in which to perform the transformation.
+</dd>
+<dt><strong>transform_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">Function that performs the actual transformation.</p>
+</dd>
+<dt><strong>def_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, str, list of int, list of str, optional</span></dt>
+<dd><p class="first last">Default set of channels in which to perform the transformation.
 If <cite>def_channels</cite> is None, use all channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data_t</strong> : FCSData or numpy array</p>
-<blockquote class="last">
-<div><p>NxD transformed flow cytometry data.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>data_t</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD transformed flow cytometry data.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -366,9 +358,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -390,7 +380,7 @@ If <cite>def_channels</cite> is None, use all channels.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -408,7 +398,8 @@ If <cite>def_channels</cite> is None, use all channels.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.4',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -426,14 +417,11 @@ If <cite>def_channels</cite> is None, use all channels.</p>
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

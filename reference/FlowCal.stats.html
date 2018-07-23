@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.stats module &mdash; FlowCal 1.1.4 documentation</title>
+  <title>FlowCal.stats module &mdash; FlowCal 1.2.0 documentation</title>
   
 
   
@@ -25,29 +25,20 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="FlowCal.transform module" href="FlowCal.transform.html"/>
-        <link rel="prev" title="FlowCal.plot module" href="FlowCal.plot.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FlowCal.transform module" href="FlowCal.transform.html" />
+    <link rel="prev" title="FlowCal.plot module" href="FlowCal.plot.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -63,13 +54,16 @@
           
 
           
+            
+            <img src="../_static/FlowCal_logo.png" class="logo" alt="Logo"/>
+          
           </a>
 
           
             
             
               <div class="version">
-                1.1.4
+                1.2.0
               </div>
             
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">FlowCal</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -185,23 +180,24 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The Coefficient of Variation of the events in the specified
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The Coefficient of Variation of the events in the specified
 channels of <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -219,23 +215,24 @@ standard deviation divided by the mean of such dataset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The geometric coefficient of variation of the events in the
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The geometric coefficient of variation of the events in the
 specified channels of <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -250,23 +247,24 @@ specified channels of <cite>data</cite>.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The geometric mean of the events in the specified channels of
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The geometric mean of the events in the specified channels of
 <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -281,23 +279,24 @@ channels.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The geometric standard deviation of the events in the specified
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The geometric standard deviation of the events in the specified
 channels of <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -312,23 +311,24 @@ channels of <cite>data</cite>.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The Interquartile Range of the events in the specified channels of
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The Interquartile Range of the events in the specified channels of
 <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -346,22 +346,23 @@ between the 25% and the 75% percentiles of such dataset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The mean of the events in the specified channels of <cite>data</cite>.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The mean of the events in the specified channels of <cite>data</cite>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -376,22 +377,23 @@ channels.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The median of the events in the specified channels of <cite>data</cite>.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The median of the events in the specified channels of <cite>data</cite>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -406,22 +408,23 @@ channels.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The mode of the events in the specified channels of <cite>data</cite>.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The mode of the events in the specified channels of <cite>data</cite>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -436,23 +439,24 @@ channels.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The Robust Coefficient of Variation of the events in the specified
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The Robust Coefficient of Variation of the events in the specified
 channels of <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -470,23 +474,24 @@ the Interquartile Range (IQR) divided by the median of such dataset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or numpy array</p>
-<blockquote>
-<div><p>NxD flow cytometry data where N is the number of events and D is
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or numpy array</span></dt>
+<dd><p class="first last">NxD flow cytometry data where N is the number of events and D is
 the number of parameters (aka channels).</p>
-</div></blockquote>
-<p><strong>channels</strong> : int or str or list of int or list of str, optional</p>
-<blockquote>
-<div><p>Channels on which to calculate the statistic. If None, use all
+</dd>
+<dt><strong>channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or str or list of int or list of str, optional</span></dt>
+<dd><p class="first last">Channels on which to calculate the statistic. If None, use all
 channels.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float or numpy array</p>
-<blockquote class="last">
-<div><p>The standard deviation of the events in the specified channels of
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>float or numpy array</strong></dt>
+<dd><p class="first last">The standard deviation of the events in the specified channels of
 <cite>data</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -497,9 +502,7 @@ channels.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -521,7 +524,7 @@ channels.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -539,7 +542,8 @@ channels.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.4',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -557,14 +561,11 @@ channels.</p>
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

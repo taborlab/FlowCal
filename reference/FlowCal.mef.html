@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FlowCal.mef module &mdash; FlowCal 1.1.4 documentation</title>
+  <title>FlowCal.mef module &mdash; FlowCal 1.2.0 documentation</title>
   
 
   
@@ -25,28 +25,19 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="FlowCal 1.1.4 documentation" href="../index.html"/>
-        <link rel="up" title="FlowCal (Python API) Reference" href="modules.html"/>
-        <link rel="next" title="FlowCal.plot module" href="FlowCal.plot.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/my_style.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FlowCal.plot module" href="FlowCal.plot.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -62,13 +53,16 @@
           
 
           
+            
+            <img src="../_static/FlowCal_logo.png" class="logo" alt="Logo"/>
+          
           </a>
 
           
             
             
               <div class="version">
-                1.1.4
+                1.2.0
               </div>
             
           
@@ -119,7 +113,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">FlowCal</a>
@@ -127,9 +121,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -178,52 +173,53 @@
 <p>Functions for transforming flow cytometer data to MEF units.</p>
 <dl class="function">
 <dt id="FlowCal.mef.clustering_gmm">
-<code class="descclassname">FlowCal.mef.</code><code class="descname">clustering_gmm</code><span class="sig-paren">(</span><em>data</em>, <em>n_clusters</em>, <em>tol=1e-07</em>, <em>min_covar=5e-05</em>, <em>scale='logicle'</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.clustering_gmm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find clusters in an array using Gaussian Mixture Models (GMM).</p>
+<code class="descclassname">FlowCal.mef.</code><code class="descname">clustering_gmm</code><span class="sig-paren">(</span><em>data</em>, <em>n_clusters</em>, <em>tol=1e-07</em>, <em>min_covar=None</em>, <em>scale='logicle'</em><span class="sig-paren">)</span><a class="headerlink" href="#FlowCal.mef.clustering_gmm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find clusters in an array using a Gaussian Mixture Model.</p>
 <p>Before clustering, <cite>data</cite> can be automatically rescaled as specified by
 the <cite>scale</cite> argument.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : FCSData or array_like</p>
-<blockquote>
-<div><p>Data to cluster.</p>
-</div></blockquote>
-<p><strong>n_clusters</strong> : int</p>
-<blockquote>
-<div><p>Number of clusters to find.</p>
-</div></blockquote>
-<p><strong>tol</strong> : float, optional</p>
-<blockquote>
-<div><p>Tolerance for convergence of GMM method. Passed directly to
-<code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s GMM.</p>
-</div></blockquote>
-<p><strong>min_covar</strong> : float, optional</p>
-<blockquote>
-<div><p>Minimum covariance. Passed directly to <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s GMM.</p>
-</div></blockquote>
-<p><strong>scale</strong> : str, optional</p>
-<blockquote>
-<div><p>Rescaling applied to <cite>data</cite> before performing clustering. Can be
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData or array_like</span></dt>
+<dd><p class="first last">Data to cluster.</p>
+</dd>
+<dt><strong>n_clusters</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Number of clusters to find.</p>
+</dd>
+<dt><strong>tol</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Tolerance for convergence. Directly passed to either
+<code class="docutils literal"><span class="pre">GaussianMixture</span></code> or <code class="docutils literal"><span class="pre">GMM</span></code>, depending on <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s
+version.</p>
+</dd>
+<dt><strong>min_covar</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">The minimum trace that the initial covariance matrix will have. If
+<code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s version is older than 0.18, <cite>min_covar</cite> is also
+passed directly to <code class="docutils literal"><span class="pre">GMM</span></code>.</p>
+</dd>
+<dt><strong>scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Rescaling applied to <cite>data</cite> before performing clustering. Can be
 either <code class="docutils literal"><span class="pre">linear</span></code> (no rescaling), <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>labels</strong> : array</p>
-<blockquote class="last">
-<div><p>Nx1 array with labels for each element in <cite>data</cite>, assigning
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>labels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Nx1 array with labels for each element in <cite>data</cite>, assigning
 <code class="docutils literal"><span class="pre">data[i]</span></code> to cluster <code class="docutils literal"><span class="pre">labels[i]</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>GMM finds clusters by fitting a linear combination of <cite>n_clusters</cite>
-Gaussian probability density functions (pdf) to <cite>data</cite> using
-Expectation Maximization (EM).</p>
-<p>GMM can be fairly sensitive to the initial parameter choice. To
+<p>A Gaussian Mixture Model finds clusters by fitting a linear combination
+of <cite>n_clusters</cite> Gaussian probability density functions (pdf) to <cite>data</cite>
+using Expectation Maximization (EM).</p>
+<p>This method can be fairly sensitive to the initial parameter choice. To
 generate a reasonable set of initial conditions, <cite>clustering_gmm</cite>
 first divides all points in <cite>data</cite> into <cite>n_clusters</cite> groups of the
 same size based on their Euclidean distance to the minimum value. Then,
@@ -231,11 +227,10 @@ for each group, the 50% samples farther away from the mean are
 discarded. The mean and covariance are calculated from the remaining
 samples of each group, and used as initial conditions for the GMM EM
 algorithm.</p>
-<p><cite>clustering_gmm</cite> internally uses <cite>GMM</cite> from the <code class="docutils literal"><span class="pre">scikit-learn</span></code>
-library, with full covariance matrices for each cluster and a fixed,
-uniform set of weights. This means that <cite>clustering_gmm</cite> implicitly
-assumes that all bead subpopulations have roughly the same number of
-events. For more information, consult <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s documentation.</p>
+<p><cite>clustering_gmm</cite> internally uses a <cite>GaussianMixture</cite> object from the
+<code class="docutils literal"><span class="pre">scikit-learn</span></code> library (<code class="docutils literal"><span class="pre">GMM</span></code> if <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s version is
+lower than 0.18), with full covariance matrices for each cluster. For
+more information, consult <code class="docutils literal"><span class="pre">scikit-learn</span></code>&#8216;s documentation.</p>
 </dd></dl>
 
 <dl class="function">
@@ -246,45 +241,42 @@ events. For more information, consult <code class="docutils literal"><span class
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_rfi</strong> : array</p>
-<blockquote>
-<div><p>Fluorescence values of bead populations in units of Relative
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fl_rfi</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Fluorescence values of bead populations in units of Relative
 Fluorescence Intensity (RFI).</p>
-</div></blockquote>
-<p><strong>fl_mef</strong> : array</p>
-<blockquote>
-<div><p>Fluorescence values of bead populations in MEF units.</p>
-</div></blockquote>
+</dd>
+<dt><strong>fl_mef</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Fluorescence values of bead populations in MEF units.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>std_crv</strong> : function</p>
-<blockquote>
-<div><p>Standard curve that transforms fluorescence values from RFI to MEF
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>std_crv</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">Standard curve that transforms fluorescence values from RFI to MEF
 units. This function has the signature <code class="docutils literal"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">std_crv(x)</span></code>, where
 <cite>x</cite> is some fluorescence value in RFI and <cite>y</cite> is the same
 fluorescence expressed in MEF units.</p>
-</div></blockquote>
-<p><strong>beads_model</strong> : function</p>
-<blockquote>
-<div><p>Fluorescence model of calibration beads. This function has the
+</dd>
+<dt><strong>beads_model</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">Fluorescence model of calibration beads. This function has the
 signature <code class="docutils literal"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">beads_model(x)</span></code>, where <cite>x</cite> is the fluorescence of
 some bead population in RFI units and <cite>y</cite> is the same fluorescence
 expressed in MEF units, without autofluorescence.</p>
-</div></blockquote>
-<p><strong>beads_params</strong> : array</p>
-<blockquote>
-<div><p>Fitted parameters of the bead fluorescence model: <code class="docutils literal"><span class="pre">[m,</span> <span class="pre">b,</span>
+</dd>
+<dt><strong>beads_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Fitted parameters of the bead fluorescence model: <code class="docutils literal"><span class="pre">[m,</span> <span class="pre">b,</span>
 <span class="pre">fl_mef_auto]</span></code>.</p>
-</div></blockquote>
-<p><strong>beads_model_str</strong> : str</p>
-<blockquote>
-<div><p>String representation of the beads model used.</p>
-</div></blockquote>
-<p><strong>beads_params_names</strong> : list of str</p>
-<blockquote class="last">
-<div><p>Names of the parameters in a list, in the same order as they are
+</dd>
+<dt><strong>beads_model_str</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">String representation of the beads model used.</p>
+</dd>
+<dt><strong>beads_params_names</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of str</span></dt>
+<dd><p class="first last">Names of the parameters in a list, in the same order as they are
 given in <cite>beads_params</cite>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -349,186 +341,241 @@ conveniently as:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_beads</strong> : FCSData object</p>
-<blockquote>
-<div><p>Flow cytometry data, taken from calibration beads.</p>
-</div></blockquote>
-<p><strong>mef_values</strong> : array</p>
-<blockquote>
-<div><p>Known MEF values of the calibration beads&#8217; subpopulations, for
-each channel specified in <cite>mef_channels</cite>.</p>
-</div></blockquote>
-<p><strong>mef_channels</strong> : int, or str, or list of int, or list of str</p>
-<blockquote>
-<div><p>Channels for which to generate transformation functions.</p>
-</div></blockquote>
-<p><strong>verbose</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag specifying whether to print information about step completion
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data_beads</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FCSData object</span></dt>
+<dd><p class="first last">Flow cytometry data describing calibration beads.</p>
+</dd>
+<dt><strong>mef_values</strong> <span class="classifier-delimiter">:</span> <span class="classifier">sequence of sequences</span></dt>
+<dd><p class="first last">Known MEF values for the calibration bead subpopulations, for each
+channel specified in <cite>mef_channels</cite>. The innermost sequences must
+have the same length (the same number of bead subpopulations must
+exist for each channel).</p>
+</dd>
+<dt><strong>mef_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, or str, or list of int, or list of str</span></dt>
+<dd><p class="first last">Channels for which to generate transformation functions.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag specifying whether to print information about step completion
 and warnings.</p>
-</div></blockquote>
-<p><strong>plot</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag specifying whether to produce diagnostic plots.</p>
-</div></blockquote>
-<p><strong>plot_dir</strong> : str, optional</p>
-<blockquote>
-<div><p>Directory where to save diagnostics plots. Ignored if <cite>plot</cite> is
+</dd>
+<dt><strong>plot</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag specifying whether to produce diagnostic plots.</p>
+</dd>
+<dt><strong>plot_dir</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Directory where to save diagnostics plots. Ignored if <cite>plot</cite> is
 False. If <code class="docutils literal"><span class="pre">plot==True</span></code> and <code class="docutils literal"><span class="pre">plot_dir</span> <span class="pre">is</span> <span class="pre">None</span></code>, plot without
 saving.</p>
-</div></blockquote>
-<p><strong>plot_filename</strong> : str, optional</p>
-<blockquote>
-<div><p>Name to use for plot files. If None, use <code class="docutils literal"><span class="pre">str(data_beads)</span></code>.</p>
-</div></blockquote>
-<p><strong>full_output</strong> : bool, optional</p>
-<blockquote>
-<div><p>Flag specifying whether to include intermediate results in the
-output. If <cite>full_output</cite> is True, the function returns a named
-tuple with fields as described below. If <cite>full_output</cite> is False,
-the function only returns the calculated transformation function.</p>
-</div></blockquote>
+</dd>
+<dt><strong>plot_filename</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Name to use for plot files. If None, use <code class="docutils literal"><span class="pre">str(data_beads)</span></code>.</p>
+</dd>
+<dt><strong>full_output</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Flag specifying whether to include intermediate results in the
+output. If <cite>full_output</cite> is True, the function returns a
+<cite>MEFOutput</cite> <code class="docutils literal"><span class="pre">namedtuple</span></code> with fields as described below. If
+<cite>full_output</cite> is False, the function only returns the calculated
+transformation function.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>transform_fxn</strong> : function</p>
-<blockquote>
-<div><p>Transformation function to convert flow cytometry data from RFI
-units to MEF. This function has the same basic signature as the
-general transformation function specified in <code class="docutils literal"><span class="pre">FlowCal.transform</span></code>.</p>
-</div></blockquote>
-<p><strong>mef_channels</strong> : int, or str, or list, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
-<blockquote>
-<div><p>Channels on which transformation functions have been generated.
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>transform_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first">Transformation function to convert flow cytometry data from RFI
+units to MEF. This function has the following signature:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">data_mef</span> <span class="o">=</span> <span class="n">transform_fxn</span><span class="p">(</span><span class="n">data_rfi</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>mef_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, or str, or list, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first last">Channels on which the transformation function has been generated.
 Directly copied from the <cite>mef_channels</cite> argument.</p>
-</div></blockquote>
-<p><strong>clustering</strong> : dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
-<blockquote>
-<div><p>Results of the clustering step, containing the following fields:</p>
-<dl class="docutils">
-<dt>labels <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
-<dd><p class="first last">Labels for each event in <cite>data_beads</cite>.</p>
+</dd>
+<dt><strong>clustering</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first">Results of the clustering step. The structure of this dictionary
+is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">clustering</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>A description of each <code class="docutils literal"><span class="pre">&quot;key&quot;:</span> <span class="pre">value</span></code> is given below.</p>
+<dl class="last docutils">
+<dt>&#8220;labels&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">array</span></dt>
+<dd><p class="first last">Array of length <code class="docutils literal"><span class="pre">N</span></code>, where <code class="docutils literal"><span class="pre">N</span></code> is the number of events in
+<cite>data_beads</cite>. This array contains labels indicating which
+subpopulation each event has been assigned to by the clustering
+algorithm. Labels range from <code class="docutils literal"><span class="pre">0</span></code> to <code class="docutils literal"><span class="pre">M</span> <span class="pre">-</span> <span class="pre">1</span></code>, where <code class="docutils literal"><span class="pre">M</span></code> is
+the number of MEF values specified, and therefore the number of
+subpopulations identified by the clustering algorithm.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p><strong>statistic</strong> : dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
-<blockquote>
-<div><p>Results of the calculation of bead subpopulations&#8217; fluorescence,
-containing the following fields:</p>
-<dl class="docutils">
-<dt>values <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">The representative fluorescence values of each
-subpopulation, for each channel in <cite>mef_channels</cite>.</p>
+</dd>
+<dt><strong>statistic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first">Results of the calculation of bead subpopulations&#8217; fluorescence.
+The structure of this dictionary is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">statistic</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="o">...</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>A description of each <code class="docutils literal"><span class="pre">&quot;key&quot;:</span> <span class="pre">value</span></code> is given below.</p>
+<dl class="last docutils">
+<dt>&#8220;values&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of arrays</span></dt>
+<dd><p class="first last">Each array contains the representative fluorescence values of
+all subpopulations, for a specific fluorescence channel from
+<cite>mef_channels</cite>. Therefore, each array has a length equal to the
+number of subpopulations, and the outer list has as many arrays
+as the number of channels in <cite>mef_channels</cite>.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p><strong>selection</strong> : dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
-<blockquote>
-<div><p>Results of the subpopulation selection step, containing the
-following fields:</p>
-<dl class="docutils">
-<dt>rfi <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">The fluorescence values of each selected subpopulation in
-RFI units, for each channel in <cite>mef_channels</cite>.</p>
 </dd>
-<dt>mef <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">The fluorescence values of each selected subpopulation in
-MEF units, for each channel in <cite>mef_channels</cite>.</p>
+<dt><strong>selection</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first">Results of the subpopulation selection step. The structure of this
+dictionary is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;rfi&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+             <span class="s2">&quot;mef&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="o">...</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>A description of each <code class="docutils literal"><span class="pre">&quot;key&quot;:</span> <span class="pre">value</span></code> is given below.</p>
+<dl class="last docutils">
+<dt>&#8220;rfi&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of arrays</span></dt>
+<dd><p class="first last">Each array contains the fluorescence values of each selected
+subpopulation in RFI units, for a specific fluorescence channel
+from <cite>mef_channels</cite>. The outer list has as many arrays as the
+number of channels in <cite>mef_channels</cite>. Because the selection
+step may discard subpopulations, each array has a length less
+than or equal to the total number of subpopulations.
+Furthermore, different arrays in this list may not have the
+same length. However, the length of each array is consistent
+with the corresponding array in <code class="docutils literal"><span class="pre">selection[&quot;mef&quot;]</span></code> (see
+below).</p>
+</dd>
+<dt>&#8220;mef&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of arrays</span></dt>
+<dd><p class="first last">Each array contains the fluorescence values of each selected
+subpopulation in MEF units, for a specific fluorescence channel
+from <cite>mef_channels</cite>. The outer list has as many arrays as the
+number of channels in <cite>mef_channels</cite>. Because the selection
+step may discard subpopulations, each array has a length less
+than or equal to the total number of subpopulations.
+Furthermore, different arrays in this list may not have the
+same length. However, the length of each array is consistent
+with the corresponding array in <code class="docutils literal"><span class="pre">selection[&quot;rfi&quot;]</span></code> (see
+above).</p>
 </dd>
 </dl>
-</div></blockquote>
-<p><strong>fitting</strong> : dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></p>
-<blockquote>
-<div><p>Results of the model fitting step, containing the following fields:</p>
-<dl class="docutils">
-<dt>std_crv <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">Functions encoding the standard curves, for each channel in
-<cite>mef_channels</cite>.</p>
 </dd>
-<dt>beads_model <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">Functions encoding the fluorescence model of the
-calibration beads, for each channel in <cite>mef_channels</cite>.</p>
+<dt><strong>fitting</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, only if <code class="docutils literal"><span class="pre">full_output==True</span></code></span></dt>
+<dd><p class="first">Results of the model fitting step. The structure of this dictionary
+is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;std_crv&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">func</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+             <span class="s2">&quot;beads_model&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">func</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+             <span class="s2">&quot;beads_params&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+             <span class="s2">&quot;beads_model_str&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+             <span class="s2">&quot;beads_params_names&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="o">...</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>A description of each <code class="docutils literal"><span class="pre">&quot;key&quot;:</span> <span class="pre">value</span></code> is given below.</p>
+<dl class="last docutils">
+<dt>&#8220;std_crv&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of functions</span></dt>
+<dd><p class="first last">Functions encoding the fitted standard curves, for each channel
+in <cite>mef_channels</cite>. Each element of this list is the <code class="docutils literal"><span class="pre">std_crv</span></code>
+output of the fitting function (see required signature of the
+<code class="docutils literal"><span class="pre">fitting_fxn</span></code> optional parameter), after applying it to the
+MEF and RFI fluorescence values of a specific channel from
+<cite>mef_channels</cite> .</p>
 </dd>
-<dt>beads_params <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
-<dd><p class="first last">Fitted parameters of the bead fluorescence model, for each
-channel in <cite>mef_chanels</cite>.</p>
+<dt>&#8220;beads_model&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of functions</span></dt>
+<dd><p class="first last">Functions encoding the fluorescence model of the calibration
+beads, for each channel in <cite>mef_channels</cite>. Each element of this
+list is the <code class="docutils literal"><span class="pre">beads_model</span></code> output of the fitting function (see
+required signature of the <code class="docutils literal"><span class="pre">fitting_fxn</span></code> optional parameter),
+after applying it to the MEF and RFI fluorescence values of a
+specific channel from <cite>mef_channels</cite> .</p>
 </dd>
-<dt>beads_model_str <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dt>&#8220;beads_params&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of arrays</span></dt>
+<dd><p class="first last">Fitted parameter values of the bead fluorescence model, for
+each channel in <cite>mef_chanels</cite>. Each element of this list is the
+<code class="docutils literal"><span class="pre">beads_params</span></code> output of the fitting function (see required
+signature of the <code class="docutils literal"><span class="pre">fitting_fxn</span></code> optional parameter), after
+applying it to the MEF and RFI fluorescence values of a
+specific channel from <cite>mef_channels</cite>.</p>
+</dd>
+<dt>&#8220;beads_model_str&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of str</span></dt>
 <dd><p class="first last">String representation of the bead models used, for each channel
-in <cite>mef_channels</cite>.</p>
+in <cite>mef_channels</cite>. Each element of this list is the
+<code class="docutils literal"><span class="pre">beads_model_str</span></code> output of the fitting function (see
+required signature of the <code class="docutils literal"><span class="pre">fitting_fxn</span></code> optional parameter),
+after applying it to the MEF and RFI fluorescence values of a
+specific channel from <cite>mef_channels</cite> .</p>
 </dd>
-<dt>beads_params_names <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dt>&#8220;beads_params_names&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">list of list</span></dt>
 <dd><p class="first last">Names of the parameters given in <cite>beads_params</cite>, for each
-channel in <cite>mef_channels</cite>.</p>
+channel in <cite>mef_channels</cite>. Each element of this list is the
+<code class="docutils literal"><span class="pre">beads_params_names</span></code> output of the fitting function (see
+required signature of the <code class="docutils literal"><span class="pre">fitting_fxn</span></code> optional parameter),
+after applying it to the MEF and RFI fluorescence values of a
+specific channel from <cite>mef_channels</cite> .</p>
 </dd>
 </dl>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-odd field"><td>&#160;</td><td class="field-body"><p class="first"><strong>clustering_fxn</strong> : function, optional</p>
-<blockquote>
-<div><p>Function used for clustering, or identification of subpopulations.
+<tr class="field-odd field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>clustering_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function, optional</span></dt>
+<dd><p class="first">Function used for clustering, or identification of subpopulations.
 Must have the following signature:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">clustering_fxn</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">,</span> <span class="o">**</span><span class="n">clustering_params</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where <cite>data</cite> is a NxD FCSData object or numpy array, <cite>n_clusters</cite>
+<p class="last">where <cite>data</cite> is a NxD FCSData object or numpy array, <cite>n_clusters</cite>
 is the expected number of bead subpopulations, and <cite>labels</cite> is a 1D
 numpy array of length N, assigning each event in <cite>data</cite> to one
 subpopulation.</p>
-</div></blockquote>
-<p><strong>clustering_params</strong> : dict, optional</p>
-<blockquote>
-<div><p>Additional keyword parameters to pass to <cite>clustering_fxn</cite>.</p>
-</div></blockquote>
-<p><strong>clustering_channels</strong> : list, optional</p>
-<blockquote>
-<div><p>Channels used for clustering. If not specified, use <cite>mef_channels</cite>.
+</dd>
+<dt><strong>clustering_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional keyword parameters to pass to <cite>clustering_fxn</cite>.</p>
+</dd>
+<dt><strong>clustering_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">Channels used for clustering. If not specified, use <cite>mef_channels</cite>.
 If more than three channels are specified and <cite>plot</cite> is True, only
 a 3D scatter plot will be produced using the first three channels.</p>
-</div></blockquote>
-<p><strong>statistic_fxn</strong> : function, optional</p>
-<blockquote>
-<div><p>Function used to calculate the representative fluorescence of each
+</dd>
+<dt><strong>statistic_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function, optional</span></dt>
+<dd><p class="first">Function used to calculate the representative fluorescence of each
 subpopulation. Must have the following signature:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">s</span> <span class="o">=</span> <span class="n">statistic_fxn</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">statistic_params</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where <cite>data</cite> is a 1D FCSData object or numpy array, and <cite>s</cite> is a
+<p class="last">where <cite>data</cite> is a 1D FCSData object or numpy array, and <cite>s</cite> is a
 float. Statistical functions from numpy, scipy, or FlowCal.stats
 are valid options.</p>
-</div></blockquote>
-<p><strong>statistic_params</strong> : dict, optional</p>
-<blockquote>
-<div><p>Additional keyword parameters to pass to <cite>statistic_fxn</cite>.</p>
-</div></blockquote>
-<p><strong>selection_fxn</strong> : function, optional</p>
-<blockquote>
-<div><p>Function to use for bead population selection. Must have the
+</dd>
+<dt><strong>statistic_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional keyword parameters to pass to <cite>statistic_fxn</cite>.</p>
+</dd>
+<dt><strong>selection_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function, optional</span></dt>
+<dd><p class="first">Function to use for bead population selection. Must have the
 following signature:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">selected_mask</span> <span class="o">=</span> <span class="n">selection_fxn</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="o">**</span><span class="n">selection_params</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where <cite>data_list</cite> is a list of FCSData objects, each one cotaining
+<p class="last">where <cite>data_list</cite> is a list of FCSData objects, each one containing
 the events of one population, and <cite>selected_mask</cite> is a boolean
 array indicating whether the population has been selected (True) or
 discarded (False). If None, don&#8217;t use a population selection
 procedure.</p>
-</div></blockquote>
-<p><strong>selection_params</strong> : dict, optional</p>
-<blockquote>
-<div><p>Additional keyword parameters to pass to <cite>selection_fxn</cite>.</p>
-</div></blockquote>
-<p><strong>fitting_fxn</strong> : function, optional</p>
-<blockquote>
-<div><p>Function used to fit the beads fluorescence model and obtain a
+</dd>
+<dt><strong>selection_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional keyword parameters to pass to <cite>selection_fxn</cite>.</p>
+</dd>
+<dt><strong>fitting_fxn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function, optional</span></dt>
+<dd><p class="first">Function used to fit the beads fluorescence model and obtain a
 standard curve. Must have the following signature:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">std_crv</span><span class="p">,</span> <span class="n">beads_model</span><span class="p">,</span> <span class="n">beads_params</span><span class="p">,</span> \
 <span class="n">beads_model_str</span><span class="p">,</span> <span class="n">beads_params_names</span> <span class="o">=</span> <span class="n">fitting_fxn</span><span class="p">(</span>
     <span class="n">fl_rfi</span><span class="p">,</span> <span class="n">fl_mef</span><span class="p">,</span> <span class="o">**</span><span class="n">fitting_params</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where <cite>std_crv</cite> is a function implementing the standard curve,
+<p class="last">where <cite>std_crv</cite> is a function implementing the standard curve,
 <cite>beads_model</cite> is a function implementing the beads fluorescence
 model, <cite>beads_params</cite> is an array containing the fitted parameters
 of the beads model, <cite>beads_model_str</cite> is a string representation
@@ -538,36 +585,31 @@ parameter names in the same order as they are given in
 values of the beads in RFI units and MEF units, respectively.
 Note that the standard curve and the fitted beads model are not
 necessarily the same.</p>
-</div></blockquote>
-<p><strong>fitting_params</strong> : dict, optional</p>
-<blockquote class="last">
-<div><p>Additional keyword parameters to pass to <cite>fitting_fxn</cite>.</p>
-</div></blockquote>
+</dd>
+<dt><strong>fitting_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Additional keyword parameters to pass to <cite>fitting_fxn</cite>.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
 <p>The steps involved in generating the MEF transformation function are:</p>
-<ol class="arabic">
-<li><p class="first">The individual subpopulations of beads are first identified using a
-clustering method of choice.</p>
-</li>
-<li><p class="first">The fluorescence of each subpopulation is calculated, for each
-channel in <cite>mef_channels</cite>.</p>
-</li>
-<li><p class="first">Some subpopulations are then discarded if they are close to either
+<ol class="arabic simple">
+<li>The individual subpopulations of beads are first identified using a
+clustering method of choice. Clustering is performed in all
+specified channels simultaneously.</li>
+<li>The fluorescence of each subpopulation is calculated, for each
+channel in <cite>mef_channels</cite>.</li>
+<li>Some subpopulations are then discarded if they are close to either
 the minimum or the maximum channel range limits. In addition, if the
 MEF value of some subpopulation is unknown (represented as a
-<code class="docutils literal"><span class="pre">np.nan</span></code> in <cite>mef_values</cite>), the whole subpopulation is also</p>
-<blockquote>
-<div><p>discarded.</p>
-</div></blockquote>
-</li>
-<li><p class="first">The measured fluorescence of each subpopulation is compared with
+<code class="docutils literal"><span class="pre">np.nan</span></code> in <cite>mef_values</cite>), the whole subpopulation is also
+discarded.</li>
+<li>The measured fluorescence of each subpopulation is compared with
 the known MEF values in <cite>mef_values</cite>, and a standard curve function
-is generated using the appropriate MEF model.</p>
-</li>
+is generated using the appropriate MEF model.</li>
 </ol>
 <p>At the end, a transformation function is generated using the calculated
 standard curves, <cite>mef_channels</cite>, and <code class="docutils literal"><span class="pre">FlowCal.transform.to_mef()</span></code>.</p>
@@ -575,6 +617,76 @@ standard curves, <cite>mef_channels</cite>, and <code class="docutils literal"><
 flow cytometry samples only yields correct results if they have been
 taken at the same settings as the calibration beads, for all channels
 in <cite>mef_channels</cite>.</p>
+<p class="rubric">Examples</p>
+<p>Here is a simple application of this function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transform_fxn</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">mef</span><span class="o">.</span><span class="n">get_transform_fxn</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">beads_data</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">mef_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="s1">&#39;FL3&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">mef_values</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>    <span class="mi">0</span><span class="p">,</span>   <span class="mi">646</span><span class="p">,</span>   <span class="mi">1704</span><span class="p">,</span>   <span class="mi">4827</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="mi">15991</span><span class="p">,</span> <span class="mi">47609</span><span class="p">,</span> <span class="mi">135896</span><span class="p">,</span> <span class="mi">273006</span><span class="p">],</span>
+<span class="gp">... </span>                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>    <span class="mi">0</span><span class="p">,</span>  <span class="mi">1614</span><span class="p">,</span>   <span class="mi">4035</span><span class="p">,</span>   <span class="mi">12025</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="mi">31896</span><span class="p">,</span> <span class="mi">95682</span><span class="p">,</span> <span class="mi">353225</span><span class="p">,</span> <span class="mi">1077421</span><span class="p">]],</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_mef</span> <span class="o">=</span> <span class="n">transform_fxn</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">sample_rfi</span><span class="p">,</span>
+<span class="gp">... </span>                           <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="s1">&#39;FL3&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Here, we first generate <code class="docutils literal"><span class="pre">transform_fxn</span></code> from flow cytometry data
+contained in <code class="docutils literal"><span class="pre">FCSData</span></code> object <code class="docutils literal"><span class="pre">beads_data</span></code>, for channels FL1 and
+FL3, using provided MEF values for each one of these channels. In the
+next line, we use the resulting transformation function to transform
+cell sample data in RFI to MEF.</p>
+<p>More data about intermediate steps can be obtained with the option
+<code class="docutils literal"><span class="pre">full_output=True</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_transform_output</span> <span class="o">=</span> <span class="n">FlowCal</span><span class="o">.</span><span class="n">mef</span><span class="o">.</span><span class="n">get_transform_fxn</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">beads_data</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">mef_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="s1">&#39;FL3&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">mef_values</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>    <span class="mi">0</span><span class="p">,</span>   <span class="mi">646</span><span class="p">,</span>   <span class="mi">1704</span><span class="p">,</span>   <span class="mi">4827</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="mi">15991</span><span class="p">,</span> <span class="mi">47609</span><span class="p">,</span> <span class="mi">135896</span><span class="p">,</span> <span class="mi">273006</span><span class="p">],</span>
+<span class="gp">... </span>                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>    <span class="mi">0</span><span class="p">,</span>  <span class="mi">1614</span><span class="p">,</span>   <span class="mi">4035</span><span class="p">,</span>   <span class="mi">12025</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="mi">31896</span><span class="p">,</span> <span class="mi">95682</span><span class="p">,</span> <span class="mi">353225</span><span class="p">,</span> <span class="mi">1077421</span><span class="p">]],</span>
+<span class="gp">... </span>    <span class="n">full_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, the output <code class="docutils literal"><span class="pre">get_transform_output</span></code> will be a
+<cite>MEFOutput</cite> <code class="docutils literal"><span class="pre">namedtuple</span></code> similar to the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FlowCal</span><span class="o">.</span><span class="n">mef</span><span class="o">.</span><span class="n">MEFOutput</span><span class="p">(</span>
+    <span class="n">transform_fxn</span><span class="o">=&lt;</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span> <span class="nb">object</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">mef_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FL1&#39;</span><span class="p">,</span> <span class="s1">&#39;FL3&#39;</span><span class="p">],</span>
+    <span class="n">clustering</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;labels&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">...</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="n">statistic</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;values&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mi">101</span><span class="p">,</span>  <span class="mi">150</span><span class="p">,</span>  <span class="mi">231</span><span class="p">,</span>  <span class="mi">433</span><span class="p">,</span>
+                              <span class="mi">1241</span><span class="p">,</span> <span class="mi">3106</span><span class="p">,</span> <span class="mi">7774</span><span class="p">,</span> <span class="mi">9306</span><span class="p">]),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>   <span class="mi">3</span><span class="p">,</span>   <span class="mi">30</span><span class="p">,</span>   <span class="mi">71</span><span class="p">,</span>  <span class="mi">204</span><span class="p">,</span>
+                               <span class="mi">704</span><span class="p">,</span> <span class="mi">2054</span><span class="p">,</span> <span class="mi">6732</span><span class="p">,</span> <span class="mi">9912</span><span class="p">])]</span>
+    <span class="p">},</span>
+    <span class="n">selection</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;rfi&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>  <span class="mi">101</span><span class="p">,</span>    <span class="mi">150</span><span class="p">,</span>    <span class="mi">231</span><span class="p">,</span>    <span class="mi">433</span><span class="p">,</span>
+                            <span class="mi">1241</span><span class="p">,</span>   <span class="mi">3106</span><span class="p">,</span>   <span class="mi">7774</span><span class="p">]),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>  <span class="mi">30</span><span class="p">,</span>      <span class="mi">71</span><span class="p">,</span>    <span class="mi">204</span><span class="p">,</span>    <span class="mi">704</span><span class="p">,</span>
+                           <span class="mi">2054</span><span class="p">,</span>    <span class="mi">6732</span><span class="p">])]</span>
+        <span class="s1">&#39;mef&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">646</span><span class="p">,</span>   <span class="mi">1704</span><span class="p">,</span>   <span class="mi">4827</span><span class="p">,</span>
+                           <span class="mi">15991</span><span class="p">,</span>  <span class="mi">47609</span><span class="p">,</span> <span class="mi">135896</span><span class="p">]),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mi">1614</span><span class="p">,</span>   <span class="mi">4035</span><span class="p">,</span>  <span class="mi">12025</span><span class="p">,</span>  <span class="mi">31896</span><span class="p">,</span>
+                           <span class="mi">95682</span><span class="p">,</span> <span class="mi">353225</span><span class="p">])]</span>
+    <span class="p">},</span>
+    <span class="n">fitting</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;std_crv&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">function</span> <span class="o">&lt;</span><span class="k">lambda</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+                     <span class="o">&lt;</span><span class="n">function</span> <span class="o">&lt;</span><span class="k">lambda</span><span class="o">&gt;&gt;</span><span class="p">]</span>
+        <span class="s1">&#39;beads_model&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">function</span> <span class="o">&lt;</span><span class="k">lambda</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+                         <span class="o">&lt;</span><span class="n">function</span> <span class="o">&lt;</span><span class="k">lambda</span><span class="o">&gt;&gt;</span><span class="p">]</span>
+        <span class="s1">&#39;beads_params&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mf">1.09e0</span><span class="p">,</span> <span class="mf">2.02e0</span><span class="p">,</span> <span class="mf">1.15e3</span><span class="p">]),</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">9.66e-1</span><span class="p">,</span> <span class="mf">4.17e0</span><span class="p">,</span> <span class="mf">6.63e1</span><span class="p">])]</span>
+        <span class="s1">&#39;beads_model_str&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;m*log(fl_rfi) + b = log(fl_mef_auto + fl_mef)&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;m*log(fl_rfi) + b = log(fl_mef_auto + fl_mef)&#39;</span><span class="p">]</span>
+        <span class="s1">&#39;beads_params_names&#39;</span> <span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;fl_mef_auto],</span>
+                                <span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;fl_mef_auto]]</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -585,44 +697,40 @@ in <cite>mef_channels</cite>.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fl_rfi</strong> : array_like</p>
-<blockquote>
-<div><p>Fluorescence of the calibration beads&#8217; subpopulations, in RFI
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fl_rfi</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">Fluorescence of the calibration beads&#8217; subpopulations, in RFI
 units.</p>
-</div></blockquote>
-<p><strong>fl_mef</strong> : array_like</p>
-<blockquote>
-<div><p>Fluorescence of the calibration beads&#8217; subpopulations, in MEF
+</dd>
+<dt><strong>fl_mef</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">Fluorescence of the calibration beads&#8217; subpopulations, in MEF
 units.</p>
-</div></blockquote>
-<p><strong>beads_model</strong> : function</p>
-<blockquote>
-<div><p>Fluorescence model of the calibration beads.</p>
-</div></blockquote>
-<p><strong>std_crv</strong> : function</p>
-<blockquote>
-<div><p>The standard curve, mapping relative fluorescence (RFI) units to
+</dd>
+<dt><strong>beads_model</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">Fluorescence model of the calibration beads.</p>
+</dd>
+<dt><strong>std_crv</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">The standard curve, mapping relative fluorescence (RFI) units to
 MEF units.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>xscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
-</div></blockquote>
-<p><strong>yscale</strong> : str, optional</p>
-<blockquote>
-<div><p>Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
-</div></blockquote>
-<p><strong>xlim</strong> : tuple, optional</p>
-<blockquote>
-<div><p>Limits for the x axis.</p>
-</div></blockquote>
-<p><strong>ylim</strong> : tuple, optional</p>
-<blockquote class="last">
-<div><p>Limits for the y axis.</p>
-</div></blockquote>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>xscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the x axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
+</dd>
+<dt><strong>yscale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Scale of the y axis, either <code class="docutils literal"><span class="pre">linear</span></code> or <code class="docutils literal"><span class="pre">log</span></code>.</p>
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the x axis.</p>
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Limits for the y axis.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -643,34 +751,33 @@ deviations.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>populations</strong> : list of 1D arrays or 1-channel FCSData objects</p>
-<blockquote>
-<div><p>Populations to select or discard.</p>
-</div></blockquote>
-<p><strong>low, high</strong> : int or float</p>
-<blockquote>
-<div><p>Low and high thresholds. Required if the elements in <cite>populations</cite>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>populations</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of 1D arrays or 1-channel FCSData objects</span></dt>
+<dd><p class="first last">Populations to select or discard.</p>
+</dd>
+<dt><strong>low, high</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd><p class="first last">Low and high thresholds. Required if the elements in <cite>populations</cite>
 are numpy arrays. If not specified, and the elements in
 <cite>populations</cite> are FCSData objects, use 1.5% and 98.5% of the range
 in <code class="docutils literal"><span class="pre">populations[0].range</span></code>.</p>
-</div></blockquote>
-<p><strong>n_std_low, n_std_high</strong> : float, optional</p>
-<blockquote>
-<div><p>Number of standard deviations from <cite>low</cite> and <cite>high</cite>, respectively,
+</dd>
+<dt><strong>n_std_low, n_std_high</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Number of standard deviations from <cite>low</cite> and <cite>high</cite>, respectively,
 that a population&#8217;s mean has to be closer than to be discarded.</p>
-</div></blockquote>
-<p><strong>scale</strong> : str, optional</p>
-<blockquote>
-<div><p>Rescaling applied to <cite>populations</cite> before calculating means and
+</dd>
+<dt><strong>scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Rescaling applied to <cite>populations</cite> before calculating means and
 standard deviations. Can be either <code class="docutils literal"><span class="pre">linear</span></code> (no rescaling),
 <code class="docutils literal"><span class="pre">log</span></code>, or <code class="docutils literal"><span class="pre">logicle</span></code>.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>selected_mask</strong> : boolean array</p>
-<blockquote class="last">
-<div><p>Flags indicating whether a population has been selected.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>selected_mask</strong> <span class="classifier-delimiter">:</span> <span class="classifier">boolean array</span></dt>
+<dd><p class="first last">Flags indicating whether a population has been selected.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -681,9 +788,7 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -703,7 +808,7 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -721,7 +826,8 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.1.4',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -739,14 +845,11 @@ standard deviations. Can be either <code class="docutils literal"><span class="p
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
