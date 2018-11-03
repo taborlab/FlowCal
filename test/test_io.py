@@ -2712,11 +2712,44 @@ class TestFCSDataPickle(unittest.TestCase):
         # Check contents of attrs affected by pickling
         pickle_sensitive_attrs = ['_resolution', '_range', '_amplifier_gain',
             '_detector_voltage', '_amplification_type', '_channels',
-            '_acquisition_end_time', '_acquisition_start_time', '_time_step'
+            '_acquisition_end_time', '_acquisition_start_time', '_time_step',
             '_data_type', '_analysis', '_text', '_infile']
-        for attr in pickle_sensitive_attrs:
-            if hasattr(self.d, attr):
-                self.assertEqual(getattr(self.d, attr), getattr(test_fcs, attr))
+        # Also test computed (property) attrs
+        computed_attrs = [
+            'infile',
+            'text',
+            'analysis',
+            'data_type',
+            'time_step',
+            'acquisition_start_time',
+            'acquisition_end_time',
+            'acquisition_time',
+            'channels',
+        ]
+        # And functions
+        functions = [
+            'amplification_type',
+            'detector_voltage',
+            'amplifier_gain',
+            'range',
+            'resolution',
+            'hist_bins',
+        ]
+
+        # Confirm attributes are reconstituted
+        for attr in pickle_sensitive_attrs + computed_attrs:
+            self.assertEqual(getattr(self.d, attr), getattr(test_fcs, attr))
+        # Confirm that functions produce the same output
+        for func in functions:
+            found = getattr(test_fcs, func)()
+            expected = getattr(self.d, func)()
+            if func in ['hist_bins']: # Must compare sub-arrays
+                for found_subarr, expected_subarr in zip(found, expected):
+                    np.testing.assert_array_equal(found_subarr, expected_subarr)
+            else:
+                self.assertEqual(expected, found)
+        # Confirm data is identical
+        np.testing.assert_array_equal(self.d, test_fcs)
 
     def tearDown(self):
         os.remove(self.test_file)

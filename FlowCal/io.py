@@ -1760,22 +1760,80 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_resolution'):
             self._resolution = copy.deepcopy(obj._resolution)
 
-    # override __reduce__ and __setstate__ to fix Issue #277
-    # Adapted from https://stackoverflow.com/a/26599346
     def __reduce__(self):
-        pickled_state = super(FCSData, self).__reduce__() # parent's __reduce__ output
-        # Update the __setstate__ tuple with FCSData attrs
+        """Override the native __reduce__ to enable serialization & pickling.
+        
+        Does this by calling the parent class' __reduce__ and appending the
+        FCSData state values, which will be used for deserialization during
+        depickling.
+
+        Pickle/cPickle expects a particular tuple to be returned by __reduce__,
+        which is reconsitituted here (described below).
+
+        Returns
+        -------
+        callable
+            Callable used to recreate the inital instance
+
+        tuple
+            Arguments to be passed to the callable to reconstitute the
+            FCSData object
+
+        tuple
+            Internal state data needed to fully reconstruct the instance. Data
+            is passed to self.__setstate__() to reconstruct object during
+            deserialization. The order of elements must match that expected
+            by __setstate__.
+
+        See Also
+        --------
+        __setstate__ : Sets the state data upon deserialization.
+
+        Notes
+        -----
+        Solution addresses Issue #277, based on StackOverflow solution:
+        https://stackoverflow.com/a/26599346
+        """
+        # Call __reduce__ on parent class to retrieve appropriate callable & arguments
+        # for numpy NDArray. 
+        pickled_state = super(FCSData, self).__reduce__()
+        # Update the __setstate__ state tuple with FCSData attrs
         fcsdata_attrs = (self._infile, self._text, self._analysis,
             self._data_type, self._time_step, self._acquisition_start_time,
             self._acquisition_end_time, self._channels,
             self._amplification_type, self._detector_voltage,
             self._amplifier_gain, self._range, self._resolution,)
+        # Append these FCSData-specific state parameters to the existing
+        # NDArray params.
         new_state = pickled_state[2] + fcsdata_attrs
-        # Return updated tuple with full set_state tuple
+
         return (pickled_state[0], pickled_state[1], new_state)
 
     def __setstate__(self, state):
-        # Set FCSData attributes
+        """Override the native __setstate__ to enable deserialization &
+        depickling.
+
+        Does this by applying the given state data to the corresponding
+        internal variables. This function is called by Pickle/cPickle
+        to reconstitute objects.
+
+        Parameters
+        ----------
+        state : tuple
+            State data originally aggregated by __reduce__, which determines
+            the order of the data.
+
+        See Also
+        ---------
+        __reduce__ : Called during serialization to aggregate relevant state
+            data.
+
+        Notes
+        -----
+        Solution addresses Issue #277, based on StackOverflow solution:
+        https://stackoverflow.com/a/26599346
+        """
+        # Set FCSData attributes aggregated by __reduce__
         self._resolution = state[-1]
         self._range = state[-2]
         self._amplifier_gain = state[-3]
@@ -1789,7 +1847,8 @@ class FCSData(np.ndarray):
         self._analysis = state[-11]
         self._text = state[-12]
         self._infile = state[-13]
-        # Call parent's __setstate__ with remaining attrs
+        # To set remaining state data for parent class, call its
+        # __setstate__ with remaining attrs
         super(FCSData, self).__setstate__(state[0:-13])
 
     # Helper functions
