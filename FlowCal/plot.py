@@ -46,6 +46,7 @@ Functions in this module are divided in two categories:
 
 """
 
+import packaging
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
@@ -55,6 +56,7 @@ import matplotlib.ticker
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
+import warnings
 
 # Use default colors from palettable if available
 try:
@@ -795,8 +797,10 @@ def hist1d(data_list,
         Label to use on the x axis. If None, attempts to extract channel
         name from last data object.
     ylabel : str, optional
-        Label to use on the y axis. If None and ``normed==True``, use
-        'Probability'. If None and `normed==False``, use 'Counts'.
+        Label to use on the y axis. If None and ``normed_area==True``, use
+        'Probability'. If None, ``normed_area==False``, and
+        ``normed_height==True``, use 'Counts (normalized)'. If None,
+        ``normed_area==False``, and ``normed_height==False``, use 'Counts'.
     xlim : tuple, optional
         Limits for the x axis. If not specified and `bins` exists, use
         the lowest and highest values of `bins`.
@@ -834,7 +838,20 @@ def hist1d(data_list,
     passed to ``plt.hist``. Additional keyword arguments provided to
     `hist1d` are passed directly to ``plt.hist``.
 
+    If `normed_area` is set to True, `hist1d` calls ``plt.hist`` with
+    ``density`` (or ``normed``, if matplotlib's version is older than
+    2.2.0) set to True. There is a bug in matplotlib 2.1.0 that
+    produces an incorrect plot in these conditions. We do not recommend
+    using matplotlib 2.1.0 if `normed_area` is expected to be used.
+
     """
+    # Using `normed_area` with matplotlib 2.1.0 causes an incorrect plot to be
+    # produced. Raise warning in these conditions.
+    if normed_area and packaging.version.parse(matplotlib.__version__) \
+            == packaging.version.parse('2.1.0'):
+        warnings.warn("bug in matplotlib 2.1.0 will result in an incorrect plot"
+            " when normed_area is set to True")
+
     # Convert to list if necessary
     if not isinstance(data_list, list):
         data_list = [data_list]
@@ -885,32 +902,55 @@ def hist1d(data_list,
                                    **xscale_kwargs)
 
         # Decide whether to normalize
-        if normed_height:
+        if normed_height and not normed_area:
             weights = np.ones_like(y)/float(len(y))
         else:
             weights = None
 
         # Actually plot
-        if bins is not None:
-            n, edges, patches = plt.hist(y,
-                                         bins,
-                                         weights=weights,
-                                         normed=normed_area,
-                                         histtype=histtype,
-                                         edgecolor=edgecolor[i],
-                                         facecolor=facecolor[i],
-                                         **kwargs)
+        if packaging.version.parse(matplotlib.__version__) \
+                >= packaging.version.parse('2.2'):
+            if bins is not None:
+                n, edges, patches = plt.hist(y,
+                                             bins,
+                                             weights=weights,
+                                             density=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
+            else:
+                n, edges, patches = plt.hist(y,
+                                             weights=weights,
+                                             density=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
         else:
-            n, edges, patches = plt.hist(y,
-                                         weights=weights,
-                                         normed=normed_area,
-                                         histtype=histtype,
-                                         edgecolor=edgecolor[i],
-                                         facecolor=facecolor[i],
-                                         **kwargs)
+            if bins is not None:
+                n, edges, patches = plt.hist(y,
+                                             bins,
+                                             weights=weights,
+                                             normed=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
+            else:
+                n, edges, patches = plt.hist(y,
+                                             weights=weights,
+                                             normed=normed_area,
+                                             histtype=histtype,
+                                             edgecolor=edgecolor[i],
+                                             facecolor=facecolor[i],
+                                             **kwargs)
 
     # Set scale of x axis
-    plt.gca().set_xscale(xscale, data=data_list, channel=channel)
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_list, channel=channel)
+    else:
+        plt.gca().set_xscale(xscale)
 
     ###
     # Final configuration
@@ -1167,8 +1207,14 @@ def density2d(data,
             cbar.ax.set_ylabel('Counts')
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale, data=data_plot, channel=0)
-    plt.gca().set_yscale(yscale, data=data_plot, channel=1)
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_plot, channel=0)
+    else:
+        plt.gca().set_xscale(xscale)
+    if yscale=='logicle':
+        plt.gca().set_yscale(yscale, data=data_plot, channel=1)
+    else:
+        plt.gca().set_yscale(yscale)
 
     # x and y limits
     if xlim is not None:
@@ -1308,8 +1354,14 @@ def scatter2d(data_list,
         plt.ylabel(data_plot.channels[1])
 
     # Set scale of axes
-    plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
-    plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
+    if xscale=='logicle':
+        plt.gca().set_xscale(xscale, data=data_list, channel=channels[0])
+    else:
+        plt.gca().set_xscale(xscale)
+    if yscale=='logicle':
+        plt.gca().set_yscale(yscale, data=data_list, channel=channels[1])
+    else:
+        plt.gca().set_yscale(yscale)
 
     # Set plot limits if specified, else extract range from data_list.
     # ``.hist_bins`` with one bin works better for visualization that

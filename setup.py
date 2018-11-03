@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # setuptools setup module.
-# 
+#
 # Based on setup.py on https://github.com/pypa/sampleproject.
 
 from setuptools import setup, find_packages
@@ -88,8 +88,9 @@ setup(
                       'six>=1.10.0',
                       'numpy>=1.8.2',
                       'scipy>=0.14.0',
-                      'matplotlib>=1.3.1',
+                      'matplotlib>=2.0.0',
                       'palettable>=2.1.1',
+                      'scikit-image>=0.10.0',
                       'scikit-learn>=0.16.0',
                       'pandas>=0.16.1',
                       'xlrd>=0.9.2',
@@ -121,9 +122,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points = {
+        'console_scripts': [
+            'flowcal=FlowCal.excel_ui:run_command_line',
+        ]
+    },
 )
