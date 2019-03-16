@@ -1,7 +1,7 @@
 Installing FlowCal in an Existing Python Evironment
 =======================================================
 
-Python (2.7 or 3.6) is required, along with ``pip`` and ``setuptools``. The easiest way is to install ``FlowCal`` is to use ``pip``::
+Python (2.7, 3.6, or 3.7) is required, along with ``pip`` and ``setuptools``. The easiest way is to install ``FlowCal`` is to use ``pip``::
 
 	pip install FlowCal
 

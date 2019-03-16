@@ -1208,7 +1208,7 @@ def get_transform_fxn(data_beads,
                   'statistic',
                   'selection',
                   'fitting']
-        MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
+        MEFOutput = collections.namedtuple('MEFOutput', fields)
         out = MEFOutput(mef_channels=mef_channels,
                         transform_fxn=transform_fxn,
                         clustering=clustering_res,
