@@ -15,26 +15,26 @@ The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The fo
 
 An ``FCSData`` object is a 2D ``numpy`` array with a few additional features. The first dimension indexes the event number, and the second dimension indexes the flow cytometry channel (or "parameter", as called by the FCS standard). We can see the number of events and channels using the standard ``numpy``'s ``shape`` property:
 
->>> print s.shape
+>>> print(s.shape)
 (30000, 8)
 
 As with any ``numpy`` array, we can slice an ``FCSData`` object. For example, let's obtain the first 100 events.
 
 >>> s_sub = s[:100]
->>> print s_sub.shape
+>>> print(s_sub.shape)
 (100, 8)
 
 Note that the product of slicing an FCSData object is also an FCSData object. We can also get all the events in a subset of channels by slicing in the second dimension.
 
 >>> s_sub_ch = s[:, [3, 4, 5]]
->>> print s_sub_ch.shape
+>>> print(s_sub_ch.shape)
 (30000, 3)
 
 However, it is not immediately obvious what channels we are getting. Fortunately, the ``FCSData`` object contains some additional information about the acquisition settings. In particular, we can check the name of the channels with the ``channels`` property.
 
->>> print s.channels
+>>> print(s.channels)
 ('TIME', 'FSC', 'SSC', 'FL1', 'FL2', 'FL3', 'FL1W', 'FL1A')
->>> print s_sub_ch.channels
+>>> print(s_sub_ch.channels)
 ('FL1', 'FL2', 'FL3')
 
 It turns out that ``s_sub_ch`` contains the fluorescence channels ``FL1``, ``FL2``, and ``FL3``.
@@ -42,7 +42,7 @@ It turns out that ``s_sub_ch`` contains the fluorescence channels ``FL1``, ``FL2
 One of the most practical features of an ``FCSData`` object is the ability to slice channels using their name. For example, if we want the fluorescence channels we can use the following.
 
 >>> s_sub_ch_2 = s[:, ['FL1', 'FL2', 'FL3']]
->>> print s_sub_ch_2.channels
+>>> print(s_sub_ch_2.channels)
 ('FL1', 'FL2', 'FL3')
 
 This is completely equivalent to indexing with integers.
