@@ -1613,9 +1613,11 @@ def run_command_line(args=None):
         from ``sys.argv``.
 
     See Also
-    ----------
-    FlowCal.excel_ui.run()
+    --------
+    FlowCal.excel_ui.run
 
+    References
+    ----------
     http://amir.rachum.com/blog/2017/07/28/python-entry-points/
 
     """
