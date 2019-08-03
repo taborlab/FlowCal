@@ -150,9 +150,17 @@ def read_table(filename, sheetname, index_col=None):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
-    table = pd.read_excel(filename,
-                          sheetname=sheetname,
-                          index_col=index_col)
+    # Parameter specifying sheet name is slightly different depending on pandas'
+    # version.
+    if packaging.version.parse(pd.__version__) \
+                < packaging.version.parse('0.21'):
+        table = pd.read_excel(filename,
+                              sheetname=sheetname,
+                              index_col=index_col)
+    else:
+        table = pd.read_excel(filename,
+                              sheet_name=sheetname,
+                              index_col=index_col)
     # Eliminate rows whose index are null
     if index_col is not None:
         table = table[pd.notnull(table.index)]
@@ -247,7 +255,8 @@ def process_beads_table(beads_table,
                         plot=False,
                         plot_dir=None,
                         full_output=False,
-                        get_transform_fxn_kwargs={}):
+                        get_transform_fxn_kwargs={},
+                        legacy_scatter_gate=False):
     """
     Process calibration bead samples, as specified by an input table.
 
@@ -299,6 +308,11 @@ def process_beads_table(beads_table,
     get_transform_fxn_kwargs : dict, optional
         Additional parameters passed directly to internal
         ``mef.get_transform_fxn()`` function call.
+    legacy_scatter_gate : bool, optional
+        If True, process the table as a legacy FlowCal table. In this case,
+        "Scatter Gate" columns are ignored and density gate is applied
+        automatically with a gate fraction given by the column "Gate
+        Fraction".
 
     Returns
     -------
@@ -308,10 +322,15 @@ def process_beads_table(beads_table,
     mef_transform_fxns : OrderedDict
         A dictionary of MEF transformation functions, indexed by
         ``beads_table.index``.
-    mef_outputs : list
+    mef_outputs : list, only if ``full_output==True``
         A list with intermediate results of the generation of the MEF
-        transformation functions, indexed by ``beads_table.index``. Only
-        included if `full_output` is True.
+        transformation functions. For every entry in `beads_table`,
+        :func:`FlowCal.mef.get_transform_fxn()` is called on the
+        corresponding processed and gated beads sample with
+        ``full_output=True``, and the full output (a `MEFOutput`
+        ``namedtuple``) is appended to `mef_outputs`. Please refer to the
+        output section of :func:`FlowCal.mef.get_transform_fxn()`'s
+        documentation for more information.
 
     """
     # Initialize output variables
@@ -411,38 +430,8 @@ def process_beads_table(beads_table,
                     channels=sc_channels)
 
             # Scatter gate
-            if 'Scatter Gate' in beads_row.index:
-                # Parse gate method
-                # An empty cell will be seen here as a NaN. Therefore, this has
-                # to be checked for explicitly.
-                if pd.isnull(beads_row['Scatter Gate']):
-                    gate_method = ''
-                else:
-                    gate_method = str(beads_row['Scatter Gate'])
-
-                if gate_method.lower().strip() == 'density':
-                    # Density gate
-                    try:
-                        beads_sample_gated, __, gate_contour = \
-                            FlowCal.gate.density2d(
-                                data=beads_sample_gated,
-                                channels=sc_channels,
-                                gate_fraction=beads_row['Gate Fraction'],
-                                xscale='logicle',
-                                yscale='logicle',
-                                sigma=5.,
-                                full_output=True)
-                    except ValueError as ve:
-                        raise ExcelUIException(ve.message)
-                elif gate_method.lower().strip() in ['', 'none']:
-                    # No additional scatter gate
-                    gate_contour = None
-                else:
-                    # Not recognized, raise error.
-                    raise ExcelUIException(
-                        "scatter gate method \"{}\" not recognized".format(
-                            gate_method))
-            else:
+            # This step must distinguish between legacy and new format
+            if legacy_scatter_gate:
                 # Density gate by default
                 try:
                     beads_sample_gated, __, gate_contour = \
@@ -456,6 +445,73 @@ def process_beads_table(beads_table,
                             full_output=True)
                 except ValueError as ve:
                     raise ExcelUIException(ve.message)
+
+            else:
+                gate_contour = []
+                # If "Scatter Gate" column not present or empty, do nothing.
+                if ('Scatter Gate' in beads_row.index) and \
+                        not (pd.isnull(beads_row['Scatter Gate'])):
+                    # Gate methods are listed in the 'Scatter Gate' column,
+                    # separated by a comma.
+                    gate_methods = [
+                        g.strip()
+                        for g in beads_row['Scatter Gate'].split(',')]
+
+                    # Iterate over gate methods
+                    for gate_idx, gate_method in enumerate(gate_methods):
+                        # Parse
+                        # Each method corresponds to a function and a set of
+                        # default parameters, stored in gate_function and
+                        # gate_params
+                        if gate_method.lower() == 'density':
+                            gate_function = FlowCal.gate.density2d
+                            gate_params = {'xscale': 'logicle',
+                                           'yscale': 'logicle',
+                                           'sigma': 5.,}
+                        elif gate_method.lower() == 'ellipse':
+                            gate_function = FlowCal.gate.ellipse
+                            gate_params = {'theta': 0,
+                                           'log': True,}
+                        else:
+                            # Not recognized, raise error.
+                            raise ExcelUIException("scatter gate method "
+                                "\"{}\" not recognized".format(gate_method))
+
+                        # Parse parameters from columns
+                        # The following regex should capture "Gate Fraction"
+                        # from "Scatter Gate 1: Gate Fraction"
+                        re_gate_params = re.compile(
+                            r'^\s*[Ss]catter\s+[Gg]ate\s+' + \
+                            str(gate_idx + 1) + \
+                            r'\s*:\s*(\S(?:.*\S)?)\s*$')
+                        gate_headers = [h
+                                        for h in list(beads_row.columns)
+                                        if re_gate_params.match(h)]
+                        gate_param_names = [re_gate_params.match(h).group(1)
+                                            for h in gate_headers]
+                        # Transfer parameters into gate_params dictionary
+                        for gate_header, param_name in \
+                                zip(gate_headers, gate_param_names):
+                            # Function parameter name is the specified name
+                            # in lowercase, with spaces replaced by underscores.
+                            # Example: Gate Fraction -> gate_fraction
+                            p = param_name.lower().replace(' ', '_')
+                            # Transfer parameter
+                            gate_params[p] = beads_row[gate_header]
+
+                        # Apply gate
+                        try:
+                            beads_sample_gated, __, current_gate_contour = \
+                                gate_function(
+                                    data=beads_sample_gated,
+                                    channels=sc_channels,
+                                    full_output=True,
+                                    gate_params**)
+                        except ValueError as ve:
+                            raise ExcelUIException(ve.message)
+
+                        # Append gate contours
+                        gate_contour.extend(current_gate_contour)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -612,7 +668,8 @@ def process_samples_table(samples_table,
                           base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir=None):
+                          plot_dir=None,
+                          legacy_scatter_gate=False):
     """
     Process flow cytometry samples, as specified by an input table.
 
@@ -668,6 +725,11 @@ def process_samples_table(samples_table,
         Directory relative to `base_dir` into which plots are saved. If
         `plot` is False, this parameter is ignored. If ``plot==True`` and
         ``plot_dir is None``, plot without saving.
+    legacy_scatter_gate : bool, optional
+        If True, process the table as a legacy FlowCal table. In this case,
+        "Scatter Gate" columns are ignored and density gate is applied
+        automatically with a gate fraction given by the column "Gate
+        Fraction".
 
     Returns
     -------
@@ -863,36 +925,8 @@ def process_samples_table(samples_table,
                     sc_channels + report_channels)
 
             # Scatter gate
-            if 'Scatter Gate' in sample_row.index:
-                # Parse gate method
-                # An empty cell will be seen here as a NaN. Therefore, this has
-                # to be checked for explicitly.
-                if pd.isnull(sample_row['Scatter Gate']):
-                    gate_method = ''
-                else:
-                    gate_method = str(sample_row['Scatter Gate'])
-
-                if gate_method.lower().strip() == 'density':
-                    # Density gate
-                    try:
-                        sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                            data=sample_gated,
-                            channels=sc_channels,
-                            gate_fraction=sample_row['Gate Fraction'],
-                            xscale='logicle',
-                            yscale='logicle',
-                            full_output=True)
-                    except ValueError as ve:
-                        raise ExcelUIException(ve.message)
-                elif gate_method.lower().strip() in ['', 'none']:
-                    # No additional scatter gate
-                    gate_contour = None
-                else:
-                    # Not recognized, raise error.
-                    raise ExcelUIException(
-                        "scatter gate method \"{}\" not recognized".format(
-                            gate_method))
-            else:
+            # This step must distinguish between legacy and new format
+            if legacy_scatter_gate:
                 # Density gate by default
                 try:
                     sample_gated, __, gate_contour = FlowCal.gate.density2d(
@@ -904,6 +938,74 @@ def process_samples_table(samples_table,
                         full_output=True)
                 except ValueError as ve:
                     raise ExcelUIException(ve.message)
+
+            else:
+                raise NotImplementedError
+                gate_contour = []
+                # If "Scatter Gate" column not present or empty, do nothing.
+                if ('Scatter Gate' in sample_row.index) and \
+                        not (pd.isnull(sample_row['Scatter Gate'])):
+                    # Gate methods are listed in the 'Scatter Gate' column,
+                    # separated by a comma.
+                    gate_methods = [
+                        g.strip()
+                        for g in sample_row['Scatter Gate'].split(',')]
+
+                    # Iterate over gate methods
+                    for gate_idx, gate_method in enumerate(gate_methods):
+                        # Parse
+                        # Each method corresponds to a function and a set of
+                        # default parameters, stored in gate_function and
+                        # gate_params
+                        if gate_method.lower() == 'density':
+                            gate_function = FlowCal.gate.density2d
+                            gate_params = {'xscale': 'logicle',
+                                           'yscale': 'logicle',
+                                           'sigma': 5.,}
+                        elif gate_method.lower() == 'ellipse':
+                            gate_function = FlowCal.gate.ellipse
+                            gate_params = {'theta': 0,
+                                           'log': True,}
+                        else:
+                            # Not recognized, raise error.
+                            raise ExcelUIException("scatter gate method "
+                                "\"{}\" not recognized".format(gate_method))
+
+                        # Parse parameters from columns
+                        # The following regex should capture "Gate Fraction"
+                        # from "Scatter Gate 1: Gate Fraction"
+                        re_gate_params = re.compile(
+                            r'^\s*[Ss]catter\s+[Gg]ate\s+' + \
+                            str(gate_idx + 1) + \
+                            r'\s*:\s*(\S(?:.*\S)?)\s*$')
+                        gate_headers = [h
+                                        for h in list(sample_row.columns)
+                                        if re_gate_params.match(h)]
+                        gate_param_names = [re_gate_params.match(h).group(1)
+                                            for h in gate_headers]
+                        # Transfer parameters into gate_params dictionary
+                        for gate_header, param_name in \
+                                zip(gate_headers, gate_param_names):
+                            # Function parameter name is the specified name
+                            # in lowercase, with spaces replaced by underscores.
+                            # Example: Gate Fraction -> gate_fraction
+                            p = param_name.lower().replace(' ', '_')
+                            # Transfer parameter
+                            gate_params[p] = sample_row[gate_header]
+
+                        # Apply gate
+                        try:
+                            sample_gated, __, current_gate_contour = \
+                                gate_function(
+                                    data=sample_gated,
+                                    channels=sc_channels,
+                                    full_output=True,
+                                    gate_params**)
+                        except ValueError as ve:
+                            raise ExcelUIException(ve.message)
+
+                        # Append gate contours
+                        gate_contour.extend(current_gate_contour)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -1043,19 +1145,35 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
             if pd.notnull(beads_table[header][row_id]):
 
                 # Detector voltage
-                beads_table.set_value(
-                    row_id,
-                    channel + ' Detector Volt.',
-                    beads_samples[i].detector_voltage(channel))
+                # Dataframes, such as beads_table, are modified differently
+                # depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    beads_table.set_value(
+                        row_id,
+                        channel + ' Detector Volt.',
+                        beads_samples[i].detector_voltage(channel))
+                else:
+                    beads_table.at[row_id, channel + ' Detector Volt.'] = \
+                        beads_samples[i].detector_voltage(channel)
+
 
                 # Amplification type
                 if beads_samples[i].amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                beads_table.set_value(row_id,
-                                      channel + ' Amp. Type',
-                                      amplification_type)
+                # Dataframes, such as beads_table, are modified differently
+                # depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    beads_table.set_value(row_id,
+                                          channel + ' Amp. Type',
+                                          amplification_type)
+                else:
+                    beads_table.at[row_id, channel + ' Amp. Type'] = \
+                        amplification_type
+
 
                 # Bead model and parameters
                 # Only populate if mef_outputs has been provided
@@ -1071,24 +1189,53 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                         # Bead model
                         beads_model_str = mef_outputs[i]. \
                             fitting['beads_model_str'][mef_channel_index]
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Model',
-                                              beads_model_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(row_id,
+                                                  channel + ' Beads Model',
+                                                  beads_model_str)
+                        else:
+                            beads_table.at[row_id, channel + ' Beads Model'] = \
+                                beads_model_str
+
                         # Bead parameter names
                         params_names = mef_outputs[i]. \
                             fitting['beads_params_names'][mef_channel_index]
                         params_names_str = ", ".join([str(p)
                                                       for p in params_names])
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Params. Names',
-                                              params_names_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(
+                                row_id,
+                                channel + ' Beads Params. Names',
+                                params_names_str)
+                        else:
+                            beads_table.at[
+                                row_id,
+                                channel + ' Beads Params. Names'] = \
+                                    params_names_str
+
                         # Bead parameter values
                         params = mef_outputs[i]. \
                             fitting['beads_params'][mef_channel_index]
                         params_str = ", ".join([str(p) for p in params])
-                        beads_table.set_value(row_id,
-                                              channel + ' Beads Params. Values',
-                                              params_str)
+                        # Dataframes, such as beads_table, are modified
+                        # differently depending on pandas' version.
+                        if packaging.version.parse(pd.__version__) \
+                                < packaging.version.parse('0.21'):
+                            beads_table.set_value(
+                                row_id,
+                                channel + ' Beads Params. Values',
+                                params_str)
+                        else:
+                            beads_table.at[
+                                row_id,
+                                channel + ' Beads Params. Values'] = \
+                                    params_str
 
     # Restore index name if table is empty
     if len(beads_table) == 0:
@@ -1190,41 +1337,76 @@ def add_samples_stats(samples_table, samples):
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
                 # Acquisition settings
+
                 # Detector voltage
-                samples_table.set_value(row_id,
-                                        channel + ' Detector Volt.',
-                                        sample.detector_voltage(channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Detector Volt.',
+                                            sample.detector_voltage(channel))
+                else:
+                    samples_table.at[row_id, channel + ' Detector Volt.'] = \
+                        sample.detector_voltage(channel)
+
                 # Amplification type
                 if sample.amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                samples_table.set_value(row_id,
-                                        channel + ' Amp. Type',
-                                        amplification_type)
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Amp. Type',
+                                            amplification_type)
+                else:
+                    samples_table.at[row_id, channel + ' Amp. Type'] = \
+                        amplification_type
 
                 # Statistics from event list
-                samples_table.set_value(row_id,
-                                        channel + ' Mean',
-                                        FlowCal.stats.mean(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Median',
-                                        FlowCal.stats.median(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Mode',
-                                        FlowCal.stats.mode(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' Std',
-                                        FlowCal.stats.std(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' CV',
-                                        FlowCal.stats.cv(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' IQR',
-                                        FlowCal.stats.iqr(sample, channel))
-                samples_table.set_value(row_id,
-                                        channel + ' RCV',
-                                        FlowCal.stats.rcv(sample, channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(row_id,
+                                            channel + ' Mean',
+                                            FlowCal.stats.mean(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Median',
+                                            FlowCal.stats.median(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Mode',
+                                            FlowCal.stats.mode(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' Std',
+                                            FlowCal.stats.std(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' CV',
+                                            FlowCal.stats.cv(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' IQR',
+                                            FlowCal.stats.iqr(sample, channel))
+                    samples_table.set_value(row_id,
+                                            channel + ' RCV',
+                                            FlowCal.stats.rcv(sample, channel))
+                else:
+                    samples_table.at[row_id, channel + ' Mean'] = \
+                        FlowCal.stats.mean(sample, channel)
+                    samples_table.at[row_id, channel + ' Median'] = \
+                        FlowCal.stats.median(sample, channel)
+                    samples_table.at[row_id, channel + ' Mode'] = \
+                        FlowCal.stats.mode(sample, channel)
+                    samples_table.at[row_id, channel + ' Std'] = \
+                        FlowCal.stats.std(sample, channel)
+                    samples_table.at[row_id, channel + ' CV'] = \
+                        FlowCal.stats.cv(sample, channel)
+                    samples_table.at[row_id, channel + ' IQR'] = \
+                        FlowCal.stats.iqr(sample, channel)
+                    samples_table.at[row_id, channel + ' RCV'] = \
+                        FlowCal.stats.rcv(sample, channel)
 
                 # For geometric statistics, first check for non-positive events.
                 # If found, throw a warning and calculate statistics on positive
@@ -1241,22 +1423,40 @@ def add_samples_stats(samples_table, samples):
                     # Write warning message to table
                     if samples_table.loc[row_id, 'Analysis Notes']:
                         msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
-                    samples_table.set_value(row_id, 'Analysis Notes', msg)
+                    # Dataframes, such as samples_table, are modified
+                    # differently depending on pandas' version.
+                    if packaging.version.parse(pd.__version__) \
+                            < packaging.version.parse('0.21'):
+                        samples_table.set_value(row_id, 'Analysis Notes', msg)
+                    else:
+                        samples_table.at[row_id, 'Analysis Notes'] = msg
                 else:
                     sample_positive = sample
+
                 # Calculate and write geometric statistics
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. Mean',
-                    FlowCal.stats.gmean(sample_positive, channel))
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. Std',
-                    FlowCal.stats.gstd(sample_positive, channel))
-                samples_table.set_value(
-                    row_id,
-                    channel + ' Geom. CV',
-                    FlowCal.stats.gcv(sample_positive, channel))
+                # Dataframes, such as samples_table, are modified
+                # differently depending on pandas' version.
+                if packaging.version.parse(pd.__version__) \
+                        < packaging.version.parse('0.21'):
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. Mean',
+                        FlowCal.stats.gmean(sample_positive, channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. Std',
+                        FlowCal.stats.gstd(sample_positive, channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Geom. CV',
+                        FlowCal.stats.gcv(sample_positive, channel))
+                else:
+                    samples_table.at[row_id, channel + ' Geom. Mean'] = \
+                        FlowCal.stats.gmean(sample_positive, channel)
+                    samples_table.at[row_id, channel + ' Geom. Std'] = \
+                        FlowCal.stats.gstd(sample_positive, channel)
+                    samples_table.at[row_id, channel + ' Geom. CV'] = \
+                        FlowCal.stats.gcv(sample_positive, channel)
 
     # Restore index name if table is empty
     if len(samples_table) == 0:
@@ -1430,7 +1630,8 @@ def run(input_path=None,
         output_path=None,
         verbose=True,
         plot=True,
-        hist_sheet=False):
+        hist_sheet=False,
+        legacy_scatter_gate=False):
     """
     Run the MS Excel User Interface.
 
@@ -1467,6 +1668,11 @@ def run(input_path=None,
     hist_sheet : bool, optional
         Whether to generate a sheet in the output Excel file specifying
         histogram bin information.
+    legacy_scatter_gate : bool, optional
+        If True, process the spreadsheet as a legacy FlowCal spreadsheet.
+        In this case, "Scatter Gate" columns are ignored and density gate
+        is applied automatically with a gate fraction given by the column
+        "Gate Fraction".
 
     """
 
@@ -1503,7 +1709,8 @@ def run(input_path=None,
         verbose=verbose,
         plot=plot,
         plot_dir='plot_beads',
-        full_output=True)
+        full_output=True,
+        legacy_scatter_gate=legacy_scatter_gate)
 
     # Add stats to beads table
     if verbose:
@@ -1520,7 +1727,8 @@ def run(input_path=None,
         base_dir=input_dir,
         verbose=verbose,
         plot=plot,
-        plot_dir='plot_samples')
+        plot_dir='plot_samples',
+        legacy_scatter_gate=legacy_scatter_gate)
 
     # Add stats to samples table
     if verbose:
@@ -1614,6 +1822,11 @@ def run_command_line(args=None):
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
+    parser.add_argument(
+        "--legacy-scatter-gate",
+        action="store_true",
+        help="ignore \"Scatter Gate\" columns and apply density gate "
+            "automatically")
     args = parser.parse_args(args=args)
 
     # Run Excel UI
@@ -1621,7 +1834,8 @@ def run_command_line(args=None):
         output_path=args.outputpath,
         verbose=args.verbose,
         plot=args.plot,
-        hist_sheet=args.histogram_sheet)
+        hist_sheet=args.histogram_sheet,
+        legacy_scatter_gate=args.legacy_scatter_gate)
 
 if __name__ == '__main__':
     run_command_line()

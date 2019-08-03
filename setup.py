@@ -71,6 +71,7 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 
     # What does your project relate to?
@@ -88,8 +89,9 @@ setup(
                       'six>=1.10.0',
                       'numpy>=1.8.2',
                       'scipy>=0.14.0',
-                      'matplotlib>=1.3.1',
+                      'matplotlib>=2.0.0',
                       'palettable>=2.1.1',
+                      'scikit-image>=0.10.0',
                       'scikit-learn>=0.16.0',
                       'pandas>=0.16.1',
                       'xlrd>=0.9.2',
