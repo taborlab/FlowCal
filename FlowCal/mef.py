@@ -576,12 +576,12 @@ def get_transform_fxn(data_beads,
     Parameters
     ----------
     data_beads : FCSData object
-        Flow cytometry data, taken from calibration beads.
+        Flow cytometry data describing calibration beads.
     mef_values : sequence of sequences
         Known MEF values for the calibration bead subpopulations, for each
-        channel specified in `mef_channels`. The innermost sequences must have
-        the same length (the same number of bead subpopulations must exist for
-        each channel).
+        channel specified in `mef_channels`. The innermost sequences must
+        have the same length (the same number of bead subpopulations must
+        exist for each channel).
     mef_channels : int, or str, or list of int, or list of str
         Channels for which to generate transformation functions.
     verbose : bool, optional
@@ -597,64 +597,133 @@ def get_transform_fxn(data_beads,
         Name to use for plot files. If None, use ``str(data_beads)``.
     full_output : bool, optional
         Flag specifying whether to include intermediate results in the
-        output. If `full_output` is True, the function returns a named
-        tuple with fields as described below. If `full_output` is False,
-        the function only returns the calculated transformation function.
+        output. If `full_output` is True, the function returns a
+        `MEFOutput` ``namedtuple`` with fields as described below. If
+        `full_output` is False, the function only returns the calculated
+        transformation function.
 
     Returns
     -------
     transform_fxn : function
         Transformation function to convert flow cytometry data from RFI
-        units to MEF. This function has the same basic signature as the
-        general transformation function specified in ``FlowCal.transform``.
+        units to MEF. This function has the following signature::
+
+            data_mef = transform_fxn(data_rfi, channels)
 
     mef_channels : int, or str, or list, only if ``full_output==True``
-        Channels on which transformation functions have been generated.
+        Channels on which the transformation function has been generated.
         Directly copied from the `mef_channels` argument.
 
     clustering : dict, only if ``full_output==True``
-        Results of the clustering step, containing the following fields:
+        Results of the clustering step. The structure of this dictionary
+        is::
 
-        labels : array
-            Labels for each event in `data_beads`.
+            clustering = {"labels": np.array}
+
+        A description of each ``"key": value`` is given below.
+
+        "labels" : array
+            Array of length ``N``, where ``N`` is the number of events in
+            `data_beads`. This array contains labels indicating which
+            subpopulation each event has been assigned to by the clustering
+            algorithm. Labels range from ``0`` to ``M - 1``, where ``M`` is
+            the number of MEF values specified, and therefore the number of
+            subpopulations identified by the clustering algorithm.
 
     statistic : dict, only if ``full_output==True``
-        Results of the calculation of bead subpopulations' fluorescence,
-        containing the following fields:
+        Results of the calculation of bead subpopulations' fluorescence.
+        The structure of this dictionary is::
 
-        values : list
-            The representative fluorescence values of each
-            subpopulation, for each channel in `mef_channels`.
+            statistic = {"values": [np.array, ...]}
+
+        A description of each ``"key": value`` is given below.
+
+        "values" : list of arrays
+            Each array contains the representative fluorescence values of
+            all subpopulations, for a specific fluorescence channel from
+            `mef_channels`. Therefore, each array has a length equal to the
+            number of subpopulations, and the outer list has as many arrays
+            as the number of channels in `mef_channels`.
 
     selection : dict, only if ``full_output==True``
-        Results of the subpopulation selection step, containing the
-        following fields:
+        Results of the subpopulation selection step. The structure of this
+        dictionary is::
 
-        rfi : list
-            The fluorescence values of each selected subpopulation in
-            RFI units, for each channel in `mef_channels`.
-        mef : list
-            The fluorescence values of each selected subpopulation in
-            MEF units, for each channel in `mef_channels`.
+            selection = {"rfi": [np.array, ...],
+                         "mef": [np.array, ...]}
+
+        A description of each ``"key": value`` is given below.
+
+        "rfi" : list of arrays
+            Each array contains the fluorescence values of each selected
+            subpopulation in RFI units, for a specific fluorescence channel
+            from `mef_channels`. The outer list has as many arrays as the
+            number of channels in `mef_channels`. Because the selection
+            step may discard subpopulations, each array has a length less
+            than or equal to the total number of subpopulations.
+            Furthermore, different arrays in this list may not have the
+            same length. However, the length of each array is consistent
+            with the corresponding array in ``selection["mef"]`` (see
+            below).
+        "mef" : list of arrays
+            Each array contains the fluorescence values of each selected
+            subpopulation in MEF units, for a specific fluorescence channel
+            from `mef_channels`. The outer list has as many arrays as the
+            number of channels in `mef_channels`. Because the selection
+            step may discard subpopulations, each array has a length less
+            than or equal to the total number of subpopulations.
+            Furthermore, different arrays in this list may not have the
+            same length. However, the length of each array is consistent
+            with the corresponding array in ``selection["rfi"]`` (see
+            above).
 
     fitting : dict, only if ``full_output==True``
-        Results of the model fitting step, containing the following fields:
+        Results of the model fitting step. The structure of this dictionary
+        is::
 
-        std_crv : list
-            Functions encoding the standard curves, for each channel in
-            `mef_channels`.
-        beads_model : list
-            Functions encoding the fluorescence model of the
-            calibration beads, for each channel in `mef_channels`.
-        beads_params : list
-            Fitted parameters of the bead fluorescence model, for each
-            channel in `mef_chanels`.
-        beads_model_str : list
+            selection = {"std_crv": [func, ...],
+                         "beads_model": [func, ...],
+                         "beads_params": [np.array, ...],
+                         "beads_model_str": [str, ...],
+                         "beads_params_names": [[], ...]}
+
+        A description of each ``"key": value`` is given below.
+
+        "std_crv" : list of functions
+            Functions encoding the fitted standard curves, for each channel
+            in `mef_channels`. Each element of this list is the ``std_crv``
+            output of the fitting function (see required signature of the
+            ``fitting_fxn`` optional parameter), after applying it to the
+            MEF and RFI fluorescence values of a specific channel from
+            `mef_channels` .
+        "beads_model" : list of functions
+            Functions encoding the fluorescence model of the calibration
+            beads, for each channel in `mef_channels`. Each element of this
+            list is the ``beads_model`` output of the fitting function (see
+            required signature of the ``fitting_fxn`` optional parameter),
+            after applying it to the MEF and RFI fluorescence values of a
+            specific channel from `mef_channels` .
+        "beads_params" : list of arrays
+            Fitted parameter values of the bead fluorescence model, for
+            each channel in `mef_chanels`. Each element of this list is the
+            ``beads_params`` output of the fitting function (see required
+            signature of the ``fitting_fxn`` optional parameter), after
+            applying it to the MEF and RFI fluorescence values of a
+            specific channel from `mef_channels`.
+        "beads_model_str" : list of str
             String representation of the bead models used, for each channel
-            in `mef_channels`.
-        beads_params_names : list
+            in `mef_channels`. Each element of this list is the
+            ``beads_model_str`` output of the fitting function (see
+            required signature of the ``fitting_fxn`` optional parameter),
+            after applying it to the MEF and RFI fluorescence values of a
+            specific channel from `mef_channels` .
+        "beads_params_names" : list of list
             Names of the parameters given in `beads_params`, for each
-            channel in `mef_channels`.
+            channel in `mef_channels`. Each element of this list is the
+            ``beads_params_names`` output of the fitting function (see
+            required signature of the ``fitting_fxn`` optional parameter),
+            after applying it to the MEF and RFI fluorescence values of a
+            specific channel from `mef_channels` .
 
     Other parameters
     ----------------
@@ -696,7 +765,7 @@ def get_transform_fxn(data_beads,
 
             selected_mask = selection_fxn(data_list, **selection_params)
 
-        where `data_list` is a list of FCSData objects, each one cotaining
+        where `data_list` is a list of FCSData objects, each one containing
         the events of one population, and `selected_mask` is a boolean
         array indicating whether the population has been selected (True) or
         discarded (False). If None, don't use a population selection
@@ -732,14 +801,15 @@ def get_transform_fxn(data_beads,
     The steps involved in generating the MEF transformation function are:
 
     1. The individual subpopulations of beads are first identified using a
-       clustering method of choice.
+       clustering method of choice. Clustering is performed in all
+       specified channels simultaneously.
     2. The fluorescence of each subpopulation is calculated, for each
        channel in `mef_channels`.
     3. Some subpopulations are then discarded if they are close to either
        the minimum or the maximum channel range limits. In addition, if the
        MEF value of some subpopulation is unknown (represented as a
        ``np.nan`` in `mef_values`), the whole subpopulation is also
-        discarded.
+       discarded.
     4. The measured fluorescence of each subpopulation is compared with
        the known MEF values in `mef_values`, and a standard curve function
        is generated using the appropriate MEF model.
@@ -751,6 +821,80 @@ def get_transform_fxn(data_beads,
     flow cytometry samples only yields correct results if they have been
     taken at the same settings as the calibration beads, for all channels
     in `mef_channels`.
+
+    Examples
+    --------
+    Here is a simple application of this function:
+
+    >>> transform_fxn = FlowCal.mef.get_transform_fxn(
+    ...     beads_data,
+    ...     mef_channels=['FL1', 'FL3'],
+    ...     mef_values=[np.array([    0,   646,   1704,   4827,
+    ...                           15991, 47609, 135896, 273006],
+    ...                 np.array([    0,  1614,   4035,   12025,
+    ...                           31896, 95682, 353225, 1077421]],
+    ...     )
+    >>> sample_mef = transform_fxn(data=sample_rfi,
+    ...                            channels=['FL1', 'FL3'])
+
+    Here, we first generate ``transform_fxn`` from flow cytometry data
+    contained in ``FCSData`` object ``beads_data``, for channels FL1 and
+    FL3, using provided MEF values for each one of these channels. In the
+    next line, we use the resulting transformation function to transform
+    cell sample data in RFI to MEF.
+
+    More data about intermediate steps can be obtained with the option
+    ``full_output=True``:
+
+    >>> get_transform_output = FlowCal.mef.get_transform_fxn(
+    ...     beads_data,
+    ...     mef_channels=['FL1', 'FL3'],
+    ...     mef_values=[np.array([    0,   646,   1704,   4827,
+    ...                           15991, 47609, 135896, 273006],
+    ...                 np.array([    0,  1614,   4035,   12025,
+    ...                           31896, 95682, 353225, 1077421]],
+    ...     full_output=True)
+
+    In this case, the output ``get_transform_output`` will be a
+    `MEFOutput` ``namedtuple`` similar to the following::
+
+        FlowCal.mef.MEFOutput(
+            transform_fxn=<functools.partial object>,
+            mef_channels=['FL1', 'FL3'],
+            clustering={
+                'labels' : [7, 2, 2, ... 4, 3, 5]
+            },
+            statistic={
+                'values' : [np.array([ 101,  150,  231,  433,
+                                      1241, 3106, 7774, 9306]),
+                            np.array([   3,   30,   71,  204,
+                                       704, 2054, 6732, 9912])]
+            },
+            selection={
+                'rfi' : [np.array([  101,    150,    231,    433,
+                                    1241,   3106,   7774]),
+                         np.array([  30,      71,    204,    704,
+                                   2054,    6732])]
+                'mef' : [np.array([    0,    646,   1704,   4827,
+                                   15991,  47609, 135896]),
+                         np.array([ 1614,   4035,  12025,  31896,
+                                   95682, 353225])]
+            },
+            fitting={
+                'std_crv' : [<function <lambda>>,
+                             <function <lambda>>]
+                'beads_model' : [<function <lambda>>,
+                                 <function <lambda>>]
+                'beads_params' : [np.array([ 1.09e0, 2.02e0, 1.15e3]),
+                                  np.array([9.66e-1, 4.17e0, 6.63e1])]
+                'beads_model_str' : ['m*log(fl_rfi) + b =\
+ log(fl_mef_auto + fl_mef)',
+                                     'm*log(fl_rfi) + b =\
+ log(fl_mef_auto + fl_mef)']
+                'beads_params_names' : [['m', 'b', 'fl_mef_auto],
+                                        ['m', 'b', 'fl_mef_auto]]
+            },
+        )
 
     """
     if verbose:
@@ -1064,7 +1208,7 @@ def get_transform_fxn(data_beads,
                   'statistic',
                   'selection',
                   'fitting']
-        MEFOutput = collections.namedtuple('MEFOutput', fields, verbose=False)
+        MEFOutput = collections.namedtuple('MEFOutput', fields)
         out = MEFOutput(mef_channels=mef_channels,
                         transform_fxn=transform_fxn,
                         clustering=clustering_res,
