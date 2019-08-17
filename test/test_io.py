@@ -4,9 +4,13 @@ Unit tests for the `io` module.
 """
 
 import datetime
-import unittest
+import os
 import six
-import cPickle, os
+import unittest
+try:
+   import cPickle as pickle
+except:
+   import pickle
 
 import numpy as np
 
@@ -2699,11 +2703,11 @@ class TestFCSDataPickle(unittest.TestCase):
         """
         channels = self.d.channels # Should be fine, no error
 
-        with open(self.test_file, 'w') as outfile:
-            cPickle.dump(self.d, outfile) # serialization
+        with open(self.test_file, 'wb') as outfile:
+            pickle.dump(self.d, outfile) # serialization
 
-        with open(self.test_file, 'r') as infile:
-            test_fcs = cPickle.load(infile) # de-serialization
+        with open(self.test_file, 'rb') as infile:
+            test_fcs = pickle.load(infile) # de-serialization
 
         # Check all attributes/methods are preserved
         attrs = set(dir(self.d))
