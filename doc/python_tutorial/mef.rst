@@ -7,8 +7,9 @@ To start, navigate to the ``examples`` directory included with FlowCal, and open
 
 >>> import FlowCal
 
-Also, import ``pyplot`` from ``matplotlib``
+Also, import ``numpy`` and ``pyplot`` from ``matplotlib``
 
+>>> import numpy as np
 >>> import matplotlib.pyplot as plt
 
 Working with Calibration Beads
@@ -47,7 +48,7 @@ Generating a transformation function from calibration beads data is a complicate
 
 >>> # Obtain transformation function
 >>> # The following MEFL values were provided by the beads' manufacturer
->>> mefl_values = [0, 646, 1704, 4827, 15991, 47609, 135896, 273006]
+>>> mefl_values = np.array([0, 646, 1704, 4827, 15991, 47609, 135896, 273006])
 >>> to_mef = FlowCal.mef.get_transform_fxn(b_g, 
 ...                                        mef_values=mefl_values,
 ...                                        mef_channels='FL1',
