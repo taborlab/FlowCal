@@ -605,6 +605,9 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             # Subticks not requested
             ticklocs = major_ticklocs
 
+        # Remove ticks outside requested range
+        ticklocs = [t for t in ticklocs if (t >= vmin) and (t <= vmax)]
+
         return self.raise_if_exceeds(np.array(ticklocs))
 
 
