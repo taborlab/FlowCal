@@ -1772,14 +1772,14 @@ class FCSData(np.ndarray):
 
         Returns
         -------
-        callable
+        init : callable
             Callable used to recreate the inital instance
 
-        tuple
+        init_args : tuple
             Arguments to be passed to the callable to reconstitute the
             FCSData object
 
-        tuple
+        state : tuple
             Internal state data needed to fully reconstruct the instance. Data
             is passed to self.__setstate__() to reconstruct object during
             deserialization. The order of elements must match that expected
