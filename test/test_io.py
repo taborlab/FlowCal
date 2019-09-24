@@ -2688,8 +2688,11 @@ class TestFCSDataOperations(unittest.TestCase):
         np.testing.assert_array_equal(m, m_array)
 
 class TestFCSDataPickle(unittest.TestCase):
-    '''See Issue #277. FCSData objects must be able to be serialized (via Pickle)
-    and deserialized correctly.'''
+    """
+    See Issue #277. FCSData objects must be able to be serialized (via Pickle)
+    and deserialized correctly.
+
+    """
 
     def setUp(self):
         self.d = FlowCal.io.FCSData(filenames[2])
@@ -2700,6 +2703,7 @@ class TestFCSDataPickle(unittest.TestCase):
         """
         Test that an FCSData instance can be pickled, then unpickled, and
         still retain all custom attributes.
+
         """
         channels = self.d.channels # Should be fine, no error
 

@@ -947,6 +947,22 @@ class FCSFile(object):
     def __repr__(self):
         return str(self.infile)
 
+_FCSDataPickleState = collections.namedtuple(
+    typename='_FCSDataPickleState',
+    field_names=['infile',
+                 'text',
+                 'analysis',
+                 'data_type',
+                 'time_step',
+                 'acquisition_start_time',
+                 'acquisition_end_time',
+                 'channels',
+                 'amplification_type',
+                 'detector_voltage',
+                 'amplifier_gain',
+                 'range',
+                 'resolution'])
+
 class FCSData(np.ndarray):
     """
     Object containing events data from a flow cytometry sample.
@@ -1761,14 +1777,14 @@ class FCSData(np.ndarray):
             self._resolution = copy.deepcopy(obj._resolution)
 
     def __reduce__(self):
-        """Override the native __reduce__ to enable serialization & pickling.
-        
-        Does this by calling the parent class' __reduce__ and appending the
-        FCSData state values, which will be used for deserialization during
-        depickling.
+        """
+        For pickling.
 
-        Pickle/cPickle expects a particular tuple to be returned by __reduce__,
-        which is reconsitituted here (described below).
+        Call NDArray's __reduce__ and append FCSData state information. Per
+        the pickle/cPickle documentation, __reduce__ should return a tuple
+        between two and five elements long. The first three elements are
+        described below. FCSData augments the `state` element but otherwise
+        relies on NDArray to populate the rest of the tuple.
 
         Returns
         -------
@@ -1776,14 +1792,15 @@ class FCSData(np.ndarray):
             Callable used to recreate the inital instance
 
         init_args : tuple
-            Arguments to be passed to the callable to reconstitute the
-            FCSData object
+            Arguments to be passed to `init` to reconstitute the initial
+            instance
 
         state : tuple
             Internal state data needed to fully reconstruct the instance. Data
-            is passed to self.__setstate__() to reconstruct object during
-            deserialization. The order of elements must match that expected
-            by __setstate__.
+            is passed to self.__setstate__() to reconstruct the object during
+            deserialization. Contains the FCSData state information (packaged
+            in a _FCSDataPickleState namedtuple) as the first element and
+            (if used) the NDArray state information as the second element.
 
         See Also
         --------
@@ -1794,34 +1811,50 @@ class FCSData(np.ndarray):
         Solution addresses Issue #277, based on StackOverflow solution:
         https://stackoverflow.com/a/26599346
         """
-        # Call __reduce__ on parent class to retrieve appropriate callable & arguments
-        # for numpy NDArray. 
-        pickled_state = super(FCSData, self).__reduce__()
-        # Update the __setstate__ state tuple with FCSData attrs
-        fcsdata_attrs = (self._infile, self._text, self._analysis,
-            self._data_type, self._time_step, self._acquisition_start_time,
-            self._acquisition_end_time, self._channels,
-            self._amplification_type, self._detector_voltage,
-            self._amplifier_gain, self._range, self._resolution,)
-        # Append these FCSData-specific state parameters to the existing
-        # NDArray params.
-        new_state = pickled_state[2] + fcsdata_attrs
+        # Collect FCSData state information
+        fcsdata_state = _FCSDataPickleState(
+            infile                 = self._infile,
+            text                   = self._text,
+            analysis               = self._analysis,
+            data_type              = self._data_type,
+            time_step              = self._time_step,
+            acquisition_start_time = self._acquisition_start_time,
+            acquisition_end_time   = self._acquisition_end_time,
+            channels               = self._channels,
+            amplification_type     = self._amplification_type,
+            detector_voltage       = self._detector_voltage,
+            amplifier_gain         = self._amplifier_gain,
+            range                  = self._range,
+            resolution             = self._resolution)
 
-        return (pickled_state[0], pickled_state[1], new_state)
+        # Call NDArray's __reduce__ to populate the initial reduce value
+        super_reduce_value = super(FCSData, self).__reduce__()
+
+        # Update state information
+        reduce_value = list(super_reduce_value)
+        if len(super_reduce_value) > 2:
+            super_state = super_reduce_value[2]
+            reduce_value[2] = (fcsdata_state, super_state)
+        else:
+            reduce_value.append((fcsdata_state,))
+        reduce_value = tuple(reduce_value)
+
+        return reduce_value
 
     def __setstate__(self, state):
-        """Override the native __setstate__ to enable deserialization &
-        depickling.
+        """
+        For unpickling.
 
-        Does this by applying the given state data to the corresponding
-        internal variables. This function is called by Pickle/cPickle
-        to reconstitute objects.
+        Call NDArray's __setstate__ with the NDArray state information if
+        provided and then populate the FCSData state information.
 
         Parameters
         ----------
         state : tuple
-            State data originally aggregated by __reduce__, which determines
-            the order of the data.
+            State data originally aggregated by __reduce__. Should contain
+            the FCSData state information (packaged in a _FCSDataPickleState
+            namedtuple) as the first element and (if used) the NDArray state
+            information as the second element.
 
         See Also
         ---------
@@ -1833,23 +1866,27 @@ class FCSData(np.ndarray):
         Solution addresses Issue #277, based on StackOverflow solution:
         https://stackoverflow.com/a/26599346
         """
-        # Set FCSData attributes aggregated by __reduce__
-        self._resolution = state[-1]
-        self._range = state[-2]
-        self._amplifier_gain = state[-3]
-        self._detector_voltage = state[-4]
-        self._amplification_type = state[-5]
-        self._channels = state[-6]
-        self._acquisition_end_time = state[-7]
-        self._acquisition_start_time = state[-8]
-        self._time_step = state[-9]
-        self._data_type = state[-10]
-        self._analysis = state[-11]
-        self._text = state[-12]
-        self._infile = state[-13]
-        # To set remaining state data for parent class, call its
-        # __setstate__ with remaining attrs
-        super(FCSData, self).__setstate__(state[0:-13])
+        # Unpackage state information (originally packaged by __reduce__)
+        fcsdata_state = state[0]
+        if len(state) > 1:
+            super_state = state[1]
+            # Call NDArray's __setstate__ with its state information
+            super(FCSData, self).__setstate__(super_state)
+
+        # Populate FCSData state information
+        self._infile                 = fcsdata_state.infile
+        self._text                   = fcsdata_state.text
+        self._analysis               = fcsdata_state.analysis
+        self._data_type              = fcsdata_state.data_type
+        self._time_step              = fcsdata_state.time_step
+        self._acquisition_start_time = fcsdata_state.acquisition_start_time
+        self._acquisition_end_time   = fcsdata_state.acquisition_end_time
+        self._channels               = fcsdata_state.channels
+        self._amplification_type     = fcsdata_state.amplification_type
+        self._detector_voltage       = fcsdata_state.detector_voltage
+        self._amplifier_gain         = fcsdata_state.amplifier_gain
+        self._range                  = fcsdata_state.range
+        self._resolution             = fcsdata_state.resolution
 
     # Helper functions
     @staticmethod
