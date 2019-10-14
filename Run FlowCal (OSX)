@@ -5,5 +5,3 @@
 export MPLBACKEND="TkAgg"
 # Run FlowCal
 python -m FlowCal.excel_ui -v -p -H
-# Pause
-read -p "Press [Enter] to finish..."
