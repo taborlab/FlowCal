@@ -5,7 +5,7 @@ Python (2.7, 3.6, or 3.7) is required, along with ``pip`` and ``setuptools``. Th
 
 	pip install FlowCal
 
-This should take care of all the requirements automatically. Linux and Mac OSX users may need to request administrative permissions by preceding this command with ``sudo``.
+This should take care of all the requirements automatically. Linux and macOS users may need to request administrative permissions by preceding this command with ``sudo``.
 
 Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/FlowCal/archive/master.zip>`_. Next, make sure that the following Python packages are present:
 
