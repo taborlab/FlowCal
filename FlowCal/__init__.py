@@ -6,7 +6,7 @@
 # Versions should comply with PEP440.  For a discussion on single-sourcing
 # the version across setup.py and the project code, see
 # https://packaging.python.org/en/latest/single_source_version.html
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 from . import io
 from . import excel_ui
