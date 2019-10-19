@@ -3,3 +3,5 @@ dist
 FlowCal.egg-info
 *.pyc
 *.ipynb_checkpoints
+.DS_Store
+*/.DS_Store

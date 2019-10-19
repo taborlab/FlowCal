@@ -680,7 +680,7 @@ class FCSFile(object):
         If more than one data set is detected in the same file.
     Warning
         If the ANALYSIS segment was not successfully parsed.
-    
+
     Notes
     -----
     The Flow Cytometry Standard (FCS) describes the de facto standard
@@ -730,7 +730,7 @@ class FCSFile(object):
 
     """
     def __init__(self, infile):
-        
+
         self._infile = infile
 
         if isinstance(infile, six.string_types):
@@ -832,7 +832,7 @@ class FCSFile(object):
                 self._analysis = {}
         else:
             self._analysis = {}
-        
+
         # Import DATA segment
         param_ranges = [float(self._text['$P{0}R'.format(p)])
                         for p in range(1,D+1)]
@@ -947,6 +947,22 @@ class FCSFile(object):
     def __repr__(self):
         return str(self.infile)
 
+_FCSDataPickleState = collections.namedtuple(
+    typename='_FCSDataPickleState',
+    field_names=['infile',
+                 'text',
+                 'analysis',
+                 'data_type',
+                 'time_step',
+                 'acquisition_start_time',
+                 'acquisition_end_time',
+                 'channels',
+                 'amplification_type',
+                 'detector_voltage',
+                 'amplifier_gain',
+                 'range',
+                 'resolution'])
+
 class FCSData(np.ndarray):
     """
     Object containing events data from a flow cytometry sample.
@@ -962,7 +978,7 @@ class FCSData(np.ndarray):
     the detector and the amplifiers are parsed from the TEXT segment of the
     FCS file and exposed as attributes. The TEXT and ANALYSIS segments are
     also exposed as attributes.
-    
+
     Parameters
     ----------
     infile : str or file-like
@@ -1760,6 +1776,118 @@ class FCSData(np.ndarray):
         if hasattr(obj, '_resolution'):
             self._resolution = copy.deepcopy(obj._resolution)
 
+    def __reduce__(self):
+        """
+        For pickling.
+
+        Call NDArray's __reduce__ and append FCSData state information. Per
+        the pickle/cPickle documentation, __reduce__ should return a tuple
+        between two and five elements long. The first three elements are
+        described below. FCSData augments the `state` element but otherwise
+        relies on NDArray to populate the rest of the tuple.
+
+        Returns
+        -------
+        init : callable
+            Callable used to recreate the inital instance
+
+        init_args : tuple
+            Arguments to be passed to `init` to reconstitute the initial
+            instance
+
+        state : tuple
+            Internal state data needed to fully reconstruct the instance. Data
+            is passed to self.__setstate__() to reconstruct the object during
+            deserialization. Contains the FCSData state information (packaged
+            in a _FCSDataPickleState namedtuple) as the first element and
+            (if used) the NDArray state information as the second element.
+
+        See Also
+        --------
+        __setstate__ : Sets the state data upon deserialization.
+
+        Notes
+        -----
+        Solution addresses Issue #277, based on StackOverflow solution:
+        https://stackoverflow.com/a/26599346
+        """
+        # Collect FCSData state information
+        fcsdata_state = _FCSDataPickleState(
+            infile                 = self._infile,
+            text                   = self._text,
+            analysis               = self._analysis,
+            data_type              = self._data_type,
+            time_step              = self._time_step,
+            acquisition_start_time = self._acquisition_start_time,
+            acquisition_end_time   = self._acquisition_end_time,
+            channels               = self._channels,
+            amplification_type     = self._amplification_type,
+            detector_voltage       = self._detector_voltage,
+            amplifier_gain         = self._amplifier_gain,
+            range                  = self._range,
+            resolution             = self._resolution)
+
+        # Call NDArray's __reduce__ to populate the initial reduce value
+        super_reduce_value = super(FCSData, self).__reduce__()
+
+        # Update state information
+        reduce_value = list(super_reduce_value)
+        if len(super_reduce_value) > 2:
+            super_state = super_reduce_value[2]
+            reduce_value[2] = (fcsdata_state, super_state)
+        else:
+            reduce_value.append((fcsdata_state,))
+        reduce_value = tuple(reduce_value)
+
+        return reduce_value
+
+    def __setstate__(self, state):
+        """
+        For unpickling.
+
+        Call NDArray's __setstate__ with the NDArray state information if
+        provided and then populate the FCSData state information.
+
+        Parameters
+        ----------
+        state : tuple
+            State data originally aggregated by __reduce__. Should contain
+            the FCSData state information (packaged in a _FCSDataPickleState
+            namedtuple) as the first element and (if used) the NDArray state
+            information as the second element.
+
+        See Also
+        ---------
+        __reduce__ : Called during serialization to aggregate relevant state
+            data.
+
+        Notes
+        -----
+        Solution addresses Issue #277, based on StackOverflow solution:
+        https://stackoverflow.com/a/26599346
+        """
+        # Unpackage state information (originally packaged by __reduce__)
+        fcsdata_state = state[0]
+        if len(state) > 1:
+            super_state = state[1]
+            # Call NDArray's __setstate__ with its state information
+            super(FCSData, self).__setstate__(super_state)
+
+        # Populate FCSData state information
+        self._infile                 = fcsdata_state.infile
+        self._text                   = fcsdata_state.text
+        self._analysis               = fcsdata_state.analysis
+        self._data_type              = fcsdata_state.data_type
+        self._time_step              = fcsdata_state.time_step
+        self._acquisition_start_time = fcsdata_state.acquisition_start_time
+        self._acquisition_end_time   = fcsdata_state.acquisition_end_time
+        self._channels               = fcsdata_state.channels
+        self._amplification_type     = fcsdata_state.amplification_type
+        self._detector_voltage       = fcsdata_state.detector_voltage
+        self._amplifier_gain         = fcsdata_state.amplifier_gain
+        self._range                  = fcsdata_state.range
+        self._resolution             = fcsdata_state.resolution
+
     # Helper functions
     @staticmethod
     def _parse_time_string(time_str):
@@ -1944,8 +2072,8 @@ class FCSData(np.ndarray):
         slicing the `channel_info` attribute.
 
         """
-        # If key is a tuple with no None, decompose and interpret key[1] as 
-        # the channel. If it contains Nones, pass directly to 
+        # If key is a tuple with no None, decompose and interpret key[1] as
+        # the channel. If it contains Nones, pass directly to
         # ndarray.__getitem__() and convert to np.ndarray. Otherwise, pass
         # directly to ndarray.__getitem__().
         if isinstance(key, tuple) and len(key) == 2 \
@@ -2030,8 +2158,8 @@ class FCSData(np.ndarray):
         channel name when writing to a FCSData object.
 
         """
-        # If key is a tuple with no Nones, decompose and interpret key[1] as 
-        # the channel. If it contains Nones, pass directly to 
+        # If key is a tuple with no Nones, decompose and interpret key[1] as
+        # the channel. If it contains Nones, pass directly to
         # ndarray.__setitem__().
         if isinstance(key, tuple) and len(key) == 2 \
             and key[0] is not None and key[1] is not None:

@@ -917,6 +917,8 @@ def get_transform_fxn(data_beads,
     else:
         mef_channels = [mef_channels]
         mef_values   = [mef_values]
+    # Transform mef_values to numpy array
+    mef_values = np.array(mef_values)
 
     # Ensure matching number of `mef_values` for all channels (this implies
     # that the calibration beads have the same number of subpopulations for

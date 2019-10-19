@@ -1454,20 +1454,16 @@ def show_open_file_dialog(filetypes):
         was chosen.
 
     """
-    # The following line is used to Tk's main window is not shown
-    Tk().withdraw()
 
-    # OSX ONLY: Call bash script to prevent file select window from sticking
-    # after use.
-    if platform.system() == 'Darwin':
-        subprocess.call("defaults write org.python.python " +
-                "ApplePersistenceIgnoreState YES", shell=True)
-        filename = askopenfilename(filetypes=filetypes)
-        subprocess.call("defaults write org.python.python " +
-                "ApplePersistenceIgnoreState NO", shell=True)
-    else:
-        filename = askopenfilename(filetypes=filetypes)
-
+    # initialize tkinter root window
+    root = Tk()
+    # remove main root window (will cause kernel panic on OSX if not present)
+    root.withdraw()
+    # link askopenfilename window to root window
+    filename = askopenfilename(parent = root, filetypes=filetypes)
+    # refresh root window to remove askopenfilename window
+    root.update()
+    
     return filename
 
 def run(input_path=None,
@@ -1613,9 +1609,11 @@ def run_command_line(args=None):
         from ``sys.argv``.
 
     See Also
-    ----------
-    FlowCal.excel_ui.run()
+    --------
+    FlowCal.excel_ui.run
 
+    References
+    ----------
     http://amir.rachum.com/blog/2017/07/28/python-entry-points/
 
     """

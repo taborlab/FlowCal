@@ -69,6 +69,55 @@ else:
 savefig_dpi = 250
 
 ###
+# HELPER FUNCTIONS FOR SCALE CLASSES
+###
+
+def _base_down(x, base=10):
+    """
+    Floor `x` to the nearest lower ``base^n``, where ``n`` is an integer.
+
+    Parameters
+    ----------
+    x : float
+        Number to calculate the floor from.
+    base : float, optional
+        Base used to calculate the floor.
+
+    Return
+    ------
+    float
+        The nearest lower ``base^n`` from `x`, where ``n`` is an integer.
+
+    """
+    if x == 0.0:
+        return -base
+    lx = np.floor(np.log(x) / np.log(base))
+    return base ** lx
+
+
+def _base_up(x, base=10):
+    """
+    Ceil `x` to the nearest higher ``base^n``, where ``n`` is an integer.
+
+    Parameters
+    ----------
+    x : float
+        Number to calculate the ceiling from.
+    base : float, optional
+        Base used to calculate the ceiling.
+
+    Return
+    ------
+    float
+        The nearest higher ``base^n`` from `x`, where ``n`` is an integer.
+
+    """
+    if x == 0.0:
+        return base
+    lx = np.ceil(np.log(x) / np.log(base))
+    return base ** lx
+
+###
 # CUSTOM SCALES
 ###
 
@@ -534,7 +583,7 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             linear_range = [vmin, vmax]
             # Initial step size will be one decade below the maximum whole
             # decade in the range
-            linear_step = matplotlib.ticker.decade_down(
+            linear_step = _base_down(
                 linear_range[1] - linear_range[0], b) / b
             # Reduce the step size according to specified number of ticks
             while (linear_range[1] - linear_range[0])/linear_step > \
@@ -605,6 +654,9 @@ class _LogicleLocator(matplotlib.ticker.Locator):
             # Subticks not requested
             ticklocs = major_ticklocs
 
+        # Remove ticks outside requested range
+        ticklocs = [t for t in ticklocs if (t >= vmin) and (t <= vmax)]
+
         return self.raise_if_exceeds(np.array(ticklocs))
 
 
@@ -619,22 +671,22 @@ class _LogicleLocator(matplotlib.ticker.Locator):
 
         if not matplotlib.ticker.is_decade(abs(vmin), b):
             if vmin < 0:
-                vmin = -matplotlib.ticker.decade_up(-vmin, b)
+                vmin = -_base_up(-vmin, b)
             else:
-                vmin = matplotlib.ticker.decade_down(vmin, b)
+                vmin = _base_down(vmin, b)
         if not matplotlib.ticker.is_decade(abs(vmax), b):
             if vmax < 0:
-                vmax = -matplotlib.ticker.decade_down(-vmax, b)
+                vmax = -_base_down(-vmax, b)
             else:
-                vmax = matplotlib.ticker.decade_up(vmax, b)
+                vmax = _base_up(vmax, b)
 
         if vmin == vmax:
             if vmin < 0:
-                vmin = -matplotlib.ticker.decade_up(-vmin, b)
-                vmax = -matplotlib.ticker.decade_down(-vmax, b)
+                vmin = -_base_up(-vmin, b)
+                vmax = -_base_down(-vmax, b)
             else:
-                vmin = matplotlib.ticker.decade_down(vmin, b)
-                vmax = matplotlib.ticker.decade_up(vmax, b)
+                vmin = _base_down(vmin, b)
+                vmax = _base_up(vmax, b)
         result = matplotlib.transforms.nonsingular(vmin, vmax)
         return result
 
@@ -674,7 +726,12 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
 
     def __init__(self, axis, **kwargs):
         # Run parent's constructor
-        matplotlib.scale.ScaleBase.__init__(self)
+        if packaging.version.parse(matplotlib.__version__) \
+                >= packaging.version.parse('3.1.0'):
+            matplotlib.scale.ScaleBase.__init__(self, axis)
+        else:
+            matplotlib.scale.ScaleBase.__init__(self)
+
         # Initialize and store logicle transform object
         self._transform = _LogicleTransform(**kwargs)
 

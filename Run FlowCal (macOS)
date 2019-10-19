@@ -1,9 +1,9 @@
 #!/bin/sh
 
+# The following is necessary to use Anaconda's python.
+source ~/.bash_profile
 # Set environment variable to change default matplotlib backend
 # This is necessary so that the open file dialog is shown properly
 export MPLBACKEND="TkAgg"
 # Run FlowCal
 python -m FlowCal.excel_ui -v -p -H
-# Pause
-read -p "Press [Enter] to finish..."
