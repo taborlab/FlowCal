@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# The following is necessary to use Anaconda's python.
+source ~/.bash_profile
 # Change current working directory
 cd -- "$(dirname "$BASH_SOURCE")"
 # Install FlowCal
