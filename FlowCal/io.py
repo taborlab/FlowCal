@@ -960,6 +960,7 @@ _FCSDataPickleState = collections.namedtuple(
                  'amplification_type',
                  'detector_voltage',
                  'amplifier_gain',
+                 'channel_labels',
                  'range',
                  'resolution'])
 
@@ -1330,6 +1331,42 @@ class FCSData(np.ndarray):
             return [self._amplifier_gain[ch] for ch in channels]
         else:
             return self._amplifier_gain[channels]
+
+    def channel_labels(self, channels=None):
+        """
+        Get the label of the specified channel(s).
+
+        The label for channel "n" is extracted from the $PnS
+        parameter, if available.
+
+        Parameters
+        ----------
+        channels : int, str, list of int, list of str
+            Channel(s) for which to get the label. If None,
+            return a list with the label of all channels, in the
+            order of ``FCSData.channels``.
+
+        Return
+        ------
+        str or list of str
+            The label of the specified channel(s). If no
+            information about the label is found for a channel,
+            return None.
+
+        """
+        # Check default
+        if channels is None:
+            channels = self._channels
+
+        # Get numerical indices of channels
+        channels = self._name_to_index(channels)
+
+        # Get detector type of the specified channels
+        if hasattr(channels, '__iter__') \
+                and not isinstance(channels, six.string_types):
+            return [self._channel_labels[ch] for ch in channels]
+        else:
+            return self._channel_labels[channels]
 
     def range(self, channels=None):
         """
@@ -1708,6 +1745,13 @@ class FCSData(np.ndarray):
             amplifier_gain.append(channel_amp_gain)
         amplifier_gain = tuple(amplifier_gain)
 
+        # Channel label: Stored in the keyword parameter $PnS for channel n.
+        channel_labels = []
+        for i in range(1, num_channels + 1):
+            channel_label = fcs_file.text.get('$P{}S'.format(i), None)
+            channel_labels.append(channel_label)
+        channel_labels = tuple(channel_labels)
+
         # Get data from fcs_file object, and change writeable flag.
         data = fcs_file.data
         data.flags.writeable = True
@@ -1729,6 +1773,7 @@ class FCSData(np.ndarray):
         obj._amplification_type = amplification_type
         obj._detector_voltage = detector_voltage
         obj._amplifier_gain = amplifier_gain
+        obj._channel_labels = channel_labels
         obj._range = data_range
         obj._resolution = resolution
 
@@ -1771,6 +1816,8 @@ class FCSData(np.ndarray):
             self._detector_voltage = copy.deepcopy(obj._detector_voltage)
         if hasattr(obj, '_amplifier_gain'):
             self._amplifier_gain = copy.deepcopy(obj._amplifier_gain)
+        if hasattr(obj, '_channel_labels'):
+            self._channel_labels = copy.deepcopy(obj._channel_labels)
         if hasattr(obj, '_range'):
             self._range = copy.deepcopy(obj._range)
         if hasattr(obj, '_resolution'):
@@ -1824,6 +1871,7 @@ class FCSData(np.ndarray):
             amplification_type     = self._amplification_type,
             detector_voltage       = self._detector_voltage,
             amplifier_gain         = self._amplifier_gain,
+            channel_labels         = self._channel_labels,
             range                  = self._range,
             resolution             = self._resolution)
 
@@ -1885,6 +1933,7 @@ class FCSData(np.ndarray):
         self._amplification_type     = fcsdata_state.amplification_type
         self._detector_voltage       = fcsdata_state.detector_voltage
         self._amplifier_gain         = fcsdata_state.amplifier_gain
+        self._channel_labels         = fcsdata_state.channel_labels
         self._range                  = fcsdata_state.range
         self._resolution             = fcsdata_state.resolution
 
@@ -2105,6 +2154,8 @@ class FCSData(np.ndarray):
                     [new_arr._detector_voltage[kc] for kc in key_channel])
                 new_arr._amplifier_gain = tuple(
                     [new_arr._amplifier_gain[kc] for kc in key_channel])
+                new_arr._channel_labels = tuple(
+                    [new_arr._channel_labels[kc] for kc in key_channel])
                 new_arr._range = \
                     [new_arr._range[kc] for kc in key_channel]
                 new_arr._resolution = tuple(\
@@ -2117,6 +2168,8 @@ class FCSData(np.ndarray):
                     new_arr._detector_voltage[key_channel]
                 new_arr._amplifier_gain = \
                     new_arr._amplifier_gain[key_channel]
+                new_arr._channel_labels = \
+                    new_arr._channel_labels[key_channel]
                 new_arr._range = \
                     new_arr._range[key_channel]
                 new_arr._resolution = \
@@ -2129,6 +2182,8 @@ class FCSData(np.ndarray):
                     tuple([new_arr._detector_voltage[key_channel]])
                 new_arr._amplifier_gain = \
                     tuple([new_arr._amplifier_gain[key_channel]])
+                new_arr._channel_labels = \
+                    tuple([new_arr._channel_labels[key_channel]])
                 new_arr._range = \
                     [new_arr._range[key_channel]]
                 new_arr._resolution = \
