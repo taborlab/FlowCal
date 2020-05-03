@@ -7,6 +7,7 @@ import datetime
 import os
 import six
 import unittest
+import warnings
 try:
    import cPickle as pickle
 except ImportError:
@@ -401,12 +402,14 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
-        self.assertEqual(
-            FlowCal.io.read_fcs_text_segment(
-                buf=buf,
-                begin=0,
-                end=len(raw_text_segment)-1),
-            (text_dict, delim))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            self.assertEqual(
+                FlowCal.io.read_fcs_text_segment(
+                    buf=buf,
+                    begin=0,
+                    end=len(raw_text_segment)-1),
+                (text_dict, delim))
 
     def test_primary_multi_delim_in_keyword_1(self):
         """
@@ -1134,14 +1137,16 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
-        self.assertEqual(
-            FlowCal.io.read_fcs_text_segment(
-                buf=buf,
-                begin=0,
-                end=len(raw_text_segment)-1,
-                delim=delim,
-                supplemental=True),
-            (text_dict, delim))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            self.assertEqual(
+                FlowCal.io.read_fcs_text_segment(
+                    buf=buf,
+                    begin=0,
+                    end=len(raw_text_segment)-1,
+                    delim=delim,
+                    supplemental=True),
+                (text_dict, delim))
 
     def test_supp_bad_segment_s(self):
         """
@@ -1152,14 +1157,16 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
-        self.assertEqual(
-            FlowCal.io.read_fcs_text_segment(
-                buf=buf,
-                begin=0,
-                end=len(raw_text_segment)-1,
-                delim=delim,
-                supplemental=True),
-            (text_dict, delim))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            self.assertEqual(
+                FlowCal.io.read_fcs_text_segment(
+                    buf=buf,
+                    begin=0,
+                    end=len(raw_text_segment)-1,
+                    delim=delim,
+                    supplemental=True),
+                (text_dict, delim))
 
     def test_supp_multi_delim_in_keyword_1(self):
         """
