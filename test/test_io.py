@@ -402,8 +402,11 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
+
+        # ignore an "ill-formed TEXT" UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
+
             self.assertEqual(
                 FlowCal.io.read_fcs_text_segment(
                     buf=buf,
@@ -1137,8 +1140,11 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
+
+        # ignore an "ill-formed TEXT" UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
+
             self.assertEqual(
                 FlowCal.io.read_fcs_text_segment(
                     buf=buf,
@@ -1157,8 +1163,11 @@ class TestReadTextSegment(unittest.TestCase):
         delim            = '/'
         text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
         buf              = six.BytesIO(six.b(raw_text_segment))
+
+        # ignore an "ill-formed TEXT" UserWarning
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
+
             self.assertEqual(
                 FlowCal.io.read_fcs_text_segment(
                     buf=buf,

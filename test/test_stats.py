@@ -4,6 +4,7 @@
 """
 
 import unittest
+import warnings
 
 import numpy as np
 import scipy
@@ -97,8 +98,14 @@ class TestGeometricMean(unittest.TestCase):
         Test size, type, and values when using a 2D numpy array.
 
         """
-        s_fc = FlowCal.stats.gmean(self.a)
-        s_lib = scipy.stats.gmean(self.a, axis=0)
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the data array contains zeros.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gmean(self.a)
+            s_lib = scipy.stats.gmean(self.a, axis=0)
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
         np.testing.assert_array_equal(s_fc, s_lib)
@@ -108,8 +115,14 @@ class TestGeometricMean(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = FlowCal.stats.gmean(self.d)
-        s_lib = scipy.stats.gmean(self.d.view(np.ndarray), axis=0)
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gmean(self.d)
+            s_lib = scipy.stats.gmean(self.d.view(np.ndarray), axis=0)
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
         np.testing.assert_array_equal(s_fc, s_lib)
@@ -119,8 +132,14 @@ class TestGeometricMean(unittest.TestCase):
         Test size, type, and values when using a 1D sliced FCSData object.
 
         """
-        s_fc = FlowCal.stats.gmean(self.d[:, 'FL1-H'])
-        s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gmean(self.d[:, 'FL1-H'])
+            s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
         self.assertEqual(s_fc, s_lib)
@@ -131,8 +150,14 @@ class TestGeometricMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = FlowCal.stats.gmean(self.d, channels='FL1-H')
-        s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gmean(self.d, channels='FL1-H')
+            s_lib = scipy.stats.gmean(self.d[:, 'FL1-H'].view(np.ndarray))
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, ())
         self.assertEqual(s_fc, s_lib)
@@ -143,8 +168,14 @@ class TestGeometricMean(unittest.TestCase):
         `channels` argument.
 
         """
-        s_fc = FlowCal.stats.gmean(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
-        s_lib = scipy.stats.gmean(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gmean(self.d, channels=['FL1-H', 'FL2-H', 'FL3-H'])
+            s_lib = scipy.stats.gmean(self.d[:, [2, 3, 4]].view(np.ndarray), axis=0)
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (3,))
         np.testing.assert_array_equal(s_fc, s_lib)
@@ -464,8 +495,14 @@ class TestGeomStd(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = FlowCal.stats.gstd(self.d)
-        s_lib = np.exp(np.std(np.log(self.d.view(np.ndarray)), axis=0))
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gstd(self.d)
+            s_lib = np.exp(np.std(np.log(self.d.view(np.ndarray)), axis=0))
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
         np.testing.assert_array_equal(s_fc, s_lib)
@@ -540,9 +577,15 @@ class TestGeomCv(unittest.TestCase):
         Test size, type, and values when using an FCSData object.
 
         """
-        s_fc = FlowCal.stats.gcv(self.d)
-        s_lib = np.sqrt(np.exp(np.std(np.log(
-            self.d.view(np.ndarray)), axis=0)**2) - 1)
+        # ignore divide-by-zero RuntimeWarnings that arise because
+        # the FCS data contains zeros in some channels.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+
+            s_fc = FlowCal.stats.gcv(self.d)
+            s_lib = np.sqrt(np.exp(np.std(np.log(
+                self.d.view(np.ndarray)), axis=0)**2) - 1)
+
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (6,))
         np.testing.assert_array_equal(s_fc, s_lib)
