@@ -9,7 +9,10 @@ import unittest
 
 import numpy as np
 import pandas as pd
-import pandas.util.testing as tm
+try:
+    import pandas.testing as tm       # for pandas >= 0.20.1
+except ImportError:
+    import pandas.util.testing as tm  # for pandas <= 0.19.2
 
 import FlowCal
 
