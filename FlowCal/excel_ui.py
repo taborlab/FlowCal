@@ -96,6 +96,10 @@ elif six.PY3:
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+try:
+    import openpyxl
+except ImportError:
+    pass
 
 import FlowCal.io
 import FlowCal.plot
@@ -115,7 +119,7 @@ class ExcelUIException(Exception):
     """
     pass
 
-def read_table(filename, sheetname, index_col=None):
+def read_table(filename, sheetname, index_col=None, engine=None):
     """
     Return the contents of an Excel table as a pandas DataFrame.
 
@@ -128,6 +132,9 @@ def read_table(filename, sheetname, index_col=None):
     index_col : str, optional
         Column name or index to be used as row labels of the DataFrame. If
         None, default index will be used.
+    engine : str, optional
+        Engine used by `pd.read_excel()` to read Excel file. If None, try
+        'openpyxl' then 'xlrd'.
 
     Returns
     -------
@@ -150,17 +157,53 @@ def read_table(filename, sheetname, index_col=None):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
-    # Parameter specifying sheet name is slightly different depending on pandas'
-    # version.
+    read_excel_kwargs = {'io':filename,'index_col':index_col}
+
+    # Parameter specifying sheet name depends on pandas version
     if packaging.version.parse(pd.__version__) \
                 < packaging.version.parse('0.21'):
-        table = pd.read_excel(filename,
-                              sheetname=sheetname,
-                              index_col=index_col)
+        read_excel_kwargs['sheetname']  = sheetname
     else:
-        table = pd.read_excel(filename,
-                              sheet_name=sheetname,
-                              index_col=index_col)
+        read_excel_kwargs['sheet_name'] = sheetname
+
+    if engine is None:
+        # try reading Excel file using openpyxl engine first, then xlrd
+        try:
+            read_excel_kwargs['engine'] = 'openpyxl'
+            table = pd.read_excel(**read_excel_kwargs)
+        except ImportError as e:
+            if not('openpyxl' in str(e).lower()
+                   and 'missing' in str(e).lower()):
+                raise
+            else:
+                # pandas recognizes openpyxl but package is missing, try xlrd
+                read_excel_kwargs['engine'] = 'xlrd'
+                table = pd.read_excel(**read_excel_kwargs)
+        except ValueError as e:
+            if not('openpyxl' in str(e).lower()
+                   and 'unknown' in str(e).lower()):
+                raise
+            else:
+                # pandas does not recognize openpyxl (e.g. pandas
+                # version <= 0.25.0), try xlrd
+                read_excel_kwargs['engine'] = 'xlrd'
+                table = pd.read_excel(**read_excel_kwargs)
+        except Exception as e:
+            if 'openpyxl' in sys.modules \
+                    and isinstance(e, openpyxl.utils.exceptions \
+                                          .InvalidFileException):
+                # unsupported file type (e.g. .xls), try xlrd
+                #
+                # (note: openpyxl's InvalidFileException has been stable at
+                # that location since v2.2.0)
+                read_excel_kwargs['engine'] = 'xlrd'
+                table = pd.read_excel(**read_excel_kwargs)
+            else:
+                raise
+    else:
+        read_excel_kwargs['engine'] = engine
+        table = pd.read_excel(**read_excel_kwargs)
+
     # Eliminate rows whose index are null
     if index_col is not None:
         table = table[pd.notnull(table.index)]
