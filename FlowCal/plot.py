@@ -58,7 +58,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 import warnings
 
-cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
+cmap_default = plt.get_cmap('Spectral_r')
 
 savefig_dpi = 250
 
