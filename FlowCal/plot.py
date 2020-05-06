@@ -58,13 +58,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 import warnings
 
-# Use default colors from palettable if available
-try:
-    import palettable
-except ImportError as e:
-    cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
-else:
-    cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
 
 savefig_dpi = 250
 
