@@ -96,6 +96,7 @@ elif six.PY3:
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import openpyxl
 
 import FlowCal.io
 import FlowCal.plot
@@ -183,7 +184,7 @@ def write_workbook(filename, table_list, column_width=None):
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
-    column_width: int, optional
+    column_width: int or float, optional
         The column width to use when saving the spreadsheet. If None,
         calculate width automatically from the maximum number of characters
         in each column.
@@ -216,7 +217,7 @@ def write_workbook(filename, table_list, column_width=None):
         pass
 
     # Generate output writer object
-    writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+    writer = pd.ExcelWriter(filename, engine='openpyxl')
 
     # Write tables
     for sheet_name, df in table_list:
@@ -225,21 +226,18 @@ def write_workbook(filename, table_list, column_width=None):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        if column_width is None:
-            for i, (col_name, column) in enumerate(six.iteritems(df)):
+        for i, (col_name, column) in enumerate(six.iteritems(df)):
+            if column_width is None:
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
-                # Write width
-                writer.sheets[sheet_name].set_column(
-                    i,
-                    i,
-                    width=1.*max_chars_col)
-        else:
-            writer.sheets[sheet_name].set_column(
-                0,
-                len(df.columns) - 1,
-                width=column_width)
+                width = float(max_chars_col)
+            else:
+                width = float(column_width)
+
+            # Write width
+            col_letter = openpyxl.utils.get_column_letter(i+1)
+            writer.sheets[sheet_name].column_dimensions[col_letter].width = width
 
     # Write excel file
     writer.save()
