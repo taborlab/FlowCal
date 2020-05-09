@@ -88,7 +88,7 @@ setup(
     install_requires=['packaging>=16.8',
                       'six>=1.10.0',
                       'numpy>=1.8.2',
-                      'scipy>=0.14.0',
+                      'scipy>=0.19.0',
                       'matplotlib>=2.0.0',
                       'palettable>=2.1.1',
                       'scikit-image>=0.10.0',
