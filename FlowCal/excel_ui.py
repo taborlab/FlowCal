@@ -20,9 +20,9 @@ should contain the following tables:
       - **Time Channel**: Name of the time channel, as specified by the
         ``$PnN`` keyword in the associated FCS files.
 
-    - **Beads**: Describes the calibration beads samples that will be used
-      to calibrate cell samples in the **Samples** table. The following
-      information should be available for each beads sample:
+    - **Beads** (optional): Describes the calibration beads samples that will
+      be used to calibrate cell samples in the **Samples** table. The
+      following information should be available for each beads sample:
 
       - **ID**: Short string identifying the beads sample. Will be
         referenced by cell samples in the **Samples** table.
@@ -42,8 +42,9 @@ should contain the following tables:
       - **Clustering Channels**: The fluorescence channels used to identify
         the different bead subpopulations.
 
-    - **Samples**: Describes the biological samples to be processed. The
-      following information should be available for each sample:
+    - **Samples** (optional): Describes the biological samples to be
+      processed. The following information should be available for each
+      sample:
 
       - **ID**: Short string identifying the sample. Will be used as part
         of the plot's filenames and in the **Histograms** table in the
@@ -1406,17 +1407,15 @@ def run(input_path=None,
 
      1. If `input_path` is not specified, show a dialog to choose an input
         Excel file.
-     2. Extract data from the Instruments, Beads, and Samples tables.
-     3. Process all the bead samples specified in the Beads table.
-     4. Generate statistics for each bead sample.
-     5. Process all the cell samples in the Samples table.
-     6. Generate statistics for each sample.
-     7. If requested, generate a histogram table for each fluorescent
-        channel specified for each sample.
-     8. Generate a table with run time, date, FlowCal version, among
-        others.
-     9. Save statistics and (if requested) histograms in an output Excel
-        file.
+     2. Read the Instruments table from the Instruments sheet.
+     3. If a Beads sheet is specified, read the Beads table, process beads
+        samples, and calculate statistics.
+     4. If a Samples sheet is specified, read the Samples table, process
+        samples, calculate statistics, and (if requested) generate a
+        histogram table describing each fluorescence channel of each sample.
+     5. Generate a table describing the run (e.g. with run time, date,
+        FlowCal version, etc.).
+     6. Save tables and calculated statistics to an output Excel file.
 
     Parameters
     ----------
@@ -1434,7 +1433,7 @@ def run(input_path=None,
         sample, and each beads sample.
     hist_sheet : bool, optional
         Whether to generate a sheet in the output Excel file specifying
-        histogram bin information.
+        histogram bin information. Ignored if Samples sheet is not specified.
 
     """
     # If input file has not been specified, show open file dialog
