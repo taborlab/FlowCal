@@ -310,27 +310,26 @@ def process_beads_table(beads_table,
 
     Returns
     -------
-    beads_samples : list of FCSData objects
-        A list of processed, gated, and transformed samples, as specified
-        in `beads_table`, in the order of ``beads_table.index``.
-    mef_transform_fxns : OrderedDict
-        A dictionary of MEF transformation functions, indexed by
+    beads_samples : OrderedDict
+        Processed, gated, and transformed samples, indexed by
         ``beads_table.index``.
-    mef_outputs : list, only if ``full_output==True``
-        A list with intermediate results of the generation of the MEF
-        transformation functions. For every entry in `beads_table`,
+    mef_transform_fxns : OrderedDict
+        MEF transformation functions, indexed by ``beads_table.index``.
+    mef_outputs : OrderedDict, only if ``full_output==True``
+        Intermediate results from the generation of the MEF transformation
+        functions. For every entry in `beads_table`,
         :func:`FlowCal.mef.get_transform_fxn()` is called on the
         corresponding processed and gated beads sample with
         ``full_output=True``, and the full output (a `MEFOutput`
-        ``namedtuple``) is appended to `mef_outputs`. Please refer to the
-        output section of :func:`FlowCal.mef.get_transform_fxn()`'s
-        documentation for more information.
+        ``namedtuple``) is added to `mef_outputs`. `mef_outputs` is indexed
+        by ``beads_table.index``. Refer to the documentation for
+        :func:`FlowCal.mef.get_transform_fxn()` for more information.
 
     """
     # Initialize output variables
-    beads_samples = []
+    beads_samples      = collections.OrderedDict()
     mef_transform_fxns = collections.OrderedDict()
-    mef_outputs = []
+    mef_outputs        = collections.OrderedDict()
 
     # Return empty structures if beads table is empty
     if beads_table.empty:
@@ -563,19 +562,19 @@ def process_beads_table(beads_table,
             # Print Exception message
             if verbose:
                 print("ERROR: {}".format(str(e)))
-            # Append exception to beads_samples array, and None to everything
-            # else
-            beads_samples.append(e)
+            # Add exception to beads_samples dictionary, and None to
+            # everything else
+            beads_samples[beads_id] = e
             mef_transform_fxns[beads_id] = None
             if full_output:
-                mef_outputs.append(None)
+                mef_outputs[beads_id] = None
 
         else:
             # If no errors were found, store results
-            beads_samples.append(beads_sample_gated)
+            beads_samples[beads_id] = beads_sample_gated
             mef_transform_fxns[beads_id] = mef_transform_fxn
             if full_output:
-                mef_outputs.append(mef_output)
+                mef_outputs[beads_id] = mef_output
 
 
     if full_output:
@@ -649,15 +648,15 @@ def process_samples_table(samples_table,
 
     Returns
     -------
-    samples : list of FCSData objects
-        A list of processed, gated, and transformed samples, as specified
-        in `samples_table`, in the order of ``samples_table.index``.
+    samples : OrderedDict
+        Processed, gated, and transformed samples, indexed by
+        ``samples_table.index``.
 
     """
     # Initialize output variable
-    samples = []
+    samples = collections.OrderedDict()
 
-    # Return empty list if samples table is empty
+    # Return empty dictionary if samples table is empty
     if samples_table.empty:
         return samples
 
@@ -897,12 +896,12 @@ def process_samples_table(samples_table,
             # Print Exception message
             if verbose:
                 print("ERROR: {}".format(str(e)))
-            # Append exception to samples array
-            samples.append(e)
+            # Add exception to samples dictionary
+            samples[sample_id] = e
 
         else:
             # If no errors were found, store results
-            samples.append(sample_gated)
+            samples[sample_id] = sample_gated
 
     return samples
 
@@ -929,16 +928,16 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
         Table specifying bead samples to analyze. For more information
         about the fields required in this table, please consult the
         module's documentation.
-    beads_samples : list
+    beads_samples : dict or OrderedDict
         FCSData objects from which to calculate statistics.
-        ``beads_samples[i]`` should correspond to ``beads_table.iloc[i]``.
-    mef_outputs : list, optional
-        A list with the intermediate results of the generation of the MEF
-        transformation functions, as given by ``mef.get_transform_fxn()``.
-        This is used to populate the fields ``<channel> Beads Model``,
+        ``beads_samples[id]`` should correspond to ``beads_table.loc[id,:]``.
+    mef_outputs : dict or OrderedDict, optional
+        Intermediate results from the generation of the MEF transformation
+        functions, as given by ``mef.get_transform_fxn()``. This is used to
+        populate the fields ``<channel> Beads Model``,
         ``<channel> Beads Params. Names``, and
         ``<channel> Beads Params. Values``. If specified,
-        ``mef_outputs[i]`` should correspond to ``beads_table.iloc[i]``.
+        ``mef_outputs[id]`` should correspond to ``beads_table.loc[id,:]``.
 
     """
     # The index name is not preserved if beads_table is empty.
@@ -949,17 +948,17 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
     notes = []
     n_events = []
     acq_time = []
-    for beads_sample in beads_samples:
+    for row_id in beads_table.index:
         # Check if sample is an exception, otherwise assume it's an FCSData
-        if isinstance(beads_sample, ExcelUIException):
+        if isinstance(beads_samples[row_id], ExcelUIException):
             # Print error message
-            notes.append("ERROR: {}".format(str(beads_sample)))
+            notes.append("ERROR: {}".format(str(beads_samples[row_id])))
             n_events.append(np.nan)
             acq_time.append(np.nan)
         else:
             notes.append('')
-            n_events.append(beads_sample.shape[0])
-            acq_time.append(beads_sample.acquisition_time)
+            n_events.append(beads_samples[row_id].shape[0])
+            acq_time.append(beads_samples[row_id].acquisition_time)
 
     beads_table['Analysis Notes'] = notes
     beads_table['Number of Events'] = n_events
@@ -981,9 +980,9 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
             beads_table[channel + ' Beads Params. Values'] = ""
 
         # Iterate
-        for i, row_id in enumerate(beads_table.index):
+        for row_id in beads_table.index:
             # If error, skip
-            if isinstance(beads_samples[i], ExcelUIException):
+            if isinstance(beads_samples[row_id], ExcelUIException):
                 continue
             # If MEF values are specified, calculate stats. If not, leave empty.
             if pd.notnull(beads_table[header][row_id]):
@@ -996,14 +995,14 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                     beads_table.set_value(
                         row_id,
                         channel + ' Detector Volt.',
-                        beads_samples[i].detector_voltage(channel))
+                        beads_samples[row_id].detector_voltage(channel))
                 else:
                     beads_table.at[row_id, channel + ' Detector Volt.'] = \
-                        beads_samples[i].detector_voltage(channel)
+                        beads_samples[row_id].detector_voltage(channel)
 
 
                 # Amplification type
-                if beads_samples[i].amplification_type(channel)[0]:
+                if beads_samples[row_id].amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
@@ -1025,13 +1024,13 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                     # Try to find the current channel among the mef'd channels.
                     # If successful, extract bead fitted parameters.
                     try:
-                        mef_channel_index = mef_outputs[i]. \
+                        mef_channel_index = mef_outputs[row_id]. \
                             mef_channels.index(channel)
                     except ValueError:
                         pass
                     else:
                         # Bead model
-                        beads_model_str = mef_outputs[i]. \
+                        beads_model_str = mef_outputs[row_id]. \
                             fitting['beads_model_str'][mef_channel_index]
                         # Dataframes, such as beads_table, are modified
                         # differently depending on pandas' version.
@@ -1045,7 +1044,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                                 beads_model_str
 
                         # Bead parameter names
-                        params_names = mef_outputs[i]. \
+                        params_names = mef_outputs[row_id]. \
                             fitting['beads_params_names'][mef_channel_index]
                         params_names_str = ", ".join([str(p)
                                                       for p in params_names])
@@ -1064,7 +1063,7 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                                     params_names_str
 
                         # Bead parameter values
-                        params = mef_outputs[i]. \
+                        params = mef_outputs[row_id]. \
                             fitting['beads_params'][mef_channel_index]
                         params_str = ", ".join([str(p) for p in params])
                         # Dataframes, such as beads_table, are modified
@@ -1117,9 +1116,9 @@ def add_samples_stats(samples_table, samples):
         Table specifying samples to analyze. For more information about the
         fields required in this table, please consult the module's
         documentation.
-    samples : list
-        FCSData objects from which to calculate statistics. ``samples[i]``
-        should correspond to ``samples_table.iloc[i]``.
+    samples : dict or OrderedDict
+        FCSData objects from which to calculate statistics. ``samples[id]``
+        should correspond to ``samples_table.loc[id,:]``.
 
     Notes
     -----
@@ -1138,17 +1137,17 @@ def add_samples_stats(samples_table, samples):
     notes = []
     n_events = []
     acq_time = []
-    for sample in samples:
+    for row_id in samples_table.index:
         # Check if sample is an exception, otherwise assume it's an FCSData
-        if isinstance(sample, ExcelUIException):
+        if isinstance(samples[row_id], ExcelUIException):
             # Print error message
-            notes.append("ERROR: {}".format(str(sample)))
+            notes.append("ERROR: {}".format(str(samples[row_id])))
             n_events.append(np.nan)
             acq_time.append(np.nan)
         else:
             notes.append('')
-            n_events.append(sample.shape[0])
-            acq_time.append(sample.acquisition_time)
+            n_events.append(samples[row_id].shape[0])
+            acq_time.append(samples[row_id].acquisition_time)
 
     samples_table['Analysis Notes'] = notes
     samples_table['Number of Events'] = n_events
@@ -1174,9 +1173,9 @@ def add_samples_stats(samples_table, samples):
         samples_table[channel + ' Geom. CV'] = np.nan
         samples_table[channel + ' IQR'] = np.nan
         samples_table[channel + ' RCV'] = np.nan
-        for row_id, sample in zip(samples_table.index, samples):
+        for row_id in samples_table.index:
             # If error, skip
-            if isinstance(sample, ExcelUIException):
+            if isinstance(samples[row_id], ExcelUIException):
                 continue
             # If units are specified, calculate stats. If not, leave empty.
             if pd.notnull(samples_table[header][row_id]):
@@ -1187,15 +1186,16 @@ def add_samples_stats(samples_table, samples):
                 # differently depending on pandas' version.
                 if packaging.version.parse(pd.__version__) \
                         < packaging.version.parse('0.21'):
-                    samples_table.set_value(row_id,
-                                            channel + ' Detector Volt.',
-                                            sample.detector_voltage(channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Detector Volt.',
+                        samples[row_id].detector_voltage(channel))
                 else:
                     samples_table.at[row_id, channel + ' Detector Volt.'] = \
-                        sample.detector_voltage(channel)
+                        samples[row_id].detector_voltage(channel)
 
                 # Amplification type
-                if sample.amplification_type(channel)[0]:
+                if samples[row_id].amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
@@ -1215,54 +1215,62 @@ def add_samples_stats(samples_table, samples):
                 # differently depending on pandas' version.
                 if packaging.version.parse(pd.__version__) \
                         < packaging.version.parse('0.21'):
-                    samples_table.set_value(row_id,
-                                            channel + ' Mean',
-                                            FlowCal.stats.mean(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' Median',
-                                            FlowCal.stats.median(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' Mode',
-                                            FlowCal.stats.mode(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' Std',
-                                            FlowCal.stats.std(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' CV',
-                                            FlowCal.stats.cv(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' IQR',
-                                            FlowCal.stats.iqr(sample, channel))
-                    samples_table.set_value(row_id,
-                                            channel + ' RCV',
-                                            FlowCal.stats.rcv(sample, channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Mean',
+                        FlowCal.stats.mean(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Median',
+                        FlowCal.stats.median(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Mode',
+                        FlowCal.stats.mode(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' Std',
+                        FlowCal.stats.std(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' CV',
+                        FlowCal.stats.cv(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' IQR',
+                        FlowCal.stats.iqr(samples[row_id], channel))
+                    samples_table.set_value(
+                        row_id,
+                        channel + ' RCV',
+                        FlowCal.stats.rcv(samples[row_id], channel))
                 else:
                     samples_table.at[row_id, channel + ' Mean'] = \
-                        FlowCal.stats.mean(sample, channel)
+                        FlowCal.stats.mean(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' Median'] = \
-                        FlowCal.stats.median(sample, channel)
+                        FlowCal.stats.median(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' Mode'] = \
-                        FlowCal.stats.mode(sample, channel)
+                        FlowCal.stats.mode(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' Std'] = \
-                        FlowCal.stats.std(sample, channel)
+                        FlowCal.stats.std(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' CV'] = \
-                        FlowCal.stats.cv(sample, channel)
+                        FlowCal.stats.cv(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' IQR'] = \
-                        FlowCal.stats.iqr(sample, channel)
+                        FlowCal.stats.iqr(samples[row_id], channel)
                     samples_table.at[row_id, channel + ' RCV'] = \
-                        FlowCal.stats.rcv(sample, channel)
+                        FlowCal.stats.rcv(samples[row_id], channel)
 
                 # For geometric statistics, first check for non-positive events.
                 # If found, throw a warning and calculate statistics on positive
                 # events only.
-                if np.any(sample[:, channel] <= 0):
+                if np.any(samples[row_id][:, channel] <= 0):
                     # Separate positive events
-                    sample_positive = sample[sample[:, channel] > 0]
+                    sample_positive = \
+                        samples[row_id][samples[row_id][:, channel] > 0]
                     # Throw warning
                     msg = "Geometric statistics for channel" + \
                         " {} calculated on positive events".format(channel) + \
                         " only ({:.1f}%). ".format(
-                            100.*sample_positive.shape[0]/sample.shape[0])
+                            100.*sample_positive.shape[0]/samples[row_id].shape[0])
                     warnings.warn("On sample {}: {}".format(row_id, msg))
                     # Write warning message to table
                     if samples_table.loc[row_id, 'Analysis Notes']:
@@ -1275,7 +1283,7 @@ def add_samples_stats(samples_table, samples):
                     else:
                         samples_table.at[row_id, 'Analysis Notes'] = msg
                 else:
-                    sample_positive = sample
+                    sample_positive = samples[row_id]
 
                 # Calculate and write geometric statistics
                 # Dataframes, such as samples_table, are modified
@@ -1316,16 +1324,16 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
         Table specifying samples to analyze. For more information about the
         fields required in this table, please consult the module's
         documentation.
-    samples : list
-        FCSData objects from which to calculate histograms. ``samples[i]``
-        should correspond to ``samples_table.iloc[i]``
+    samples : dict or OrderedDict
+        FCSData objects from which to calculate statistics. ``samples[id]``
+        should correspond to ``samples_table.loc[id,:]``.
     max_bins : int, optional
         Maximum number of bins to use.
 
     Returns
     -------
     hist_table : DataFrame
-        A multi-indexed DataFrame. Rows cotain the histogram bins and
+        A multi-indexed DataFrame. Rows contain the histogram bins and
         counts for every sample and channel specified in samples_table.
         `hist_table` is indexed by the sample's ID, the channel name,
         and whether the row corresponds to bins or counts.
@@ -1341,13 +1349,13 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
     # The following iterates through these histograms and finds the
     # largest.
     n_columns = 0
-    for sample_id, sample in zip(samples_table.index, samples):
-        if isinstance(sample, ExcelUIException):
+    for sample_id in samples_table.index:
+        if isinstance(samples[sample_id], ExcelUIException):
             continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
-                if n_columns < sample.resolution(channel):
-                    n_columns = sample.resolution(channel)
+                if n_columns < samples[sample_id].resolution(channel):
+                    n_columns = samples[sample_id].resolution(channel)
     # Saturate at max_bins
     if n_columns > max_bins:
         n_columns = max_bins
@@ -1359,8 +1367,8 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
     hist_table = pd.DataFrame([], index=index, columns=columns)
 
     # Generate histograms
-    for sample_id, sample in zip(samples_table.index, samples):
-        if isinstance(sample, ExcelUIException):
+    for sample_id in samples_table.index:
+        if isinstance(samples[sample_id], ExcelUIException):
             continue
         for header, channel in zip(hist_headers, hist_channels):
             if pd.notnull(samples_table[header][sample_id]):
@@ -1373,12 +1381,14 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
                 else:
                     scale = 'logicle'
                 # Define number of bins
-                nbins = min(sample.resolution(channel), max_bins)
+                nbins = min(samples[sample_id].resolution(channel), max_bins)
                 # Calculate bin edges and centers
                 # We generate twice the necessary number of bins. We then take
                 # every other value as the proper bin edges, and the remaining
                 # values as the bin centers.
-                bins_extended = sample.hist_bins(channel, 2*nbins, scale)
+                bins_extended = samples[sample_id].hist_bins(channel,
+                                                             2*nbins,
+                                                             scale)
                 bin_edges = bins_extended[::2]
                 bin_centers = bins_extended[1::2]
                 # Store bin centers
@@ -1387,7 +1397,8 @@ def generate_histograms_table(samples_table, samples, max_bins=1024):
                                 'Bin Centers ({})'.format(unit)),
                                 columns[0:len(bin_centers)]] = bin_centers
                 # Calculate and store histogram counts
-                hist, __ = np.histogram(sample[:,channel], bins=bin_edges)
+                hist, __ = np.histogram(samples[sample_id][:,channel],
+                                        bins=bin_edges)
                 hist_table.loc[(sample_id, channel, 'Counts'),
                                columns[0:len(bin_centers)]] = hist
 

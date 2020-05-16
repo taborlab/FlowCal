@@ -50,10 +50,11 @@ if __name__ == "__main__":
     # To do so, it requires a table describing the flow cytometer used
     # (``instruments_table``). Here, we also use verbose mode, and indicate that
     # plots describing individual steps should be generated in the folder
-    # "plot_beads". The result is a list of ``FCSData`` objects representing
-    # gated and transformed calibration beads samples (``beads_samples``), and
-    # a dictionary containing MEF transformation functions
-    # (``mef_transform_fxns``). This will be used later to process cell samples.
+    # "plot_beads". The result is a dictionary of ``FCSData`` objects
+    # representing gated and transformed calibration beads samples
+    # (``beads_samples``), and a dictionary containing MEF transformation
+    # functions (``mef_transform_fxns``). This will be used later to process
+    # cell samples.
     beads_samples, mef_transform_fxns = FlowCal.excel_ui.process_beads_table(
         beads_table=beads_table,
         instruments_table=instruments_table,
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     # in the context of accessory matplotlib functions to modify the axes
     # limits and labels and add a legend, among others.
     plt.figure(figsize=(6,3.5))
-    FlowCal.plot.hist1d(samples,
+    FlowCal.plot.hist1d(list(samples.values()),
                         channel='FL1',
                         histtype='step',
                         bins=128)
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     # geometric mean from channel FL1 of each sample, and plot them against the
     # corresponding IPTG concentrations.
     samples_fluorescence = [FlowCal.stats.gmean(s, channels='FL1')
-                            for s in samples]
+                            for s in list(samples.values())]
     plt.figure(figsize=(5.5, 3.5))
     plt.plot(iptg,
              samples_fluorescence,
