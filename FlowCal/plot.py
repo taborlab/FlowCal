@@ -47,6 +47,7 @@ Functions in this module are divided in two categories:
 """
 
 import packaging
+import collections
 import numpy as np
 import scipy.ndimage.filters
 import matplotlib
@@ -57,6 +58,15 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 import warnings
+
+# expose the collections module abstract base classes (ABCs) in both
+# Python 2 and 3
+try:
+    # python 3
+    collectionsAbc = collections.abc
+except AttributeError:
+    # python 2
+    collectionsAbc = collections
 
 # Use default colors from palettable if available
 try:
@@ -1060,6 +1070,1172 @@ def hist1d(data_list,
         plt.tight_layout()
         plt.savefig(savefig, dpi=savefig_dpi)
         plt.close()
+
+_ViolinRegion = collections.namedtuple('_ViolinRegion',
+                                       field_names=('left_side_x',
+                                                    'right_side_x',
+                                                    'y'))
+
+def _plot_violin(violin_position,
+                 violin_data,
+                 violin_width,
+                 violin_kwargs,
+                 y_bin_edges,
+                 xscale,
+                 upper_trim_fraction,
+                 lower_trim_fraction,
+                 draw_summary_stat,
+                 draw_summary_stat_fxn,
+                 draw_summary_stat_kwargs):
+    """
+    Plot a single violin.
+
+    """
+    if draw_summary_stat:
+        summary_stat = draw_summary_stat_fxn(violin_data)
+
+    # trim outliers to get rid of long unsightly tails
+    num_discard_low  = int(np.floor(len(violin_data) \
+                         * float(lower_trim_fraction)))
+    num_discard_high = int(np.floor(len(violin_data) \
+                         * float(upper_trim_fraction)))
+
+    violin_data = np.sort(violin_data)
+
+    violin_data = violin_data[num_discard_low:]
+    violin_data = violin_data[::-1]
+    violin_data = violin_data[num_discard_high:]
+    violin_data = violin_data[::-1]
+
+    ###
+    # build violin
+    ###
+    H,H_edges = np.histogram(violin_data, bins=y_bin_edges)
+    H = np.array(H, dtype=np.float)
+
+    # duplicate histogram bin counts to serve as left and right corners of
+    # the bars in the histogram
+    left_side_x = np.repeat(H,2)
+
+    # add leftmost (bottom) and rightmost (top) points to bring histogram
+    # silhouette back to the axis
+    left_side_x = np.insert(left_side_x, 0, 0.0)
+    left_side_x = np.append(left_side_x, 0.0)
+
+    # normalize the histogram height (violin width)
+    left_side_x /= np.max(left_side_x)
+
+    # rescale to specified violin width
+    left_side_x *= (violin_width/2.0)
+
+    # reflect histogram silhouette across the axis defined by
+    # `violin_position`
+    if xscale == 'log':
+        right_side_x = np.log10(violin_position) + left_side_x
+        left_side_x  = np.log10(violin_position) - left_side_x
+
+        right_side_x = 10**right_side_x
+        left_side_x  = 10**left_side_x
+    else:
+        right_side_x = violin_position + left_side_x
+        left_side_x  = violin_position - left_side_x
+
+    # duplicate the histogram edges to serve as y-axis values.
+    y = np.repeat(H_edges,2)
+
+    ###
+    # crimp violin (i.e. remove the frequency=0 line segments between
+    #               violin regions)
+    ###
+    violin_regions = []
+    idx = 0
+    if len(y) == 1:
+        # edge case
+        if left_side_x[idx] == right_side_x[idx]:
+            # singularity
+            pass
+        else:
+            violin_regions.append(_ViolinRegion(left_side_x  = left_side_x,
+                                                right_side_x = right_side_x,
+                                                y            = y))
+    else:
+        # The left and right sides of a violin can have identical or
+        # different x-values at different points along the y-axis. Points
+        # where they have the same x-value represent either the end of a
+        # violin region, which we want to keep, or part of an inter-region
+        # line segment (i.e. frequency=0), which we want to discard for
+        # aesthetic purposes. We can distinguish between these two cases
+        # by looking at how the equality of the two sides changes as you
+        # proceed along the y-axis.
+        start = idx  # assume we start in a violin region
+        while(idx < len(y)-1):
+            if (left_side_x[idx] == right_side_x[idx]) \
+                    and (left_side_x[idx+1] != right_side_x[idx+1]):
+                # violin region is opening
+                start = idx
+            elif (left_side_x[idx] != right_side_x[idx]) \
+                    and (left_side_x[idx+1] != right_side_x[idx+1]):
+                # violin region is continuing
+                pass
+            elif (left_side_x[idx] != right_side_x[idx]) \
+                    and (left_side_x[idx+1] == right_side_x[idx+1]):
+                # violin region is closing
+                end = idx+1  # include this point
+                violin_regions.append(
+                    _ViolinRegion(left_side_x  = left_side_x[start:end+1],
+                                  right_side_x = right_side_x[start:end+1],
+                                  y            = y[start:end+1]))
+                start = None  # we are no longer in a violin region
+            elif (left_side_x[idx] == right_side_x[idx]) \
+                    and (left_side_x[idx+1] == right_side_x[idx+1]):
+                # we are in an inter-region segment
+                start = None
+
+            idx += 1
+
+        if start is not None:
+            # if we were still in a violin region at the end,
+            # add the last region to the list
+            end = idx  # include this point
+            violin_regions.append(
+                _ViolinRegion(left_side_x  = left_side_x[start:end+1],
+                              right_side_x = right_side_x[start:end+1],
+                              y            = y[start:end+1]))
+    for vr in violin_regions:
+        plt.fill_betweenx(x1=vr.left_side_x,
+                          x2=vr.right_side_x,
+                          y=vr.y,
+                          **violin_kwargs)
+
+    # illustrate summary statistic
+    if draw_summary_stat:
+        if xscale == 'log':
+            left_x  = np.log10(violin_position) - (violin_width/2.0)
+            right_x = np.log10(violin_position) + (violin_width/2.0)
+
+            left_x  = 10**left_x
+            right_x = 10**right_x
+
+            plt.plot([left_x, right_x],
+                     [summary_stat, summary_stat],
+                     **draw_summary_stat_kwargs)
+        else:
+            plt.plot([violin_position-(violin_width/2.0),
+                      violin_position+(violin_width/2.0)],
+                     [summary_stat, summary_stat],
+                     **draw_summary_stat_kwargs)
+
+def violin(data,
+           positions=None,
+           min_data=None,
+           max_data=None,
+           logx_zero_data=None,
+           violin_width=None,
+           xscale='linear',
+           yscale='linear',
+           data_xlim=None,
+           ylim=None,
+           num_y_bins=100,
+           y_bin_edges=None,
+           upper_trim_fraction=0.01,
+           lower_trim_fraction=0.01,
+           violin_width_to_span_fraction=0.1,
+           violin_kwargs=None,
+           draw_summary_stat=True,
+           draw_summary_stat_fxn=np.mean,
+           draw_summary_stat_kwargs=None,
+           draw_min_line=True,
+           draw_max_line=True,
+           draw_min_line_kwargs=None,
+           draw_max_line_kwargs=None,
+           draw_minmax_divider=True,
+           draw_minmax_divider_kwargs=None,
+           draw_logx_zero_divider=True,
+           draw_logx_zero_divider_kwargs=None,
+           draw_model=False,
+           draw_model_fxn=None,
+           draw_model_kwargs=None):
+    """
+    Plot violin plot.
+
+    Illustrate the relative frequency of members of different populations
+    using vertical, normalized, symmetrical histograms ("violins") centered on
+    corresponding x-axis values. Wider regions of violins indicate regions
+    that occur with greater frequency.
+
+    Parameters
+    ----------
+    data : sequence of scalars or sequence of sequence of scalars
+        A population or collection of populations for which to plot violins.
+    positions : scalar or sequence of scalars, optional
+        Positions (x-axis values) at which to center violins.
+    min_data : sequence of scalars, optional
+        A population representing a minimum control. This violin is separately
+        illustrated at the left of the plot.
+    max_data : sequence of scalars, optional
+        A population representing a maximum control. This violin is separately
+        illustrated at the left of the plot.
+    logx_zero_data : sequence of scalars, optional
+        A population representing position=0 if `xscale` is 'log'. This violin
+        is separately illustrated at the left of the plot. Ignored if `xscale`
+        is not 'log'.
+    violin_width : scalar, optional
+        Width of violin. If `xscale` is 'log', the units are decades. If not
+        specified, `violin_width` is calculated from `data_xlim` and
+        `violin_width_to_span_fraction`. If only one violin is specified in
+        `data`, `violin_width` = 0.5.
+
+    Other parameters
+    ----------------
+    xscale : {'linear','log}, optional
+        Scale of the x-axis.
+    yscale : {'linear','log'}, optional
+        Scale of the y-axis.
+    data_xlim : 2-element sequence, optional
+        Limits of the x-axis where `data` are plotted. If min, max, and zero
+        violins are not used, `data_xlim` also specifies plt.xlim(). If not
+        specified, `data_lim` is calculated to pad leftmost and rightmost
+        violins with 0.5*`violin_width`. If `violin_width` is also not
+        specified, `violin_width` is calculated to satisfy the
+        0.5*`violin_width` padding and `violin_width_to_span_fraction`.
+    ylim : 2-element sequence, optional
+        Limits of the y-axis. If not specified, `ylim` is calculated to span
+        all violins (before aesthetic trimming).
+    num_y_bins : int, optional
+        Number of bins to bin population members into along the y-axis.
+        Ignored if `y_bin_edges` is specified.
+    y_bin_edges : sequence of scalars, sequence of sequence of scalars, or
+                  mapping to sequence of scalars, optional
+        Bin edges used to bin population members along the y-axis. If a
+        mapping is specified, each violin's `y_bin_edges` are searched for in
+        the following key order: the violin's position, 'data'. Min, max, and
+        zero `y_bin_edges` can be specified via the 'min', 'max', and
+        'logx_zero' keys, respectively. If `y_bin_edges` is a sequence of
+        sequence of scalars, min, max, and zero violins cannot be used. If
+        not specified, `y_bin_edges` is calculated linearly (`yscale` ==
+        'linear') or logarithmically (`yscale` == 'log') to span `ylim` using
+        `num_y_bins`.
+    upper_trim_fraction : float, sequence of floats, or mapping to float,
+                          optional
+        Fraction of members to trim (discard) from the top of the violin (for
+        aesthetic purposes). If a mapping is specified, each violin's
+        `upper_trim_fraction` is searched for in the following key order: the
+        violin's position, 'data'. Min, max, and zero `upper_trim_fraction`
+        can be specified via the 'min', 'max', and 'logx_zero' keys,
+        respectively. If `upper_trim_fraction` is a sequence of sequence of
+        floats, min, max, and zero violins cannot be used.
+    lower_trim_fraction : float, sequence of floats, or mapping to float,
+                          optional
+        Fraction of members to trim (discard) from the bottom of the violin
+        (for aesthetic purposes). If a mapping is specified, each violin's
+        `lower_trim_fraction` is searched for in the following key order: the
+        violin's position, 'data'. Min, max, and zero `lower_trim_fraction`
+        can be specified via the 'min', 'max', and 'logx_zero' keys,
+        respectively. If `lower_trim_fraction` is a sequence of sequence of
+        floats, min, max, and zero violins cannot be used.
+    violin_width_to_span_fraction : float, optional
+        Fraction of the x-axis span that a violin should span. Ignored if
+        `violin_width` is specified.
+    violin_kwargs : mapping, sequence of mappings, mapping to mappings,
+                    optional
+        Keyword arguments passed to the plt.fill_betweenx() command that
+        illustrates each violin. If a mapping to mappings is specified, each
+        violin's kwargs are searched for in the following key order: the
+        violin's position, 'data'. Min, max, and zero kwargs can be specified
+        via the 'min', 'max', and 'logx_zero' keys, respectively. If
+        `violin_kwargs` is a sequence of mappings, min, max, and zero violins
+        cannot be used. Default = {'facecolor':'gray', 'edgecolor':'black'}.
+    draw_summary_stat : bool, optional
+        Flag specifying to illustrate a summary statistic for each violin.
+    draw_summary_stat_fxn : function, optional
+        Function used to calculate the summary statistic for each violin.
+        Summary statistics are calculated prior to aesthetic trimming.
+    draw_summary_stat_kwargs : mapping, sequence of mappings, mapping to
+                               mappings, optional
+        Keyword arguments passed to the plt.plot() command that illustrates
+        each violin's summary statistic. If a mapping to mappings is
+        specified, each violin's `draw_summary_stat_kwargs` is searched for
+        in the following key order: the violin's position, 'data'. Min, max,
+        and zero `draw_summary_stat_kwargs` can be specified via the 'min',
+        'max', and 'logx_zero' keys, respectively. If
+        `draw_summary_stat_kwargs` is a sequence of mappings, min, max, and
+        zero violins cannot be used. Default = {'color':'black'}.
+    draw_min_line : bool, optional
+        Flag specifying to illustrate a line from the min violin summary
+        statistic across the plot.
+    draw_max_line : bool, optional
+        Flag specifying to illustrate a line from the max violin summary
+        statistic across the plot.
+    draw_min_line_kwargs : mapping, optional
+        Keyword arguments passed to the plt.plot() command that illustrates
+        the min violin line. Default = {'color':'gray', 'linestyle':'--',
+        'zorder':-2}.
+    draw_max_line_kwargs : mapping, optional
+        Keyword arguments passed to the plt.plot() command that illustrates
+        the max violin line. Default = {'color':'gray', 'linestyle':'--',
+        'zorder':-2}.
+    draw_minmax_divider : bool, optional
+        Flag specifying to illustrate a vertical line separating the min and
+        max violins from other violins.
+    draw_minmax_divider_kwargs : mapping, optional
+        Keyword arguments passed to the plt.axvline() command that
+        illustrates the min/max divider. Default = {'color':'gray',
+        'linestyle':'-'}.
+    draw_logx_zero_divider : bool, optional
+        Flag specifying to illustrate a vertical line separating the zero
+        violin from the `data` violins.
+    draw_logx_zero_divider_kwargs : mapping, optional
+        Keyword arguments passed to the plt.axvline() command that
+        illustrates the zero divider. Default = {'color':'gray',
+        'linestyle':':'}.
+    draw_model : bool, optional
+        Flag specifying to illustrate a mathematical model with the `data`
+        and zero violins.
+    draw_model_fxn : function, optional
+        Function used to calculate model y-values. 100 x-values are linearly
+        (`xscale` == 'linear') or logarithmically (`xscale` == 'log')
+        generated spanning `data_xlim`. The zero value is separately
+        illustrated with the zero violin as a horizontal line.
+    draw_model_kwargs : mapping, optional
+        Keyword arguments passed to the plt.plot() command that
+        illustrates the model. Default = {'color':'gray', 'zorder':-1,
+        'solid_capstyle':'butt'}.
+
+    """
+
+    ###
+    # understand inputs
+    ###
+
+    # populate default input values
+    if violin_kwargs is None:
+        violin_kwargs = {'facecolor':'gray', 'edgecolor':'black'}
+
+    if draw_summary_stat_kwargs is None:
+        draw_summary_stat_kwargs = {'color':'black'}
+
+    if draw_min_line_kwargs is None:
+        draw_min_line_kwargs = {'color':'gray', 'linestyle':'--', 'zorder':-2}
+
+    if draw_max_line_kwargs is None:
+        draw_max_line_kwargs = {'color':'gray', 'linestyle':'--', 'zorder':-2}
+
+    if draw_model_kwargs is None:
+        draw_model_kwargs = {'color':'gray',
+                             'zorder':-1,
+                             'solid_capstyle':'butt'}
+
+    if draw_logx_zero_divider_kwargs is None:
+        draw_logx_zero_divider_kwargs = {'color':'gray', 'linestyle':':'}
+
+    if draw_minmax_divider_kwargs is None:
+        draw_minmax_divider_kwargs = {'color':'gray', 'linestyle':'-'}
+
+    # check x and y scales
+    if xscale not in ('linear', 'log'):
+        msg  = "`xscale` must be 'linear' or 'log'"
+        raise ValueError(msg)
+
+    if yscale not in ('linear', 'log'):
+        msg  = "`yscale` must be 'linear' or 'log'"
+        raise ValueError(msg)
+
+    # understand `data`
+    try:
+        first_element = next(iter(data))
+        try:
+            iter(first_element)   # success => sequence of sequences
+            data_length = len(data)
+        except TypeError:
+            data = [data]
+            data_length = 1
+    except TypeError:
+        msg  = "`data` should be iterable sequence or sequence of sequences"
+        raise TypeError(msg)
+
+    # understand `positions`
+    if positions is None:
+        positions = np.arange(1,data_length+1, dtype=np.float)
+        if xscale == 'log':
+            positions = 10**positions
+        positions_length = len(positions)
+    else:
+        try:
+            positions_length = len(positions)
+        except TypeError:
+            positions = [positions]
+            positions_length = 1
+
+    if positions_length != data_length:
+        msg  = "`positions` must have the same length as `data`"
+        raise ValueError(msg)
+
+    # separately illustrate position=0 if log x-axis
+    if xscale == 'log' and 0 in positions:
+        data      = list(data)
+        positions = list(positions)
+
+        zero_idx = [idx
+                    for idx,pos in enumerate(positions)
+                    if pos == 0]
+
+        if len(zero_idx) > 1:
+            msg  = "attempting to separately illustrate position=0 violin,"
+            msg += " but found multiple instances"
+            raise ValueError(msg)
+        zero_idx = zero_idx[0]
+
+        zero_data = data.pop(zero_idx)
+        del positions[zero_idx]
+        data_length      = len(data)
+        positions_length = len(positions)
+
+        if logx_zero_data is None:
+            logx_zero_data = zero_data
+
+        # convert parameters specified via sequences to mappings
+        if isinstance(violin_kwargs, collectionsAbc.Sequence):
+            violin_kwargs_seq = list(violin_kwargs)
+            zero_kwargs = violin_kwargs_seq.pop(zero_idx)
+            violin_kwargs = {pos:kwargs
+                             for pos,kwargs in zip(positions,
+                                                   violin_kwargs_seq)}
+            violin_kwargs['logx_zero'] = zero_kwargs
+
+        if isinstance(draw_summary_stat_kwargs, collectionsAbc.Sequence):
+            draw_summary_stat_kwargs_seq = list(draw_summary_stat_kwargs)
+            zero_kwargs = draw_summary_stat_kwargs_seq.pop(zero_idx)
+            draw_summary_stat_kwargs = \
+                {pos:kwargs
+                 for pos,kwargs in zip(positions,
+                                       draw_summary_stat_kwargs_seq)}
+            draw_summary_stat_kwargs['logx_zero'] = zero_kwargs
+
+        if y_bin_edges is not None:
+            try:
+                first_element = next(iter(y_bin_edges))
+                try:
+                    iter(first_element)   # success => sequence of sequences
+
+                    y_bin_edges_seq = list(y_bin_edges)
+                    zero_y_bin_edges = y_bin_edges_seq.pop(zero_idx)
+                    y_bin_edges = {pos:ybe
+                                   for pos,ybe in zip(positions,
+                                                      y_bin_edges_seq)}
+                    y_bin_edges['logx_zero'] = zero_y_bin_edges
+                except TypeError:
+                    # sequence of scalars
+                    pass
+            except TypeError:
+                msg  = "`y_bin_edges` should be iterable sequence or sequence"
+                msg += " of sequences"
+                raise TypeError(msg)
+
+        if isinstance(upper_trim_fraction, collectionsAbc.Sequence):
+            upper_trim_fraction_seq = list(upper_trim_fraction)
+            zero_upper_trim_fraction = upper_trim_fraction_seq.pop(zero_idx)
+            upper_trim_fraction = \
+                {pos:utf
+                 for pos,utf in zip(positions,
+                                    upper_trim_fraction_seq)}
+            upper_trim_fraction['logx_zero'] = zero_upper_trim_fraction
+
+        if isinstance(lower_trim_fraction, collectionsAbc.Sequence):
+            lower_trim_fraction_seq = list(lower_trim_fraction)
+            zero_lower_trim_fraction = lower_trim_fraction_seq.pop(zero_idx)
+            lower_trim_fraction = \
+                {pos:ltf
+                 for pos,ltf in zip(positions,
+                                    lower_trim_fraction_seq)}
+            lower_trim_fraction['logx_zero'] = zero_lower_trim_fraction
+
+    # calculate data_xlim and violin_width if necessary. To do so, pad
+    # data_xlim one violin_width away from extreme positions.
+    if data_xlim is None:
+        if violin_width is None:
+            if data_length == 1:
+                # edge case
+                violin_width = 0.5
+            elif xscale == 'log':
+                log_positions_span = np.log10(np.max(positions)) \
+                                       - np.log10(np.min(positions))
+                log_xspan = log_positions_span \
+                              / (1 - 2.0*violin_width_to_span_fraction)
+                violin_width = violin_width_to_span_fraction*log_xspan
+            else:
+                positions_span = np.max(positions) - np.min(positions)
+                xspan = positions_span \
+                          / (1 - 2.0*violin_width_to_span_fraction)
+                violin_width = violin_width_to_span_fraction*xspan
+
+        if xscale == 'log':
+            data_xlim = (10**(np.log10(np.min(positions))-violin_width),
+                         10**(np.log10(np.max(positions))+violin_width))
+        else:
+            data_xlim = (np.min(positions)-violin_width,
+                         np.max(positions)+violin_width)
+    elif violin_width is None:
+        if xscale == 'log':
+            log_xspan = np.log10(data_xlim[1]) - np.log10(data_xlim[0])
+            violin_width = violin_width_to_span_fraction*log_xspan
+        else:
+            xspan = data_xlim[1] - data_xlim[0]
+            violin_width = violin_width_to_span_fraction*xspan
+
+    # calculate default ylim if necessary. To do so, take min and max values
+    # of all data.
+    if ylim is None:
+        ymin = np.inf
+        ymax = -np.inf
+        for idx in range(data_length):
+            violin_data = np.array(data[idx], dtype=np.float).flat
+            violin_min = np.min(violin_data)
+            violin_max = np.max(violin_data)
+            if violin_min < ymin:
+                ymin = violin_min
+            if violin_max > ymax:
+                ymax = violin_max
+        if min_data is not None:
+            violin_min = np.min(min_data)
+            violin_max = np.max(min_data)
+            if violin_min < ymin:
+                ymin = violin_min
+            if violin_max > ymax:
+                ymax = violin_max
+        if max_data is not None:
+            violin_min = np.min(max_data)
+            violin_max = np.max(max_data)
+            if violin_min < ymin:
+                ymin = violin_min
+            if violin_max > ymax:
+                ymax = violin_max
+        if xscale == 'log' and logx_zero_data is not None:
+            violin_min = np.min(logx_zero_data)
+            violin_max = np.max(logx_zero_data)
+            if violin_min < ymin:
+                ymin = violin_min
+            if violin_max > ymax:
+                ymax = violin_max
+        ylim = (ymin, ymax)
+
+    # calculate violin bin edges if necessary
+    if y_bin_edges is None:
+        if yscale == 'linear':
+            y_bin_edges = np.linspace(ylim[0], ylim[1], num_y_bins+1)
+        else:
+            y_bin_edges = np.logspace(np.log10(ylim[0]),
+                                      np.log10(ylim[1]),
+                                      num_y_bins+1)
+
+    ###
+    # plot violins
+    ###
+    for idx in range(data_length):
+        violin_position = positions[idx]
+        violin_data     = np.array(data[idx], dtype=np.float).flat
+
+        # understand violin_kwargs
+        if isinstance(violin_kwargs, collectionsAbc.Mapping):
+            try:
+                v_kwargs = violin_kwargs[violin_position]
+            except KeyError:
+                try:
+                    v_kwargs = violin_kwargs['data']
+                except KeyError:
+                    v_kwargs = violin_kwargs
+        elif isinstance(violin_kwargs, collectionsAbc.Sequence):
+            v_kwargs = violin_kwargs[idx]
+
+        # understand draw_summary_stat_kwargs
+        if isinstance(draw_summary_stat_kwargs, collectionsAbc.Mapping):
+            try:
+                v_draw_summary_stat_kwargs = \
+                    draw_summary_stat_kwargs[violin_position]
+            except KeyError:
+                try:
+                    v_draw_summary_stat_kwargs = \
+                        draw_summary_stat_kwargs['data']
+                except KeyError:
+                    v_draw_summary_stat_kwargs = draw_summary_stat_kwargs
+        elif isinstance(draw_summary_stat_kwargs, collectionsAbc.Sequence):
+            v_draw_summary_stat_kwargs = draw_summary_stat_kwargs[idx]
+
+        # understand y_bin_edges
+        if isinstance(y_bin_edges, collectionsAbc.Mapping):
+            try:
+                violin_y_bin_edges = y_bin_edges[violin_position]
+            except KeyError:
+                try:
+                    violin_y_bin_edges = y_bin_edges['data']
+                except KeyError:
+                    msg  = "unable to understand `y_bin_edges`"
+                    raise ValueError(msg)
+        else:
+            # check for sequence of sequences
+            try:
+                first_element = next(iter(y_bin_edges))
+                try:
+                    iter(first_element)   # success => sequence of sequences
+                    violin_y_bin_edges = y_bin_edges[idx]
+                except TypeError:
+                    violin_y_bin_edges = y_bin_edges
+            except TypeError:
+                msg  = "`y_bin_edges` should be iterable sequence or sequence"
+                msg += " of sequences"
+                raise TypeError(msg)
+
+        # understand upper and lower trim fractions
+        if isinstance(upper_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_upper_trim_fraction = upper_trim_fraction[violin_position]
+            except KeyError:
+                try:
+                    v_upper_trim_fraction = upper_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `upper_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(upper_trim_fraction, collectionsAbc.Sequence):
+            v_upper_trim_fraction = upper_trim_fraction[idx]
+        else:
+            v_upper_trim_fraction = upper_trim_fraction
+
+        if isinstance(lower_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_lower_trim_fraction = lower_trim_fraction[violin_position]
+            except KeyError:
+                try:
+                    v_lower_trim_fraction = lower_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `lower_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(lower_trim_fraction, collectionsAbc.Sequence):
+            v_lower_trim_fraction = lower_trim_fraction[idx]
+        else:
+            v_lower_trim_fraction = lower_trim_fraction
+
+        _plot_violin(violin_position=violin_position,
+                     violin_data=violin_data,
+                     violin_width=violin_width,
+                     violin_kwargs=v_kwargs,
+                     y_bin_edges=violin_y_bin_edges,
+                     xscale=xscale,
+                     upper_trim_fraction=v_upper_trim_fraction,
+                     lower_trim_fraction=v_lower_trim_fraction,
+                     draw_summary_stat=draw_summary_stat,
+                     draw_summary_stat_fxn=draw_summary_stat_fxn,
+                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+
+        if draw_model:
+            if xscale == 'log':
+                model_xvalues = np.logspace(np.log10(data_xlim[0]),
+                                            np.log10(data_xlim[1]),
+                                            100)
+            else:
+                model_xvalues = np.linspace(data_xlim[0], data_xlim[1], 100)
+            model_yvalues = draw_model_fxn(model_xvalues)
+            plt.plot(model_xvalues,
+                     model_yvalues,
+                     **draw_model_kwargs)
+
+    ###
+    # plot optional min, max, and zero violins
+    ###
+    if xscale == 'log':
+        next_violin_position = \
+            10**(np.log10(data_xlim[0]) - violin_width)
+    else:
+        next_violin_position = data_xlim[0] - violin_width
+    xlim = data_xlim
+
+    if xscale == 'log' and logx_zero_data is not None:
+        # use left-most violin for defaults if not otherwise specified
+        leftmost_violin_idx = positions.index(np.min(positions))
+
+        # understand violin_kwargs
+        if isinstance(violin_kwargs, collectionsAbc.Mapping):
+            try:
+                v_kwargs = violin_kwargs['logx_zero']
+            except KeyError:
+                try:
+                    v_kwargs = violin_kwargs[0]
+                except KeyError:
+                    try:
+                        # match left-most violin
+                        v_kwargs = violin_kwargs[np.min(positions)]
+                    except KeyError:
+                        try:
+                            v_kwargs = violin_kwargs['data']
+                        except KeyError:
+                            v_kwargs = violin_kwargs
+        elif isinstance(violin_kwargs, collectionsAbc.Sequence):
+            # match left-most violin
+            v_kwargs = violin_kwargs[leftmost_violin_idx]
+
+        # understand draw_summary_stat_kwargs
+        if isinstance(draw_summary_stat_kwargs, collectionsAbc.Mapping):
+            try:
+                v_draw_summary_stat_kwargs = \
+                    draw_summary_stat_kwargs['logx_zero']
+            except KeyError:
+                try:
+                    v_draw_summary_stat_kwargs = \
+                        draw_summary_stat_kwargs[0]
+                except KeyError:
+                    try:
+                        # match left-most violin
+                        v_draw_summary_stat_kwargs = \
+                            draw_summary_stat_kwargs[np.min(positions)]
+                    except KeyError:
+                        try:
+                            v_draw_summary_stat_kwargs = \
+                                draw_summary_stat_kwargs['data']
+                        except KeyError:
+                            v_draw_summary_stat_kwargs = \
+                                draw_summary_stat_kwargs
+        elif isinstance(draw_summary_stat_kwargs, collectionsAbc.Sequence):
+            # match left-most violin
+            v_draw_summary_stat_kwargs = \
+                draw_summary_stat_kwargs[leftmost_violin_idx]
+
+        # understand y_bin_edges
+        if isinstance(y_bin_edges, collectionsAbc.Mapping):
+            try:
+                violin_y_bin_edges = y_bin_edges['logx_zero']
+            except KeyError:
+                try:
+                    violin_y_bin_edges = y_bin_edges[0]
+                except KeyError:
+                    try:
+                        # match left-most violin
+                        violin_y_bin_edges = y_bin_edges[np.min(positions)]
+                    except KeyError:
+                        try:
+                            violin_y_bin_edges = y_bin_edges['data']
+                        except KeyError:
+                            msg  = "unable to understand `y_bin_edges`"
+                            raise ValueError(msg)
+        else:
+            # check for sequence of sequences
+            try:
+                first_element = next(iter(y_bin_edges))
+                try:
+                    iter(first_element)   # success => sequence of sequences
+                    # match left-most violin
+                    violin_y_bin_edges = y_bin_edges[leftmost_violin_idx]
+                except TypeError:
+                    violin_y_bin_edges = y_bin_edges
+            except TypeError:
+                msg  = "`y_bin_edges` should be iterable sequence or sequence"
+                msg += " of sequences"
+                raise TypeError(msg)
+
+        # understand upper and lower trim fractions
+        if isinstance(upper_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_upper_trim_fraction = upper_trim_fraction['logx_zero']
+            except KeyError:
+                try:
+                    v_upper_trim_fraction = upper_trim_fraction[0]
+                except KeyError:
+                    try:
+                        # match left-most violin
+                        v_upper_trim_fraction = \
+                            upper_trim_fraction[np.min(positions)]
+                    except KeyError:
+                        try:
+                            v_upper_trim_fraction = upper_trim_fraction['data']
+                        except KeyError:
+                            msg  = "unable to understand `upper_trim_fraction`"
+                            raise ValueError(msg)
+        elif isinstance(upper_trim_fraction, collectionsAbc.Sequence):
+            # match left-most violin
+            v_upper_trim_fraction = upper_trim_fraction[leftmost_violin_idx]
+        else:
+            v_upper_trim_fraction = upper_trim_fraction
+
+        if isinstance(lower_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_lower_trim_fraction = lower_trim_fraction['logx_zero']
+            except KeyError:
+                try:
+                    v_lower_trim_fraction = lower_trim_fraction[0]
+                except KeyError:
+                    try:
+                        # match left-most violin
+                        v_lower_trim_fraction = \
+                            lower_trim_fraction[np.min(positions)]
+                    except KeyError:
+                        try:
+                            v_lower_trim_fraction = lower_trim_fraction['data']
+                        except KeyError:
+                            msg  = "unable to understand `lower_trim_fraction`"
+                            raise ValueError(msg)
+        elif isinstance(lower_trim_fraction, collectionsAbc.Sequence):
+            v_lower_trim_fraction = lower_trim_fraction[leftmost_violin_idx]
+        else:
+            v_lower_trim_fraction = lower_trim_fraction
+
+        _plot_violin(violin_position=next_violin_position,
+                     violin_data=logx_zero_data,
+                     violin_width=violin_width,
+                     violin_kwargs=v_kwargs,
+                     y_bin_edges=violin_y_bin_edges,
+                     xscale=xscale,
+                     upper_trim_fraction=v_upper_trim_fraction,
+                     lower_trim_fraction=v_lower_trim_fraction,
+                     draw_summary_stat=draw_summary_stat,
+                     draw_summary_stat_fxn=draw_summary_stat_fxn,
+                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+
+        if draw_model:
+            model_zero_yvalue = draw_model_fxn(0.0)
+            plt.plot([10**(np.log10(next_violin_position)-violin_width),
+                      10**(np.log10(next_violin_position)+violin_width)],
+                     [model_zero_yvalue, model_zero_yvalue],
+                     **draw_model_kwargs)
+
+        if draw_logx_zero_divider:
+            plt.axvline(10**(np.log10(next_violin_position) + violin_width),
+                        **draw_logx_zero_divider_kwargs)
+
+        xlim = (10**(np.log10(next_violin_position) - violin_width),
+                xlim[1])
+
+        next_violin_position = \
+            10**(np.log10(next_violin_position) - 2*violin_width)
+
+    if max_data is not None:
+        # understand violin_kwargs
+        if isinstance(violin_kwargs, collectionsAbc.Mapping):
+            try:
+                v_kwargs = violin_kwargs['max']
+            except KeyError:
+                try:
+                    v_kwargs = violin_kwargs['data']
+                except KeyError:
+                    v_kwargs = violin_kwargs
+        elif isinstance(violin_kwargs, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'max' key to specify"
+            msg += " `violin_kwargs` for the Max violin"
+            raise ValueError(msg)
+
+        # understand draw_summary_stat_kwargs
+        if isinstance(draw_summary_stat_kwargs, collectionsAbc.Mapping):
+            try:
+                v_draw_summary_stat_kwargs = \
+                    draw_summary_stat_kwargs['max']
+            except KeyError:
+                try:
+                    v_draw_summary_stat_kwargs = \
+                        draw_summary_stat_kwargs['data']
+                except KeyError:
+                    v_draw_summary_stat_kwargs = draw_summary_stat_kwargs
+        elif isinstance(draw_summary_stat_kwargs, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'max' key to specify"
+            msg += " `draw_summary_stat_kwargs` for the Max violin"
+            raise ValueError(msg)
+
+        # understand y_bin_edges
+        if isinstance(y_bin_edges, collectionsAbc.Mapping):
+            try:
+                violin_y_bin_edges = y_bin_edges['max']
+            except KeyError:
+                try:
+                    violin_y_bin_edges = y_bin_edges['data']
+                except KeyError:
+                    msg  = "unable to understand `y_bin_edges`"
+                    raise ValueError(msg)
+        else:
+            # check for sequence of sequences
+            try:
+                first_element = next(iter(y_bin_edges))
+                try:
+                    iter(first_element)   # success => sequence of sequences
+                    msg  = "use a mapping (e.g. dict) with a 'max' key to"
+                    msg += " specify `y_bin_edges` for the Max violin"
+                    raise ValueError(msg)
+                except TypeError:
+                    violin_y_bin_edges = y_bin_edges
+            except TypeError:
+                msg  = "`y_bin_edges` should be iterable sequence or sequence"
+                msg += " of sequences"
+                raise TypeError(msg)
+
+        # understand upper and lower trim fractions
+        if isinstance(upper_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_upper_trim_fraction = upper_trim_fraction['max']
+            except KeyError:
+                try:
+                    v_upper_trim_fraction = upper_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `upper_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(upper_trim_fraction, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'max' key to specify"
+            msg += " `upper_trim_fraction` for the Max violin"
+            raise ValueError(msg)
+        else:
+            v_upper_trim_fraction = upper_trim_fraction
+
+        if isinstance(lower_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_lower_trim_fraction = lower_trim_fraction['max']
+            except KeyError:
+                try:
+                    v_lower_trim_fraction = lower_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `lower_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(lower_trim_fraction, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'max' key to specify"
+            msg += " `lower_trim_fraction` for the Max violin"
+            raise ValueError(msg)
+        else:
+            v_lower_trim_fraction = lower_trim_fraction
+
+        _plot_violin(violin_position=next_violin_position,
+                     violin_data=max_data,
+                     violin_width=violin_width,
+                     violin_kwargs=v_kwargs,
+                     y_bin_edges=violin_y_bin_edges,
+                     xscale=xscale,
+                     upper_trim_fraction=v_upper_trim_fraction,
+                     lower_trim_fraction=v_lower_trim_fraction,
+                     draw_summary_stat=draw_summary_stat,
+                     draw_summary_stat_fxn=draw_summary_stat_fxn,
+                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+
+        if draw_max_line:
+            summary_stat = draw_summary_stat_fxn(max_data)
+            plt.plot([next_violin_position, xlim[1]],
+                     [summary_stat, summary_stat],
+                     **draw_max_line_kwargs)
+
+        if draw_minmax_divider:
+            if xscale == 'log':
+                plt.axvline(10**(np.log10(next_violin_position) + violin_width),
+                            **draw_minmax_divider_kwargs)
+            else:
+                plt.axvline(next_violin_position + violin_width,
+                            **draw_minmax_divider_kwargs)
+
+        if xscale == 'log':
+            xlim = (10**(np.log10(next_violin_position) - violin_width),
+                    xlim[1])
+        else:
+            xlim = (next_violin_position - violin_width,
+                    xlim[1])
+
+        if xscale == 'log':
+            next_violin_position = \
+                10**(np.log10(next_violin_position) - 2*violin_width)
+        else:
+            next_violin_position = next_violin_position - 2*violin_width
+
+    if min_data is not None:
+        # understand violin_kwargs
+        if isinstance(violin_kwargs, collectionsAbc.Mapping):
+            try:
+                v_kwargs = violin_kwargs['min']
+            except KeyError:
+                try:
+                    v_kwargs = violin_kwargs['data']
+                except KeyError:
+                    v_kwargs = violin_kwargs
+        elif isinstance(violin_kwargs, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'min' key to specify"
+            msg += " `violin_kwargs` for the Min violin"
+            raise ValueError(msg)
+
+        # understand draw_summary_stat_kwargs
+        if isinstance(draw_summary_stat_kwargs, collectionsAbc.Mapping):
+            try:
+                v_draw_summary_stat_kwargs = \
+                    draw_summary_stat_kwargs['min']
+            except KeyError:
+                try:
+                    v_draw_summary_stat_kwargs = \
+                        draw_summary_stat_kwargs['data']
+                except KeyError:
+                    v_draw_summary_stat_kwargs = draw_summary_stat_kwargs
+        elif isinstance(draw_summary_stat_kwargs, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'min' key to specify"
+            msg += " `draw_summary_stat_kwargs` for the Min violin"
+            raise ValueError(msg)
+
+        # understand y_bin_edges
+        if isinstance(y_bin_edges, collectionsAbc.Mapping):
+            try:
+                violin_y_bin_edges = y_bin_edges['min']
+            except KeyError:
+                try:
+                    violin_y_bin_edges = y_bin_edges['data']
+                except KeyError:
+                    msg  = "unable to understand `y_bin_edges`"
+                    raise ValueError(msg)
+        else:
+            # check for sequence of sequences
+            try:
+                first_element = next(iter(y_bin_edges))
+                try:
+                    iter(first_element)   # success => sequence of sequences
+                    msg  = "use a mapping (e.g. dict) with a 'min' key to"
+                    msg += " specify `y_bin_edges` for the Min violin"
+                    raise ValueError(msg)
+                except TypeError:
+                    violin_y_bin_edges = y_bin_edges
+            except TypeError:
+                msg  = "`y_bin_edges` should be iterable sequence or sequence"
+                msg += " of sequences"
+                raise TypeError(msg)
+
+        # understand upper and lower trim fractions
+        if isinstance(upper_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_upper_trim_fraction = upper_trim_fraction['min']
+            except KeyError:
+                try:
+                    v_upper_trim_fraction = upper_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `upper_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(upper_trim_fraction, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'min' key to specify"
+            msg += " `upper_trim_fraction` for the Min violin"
+            raise ValueError(msg)
+        else:
+            v_upper_trim_fraction = upper_trim_fraction
+
+        if isinstance(lower_trim_fraction, collectionsAbc.Mapping):
+            try:
+                v_lower_trim_fraction = lower_trim_fraction['min']
+            except KeyError:
+                try:
+                    v_lower_trim_fraction = lower_trim_fraction['data']
+                except KeyError:
+                    msg  = "unable to understand `lower_trim_fraction`"
+                    raise ValueError(msg)
+        elif isinstance(lower_trim_fraction, collectionsAbc.Sequence):
+            msg  = "use a mapping (e.g. dict) with a 'min' key to specify"
+            msg += " `lower_trim_fraction` for the Min violin"
+            raise ValueError(msg)
+        else:
+            v_lower_trim_fraction = lower_trim_fraction
+
+        _plot_violin(violin_position=next_violin_position,
+                     violin_data=min_data,
+                     violin_width=violin_width,
+                     violin_kwargs=v_kwargs,
+                     y_bin_edges=violin_y_bin_edges,
+                     xscale=xscale,
+                     upper_trim_fraction=v_upper_trim_fraction,
+                     lower_trim_fraction=v_lower_trim_fraction,
+                     draw_summary_stat=draw_summary_stat,
+                     draw_summary_stat_fxn=draw_summary_stat_fxn,
+                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+
+        if draw_min_line:
+            summary_stat = draw_summary_stat_fxn(min_data)
+            plt.plot([next_violin_position, xlim[1]],
+                     [summary_stat, summary_stat],
+                     **draw_min_line_kwargs)
+
+        if draw_minmax_divider and max_data is None:
+            if xscale == 'log':
+                plt.axvline(10**(np.log10(next_violin_position) + violin_width),
+                            **draw_minmax_divider_kwargs)
+            else:
+                plt.axvline(next_violin_position + violin_width,
+                            **draw_minmax_divider_kwargs)
+
+        if xscale == 'log':
+            xlim = (10**(np.log10(next_violin_position) - violin_width),
+                    xlim[1])
+        else:
+            xlim = (next_violin_position - violin_width,
+                    xlim[1])
+
+    plt.xscale(xscale)
+    plt.yscale(yscale)
+
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+
+    ###
+    # update x-axis label if necessary
+    ###
+    if xlim[0] < data_xlim[0]:
+
+        # draw canvas to populate xticks and their labels using matplotlib
+        # defaults
+        plt.draw()
+
+        # filter for ticks within data_xlim
+        major_xticks, major_xlabels = plt.xticks()
+        data_major_xticks, data_major_xlabels = \
+            zip(*[(t,l)
+                  for t,l in zip(major_xticks, major_xlabels)
+                  if t > data_xlim[0] and t < data_xlim[1]])
+        data_major_xticks  = list(data_major_xticks)
+        data_major_xlabels = list(data_major_xlabels)
+
+        # add min, max, and zero labels as appropriate
+        major_xticks  = list(data_major_xticks)   # shallow copy
+        major_xlabels = list(data_major_xlabels)  # shallow copy
+
+        if xscale == 'log':
+            next_violin_position = \
+                10**(np.log10(data_xlim[0]) - violin_width)
+        else:
+            next_violin_position = data_xlim[0] - violin_width
+
+        if xscale == 'log' and logx_zero_data is not None:
+            major_xticks.insert(0, next_violin_position)
+            major_xlabels.insert(0, '0')
+
+            next_violin_position = \
+                10**(np.log10(next_violin_position) - 2*violin_width)
+
+        if max_data is not None:
+            major_xticks.insert(0, next_violin_position)
+            major_xlabels.insert(0, 'Max')
+
+            if xscale == 'log':
+                next_violin_position = \
+                    10**(np.log10(next_violin_position) - 2*violin_width)
+            else:
+                next_violin_position = next_violin_position - 2*violin_width
+
+        if min_data is not None:
+            major_xticks.insert(0, next_violin_position)
+            major_xlabels.insert(0, 'Min')
+
+        plt.xticks(major_xticks, major_xlabels)
+
+        # illustrate minor xticks if x-axis is log
+        if xscale == 'log':
+            # add one more tick on either end of the major ticks
+            extended_data_major_xticks = \
+                np.insert(data_major_xticks,
+                          0,
+                          data_major_xticks[0]/10.0)
+            extended_data_major_xticks = \
+                np.append(extended_data_major_xticks,
+                          extended_data_major_xticks[-1]*10.0)
+
+            data_minor_xticks = []
+            for t in extended_data_major_xticks:
+                data_minor_xticks.extend(t*np.arange(2,9+1,dtype=np.float))
+            data_minor_xticks = np.array(data_minor_xticks, dtype=np.float)
+            data_minor_xticks = \
+                data_minor_xticks[(data_minor_xticks > data_xlim[0]) \
+                                  & (data_minor_xticks < data_xlim[1])]
+
+            minor_x_ticker = mpl.ticker.FixedLocator(locs=data_minor_xticks)
+            ax = plt.gca()
+            ax.xaxis.set_minor_locator(minor_x_ticker)
+            ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
 def density2d(data, 
               channels=[0,1],
