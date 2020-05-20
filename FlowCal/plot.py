@@ -2282,10 +2282,10 @@ def violin(data,
                 data_minor_xticks[(data_minor_xticks > data_xlim[0]) \
                                   & (data_minor_xticks < data_xlim[1])]
 
-            minor_x_ticker = mpl.ticker.FixedLocator(locs=data_minor_xticks)
+            minor_x_ticker = matplotlib.ticker.FixedLocator(locs=data_minor_xticks)
             ax = plt.gca()
             ax.xaxis.set_minor_locator(minor_x_ticker)
-            ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+            ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
 
     if xlabel is not None:
         plt.xlabel(xlabel)
