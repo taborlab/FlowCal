@@ -10,10 +10,10 @@ Functions in this module are divided in two categories:
   where `data_list` is a NxD FCSData object or numpy array, or a list of
   such, `channels` spcecifies the channel or channels to use for the plot,
   `parameters` are function-specific parameters, and `savefig` indicates
-  whether to save the figure to an image file. Note that `hist1d` uses
-  `channel` instead of `channels`, since it uses a single channel, and
-  `density2d` only accepts one FCSData object or numpy array as its first
-  argument.
+  whether to save the figure to an image file. Note that `hist1d` and
+  `violin` use `channel` instead of `channels`, since they use a single
+  channel, and `density2d` only accepts one FCSData object or numpy array
+  as its first argument.
 
   Simple Plot Functions do not create a new figure or axis, so they can be
   called directly to plot in a previously created axis if desired. If
@@ -28,6 +28,7 @@ Functions in this module are divided in two categories:
   The following functions in this module are Simple Plot Functions:
 
     - ``hist1d``
+    - ``violin``
     - ``density2d``
     - ``scatter2d``
     - ``scatter3d``
@@ -1226,13 +1227,14 @@ def _plot_violin(violin_position,
                      **draw_summary_stat_kwargs)
 
 def violin(data,
+           channel=None,
            positions=None,
            min_data=None,
            max_data=None,
            logx_zero_data=None,
            violin_width=None,
            xscale='linear',
-           yscale='linear',
+           yscale='log',
            data_xlim=None,
            ylim=None,
            num_y_bins=100,
@@ -1254,7 +1256,11 @@ def violin(data,
            draw_logx_zero_divider_kwargs=None,
            draw_model=False,
            draw_model_fxn=None,
-           draw_model_kwargs=None):
+           draw_model_kwargs=None,
+           xlabel=None,
+           ylabel=None,
+           title=None,
+           savefig=None):
     """
     Plot violin plot.
 
@@ -1265,8 +1271,13 @@ def violin(data,
 
     Parameters
     ----------
-    data : sequence of scalars or sequence of sequence of scalars
+    data : 1D or ND sequence or sequence of 1D or ND sequences
         A population or collection of populations for which to plot violins.
+        If ND sequences are used (e.g. FCSData), `channel` must be specified.
+    channel : int or str, optional
+        Channel from `data` to plot. If specified, data are assumed to be ND
+        sequences. String channel specifications are only supported for data
+        types which support string-based indexing (e.g. FCSData).
     positions : scalar or sequence of scalars, optional
         Positions (x-axis values) at which to center violins.
     min_data : sequence of scalars, optional
@@ -1284,6 +1295,8 @@ def violin(data,
         specified, `violin_width` is calculated from `data_xlim` and
         `violin_width_to_span_fraction`. If only one violin is specified in
         `data`, `violin_width` = 0.5.
+    savefig : str, optional
+        The name of the file to save the figure to. If None, do not save.
 
     Other parameters
     ----------------
@@ -1400,6 +1413,13 @@ def violin(data,
         Keyword arguments passed to the plt.plot() command that
         illustrates the model. Default = {'color':'gray', 'zorder':-1,
         'solid_capstyle':'butt'}.
+    xlabel : str, optional
+        Label to use on the x axis.
+    ylabel : str, optional
+        Label to use on the y axis. If None, attempts to extract channel
+        name from last data object.
+    title : str, optional
+        Plot title.
 
     """
 
@@ -1441,17 +1461,47 @@ def violin(data,
         raise ValueError(msg)
 
     # understand `data`
-    try:
-        first_element = next(iter(data))
+    if channel is None:
+        # assume 1D sequence or sequence of 1D sequences
         try:
-            iter(first_element)   # success => sequence of sequences
+            first_element = next(iter(data))
+        except TypeError:
+            msg  = "`data` should be 1D sequence or sequence of 1D sequences."
+            msg += " Specify `channel` to use ND sequence or sequence of ND"
+            msg += " sequences."
+            raise TypeError(msg)
+
+        # promote singleton if necessary
+        try:
+            iter(first_element)  # success => sequence of 1D sequences
             data_length = len(data)
         except TypeError:
             data = [data]
             data_length = 1
-    except TypeError:
-        msg  = "`data` should be iterable sequence or sequence of sequences"
-        raise TypeError(msg)
+    else:
+        # assume ND sequence or sequence of ND sequences
+        try:
+            first_element               = next(iter(data))
+            first_element_first_element = next(iter(first_element))
+        except TypeError:
+            msg  = "`data` should be ND sequence or sequence of ND sequences."
+            msg += " Set `channel` to None to use 1D sequence or sequence of"
+            msg += " 1D sequences."
+            raise TypeError(msg)
+
+        # promote singleton if necessary
+        try:
+            iter(first_element_first_element)  # success => sequence of ND sequences
+            data_length = len(data)
+        except TypeError:
+            data = [data]
+            data_length = 1
+
+        # exctract channel
+        try:
+            data = [d[:,channel] for d in data]
+        except TypeError:
+            data = [[row[channel] for row in d] for d in data]
 
     # understand `positions`
     if positions is None:
@@ -2236,6 +2286,24 @@ def violin(data,
             ax = plt.gca()
             ax.xaxis.set_minor_locator(minor_x_ticker)
             ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+
+    if xlabel is not None:
+        plt.xlabel(xlabel)
+
+    if ylabel is not None:
+        # Highest priority is user-provided label
+        plt.ylabel(ylabel)
+    elif hasattr(data[-1], 'channels'):
+        # Attempt to use channel name
+        plt.ylabel(data[-1].channels[0])
+
+    if title is not None:
+        plt.title(title)
+
+    if savefig is not None:
+        plt.tight_layout()
+        plt.savefig(savefig, dpi=savefig_dpi)
+        plt.close()
 
 def density2d(data, 
               channels=[0,1],
