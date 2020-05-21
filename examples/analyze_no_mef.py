@@ -208,4 +208,18 @@ if __name__ == "__main__":
     plt.savefig('dose_response.png', dpi=200)
     plt.close()
 
+    # Violin plot
+    # Here, we use a violin plot to show cellular fluorescence as a function
+    # of IPTG.
+    plt.figure(figsize=(3,3))
+    FlowCal.plot.violin(data=samples,
+                        channel='FL1',
+                        positions=iptg,
+                        xscale='log')
+    plt.xlabel('IPTG Concentration ($\mu M$)')
+    plt.ylabel('FL1 Fluorescence (a.u.)')
+    plt.tight_layout()
+    plt.savefig('dose_response_violin.png', dpi=200)
+    plt.close()
+
     print("\nDone.")
