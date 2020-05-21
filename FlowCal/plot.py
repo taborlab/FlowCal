@@ -1300,7 +1300,7 @@ def violin(data,
 
     Other parameters
     ----------------
-    xscale : {'linear','log}, optional
+    xscale : {'linear','log'}, optional
         Scale of the x-axis.
     yscale : {'linear','log'}, optional
         Scale of the y-axis.
@@ -1521,7 +1521,7 @@ def violin(data,
         raise ValueError(msg)
 
     # separately illustrate position=0 if log x-axis
-    if xscale == 'log' and 0 in positions:
+    if xscale == 'log' and 0 in list(positions):
         data      = list(data)
         positions = list(positions)
 
@@ -2219,7 +2219,8 @@ def violin(data,
 
         # draw canvas to populate xticks and their labels using matplotlib
         # defaults
-        plt.draw()
+        fig = plt.gcf()
+        fig.canvas.draw()
 
         # filter for ticks within data_xlim
         major_xticks, major_xlabels = plt.xticks()
