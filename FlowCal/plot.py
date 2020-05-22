@@ -1502,6 +1502,21 @@ def violin(data,
             data = [d[:,channel] for d in data]
         except TypeError:
             data = [[row[channel] for row in d] for d in data]
+        if min_data is not None:
+            try:
+                min_data = min_data[:,channel]
+            except TypeError:
+                min_data = [row[channel] for row in min_data]
+        if max_data is not None:
+            try:
+                max_data = max_data[:,channel]
+            except TypeError:
+                max_data = [row[channel] for row in max_data]
+        if logx_zero_data is not None:
+            try:
+                logx_zero_data = logx_zero_data[:,channel]
+            except TypeError:
+                logx_zero_data = [row[channel] for row in logx_zero_data]
 
     # understand `positions`
     if positions is None:
