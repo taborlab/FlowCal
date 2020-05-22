@@ -1797,7 +1797,13 @@ def violin(data,
                                             100)
             else:
                 model_xvalues = np.linspace(data_xlim[0], data_xlim[1], 100)
-            model_yvalues = draw_model_fxn(model_xvalues)
+
+            try:
+                model_yvalues = draw_model_fxn(model_xvalues)
+            except Exception:
+                model_yvalues = [draw_model_fxn(xvalue)
+                                 for xvalue in model_xvalues]
+
             plt.plot(model_xvalues,
                      model_yvalues,
                      **draw_model_kwargs)
