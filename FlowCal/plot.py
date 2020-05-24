@@ -80,56 +80,7 @@ else:
 savefig_dpi = 250
 
 ###
-# HELPER FUNCTIONS FOR SCALE CLASSES
-###
-
-def _base_down(x, base=10):
-    """
-    Floor `x` to the nearest lower ``base^n``, where ``n`` is an integer.
-
-    Parameters
-    ----------
-    x : float
-        Number to calculate the floor from.
-    base : float, optional
-        Base used to calculate the floor.
-
-    Return
-    ------
-    float
-        The nearest lower ``base^n`` from `x`, where ``n`` is an integer.
-
-    """
-    if x == 0.0:
-        return -base
-    lx = np.floor(np.log(x) / np.log(base))
-    return base ** lx
-
-
-def _base_up(x, base=10):
-    """
-    Ceil `x` to the nearest higher ``base^n``, where ``n`` is an integer.
-
-    Parameters
-    ----------
-    x : float
-        Number to calculate the ceiling from.
-    base : float, optional
-        Base used to calculate the ceiling.
-
-    Return
-    ------
-    float
-        The nearest higher ``base^n`` from `x`, where ``n`` is an integer.
-
-    """
-    if x == 0.0:
-        return base
-    lx = np.ceil(np.log(x) / np.log(base))
-    return base ** lx
-
-###
-# CUSTOM SCALES
+# CUSTOM TRANSFORMS
 ###
 
 class _InterpolatedInverseTransform(matplotlib.transforms.Transform):
@@ -442,6 +393,10 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                                              smin=0,
                                              smax=self._M)
 
+###
+# CUSTOM TICK LOCATORS AND FORMATTERS
+###
+
 class _LogicleLocator(matplotlib.ticker.Locator):
     """
     Determine the tick locations for logicle axes.
@@ -700,6 +655,281 @@ class _LogicleLocator(matplotlib.ticker.Locator):
                 vmax = _base_up(vmax, b)
         result = matplotlib.transforms.nonsingular(vmin, vmax)
         return result
+
+class _ViolinAutoLocator(matplotlib.ticker.MaxNLocator):
+    """
+    Default linear tick locator aware of min and max violins.
+
+    Parameters
+    ----------
+    min_tick_loc : int or float, optional
+        Location of min violin tick. Default is None.
+    max_tick_loc : int or float, optional
+        Location of max violin tick. Default is None.
+    data_xlim_min : int or float, optional
+        Location of lower boundary of data, at or below which ticks are not
+        illustrated. Default is None.
+
+    Other parameters
+    ----------------
+    See matplotlib.ticker.MaxNLocator.
+
+    Notes
+    -----
+    The `nbins` default is 'auto' and the `steps` default is
+    (1, 2, 2.5, 5, 10) to emulate matplotlib.ticker.AutoLocator, which
+    subclasses matplotlib.ticker.MaxNLocator and installs nice defaults.
+
+    """
+    default_params = matplotlib.ticker.MaxNLocator.default_params.copy()
+
+    # use defaults from matplotlib.ticker.AutoLocator
+    default_params['nbins'] = 'auto'
+    default_params['steps'] = (1, 2, 2.5, 5, 10)
+
+    # add parameters specific to violin plots
+    default_params.update({'min_tick_loc' : None,
+                           'max_tick_loc' : None,
+                           'data_xlim_min': None})
+
+    def set_params(self, **kwargs):
+        if 'min_tick_loc' in kwargs:
+            self._min_tick_loc = kwargs.pop('min_tick_loc')
+        if 'max_tick_loc' in kwargs:
+            self._max_tick_loc = kwargs.pop('max_tick_loc')
+        if 'data_xlim_min' in kwargs:
+            self._data_xlim_min = kwargs.pop('data_xlim_min')
+        matplotlib.ticker.MaxNLocator.set_params(self, **kwargs)
+
+    def tick_values(self, vmin, vmax):
+        locs = list(matplotlib.ticker.MaxNLocator.tick_values(self,
+                                                              vmin=vmin,
+                                                              vmax=vmax))
+
+        # if `data_xlim_min` is specified, remove all ticks at or below it
+        if self._data_xlim_min is not None:
+            locs = [loc
+                    for loc in locs
+                    if loc > self._data_xlim_min]
+
+        # add min and max violin ticks as appropriate
+        if self._max_tick_loc is not None:
+            locs.insert(0, self._max_tick_loc)
+        if self._min_tick_loc is not None:
+            locs.insert(0, self._min_tick_loc)
+
+        locs = np.array(locs)
+        return self.raise_if_exceeds(locs)
+
+class _ViolinLogLocator(matplotlib.ticker.LogLocator):
+    """
+    Default log tick locator aware of min, max, and zero violins.
+
+    Parameters
+    ----------
+    min_tick_loc : int or float, optional
+        Location of min violin tick. Default is None.
+    max_tick_loc : int or float, optional
+        Location of max violin tick. Default is None.
+    zero_tick_loc : int or float, optional
+        Location of zero violin tick. Default is None.
+    data_xlim_min : int or float, optional
+        Location of lower boundary of data, at or below which ticks are not
+        illustrated. Default is None.
+
+    Other parameters
+    ----------------
+    See matplotlib.ticker.LogLocator.
+
+    """
+    def __init__(self,
+                 min_tick_loc=None,
+                 max_tick_loc=None,
+                 zero_tick_loc=None,
+                 data_xlim_min=None,
+                 **kwargs):
+        self._min_tick_loc  = min_tick_loc
+        self._max_tick_loc  = max_tick_loc
+        self._zero_tick_loc = zero_tick_loc
+        self._data_xlim_min = data_xlim_min
+        matplotlib.ticker.LogLocator.__init__(self, **kwargs)
+
+    def set_params(self, **kwargs):
+        if 'min_tick_loc' in kwargs:
+            self._min_tick_loc = kwargs.pop('min_tick_loc')
+        if 'max_tick_loc' in kwargs:
+            self._max_tick_loc = kwargs.pop('max_tick_loc')
+        if 'zero_tick_loc' in kwargs:
+            self._zero_tick_loc = kwargs.pop('zero_tick_loc')
+        if 'data_xlim_min' in kwargs:
+            self._data_xlim_min = kwargs.pop('data_xlim_min')
+        matplotlib.ticker.LogLocator.set_params(self, **kwargs)
+
+    def tick_values(self, vmin, vmax):
+        locs = list(matplotlib.ticker.LogLocator.tick_values(self,
+                                                             vmin=vmin,
+                                                             vmax=vmax))
+
+        # if `data_xlim_min` is specified, remove all ticks at or below it
+        if self._data_xlim_min is not None:
+            locs = [loc
+                    for loc in locs
+                    if loc > self._data_xlim_min]
+
+        # add min, max, and zero violin ticks as appropriate
+        if self._zero_tick_loc is not None:
+            locs.insert(0, self._zero_tick_loc)
+        if self._max_tick_loc is not None:
+            locs.insert(0, self._max_tick_loc)
+        if self._min_tick_loc is not None:
+            locs.insert(0, self._min_tick_loc)
+
+        locs = np.array(locs)
+        return self.raise_if_exceeds(locs)
+
+class _ViolinScalarFormatter(matplotlib.ticker.ScalarFormatter):
+    """
+    Default linear tick formatter aware of min and max violins.
+
+    Parameters
+    ----------
+    min_tick_loc : int or float, optional
+        Location of min violin tick. Default is None.
+    max_tick_loc : int or float, optional
+        Location of max violin tick. Default is None.
+    min_tick_label : str, optional
+        Label of min violin tick. Default='Min'.
+    max_tick_label : str, optional
+        Label of max violin tick. Default='Max'.
+
+    Other parameters
+    ----------------
+    See matplotlib.ticker.ScalarFormatter.
+
+    """
+    def __init__(self,
+                 min_tick_loc=None,
+                 max_tick_loc=None,
+                 min_tick_label='Min',
+                 max_tick_label='Max',
+                 **kwargs):
+        self._min_tick_loc   = min_tick_loc
+        self._max_tick_loc   = max_tick_loc
+        self._min_tick_label = min_tick_label
+        self._max_tick_label = max_tick_label
+        matplotlib.ticker.ScalarFormatter.__init__(self, **kwargs)
+
+    def __call__(self, x, pos=None):
+        if self._min_tick_loc is not None and x == self._min_tick_loc:
+            return self._min_tick_label
+        if self._max_tick_loc is not None and x == self._max_tick_loc:
+            return self._max_tick_label
+        return matplotlib.ticker.ScalarFormatter.__call__(self, x=x, pos=pos)
+
+class _ViolinLogFormatterSciNotation(matplotlib.ticker.LogFormatterSciNotation):
+    """
+    Default log tick formatter aware of min, max, and zero violins.
+
+    Parameters
+    ----------
+    min_tick_loc : int or float, optional
+        Location of min violin tick. Default is None.
+    max_tick_loc : int or float, optional
+        Location of max violin tick. Default is None.
+    zero_tick_loc : int or float, optional
+        Location of zero violin tick. Default is None.
+    min_tick_label : str, optional
+        Label of min violin tick. Default='Min'.
+    max_tick_label : str, optional
+        Label of max violin tick. Default='Max'.
+    zero_tick_label : str, optional
+        Label of zero violin tick. Default is generated by
+        matplotlib.ticker.LogFormatterSciNotation with x=0.
+
+    Other parameters
+    ----------------
+    See matplotlib.ticker.LogFormatterSciNotation.
+
+    """
+    def __init__(self,
+                 min_tick_loc=None,
+                 max_tick_loc=None,
+                 zero_tick_loc=None,
+                 min_tick_label='Min',
+                 max_tick_label='Max',
+                 zero_tick_label=None,
+                 **kwargs):
+        self._min_tick_loc    = min_tick_loc
+        self._max_tick_loc    = max_tick_loc
+        self._zero_tick_loc   = zero_tick_loc
+        self._min_tick_label  = min_tick_label
+        self._max_tick_label  = max_tick_label
+        if zero_tick_label is None:
+            self._zero_tick_label = \
+                matplotlib.ticker.LogFormatterSciNotation.__call__(self, x=0)
+        else:
+            self._zero_tick_label = zero_tick_label
+        matplotlib.ticker.LogFormatterSciNotation.__init__(self, **kwargs)
+
+    def __call__(self, x, pos=None):
+        if self._min_tick_loc is not None and x == self._min_tick_loc:
+            return self._min_tick_label
+        if self._max_tick_loc is not None and x == self._max_tick_loc:
+            return self._max_tick_label
+        if self._zero_tick_loc is not None and x == self._zero_tick_loc:
+            return self._zero_tick_label
+        return matplotlib.ticker.LogFormatterSciNotation.__call__(self,
+                                                                  x=x,
+                                                                  pos=pos)
+
+###
+# CUSTOM SCALES
+###
+
+def _base_down(x, base=10):
+    """
+    Floor `x` to the nearest lower ``base^n``, where ``n`` is an integer.
+
+    Parameters
+    ----------
+    x : float
+        Number to calculate the floor from.
+    base : float, optional
+        Base used to calculate the floor.
+
+    Return
+    ------
+    float
+        The nearest lower ``base^n`` from `x`, where ``n`` is an integer.
+
+    """
+    if x == 0.0:
+        return -base
+    lx = np.floor(np.log(x) / np.log(base))
+    return base ** lx
+
+
+def _base_up(x, base=10):
+    """
+    Ceil `x` to the nearest higher ``base^n``, where ``n`` is an integer.
+
+    Parameters
+    ----------
+    x : float
+        Number to calculate the ceiling from.
+    base : float, optional
+        Base used to calculate the ceiling.
+
+    Return
+    ------
+    float
+        The nearest higher ``base^n`` from `x`, where ``n`` is an integer.
+
+    """
+    if x == 0.0:
+        return base
+    lx = np.ceil(np.log(x) / np.log(base))
+    return base ** lx
 
 class _LogicleScale(matplotlib.scale.ScaleBase):
     """
@@ -1257,6 +1487,9 @@ def violin(data,
            draw_model=False,
            draw_model_fxn=None,
            draw_model_kwargs=None,
+           min_tick_label='Min',
+           max_tick_label='Max',
+           logx_zero_tick_label=None,
            xlabel=None,
            ylabel=None,
            title=None,
@@ -1413,6 +1646,14 @@ def violin(data,
         Keyword arguments passed to the plt.plot() command that
         illustrates the model. Default = {'color':'gray', 'zorder':-1,
         'solid_capstyle':'butt'}.
+    min_tick_label : str, optional
+        Label of min violin tick. Default='Min'.
+    max_tick_label : str, optional
+        Label of max violin tick. Default='Max'.
+    logx_zero_tick_label : str, optional
+        Label of zero violin tick if `xscale` is 'log'. Default is generated
+        by the default log tick formatter
+        (matplotlib.ticker.LogFormatterSciNotation) with x=0.
     xlabel : str, optional
         Label to use on the x axis.
     ylabel : str, optional
@@ -2233,81 +2474,80 @@ def violin(data,
     plt.xlim(xlim)
     plt.ylim(ylim)
 
-    ###
-    # update x-axis label if necessary
-    ###
-    if xlim[0] < data_xlim[0]:
-
-        # draw canvas to populate xticks and their labels using matplotlib
-        # defaults
-        fig = plt.gcf()
-        fig.canvas.draw()
-
-        # filter for ticks within data_xlim
-        major_xticks, major_xlabels = plt.xticks()
-        data_major_xticks, data_major_xlabels = \
-            zip(*[(t,l)
-                  for t,l in zip(major_xticks, major_xlabels)
-                  if t > data_xlim[0] and t < data_xlim[1]])
-        data_major_xticks  = list(data_major_xticks)
-        data_major_xlabels = list(data_major_xlabels)
-
-        # add min, max, and zero labels as appropriate
-        major_xticks  = list(data_major_xticks)   # shallow copy
-        major_xlabels = list(data_major_xlabels)  # shallow copy
-
-        if xscale == 'log':
-            next_violin_position = \
-                10**(np.log10(data_xlim[0]) - violin_width)
-        else:
-            next_violin_position = data_xlim[0] - violin_width
-
-        if xscale == 'log' and logx_zero_data is not None:
-            major_xticks.insert(0, next_violin_position)
-            major_xlabels.insert(0, '0')
-
+    # set x-tick locators and formatters
+    ax = plt.gca()
+    if xscale == 'log':
+        next_violin_position = 10**(np.log10(data_xlim[0]) - violin_width)
+        if logx_zero_data is not None:
+            zero_tick_loc = next_violin_position
             next_violin_position = \
                 10**(np.log10(next_violin_position) - 2*violin_width)
-
+        else:
+            zero_tick_loc = None
         if max_data is not None:
-            major_xticks.insert(0, next_violin_position)
-            major_xlabels.insert(0, 'Max')
+            max_tick_loc = next_violin_position
+            next_violin_position = \
+                10**(np.log10(next_violin_position) - 2*violin_width)
+        else:
+            max_tick_loc = None
+        min_tick_loc = None if min_data is None else next_violin_position
+        if min_data is not None or max_data is not None \
+                or logx_zero_data is not None:
+            data_xlim_min = data_xlim[0]
+        else:
+            data_xlim_min = None
 
-            if xscale == 'log':
-                next_violin_position = \
-                    10**(np.log10(next_violin_position) - 2*violin_width)
-            else:
-                next_violin_position = next_violin_position - 2*violin_width
+        major_locator = _ViolinLogLocator(min_tick_loc=min_tick_loc,
+                                          max_tick_loc=max_tick_loc,
+                                          zero_tick_loc=zero_tick_loc,
+                                          data_xlim_min=data_xlim_min)
+        minor_locator = _ViolinLogLocator(min_tick_loc=None,
+                                          max_tick_loc=None,
+                                          zero_tick_loc=None,
+                                          data_xlim_min=data_xlim_min,
+                                          subs='auto')
+        major_formatter = _ViolinLogFormatterSciNotation(
+            min_tick_loc=min_tick_loc,
+            max_tick_loc=max_tick_loc,
+            zero_tick_loc=zero_tick_loc,
+            min_tick_label=min_tick_label,
+            max_tick_label=max_tick_label,
+            zero_tick_label=logx_zero_tick_label)
+        minor_formatter = _ViolinLogFormatterSciNotation(
+            min_tick_loc=min_tick_loc,
+            max_tick_loc=max_tick_loc,
+            zero_tick_loc=zero_tick_loc,
+            min_tick_label=min_tick_label,
+            max_tick_label=max_tick_label,
+            zero_tick_label=logx_zero_tick_label)
 
-        if min_data is not None:
-            major_xticks.insert(0, next_violin_position)
-            major_xlabels.insert(0, 'Min')
+        ax.xaxis.set_major_locator(major_locator)
+        ax.xaxis.set_major_formatter(major_formatter)
+        ax.xaxis.set_minor_locator(minor_locator)
+        ax.xaxis.set_minor_formatter(minor_formatter)
+    else:
+        next_violin_position = data_xlim[0] - violin_width
+        if max_data is not None:
+            max_tick_loc = next_violin_position
+            next_violin_position -= 2*violin_width
+        else:
+            max_tick_loc = None
+        min_tick_loc = None if min_data is None else next_violin_position
+        if min_data is not None or max_data is not None:
+            data_xlim_min = data_xlim[0]
+        else:
+            data_xlim_min = None
 
-        plt.xticks(major_xticks, major_xlabels)
+        major_locator = _ViolinAutoLocator(min_tick_loc=min_tick_loc,
+                                           max_tick_loc=max_tick_loc,
+                                           data_xlim_min=data_xlim_min)
+        major_formatter = _ViolinScalarFormatter(min_tick_loc=min_tick_loc,
+                                                 max_tick_loc=max_tick_loc,
+                                                 min_tick_label=min_tick_label,
+                                                 max_tick_label=max_tick_label)
 
-        # illustrate minor xticks if x-axis is log
-        if xscale == 'log':
-            # add one more tick on either end of the major ticks
-            extended_data_major_xticks = \
-                np.insert(data_major_xticks,
-                          0,
-                          data_major_xticks[0]/10.0)
-            extended_data_major_xticks = \
-                np.append(extended_data_major_xticks,
-                          extended_data_major_xticks[-1]*10.0)
-
-            data_minor_xticks = []
-            for t in extended_data_major_xticks:
-                data_minor_xticks.extend(t*np.arange(2,9+1,dtype=np.float))
-            data_minor_xticks = np.array(data_minor_xticks, dtype=np.float)
-            data_minor_xticks = \
-                data_minor_xticks[(data_minor_xticks > data_xlim[0]) \
-                                  & (data_minor_xticks < data_xlim[1])]
-
-            minor_x_ticker = matplotlib.ticker.FixedLocator(locs=data_minor_xticks)
-            ax = plt.gca()
-            ax.xaxis.set_minor_locator(minor_x_ticker)
-            ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.xaxis.set_major_locator(major_locator)
+        ax.xaxis.set_major_formatter(major_formatter)
 
     if xlabel is not None:
         plt.xlabel(xlabel)
