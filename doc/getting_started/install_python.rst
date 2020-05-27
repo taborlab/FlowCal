@@ -11,7 +11,7 @@ Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/Flow
 
 * ``packaging`` (>=16.8)
 * ``six`` (>=1.10.0)
-* ``numpy`` (>=1.8.2)
+* ``numpy`` (>=1.9.0)
 * ``scipy`` (>=0.14.0)
 * ``matplotlib`` (>=2.0.0)
 * ``palettable`` (>=2.1.1)
