@@ -34,15 +34,15 @@ class DensityGate(object):
 
     Attributes
     ----------
-    boundaries : sequence of numpy arrays
+    boundaries : sequence of numpy arrays of floats
         Sequence of gate boundaries used to visualize the gate (e.g. a list of
         2D arrays specifying the x-y coordinates of gate contours).
 
     Attributes (private)
     --------------------
-    _bin_edges : sequence of sequences
+    _bin_edges : sequence of sequences of floats
         Histogram bin edges for each dimension of the gate.
-    _accepted_bin_indices : numpy array
+    _accepted_bin_indices : set
         Indices of histogram bins permitted by the gate.
 
     """
@@ -58,8 +58,8 @@ class DensityGate(object):
                  == set(b.tobytes() for b in other.boundaries)) \
                 and (tuple(tuple(seq) for seq in self._bin_edges)
                   == tuple(tuple(seq) for seq in other._bin_edges)) \
-                and np.array_equal(self._accepted_bin_indices,
-                                   other._accepted_bin_indices)
+                and (self._accepted_bin_indices
+                  == other._accepted_bin_indices)
         else:
             return NotImplemented
 
@@ -73,7 +73,7 @@ class DensityGate(object):
         # ignore sequence order for `boundaries`
         return hash((frozenset(b.tobytes() for b in self.boundaries),
                      tuple(tuple(seq) for seq in self._bin_edges),
-                     self._accepted_bin_indices.tobytes()))
+                     frozenset(self._accepted_bin_indices)))
 
 # Output namedtuples returned by gate functions
 StartEndGateOutput = collections.namedtuple(
@@ -475,6 +475,8 @@ def density2d(data,
 
     # Make 2D histogram
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
+    xe = np.array(xe, dtype=np.float)
+    ye = np.array(ye, dtype=np.float)
 
     # Map each event to its histogram bin by sorting events into a 2D array of
     # lists which mimics the histogram.
@@ -542,7 +544,7 @@ def density2d(data,
                     density_gate=DensityGate(
                         boundaries=[],
                         _bin_edges=[xe,ye],
-                        _accepted_bin_indices=np.array([],dtype=np.int)))
+                        _accepted_bin_indices=set()))
             else:
                 return gated_data
 
@@ -571,13 +573,14 @@ def density2d(data,
         Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
         # Get indices of accepted histogram bins
-        accepted_bin_indices = sidx[:(Nidx+1)]
+        accepted_bin_indices = set(sidx[:(Nidx+1)])
     else:
         accepted_bin_indices = density_gate._accepted_bin_indices
 
     # Get indices of events to keep
     vH_events = H_events.ravel()
-    accepted_data_indices = vH_events[accepted_bin_indices]
+    accepted_data_indices = vH_events[np.array(list(accepted_bin_indices),
+                                               dtype=np.int)]
     accepted_data_indices = np.array([item       # flatten list of lists
                                       for sublist in accepted_data_indices
                                       for item in sublist])
