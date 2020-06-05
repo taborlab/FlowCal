@@ -583,7 +583,8 @@ def density2d(data,
                                                dtype=np.int)]
     accepted_data_indices = np.array([item       # flatten list of lists
                                       for sublist in accepted_data_indices
-                                      for item in sublist])
+                                      for item in sublist],
+                                     dtype=np.int)
     accepted_data_indices = np.sort(accepted_data_indices)
 
     # Convert list of accepted data indices to boolean mask array
