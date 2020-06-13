@@ -58,13 +58,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
 import warnings
 
-# Use default colors from palettable if available
-try:
-    import palettable
-except ImportError as e:
-    cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
-else:
-    cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+cmap_default = plt.get_cmap('Spectral_r')
 
 savefig_dpi = 250
 
@@ -1786,7 +1780,8 @@ def density_and_hist(data,
 
     # Colors
     n_colors = n_plots - 1
-    colors = [cmap_default(i) for i in np.linspace(0, 1, n_colors)]
+    default_property_cycler = plt.rcParams['axes.prop_cycle']()
+    colors = [next(default_property_cycler)['color'] for i in range(n_colors)]
     # Histogram
     for i, hist_channel in enumerate(hist_channels):
         # Define subplot

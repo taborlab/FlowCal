@@ -24,14 +24,7 @@ import FlowCal.plot
 import FlowCal.transform
 import FlowCal.stats
 
-# Use default colors from palettable if available
-try:
-    import palettable
-except ImportError as e:
-    standard_curve_colors = ['b', 'g', 'r']
-else:
-    standard_curve_colors = \
-        palettable.colorbrewer.qualitative.Paired_12.mpl_colors[1::2]
+standard_curve_colors = ['tab:blue', 'tab:green', 'tab:red']
 
 def clustering_gmm(data,
                    n_clusters,
