@@ -1016,6 +1016,8 @@ class FCSData(np.ndarray):
         Get the detector voltage used for the specified channel(s).
     amplifier_gain
         Get the amplifier gain used for the specified channel(s).
+    channel_labels
+        Get the label of the specified channel(s).
     range
         Get the range of the specified channel(s).
     resolution
@@ -1361,7 +1363,7 @@ class FCSData(np.ndarray):
         # Get numerical indices of channels
         channels = self._name_to_index(channels)
 
-        # Get detector type of the specified channels
+        # Get the label of the specified channels
         if hasattr(channels, '__iter__') \
                 and not isinstance(channels, six.string_types):
             return [self._channel_labels[ch] for ch in channels]
