@@ -24,7 +24,7 @@ import FlowCal.plot
 import FlowCal.transform
 import FlowCal.stats
 
-standard_curve_colors = ['b', 'g', 'r']
+standard_curve_colors = ['tab:blue', 'tab:green', 'tab:orange']
 
 def clustering_gmm(data,
                    n_clusters,
