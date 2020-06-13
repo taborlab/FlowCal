@@ -574,7 +574,8 @@ def get_transform_fxn(data_beads,
         Known MEF values for the calibration bead subpopulations, for each
         channel specified in `mef_channels`. The innermost sequences must
         have the same length (the same number of bead subpopulations must
-        exist for each channel).
+        exist for each channel). Values of np.nan or None specify that a
+        subpopulation should be omitted from the fitting procedure.
     mef_channels : int, or str, or list of int, or list of str
         Channels for which to generate transformation functions.
     verbose : bool, optional
@@ -910,18 +911,9 @@ def get_transform_fxn(data_beads,
     else:
         mef_channels = [mef_channels]
         mef_values   = [mef_values]
-    # Transform mef_values to numpy array
-    mef_values = np.array(mef_values)
 
-    # Ensure matching number of `mef_values` for all channels (this implies
-    # that the calibration beads have the same number of subpopulations for
-    # all channels).
-    if not np.all([len(mef_values_channel)==len(mef_values[0])
-                   for mef_values_channel in mef_values]):
-        msg  = "innermost sequences of mef_values must have the same length"
-        msg += " (same number of bead subpopulations must exist for each"
-        msg += " channel)"
-        raise ValueError(msg)
+    # Transform mef_values to numpy array
+    mef_values = np.array(mef_values, dtype=np.float)
 
     ###
     # 1. Clustering
