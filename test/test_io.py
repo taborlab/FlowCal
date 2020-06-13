@@ -2789,10 +2789,21 @@ class TestFCSDataPickle(unittest.TestCase):
         loaded_attrs = set(dir(test_fcs))
         self.assertEqual(attrs, loaded_attrs)
         # Check contents of attrs affected by pickling
-        pickle_sensitive_attrs = ['_resolution', '_range', '_amplifier_gain',
-            '_detector_voltage', '_amplification_type', '_channels',
-            '_acquisition_end_time', '_acquisition_start_time', '_time_step',
-            '_data_type', '_analysis', '_text', '_infile']
+        pickle_sensitive_attrs = [
+            '_resolution',
+            '_range',
+            '_amplifier_gain',
+            '_channel_labels',
+            '_detector_voltage',
+            '_amplification_type',
+            '_channels',
+            '_acquisition_end_time',
+            '_acquisition_start_time',
+            '_time_step',
+            '_data_type',
+            '_analysis',
+            '_text',
+            '_infile']
         # Also test computed (property) attrs
         computed_attrs = [
             'infile',
@@ -2810,6 +2821,7 @@ class TestFCSDataPickle(unittest.TestCase):
             'amplification_type',
             'detector_voltage',
             'amplifier_gain',
+            'channel_labels',
             'range',
             'resolution',
             'hist_bins',
