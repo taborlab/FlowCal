@@ -18,6 +18,7 @@ Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/Flow
 * ``scikit-learn`` (>=0.16.0)
 * ``pandas`` (>=0.16.1)
 * ``xlrd`` (>=0.9.2)
+* ``openpyxl`` (>=2.4.1)
 * ``XlsxWriter`` (>=0.5.2)
 
 If you have ``pip``, a ``requirements.txt`` file is provided, such that the required packages can be installed by running::

@@ -67,6 +67,53 @@ class TestReadTable(unittest.TestCase):
         # Compare
         tm.assert_frame_equal(table, expected_output)
 
+    def test_read_table_xls(self):
+        """
+        Test for proper loading of a table from an old-format Excel sheet.
+
+        """
+        xls_filename = 'test/test_excel_ui.xls'
+
+        # Sheet to read
+        sheetname = "Instruments"
+        # Column to use as index labels
+        index_col = "ID"
+
+        # Expected output
+        expected_output_list = []
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        expected_output_list.append(row)
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        expected_output_list.append(row)
+        expected_index = pd.Series([u'FC001', u'FC002'], name='ID')
+        expected_columns = [u'Description',
+                            u'Forward Scatter Channel',
+                            u'Side Scatter Channel',
+                            u'Fluorescence Channels',
+                            u'Time Channel']
+
+        expected_output = pd.DataFrame(expected_output_list,
+                                       index=expected_index,
+                                       columns=expected_columns)
+
+        # Read table
+        table = FlowCal.excel_ui.read_table(xls_filename,
+                                            sheetname=sheetname,
+                                            index_col=index_col)
+
+        # Compare
+        tm.assert_frame_equal(table, expected_output)
+
     def test_read_table_no_index_col(self):
         """
         Test proper loading of a table when no index column is specified.
