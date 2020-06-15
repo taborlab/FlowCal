@@ -51,7 +51,7 @@ From there, one can obtain the file name and analysis options of each beads file
 ...     verbose=True,
 ...     plot=True)
 
-``FlowCal.excel_ui.process_beads_table`` uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags ``verbose`` and ``plot`` instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the :doc:`MEF tutorial </python_tutorial/mef>`. The ouput arguments are ``beads_samples``, a list of transformed and gated FCSData objects, and ``mef_transform_fxns``, a dictionary of MEF transformation functions, indexed by the ID of the beads files.
+``FlowCal.excel_ui.process_beads_table`` uses the instruments table and the beads table to automatically open, density-gate, and transform the specified beads files, and generate MEF transformation functions as indicated by the Excel input file. The flags ``verbose`` and ``plot`` instruct the function to generate messages for each file being processed, and plots for each step of standard curve calculation, similar to what we saw in the :doc:`MEF tutorial </python_tutorial/mef>`. The output arguments are ``beads_samples``, a dictionary of transformed and gated FCSData objects, and ``mef_transform_fxns``, a dictionary of MEF transformation functions, each indexed by the ID of the beads files.
 
 In a similar way, ``FlowCal``'s Excel UI can automatically density-gate and transform cell samples using a single instruction:
 
@@ -62,6 +62,6 @@ In a similar way, ``FlowCal``'s Excel UI can automatically density-gate and tran
 ...     verbose=True,
 ...     plot=True)
 
-``FlowCal.excel_ui.process_samples_table`` uses the instruments and samples tables to open, density-gate, and transform cell samples as specified, and return the processed data as a list of FCSData objects. If the input Excel file specifies that some samples should be transformed to MEF, ``FlowCal.excel_ui.process_samples_table`` also requires a dictionary with the respective MEF transformation functions (``mef_transform_fxns``), which was provided in the previous step by ``FlowCal.excel_ui.process_beads_table``.
+``FlowCal.excel_ui.process_samples_table`` uses the instruments and samples tables to open, density-gate, and transform cell samples as specified, and return the processed data as a dictionary of FCSData objects. If the input Excel file specifies that some samples should be transformed to MEF, ``FlowCal.excel_ui.process_samples_table`` also requires a dictionary with the respective MEF transformation functions (``mef_transform_fxns``), which was provided in the previous step by ``FlowCal.excel_ui.process_beads_table``.
 
 **This is all the code required to obtain a set of processed cell samples**. From here, one can perform any desired analysis on ``samples``. Note that ``samples_table`` contains any other information in the input Excel file not directly used by ``FlowCal``, such as inducer concentration, incubation time, etc. This can be used to build an induction curve, fluorescence vs. final optical density (OD), etc.
