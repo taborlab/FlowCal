@@ -94,7 +94,7 @@ setup(
                       'scikit-learn>=0.16.0',
                       'pandas>=0.16.1',
                       'xlrd>=0.9.2',
-                      'openpyxl>=2.4.1'],
+                      'openpyxl>=2.2.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

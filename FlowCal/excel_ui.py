@@ -177,6 +177,12 @@ def read_table(filename, sheetname, index_col=None, engine=None):
                 # version < 0.25.0), try xlrd
                 read_excel_kwargs['engine'] = 'xlrd'
                 table = pd.read_excel(**read_excel_kwargs)
+        except ImportError:
+            # pandas recognizes openpyxl but encountered an ImportError, try
+            # xlrd. Possible scenarios: openpyxl version is less than what
+            # pandas requires, openpyxl is missing (shouldn't happen)
+            read_excel_kwargs['engine'] = 'xlrd'
+            table = pd.read_excel(**read_excel_kwargs)
         except openpyxl.utils.exceptions.InvalidFileException:
             # unsupported file type (e.g. .xls), try xlrd
             #
