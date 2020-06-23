@@ -16,7 +16,7 @@ Alternatively, download ``FlowCal`` from `here <https://github.com/taborlab/Flow
 * ``matplotlib`` (>=2.0.0)
 * ``scikit-image`` (>=0.10.0)
 * ``scikit-learn`` (>=0.16.0)
-* ``pandas`` (>=0.16.1)
+* ``pandas`` (>=0.23.0)
 * ``xlrd`` (>=0.9.2)
 * ``openpyxl`` (>=2.2.0)
 
