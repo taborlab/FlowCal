@@ -414,6 +414,23 @@ class TestReadTextSegment(unittest.TestCase):
                     end=len(raw_text_segment)-1),
                 (text_dict, delim))
 
+    if six.PY3:
+        def test_primary_bad_segment_warning(self):
+            """
+            Test warning with unpaired non-boundary delimiter in last value.
+
+            """
+            raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
+            delim            = '/'
+            text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+            buf              = six.BytesIO(six.b(raw_text_segment))
+
+            with self.assertWarnsRegex(UserWarning,
+                                       'ill-formed TEXT segment'):
+                FlowCal.io.read_fcs_text_segment(buf=buf,
+                                                 begin=0,
+                                                 end=len(raw_text_segment)-1)
+
     def test_primary_multi_delim_in_keyword_1(self):
         """
         Test that multiple delimiters in keyword still parses correctly.
@@ -1154,6 +1171,25 @@ class TestReadTextSegment(unittest.TestCase):
                     supplemental=True),
                 (text_dict, delim))
 
+    if six.PY3:
+        def test_supp_bad_segment_warning(self):
+            """
+            Test warning with unpaired non-boundary delimiter in last value.
+
+            """
+            raw_text_segment = '/k1/v1/k2/v2/k3/v3//'
+            delim            = '/'
+            text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+            buf              = six.BytesIO(six.b(raw_text_segment))
+
+            with self.assertWarnsRegex(UserWarning,
+                                       'ill-formed TEXT segment'):
+                FlowCal.io.read_fcs_text_segment(buf=buf,
+                                                 begin=0,
+                                                 end=len(raw_text_segment)-1,
+                                                 delim=delim,
+                                                 supplemental=True)
+
     def test_supp_bad_segment_s(self):
         """
         Test edge case with unpaired non-boundary delimiter in last value.
@@ -1176,6 +1212,25 @@ class TestReadTextSegment(unittest.TestCase):
                     delim=delim,
                     supplemental=True),
                 (text_dict, delim))
+
+    if six.PY3:
+        def test_supp_bad_segment_s_warning(self):
+            """
+            Test warning with unpaired non-boundary delimiter in last value.
+
+            """
+            raw_text_segment = 'k1/v1/k2/v2/k3/v3//'
+            delim            = '/'
+            text_dict        = {'k1':'v1','k2':'v2','k3':'v3'}
+            buf              = six.BytesIO(six.b(raw_text_segment))
+
+            with self.assertWarnsRegex(UserWarning,
+                                       'ill-formed TEXT segment'):
+                FlowCal.io.read_fcs_text_segment(buf=buf,
+                                                 begin=0,
+                                                 end=len(raw_text_segment)-1,
+                                                 delim=delim,
+                                                 supplemental=True)
 
     def test_supp_multi_delim_in_keyword_1(self):
         """
