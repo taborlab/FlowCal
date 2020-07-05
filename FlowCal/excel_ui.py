@@ -96,10 +96,7 @@ elif six.PY3:
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-try:
-    import openpyxl
-except ImportError:
-    pass
+import openpyxl
 
 import FlowCal.io
 import FlowCal.plot
@@ -171,35 +168,28 @@ def read_table(filename, sheetname, index_col=None, engine=None):
         try:
             read_excel_kwargs['engine'] = 'openpyxl'
             table = pd.read_excel(**read_excel_kwargs)
-        except ImportError as e:
-            if not('openpyxl' in str(e).lower()
-                   and 'missing' in str(e).lower()):
-                raise
-            else:
-                # pandas recognizes openpyxl but package is missing, try xlrd
-                read_excel_kwargs['engine'] = 'xlrd'
-                table = pd.read_excel(**read_excel_kwargs)
         except ValueError as e:
             if not('openpyxl' in str(e).lower()
                    and 'unknown' in str(e).lower()):
                 raise
             else:
                 # pandas does not recognize openpyxl (e.g. pandas
-                # version <= 0.25.0), try xlrd
+                # version < 0.25.0), try xlrd
                 read_excel_kwargs['engine'] = 'xlrd'
                 table = pd.read_excel(**read_excel_kwargs)
-        except Exception as e:
-            if 'openpyxl' in sys.modules \
-                    and isinstance(e, openpyxl.utils.exceptions \
-                                          .InvalidFileException):
-                # unsupported file type (e.g. .xls), try xlrd
-                #
-                # (note: openpyxl's InvalidFileException has been stable at
-                # that location since v2.2.0)
-                read_excel_kwargs['engine'] = 'xlrd'
-                table = pd.read_excel(**read_excel_kwargs)
-            else:
-                raise
+        except ImportError:
+            # pandas recognizes openpyxl but encountered an ImportError, try
+            # xlrd. Possible scenarios: openpyxl version is less than what
+            # pandas requires, openpyxl is missing (shouldn't happen)
+            read_excel_kwargs['engine'] = 'xlrd'
+            table = pd.read_excel(**read_excel_kwargs)
+        except openpyxl.utils.exceptions.InvalidFileException:
+            # unsupported file type (e.g. .xls), try xlrd
+            #
+            # (note: openpyxl's InvalidFileException has been stable at that
+            # location since v2.2.0)
+            read_excel_kwargs['engine'] = 'xlrd'
+            table = pd.read_excel(**read_excel_kwargs)
     else:
         read_excel_kwargs['engine'] = engine
         table = pd.read_excel(**read_excel_kwargs)
@@ -226,7 +216,7 @@ def write_workbook(filename, table_list, column_width=None):
         Tables to be saved as individual sheets in the Excel table. Each
         tuple contains two values: the name of the sheet to be saved as a
         string, and the contents of the table as a DataFrame.
-    column_width: int, optional
+    column_width: int or float, optional
         The column width to use when saving the spreadsheet. If None,
         calculate width automatically from the maximum number of characters
         in each column.
@@ -259,7 +249,7 @@ def write_workbook(filename, table_list, column_width=None):
         pass
 
     # Generate output writer object
-    writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+    writer = pd.ExcelWriter(filename, engine='openpyxl')
 
     # Write tables
     for sheet_name, df in table_list:
@@ -268,21 +258,18 @@ def write_workbook(filename, table_list, column_width=None):
         # Write to an Excel sheet
         df.to_excel(writer, sheet_name=sheet_name, index=False)
         # Set column width
-        if column_width is None:
-            for i, (col_name, column) in enumerate(six.iteritems(df)):
+        for i, (col_name, column) in enumerate(six.iteritems(df)):
+            if column_width is None:
                 # Get the maximum number of characters in a column
                 max_chars_col = column.astype(str).str.len().max()
                 max_chars_col = max(len(col_name), max_chars_col)
-                # Write width
-                writer.sheets[sheet_name].set_column(
-                    i,
-                    i,
-                    width=1.*max_chars_col)
-        else:
-            writer.sheets[sheet_name].set_column(
-                0,
-                len(df.columns) - 1,
-                width=column_width)
+                width = float(max_chars_col)
+            else:
+                width = float(column_width)
+
+            # Write width
+            col_letter = openpyxl.utils.get_column_letter(i+1)
+            writer.sheets[sheet_name].column_dimensions[col_letter].width = width
 
     # Write excel file
     writer.save()
