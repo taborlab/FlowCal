@@ -780,7 +780,9 @@ def process_samples_table(samples_table,
                     elif units.lower() == 'mef':
                         units_label = "Molecules of Equivalent Fluorophore, MEF"
                         # Check if transformation function is available
-                        if mef_transform_fxns[sample_row['Beads ID']] is None:
+                        if mef_transform_fxns is None or \
+                                mef_transform_fxns[sample_row['Beads ID']] \
+                                is None:
                             raise ExcelUIException("MEF transformation "
                                 "function not available")
 
