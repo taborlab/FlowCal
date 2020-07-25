@@ -285,7 +285,8 @@ def process_beads_table(beads_table,
                         plot=False,
                         plot_dir=None,
                         full_output=False,
-                        get_transform_fxn_kwargs={}):
+                        get_transform_fxn_kwargs={},
+                        legacy_scatter_gate=False):
     """
     Process calibration bead samples, as specified by an input table.
 
@@ -337,6 +338,11 @@ def process_beads_table(beads_table,
     get_transform_fxn_kwargs : dict, optional
         Additional parameters passed directly to internal
         ``mef.get_transform_fxn()`` function call.
+    legacy_scatter_gate : bool, optional
+        If True, process the table as a legacy FlowCal table. In this case,
+        "Scatter Gate" columns are ignored and density gate is applied
+        automatically with a gate fraction given by the column "Gate
+        Fraction".
 
     Returns
     -------
@@ -451,18 +457,90 @@ def process_beads_table(beads_table,
                 beads_sample_gated = FlowCal.gate.high_low(
                     beads_sample_gated,
                     channels=sc_channels)
-            # Density gating
-            try:
-                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                    data=beads_sample_gated,
-                    channels=sc_channels,
-                    gate_fraction=beads_row['Gate Fraction'],
-                    xscale='logicle',
-                    yscale='logicle',
-                    sigma=5.,
-                    full_output=True)
-            except ValueError as ve:
-                raise ExcelUIException(ve.message)
+
+            # Scatter gate
+            # This step must distinguish between legacy and new format
+            if legacy_scatter_gate:
+                # Density gate by default
+                try:
+                    beads_sample_gated, __, gate_contour = \
+                        FlowCal.gate.density2d(
+                            data=beads_sample_gated,
+                            channels=sc_channels,
+                            gate_fraction=beads_row['Gate Fraction'],
+                            xscale='logicle',
+                            yscale='logicle',
+                            sigma=5.,
+                            full_output=True)
+                except ValueError as ve:
+                    raise ExcelUIException(ve.message)
+
+            else:
+                gate_contour = []
+                # If "Scatter Gate" column not present or empty, do nothing.
+                if ('Scatter Gate' in beads_row.index) and \
+                        not (pd.isnull(beads_row['Scatter Gate'])):
+                    # Gate methods are listed in the 'Scatter Gate' column,
+                    # separated by a comma.
+                    gate_methods = [
+                        g.strip()
+                        for g in beads_row['Scatter Gate'].split(',')]
+
+                    # Iterate over gate methods
+                    for gate_idx, gate_method in enumerate(gate_methods):
+                        # Parse
+                        # Each method corresponds to a function and a set of
+                        # default parameters, stored in gate_function and
+                        # gate_params
+                        if gate_method.lower() == 'density':
+                            gate_function = FlowCal.gate.density2d
+                            gate_params = {'xscale': 'logicle',
+                                           'yscale': 'logicle',
+                                           'sigma': 5.,}
+                        elif gate_method.lower() == 'ellipse':
+                            gate_function = FlowCal.gate.ellipse
+                            gate_params = {'theta': 0,
+                                           'log': True,}
+                        else:
+                            # Not recognized, raise error.
+                            raise ExcelUIException("scatter gate method "
+                                "\"{}\" not recognized".format(gate_method))
+
+                        # Parse parameters from columns
+                        # The following regex should capture "Gate Fraction"
+                        # from "Scatter Gate 1: Gate Fraction"
+                        re_gate_params = re.compile(
+                            r'^\s*[Ss]catter\s+[Gg]ate\s+' + \
+                            str(gate_idx + 1) + \
+                            r'\s*:\s*(\S(?:.*\S)?)\s*$')
+                        gate_headers = [h
+                                        for h in list(beads_row.columns)
+                                        if re_gate_params.match(h)]
+                        gate_param_names = [re_gate_params.match(h).group(1)
+                                            for h in gate_headers]
+                        # Transfer parameters into gate_params dictionary
+                        for gate_header, param_name in \
+                                zip(gate_headers, gate_param_names):
+                            # Function parameter name is the specified name
+                            # in lowercase, with spaces replaced by underscores.
+                            # Example: Gate Fraction -> gate_fraction
+                            p = param_name.lower().replace(' ', '_')
+                            # Transfer parameter
+                            gate_params[p] = beads_row[gate_header]
+
+                        # Apply gate
+                        try:
+                            beads_sample_gated, __, current_gate_contour = \
+                                gate_function(
+                                    data=beads_sample_gated,
+                                    channels=sc_channels,
+                                    full_output=True,
+                                    gate_params**)
+                        except ValueError as ve:
+                            raise ExcelUIException(ve.message)
+
+                        # Append gate contours
+                        gate_contour.extend(current_gate_contour)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -619,7 +697,8 @@ def process_samples_table(samples_table,
                           base_dir=".",
                           verbose=False,
                           plot=False,
-                          plot_dir=None):
+                          plot_dir=None,
+                          legacy_scatter_gate=False):
     """
     Process flow cytometry samples, as specified by an input table.
 
@@ -675,6 +754,11 @@ def process_samples_table(samples_table,
         Directory relative to `base_dir` into which plots are saved. If
         `plot` is False, this parameter is ignored. If ``plot==True`` and
         ``plot_dir is None``, plot without saving.
+    legacy_scatter_gate : bool, optional
+        If True, process the table as a legacy FlowCal table. In this case,
+        "Scatter Gate" columns are ignored and density gate is applied
+        automatically with a gate fraction given by the column "Gate
+        Fraction".
 
     Returns
     -------
@@ -868,17 +952,89 @@ def process_samples_table(samples_table,
                 sample_gated = FlowCal.gate.high_low(
                     sample_gated,
                     sc_channels + report_channels)
-            # Density gating
-            try:
-                sample_gated, __, gate_contour = FlowCal.gate.density2d(
-                    data=sample_gated,
-                    channels=sc_channels,
-                    gate_fraction=sample_row['Gate Fraction'],
-                    xscale='logicle',
-                    yscale='logicle',
-                    full_output=True)
-            except ValueError as ve:
-                raise ExcelUIException(ve.message)
+
+            # Scatter gate
+            # This step must distinguish between legacy and new format
+            if legacy_scatter_gate:
+                # Density gate by default
+                try:
+                    sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                        data=sample_gated,
+                        channels=sc_channels,
+                        gate_fraction=sample_row['Gate Fraction'],
+                        xscale='logicle',
+                        yscale='logicle',
+                        full_output=True)
+                except ValueError as ve:
+                    raise ExcelUIException(ve.message)
+
+            else:
+                raise NotImplementedError
+                gate_contour = []
+                # If "Scatter Gate" column not present or empty, do nothing.
+                if ('Scatter Gate' in sample_row.index) and \
+                        not (pd.isnull(sample_row['Scatter Gate'])):
+                    # Gate methods are listed in the 'Scatter Gate' column,
+                    # separated by a comma.
+                    gate_methods = [
+                        g.strip()
+                        for g in sample_row['Scatter Gate'].split(',')]
+
+                    # Iterate over gate methods
+                    for gate_idx, gate_method in enumerate(gate_methods):
+                        # Parse
+                        # Each method corresponds to a function and a set of
+                        # default parameters, stored in gate_function and
+                        # gate_params
+                        if gate_method.lower() == 'density':
+                            gate_function = FlowCal.gate.density2d
+                            gate_params = {'xscale': 'logicle',
+                                           'yscale': 'logicle',
+                                           'sigma': 5.,}
+                        elif gate_method.lower() == 'ellipse':
+                            gate_function = FlowCal.gate.ellipse
+                            gate_params = {'theta': 0,
+                                           'log': True,}
+                        else:
+                            # Not recognized, raise error.
+                            raise ExcelUIException("scatter gate method "
+                                "\"{}\" not recognized".format(gate_method))
+
+                        # Parse parameters from columns
+                        # The following regex should capture "Gate Fraction"
+                        # from "Scatter Gate 1: Gate Fraction"
+                        re_gate_params = re.compile(
+                            r'^\s*[Ss]catter\s+[Gg]ate\s+' + \
+                            str(gate_idx + 1) + \
+                            r'\s*:\s*(\S(?:.*\S)?)\s*$')
+                        gate_headers = [h
+                                        for h in list(sample_row.columns)
+                                        if re_gate_params.match(h)]
+                        gate_param_names = [re_gate_params.match(h).group(1)
+                                            for h in gate_headers]
+                        # Transfer parameters into gate_params dictionary
+                        for gate_header, param_name in \
+                                zip(gate_headers, gate_param_names):
+                            # Function parameter name is the specified name
+                            # in lowercase, with spaces replaced by underscores.
+                            # Example: Gate Fraction -> gate_fraction
+                            p = param_name.lower().replace(' ', '_')
+                            # Transfer parameter
+                            gate_params[p] = sample_row[gate_header]
+
+                        # Apply gate
+                        try:
+                            sample_gated, __, current_gate_contour = \
+                                gate_function(
+                                    data=sample_gated,
+                                    channels=sc_channels,
+                                    full_output=True,
+                                    gate_params**)
+                        except ValueError as ve:
+                            raise ExcelUIException(ve.message)
+
+                        # Append gate contours
+                        gate_contour.extend(current_gate_contour)
 
             # Plot forward/side scatter density plot and fluorescence histograms
             if plot:
@@ -1511,7 +1667,8 @@ def run(input_path=None,
         output_path=None,
         verbose=True,
         plot=True,
-        hist_sheet=False):
+        hist_sheet=False,
+        legacy_scatter_gate=False):
     """
     Run the MS Excel User Interface.
 
@@ -1548,6 +1705,11 @@ def run(input_path=None,
     hist_sheet : bool, optional
         Whether to generate a sheet in the output Excel file specifying
         histogram bin information.
+    legacy_scatter_gate : bool, optional
+        If True, process the spreadsheet as a legacy FlowCal spreadsheet.
+        In this case, "Scatter Gate" columns are ignored and density gate
+        is applied automatically with a gate fraction given by the column
+        "Gate Fraction".
 
     """
 
@@ -1584,7 +1746,8 @@ def run(input_path=None,
         verbose=verbose,
         plot=plot,
         plot_dir='plot_beads',
-        full_output=True)
+        full_output=True,
+        legacy_scatter_gate=legacy_scatter_gate)
 
     # Add stats to beads table
     if verbose:
@@ -1601,7 +1764,8 @@ def run(input_path=None,
         base_dir=input_dir,
         verbose=verbose,
         plot=plot,
-        plot_dir='plot_samples')
+        plot_dir='plot_samples',
+        legacy_scatter_gate=legacy_scatter_gate)
 
     # Add stats to samples table
     if verbose:
@@ -1697,6 +1861,11 @@ def run_command_line(args=None):
         "--histogram-sheet",
         action="store_true",
         help="generate sheet in output Excel file specifying histogram bins")
+    parser.add_argument(
+        "--legacy-scatter-gate",
+        action="store_true",
+        help="ignore \"Scatter Gate\" columns and apply density gate "
+            "automatically")
     args = parser.parse_args(args=args)
 
     # Run Excel UI
@@ -1704,7 +1873,8 @@ def run_command_line(args=None):
         output_path=args.outputpath,
         verbose=args.verbose,
         plot=args.plot,
-        hist_sheet=args.histogram_sheet)
+        hist_sheet=args.histogram_sheet,
+        legacy_scatter_gate=args.legacy_scatter_gate)
 
 if __name__ == '__main__':
     run_command_line()
