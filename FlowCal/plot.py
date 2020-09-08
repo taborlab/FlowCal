@@ -1293,17 +1293,17 @@ _ViolinRegion = collections.namedtuple('_ViolinRegion',
                                                     'right_side_x',
                                                     'y'))
 
-def _plot_violin(violin_position,
-                 violin_data,
-                 violin_width,
-                 violin_kwargs,
-                 y_bin_edges,
-                 xscale,
-                 upper_trim_fraction,
-                 lower_trim_fraction,
-                 draw_summary_stat,
-                 draw_summary_stat_fxn,
-                 draw_summary_stat_kwargs):
+def _plot_single_violin(violin_position,
+                        violin_data,
+                        violin_width,
+                        violin_kwargs,
+                        y_bin_edges,
+                        xscale,
+                        upper_trim_fraction,
+                        lower_trim_fraction,
+                        draw_summary_stat,
+                        draw_summary_stat_fxn,
+                        draw_summary_stat_kwargs):
     """
     Plot a single violin.
 
@@ -2005,17 +2005,18 @@ def violin(data,
         else:
             v_lower_trim_fraction = lower_trim_fraction
 
-        _plot_violin(violin_position=violin_position,
-                     violin_data=violin_data,
-                     violin_width=violin_width,
-                     violin_kwargs=v_kwargs,
-                     y_bin_edges=violin_y_bin_edges,
-                     xscale=xscale,
-                     upper_trim_fraction=v_upper_trim_fraction,
-                     lower_trim_fraction=v_lower_trim_fraction,
-                     draw_summary_stat=draw_summary_stat,
-                     draw_summary_stat_fxn=draw_summary_stat_fxn,
-                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+        _plot_single_violin(
+            violin_position=violin_position,
+            violin_data=violin_data,
+            violin_width=violin_width,
+            violin_kwargs=v_kwargs,
+            y_bin_edges=violin_y_bin_edges,
+            xscale=xscale,
+            upper_trim_fraction=v_upper_trim_fraction,
+            lower_trim_fraction=v_lower_trim_fraction,
+            draw_summary_stat=draw_summary_stat,
+            draw_summary_stat_fxn=draw_summary_stat_fxn,
+            draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
 
     if draw_model:
         if xscale == 'log':
@@ -2173,17 +2174,18 @@ def violin(data,
         else:
             v_lower_trim_fraction = lower_trim_fraction
 
-        _plot_violin(violin_position=next_violin_position,
-                     violin_data=logx_zero_data,
-                     violin_width=violin_width,
-                     violin_kwargs=v_kwargs,
-                     y_bin_edges=violin_y_bin_edges,
-                     xscale=xscale,
-                     upper_trim_fraction=v_upper_trim_fraction,
-                     lower_trim_fraction=v_lower_trim_fraction,
-                     draw_summary_stat=draw_summary_stat,
-                     draw_summary_stat_fxn=draw_summary_stat_fxn,
-                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+        _plot_single_violin(
+            violin_position=next_violin_position,
+            violin_data=logx_zero_data,
+            violin_width=violin_width,
+            violin_kwargs=v_kwargs,
+            y_bin_edges=violin_y_bin_edges,
+            xscale=xscale,
+            upper_trim_fraction=v_upper_trim_fraction,
+            lower_trim_fraction=v_lower_trim_fraction,
+            draw_summary_stat=draw_summary_stat,
+            draw_summary_stat_fxn=draw_summary_stat_fxn,
+            draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
 
         if draw_model:
             model_zero_yvalue = draw_model_fxn(0.0)
@@ -2292,17 +2294,18 @@ def violin(data,
         else:
             v_lower_trim_fraction = lower_trim_fraction
 
-        _plot_violin(violin_position=next_violin_position,
-                     violin_data=max_data,
-                     violin_width=violin_width,
-                     violin_kwargs=v_kwargs,
-                     y_bin_edges=violin_y_bin_edges,
-                     xscale=xscale,
-                     upper_trim_fraction=v_upper_trim_fraction,
-                     lower_trim_fraction=v_lower_trim_fraction,
-                     draw_summary_stat=draw_summary_stat,
-                     draw_summary_stat_fxn=draw_summary_stat_fxn,
-                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+        _plot_single_violin(
+            violin_position=next_violin_position,
+            violin_data=max_data,
+            violin_width=violin_width,
+            violin_kwargs=v_kwargs,
+            y_bin_edges=violin_y_bin_edges,
+            xscale=xscale,
+            upper_trim_fraction=v_upper_trim_fraction,
+            lower_trim_fraction=v_lower_trim_fraction,
+            draw_summary_stat=draw_summary_stat,
+            draw_summary_stat_fxn=draw_summary_stat_fxn,
+            draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
 
         if draw_max_line:
             summary_stat = draw_summary_stat_fxn(max_data)
@@ -2421,17 +2424,18 @@ def violin(data,
         else:
             v_lower_trim_fraction = lower_trim_fraction
 
-        _plot_violin(violin_position=next_violin_position,
-                     violin_data=min_data,
-                     violin_width=violin_width,
-                     violin_kwargs=v_kwargs,
-                     y_bin_edges=violin_y_bin_edges,
-                     xscale=xscale,
-                     upper_trim_fraction=v_upper_trim_fraction,
-                     lower_trim_fraction=v_lower_trim_fraction,
-                     draw_summary_stat=draw_summary_stat,
-                     draw_summary_stat_fxn=draw_summary_stat_fxn,
-                     draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
+        _plot_single_violin(
+            violin_position=next_violin_position,
+            violin_data=min_data,
+            violin_width=violin_width,
+            violin_kwargs=v_kwargs,
+            y_bin_edges=violin_y_bin_edges,
+            xscale=xscale,
+            upper_trim_fraction=v_upper_trim_fraction,
+            lower_trim_fraction=v_lower_trim_fraction,
+            draw_summary_stat=draw_summary_stat,
+            draw_summary_stat_fxn=draw_summary_stat_fxn,
+            draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
 
         if draw_min_line:
             summary_stat = draw_summary_stat_fxn(min_data)
