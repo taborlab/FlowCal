@@ -2017,23 +2017,23 @@ def violin(data,
                      draw_summary_stat_fxn=draw_summary_stat_fxn,
                      draw_summary_stat_kwargs=v_draw_summary_stat_kwargs)
 
-        if draw_model:
-            if xscale == 'log':
-                model_xvalues = np.logspace(np.log10(data_xlim[0]),
-                                            np.log10(data_xlim[1]),
-                                            100)
-            else:
-                model_xvalues = np.linspace(data_xlim[0], data_xlim[1], 100)
+    if draw_model:
+        if xscale == 'log':
+            model_xvalues = np.logspace(np.log10(data_xlim[0]),
+                                        np.log10(data_xlim[1]),
+                                        100)
+        else:
+            model_xvalues = np.linspace(data_xlim[0], data_xlim[1], 100)
 
-            try:
-                model_yvalues = draw_model_fxn(model_xvalues)
-            except Exception:
-                model_yvalues = [draw_model_fxn(xvalue)
-                                 for xvalue in model_xvalues]
+        try:
+            model_yvalues = draw_model_fxn(model_xvalues)
+        except Exception:
+            model_yvalues = [draw_model_fxn(xvalue)
+                             for xvalue in model_xvalues]
 
-            plt.plot(model_xvalues,
-                     model_yvalues,
-                     **draw_model_kwargs)
+        plt.plot(model_xvalues,
+                 model_yvalues,
+                 **draw_model_kwargs)
 
     ###
     # plot optional min, max, and zero violins
