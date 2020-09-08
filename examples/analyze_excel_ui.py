@@ -135,7 +135,7 @@ if __name__ == "__main__":
     # Here, we use a violin plot to show cellular fluorescence as a function
     # of IPTG.
     plt.figure(figsize=(3,3))
-    FlowCal.plot.violin(data=samples,
+    FlowCal.plot.violin(data=list(samples.values()),
                         channel='FL1',
                         positions=iptg,
                         xscale='log')
