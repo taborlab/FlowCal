@@ -87,10 +87,14 @@ class TestGeometricMean(unittest.TestCase):
     """
     def setUp(self):
         # 10x2 array
-        self.a = np.array([[0, 8, 6, 1, 1, 6, 5, 9, 2, 2],
-                           [9, 9, 2, 0, 2, 0, 8, 8, 4, 7]]).T
+        self.a = np.array([[1, 8, 6, 1, 1, 6, 5, 9, 2, 2],
+                           [9, 9, 2, 1, 2, 1, 8, 8, 4, 7]]).T
         # FCSFile
         self.d = FlowCal.io.FCSData('test/Data001.fcs')
+        # Transform fluorescence data to a.u. so that there are no zeros
+        self.d = FlowCal.transform.to_rfi(
+            self.d,
+            channels=['FL1-H', 'FL2-H', 'FL3-H'])
 
     def test_array(self):
         """
@@ -101,17 +105,6 @@ class TestGeometricMean(unittest.TestCase):
         s_lib = scipy.stats.gmean(self.a, axis=0)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
-        np.testing.assert_array_equal(s_fc, s_lib)
-
-    def test_fcs_data(self):
-        """
-        Test size, type, and values when using an FCSData object.
-
-        """
-        s_fc = FlowCal.stats.gmean(self.d)
-        s_lib = scipy.stats.gmean(self.d.view(np.ndarray), axis=0)
-        self.assertIsInstance(s_fc, type(s_lib))
-        self.assertEqual(s_fc.shape, (6,))
         np.testing.assert_array_equal(s_fc, s_lib)
 
     def test_fcs_data_slice_1d(self):
@@ -459,17 +452,6 @@ class TestGeomStd(unittest.TestCase):
         self.assertEqual(s_fc.shape, (2,))
         np.testing.assert_array_equal(s_fc, s_lib)
 
-    def test_fcs_data(self):
-        """
-        Test size, type, and values when using an FCSData object.
-
-        """
-        s_fc = FlowCal.stats.gstd(self.d)
-        s_lib = np.exp(np.std(np.log(self.d.view(np.ndarray)), axis=0))
-        self.assertIsInstance(s_fc, type(s_lib))
-        self.assertEqual(s_fc.shape, (6,))
-        np.testing.assert_array_equal(s_fc, s_lib)
-
     def test_fcs_data_slice_1d(self):
         """
         Test size, type, and values when using a 1D sliced FCSData object.
@@ -533,18 +515,6 @@ class TestGeomCv(unittest.TestCase):
         s_lib = np.sqrt(np.exp(np.std(np.log(self.a), axis=0)**2) - 1)
         self.assertIsInstance(s_fc, type(s_lib))
         self.assertEqual(s_fc.shape, (2,))
-        np.testing.assert_array_equal(s_fc, s_lib)
-
-    def test_fcs_data(self):
-        """
-        Test size, type, and values when using an FCSData object.
-
-        """
-        s_fc = FlowCal.stats.gcv(self.d)
-        s_lib = np.sqrt(np.exp(np.std(np.log(
-            self.d.view(np.ndarray)), axis=0)**2) - 1)
-        self.assertIsInstance(s_fc, type(s_lib))
-        self.assertEqual(s_fc.shape, (6,))
         np.testing.assert_array_equal(s_fc, s_lib)
 
     def test_fcs_data_slice_1d(self):

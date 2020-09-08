@@ -69,13 +69,7 @@ except AttributeError:
     # python 2
     collectionsAbc = collections
 
-# Use default colors from palettable if available
-try:
-    import palettable
-except ImportError as e:
-    cmap_default = plt.get_cmap(matplotlib.rcParams['image.cmap'])
-else:
-    cmap_default = palettable.colorbrewer.diverging.Spectral_8_r.mpl_colormap
+cmap_default = plt.get_cmap('Spectral_r')
 
 savefig_dpi = 250
 
@@ -1182,67 +1176,59 @@ def hist1d(data_list,
 
     # Iterate through data_list
     for i, data in enumerate(data_list):
+        hist_kwargs = kwargs.copy()  # note: this is a shallow copy
+
         # Extract channel
+        if 'x' in hist_kwargs:
+            raise ValueError("`x` must be specified via `data_list`")
         if data.ndim > 1:
-            y = data[:, channel]
+            hist_kwargs['x'] = data[:, channel]
         else:
-            y = data
+            hist_kwargs['x'] = data
 
         # If ``data_plot.hist_bins()`` exists, obtain bin edges from it if
         # necessary. If it does not exist, do not modify ``bins``.
-        if hasattr(y, 'hist_bins') and hasattr(y.hist_bins, '__call__'):
+        hist_kwargs['bins'] = bins
+        if hasattr(hist_kwargs['x'], 'hist_bins') \
+                and hasattr(hist_kwargs['x'].hist_bins, '__call__'):
             # If bins is None or an integer, get bin edges from
             # ``data_plot.hist_bins()``.
-            if bins is None or isinstance(bins, int):
-                bins = y.hist_bins(channels=0,
-                                   nbins=bins,
-                                   scale=xscale,
-                                   **xscale_kwargs)
+            if hist_kwargs['bins'] is None \
+                    or isinstance(hist_kwargs['bins'], int):
+                hist_kwargs['bins'] = hist_kwargs['x'].hist_bins(
+                    channels=0,
+                    nbins=hist_kwargs['bins'],
+                    scale=xscale,
+                    **xscale_kwargs)
 
-        # Decide whether to normalize
-        if normed_height and not normed_area:
-            weights = np.ones_like(y)/float(len(y))
-        else:
-            weights = None
-
-        # Actually plot
+        # Resolve normalizations
+        if 'density' in hist_kwargs:
+            msg  = "use `normed_area` instead of `density`"
+            raise ValueError(msg)
+        if 'normed' in hist_kwargs:
+            msg  = "use `normed_area` or `normed_height` instead of `normed`"
+            raise ValueError(msg)
         if packaging.version.parse(matplotlib.__version__) \
                 >= packaging.version.parse('2.2'):
-            if bins is not None:
-                n, edges, patches = plt.hist(y,
-                                             bins,
-                                             weights=weights,
-                                             density=normed_area,
-                                             histtype=histtype,
-                                             edgecolor=edgecolor[i],
-                                             facecolor=facecolor[i],
-                                             **kwargs)
-            else:
-                n, edges, patches = plt.hist(y,
-                                             weights=weights,
-                                             density=normed_area,
-                                             histtype=histtype,
-                                             edgecolor=edgecolor[i],
-                                             facecolor=facecolor[i],
-                                             **kwargs)
+            hist_kwargs['density'] = normed_area
         else:
-            if bins is not None:
-                n, edges, patches = plt.hist(y,
-                                             bins,
-                                             weights=weights,
-                                             normed=normed_area,
-                                             histtype=histtype,
-                                             edgecolor=edgecolor[i],
-                                             facecolor=facecolor[i],
-                                             **kwargs)
-            else:
-                n, edges, patches = plt.hist(y,
-                                             weights=weights,
-                                             normed=normed_area,
-                                             histtype=histtype,
-                                             edgecolor=edgecolor[i],
-                                             facecolor=facecolor[i],
-                                             **kwargs)
+            hist_kwargs['normed'] = normed_area
+
+        # Calculate weights if normalizing bins by height
+        if normed_height and not normed_area:
+            if 'weights' in hist_kwargs:
+                msg  = "`weights` must not be specified if"
+                msg += " `normed_height=True`"
+                raise ValueError(msg)
+            hist_kwargs['weights'] = np.ones_like(hist_kwargs['x'])
+            hist_kwargs['weights'] /= float(len(hist_kwargs['x']))
+
+        hist_kwargs['histtype']  = histtype
+        hist_kwargs['facecolor'] = facecolor[i]
+        hist_kwargs['edgecolor'] = edgecolor[i]
+
+        # Plot
+        n, edges, patches = plt.hist(**hist_kwargs)
 
     # Set scale of x axis
     if xscale=='logicle':
@@ -1258,9 +1244,9 @@ def hist1d(data_list,
     if xlabel is not None:
         # Highest priority is user-provided label
         plt.xlabel(xlabel)
-    elif hasattr(y, 'channels'):
+    elif hasattr(hist_kwargs['x'], 'channels'):
         # Attempt to use channel name
-        plt.xlabel(y.channels[0])
+        plt.xlabel(hist_kwargs['x'].channels[0])
 
     if ylabel is not None:
         # Highest priority is user-provided label
@@ -3292,7 +3278,8 @@ def density_and_hist(data,
 
     # Colors
     n_colors = n_plots - 1
-    colors = [cmap_default(i) for i in np.linspace(0, 1, n_colors)]
+    default_property_cycler = plt.rcParams['axes.prop_cycle']()
+    colors = [next(default_property_cycler)['color'] for i in range(n_colors)]
     # Histogram
     for i, hist_channel in enumerate(hist_channels):
         # Define subplot
