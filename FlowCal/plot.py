@@ -1448,7 +1448,7 @@ def violin(data,
            positions=None,
            violin_width=None,
            xscale='linear',
-           yscale='log',
+           yscale='logicle',
            xlim=None,
            ylim=None,
            num_y_bins=100,
@@ -1499,7 +1499,7 @@ def violin(data,
     ----------------
     xscale : {'linear','log'}, optional
         Scale of the x-axis.
-    yscale : {'linear','log'}, optional
+    yscale : {'logicle','linear','log'}, optional
         Scale of the y-axis.
     xlim : tuple, optional
         Limits of the x-axis view. If not specified, `xlim` is calculated to
@@ -1517,8 +1517,9 @@ def violin(data,
         Bin edges used to bin population members along the y-axis. Bin edges
         can be specified for individual violins using a list of arrays of the
         same length as `data`. If not specified, `y_bin_edges` is calculated
-        to span `ylim` linearly (if `yscale` is 'linear') or logarithmically
-        (if `yscale` is 'log') using `num_y_bins`.
+        to span `ylim` logicly (if `yscale` is 'logicle'), linearly (if
+        `yscale` is 'linear'), or logarithmically (if `yscale` is 'log') using
+        `num_y_bins`.
     density : bool, optional
         `density` parameter passed to the np.histogram() command that bins
         population members for each violin. If True, violin width represents
@@ -1592,8 +1593,8 @@ def violin(data,
         msg  = "`xscale` must be 'linear' or 'log'"
         raise ValueError(msg)
 
-    if yscale not in ('linear', 'log'):
-        msg  = "`yscale` must be 'linear' or 'log'"
+    if yscale not in ('logicle', 'linear', 'log'):
+        msg  = "`yscale` must be 'logicle', 'linear', or 'log'"
         raise ValueError(msg)
 
     # understand `data`
@@ -1673,7 +1674,13 @@ def violin(data,
 
     # calculate violin bin edges if necessary
     if y_bin_edges is None:
-        if yscale == 'linear':
+        if yscale == 'logicle':
+            t = _LogicleTransform(data=data, channel=channel)
+            t_ymin = t.inverted().transform_non_affine(ylim[0])
+            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_y_bin_edges = np.linspace(t_ymin, t_ymax, num_y_bins+1)
+            y_bin_edges = t.transform_non_affine(t_y_bin_edges)
+        elif yscale == 'linear':
             y_bin_edges = np.linspace(ylim[0], ylim[1], num_y_bins+1)
         else:
             y_bin_edges = np.logspace(np.log10(ylim[0]),
@@ -1867,7 +1874,10 @@ def violin(data,
                 xlim[1])
 
     plt.xscale(xscale)
-    plt.yscale(yscale)
+    if yscale == 'logicle':
+        plt.yscale(yscale, data=data, channel=channel)
+    else:
+        plt.yscale(yscale)
 
     plt.xlim(xlim)
     plt.ylim(ylim)
@@ -1934,7 +1944,7 @@ def violin_dose_response(data,
                          violin_width=None,
                          model_fxn=None,
                          xscale='linear',
-                         yscale='log',
+                         yscale='logicle',
                          xlim=None,
                          ylim=None,
                          violin_width_to_span_fraction=0.1,
@@ -2020,7 +2030,7 @@ def violin_dose_response(data,
     ----------------
     xscale : {'linear','log'}, optional
         Scale of the x-axis.
-    yscale : {'linear','log'}, optional
+    yscale : {'logicle','linear','log'}, optional
         Scale of the y-axis.
     xlim : tuple, optional
         Limits of the x-axis view. If not specified, `xlim` is calculated to
@@ -2041,8 +2051,9 @@ def violin_dose_response(data,
         Bin edges used to bin population members along the y-axis for `data`
         violins. Bin edges can be specified for individual violins using a
         list of arrays of the same length as `data`. If not specified,
-        `y_bin_edges` is calculated to span `ylim` linearly (if `yscale` is
-        'linear') or logarithmically (if `yscale` is 'log') using `num_y_bins`.
+        `y_bin_edges` is calculated to span `ylim` logicly (if `yscale` is
+        'logicle'), linearly (if `yscale` is 'linear'), or logarithmically (if
+        `yscale` is 'log') using `num_y_bins`.
     density : bool, optional
         `density` parameter passed to the np.histogram() command that bins
         population members for each violin. If True, violin width represents
@@ -2080,8 +2091,9 @@ def violin_dose_response(data,
     min_y_bin_edges : array, optional
         Bin edges used to bin population members along the y-axis for the min
         violin. If not specified, `min_y_bin_edges` is calculated to span
-        `ylim` linearly (if `yscale` is 'linear') or logarithmically (if
-        `yscale` is 'log') using `num_y_bins`.
+        `ylim` logicaly (if `yscale` is 'logicle'), linearly (if `yscale` is
+        'linear'), or logarithmically (if `yscale` is 'log') using
+        `num_y_bins`.
     min_upper_trim_fraction : float, optional
         Fraction of members to trim (discard) from the top of the min violin.
     min_lower_trim_fraction : float, optional
@@ -2106,8 +2118,9 @@ def violin_dose_response(data,
     max_y_bin_edges : array, optional
         Bin edges used to bin population members along the y-axis for the max
         violin. If not specified, `max_y_bin_edges` is calculated to span
-        `ylim` linearly (if `yscale` is 'linear') or logarithmically (if
-        `yscale` is 'log') using `num_y_bins`.
+        `ylim` logicaly (if `yscale` is 'logicle'), linearly (if `yscale` is
+        'linear'), or logarithmically (if `yscale` is 'log') using
+        `num_y_bins`.
     max_upper_trim_fraction : float, optional
         Fraction of members to trim (discard) from the top of the max violin.
     max_lower_trim_fraction : float, optional
@@ -2196,8 +2209,8 @@ def violin_dose_response(data,
         msg  = "`xscale` must be 'linear' or 'log'"
         raise ValueError(msg)
 
-    if yscale not in ('linear', 'log'):
-        msg  = "`yscale` must be 'linear' or 'log'"
+    if yscale not in ('logicle', 'linear', 'log'):
+        msg  = "`yscale` must be 'logicle', 'linear', or 'log'"
         raise ValueError(msg)
 
     # understand `data`
@@ -2272,27 +2285,19 @@ def violin_dose_response(data,
 
     # calculate default ylim if necessary. To do so, take min and max values
     # of all data.
+    all_data = list(data)
+    if min_data is not None:
+        all_data.append(min_data)
+    if max_data is not None:
+        all_data.append(max_data)
+
     if ylim is None:
         ymin = np.inf
         ymax = -np.inf
-        for idx in range(data_length):
-            violin_data = np.array(data[idx], dtype=np.float).flat
+        for idx in range(len(all_data)):
+            violin_data = np.array(all_data[idx], dtype=np.float).flat
             violin_min = np.min(violin_data)
             violin_max = np.max(violin_data)
-            if violin_min < ymin:
-                ymin = violin_min
-            if violin_max > ymax:
-                ymax = violin_max
-        if min_data is not None:
-            violin_min = np.min(min_data)
-            violin_max = np.max(min_data)
-            if violin_min < ymin:
-                ymin = violin_min
-            if violin_max > ymax:
-                ymax = violin_max
-        if max_data is not None:
-            violin_min = np.min(max_data)
-            violin_max = np.max(max_data)
             if violin_min < ymin:
                 ymin = violin_min
             if violin_max > ymax:
@@ -2301,21 +2306,39 @@ def violin_dose_response(data,
 
     # calculate violin bin edges if necessary
     if y_bin_edges is None:
-        if yscale == 'linear':
+        if yscale == 'logicle':
+            t = _LogicleTransform(data=all_data, channel=channel)
+            t_ymin = t.inverted().transform_non_affine(ylim[0])
+            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_y_bin_edges = np.linspace(t_ymin, t_ymax, num_y_bins+1)
+            y_bin_edges = t.transform_non_affine(t_y_bin_edges)
+        elif yscale == 'linear':
             y_bin_edges = np.linspace(ylim[0], ylim[1], num_y_bins+1)
         else:
             y_bin_edges = np.logspace(np.log10(ylim[0]),
                                       np.log10(ylim[1]),
                                       num_y_bins+1)
     if min_y_bin_edges is None:
-        if yscale == 'linear':
+        if yscale == 'logicle':
+            t = _LogicleTransform(data=all_data, channel=channel)
+            t_ymin = t.inverted().transform_non_affine(ylim[0])
+            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_min_y_bin_edges = np.linspace(t_ymin, t_ymax, num_y_bins+1)
+            min_y_bin_edges = t.transform_non_affine(t_min_y_bin_edges)
+        elif yscale == 'linear':
             min_y_bin_edges = np.linspace(ylim[0], ylim[1], num_y_bins+1)
         else:
             min_y_bin_edges = np.logspace(np.log10(ylim[0]),
                                           np.log10(ylim[1]),
                                           num_y_bins+1)
     if max_y_bin_edges is None:
-        if yscale == 'linear':
+        if yscale == 'logicle':
+            t = _LogicleTransform(data=all_data, channel=channel)
+            t_ymin = t.inverted().transform_non_affine(ylim[0])
+            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_max_y_bin_edges = np.linspace(t_ymin, t_ymax, num_y_bins+1)
+            max_y_bin_edges = t.transform_non_affine(t_max_y_bin_edges)
+        elif yscale == 'linear':
             max_y_bin_edges = np.linspace(ylim[0], ylim[1], num_y_bins+1)
         else:
             max_y_bin_edges = np.logspace(np.log10(ylim[0]),
@@ -2618,7 +2641,10 @@ def violin_dose_response(data,
                     xlim[1])
 
     plt.xscale(xscale)
-    plt.yscale(yscale)
+    if yscale == 'logicle':
+        plt.yscale(yscale, data=all_data, channel=channel)
+    else:
+        plt.yscale(yscale)
 
     plt.xlim(xlim)
     plt.ylim(ylim)
