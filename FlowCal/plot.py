@@ -1298,6 +1298,7 @@ def _plot_single_violin(violin_position,
                         violin_width,
                         violin_kwargs,
                         y_bin_edges,
+                        density,
                         xscale,
                         upper_trim_fraction,
                         lower_trim_fraction,
@@ -1327,7 +1328,7 @@ def _plot_single_violin(violin_position,
     ###
     # build violin
     ###
-    H,H_edges = np.histogram(violin_data, bins=y_bin_edges)
+    H,H_edges = np.histogram(violin_data, bins=y_bin_edges, density=density)
     H = np.array(H, dtype=np.float)
 
     # duplicate histogram bin counts to serve as left and right corners of
@@ -1452,6 +1453,7 @@ def violin(data,
            ylim=None,
            num_y_bins=100,
            y_bin_edges=None,
+           density=False,
            upper_trim_fraction=0.01,
            lower_trim_fraction=0.01,
            violin_width_to_span_fraction=0.1,
@@ -1517,6 +1519,11 @@ def violin(data,
         same length as `data`. If not specified, `y_bin_edges` is calculated
         to span `ylim` linearly (if `yscale` is 'linear') or logarithmically
         (if `yscale` is 'log') using `num_y_bins`.
+    density : bool, optional
+        `density` parameter passed to the np.histogram() command that bins
+        population members for each violin. If True, violin width represents
+        relative frequency *density* instead of relative frequency (i.e., bins
+        are normalized by their width).
     upper_trim_fraction : float or list of floats, optional
         Fraction of members to trim (discard) from the top of the violin
         (e.g., for aesthetic purposes). Upper trim fractions can be specified
@@ -1822,6 +1829,7 @@ def violin(data,
             violin_width=violin_width,
             violin_kwargs=v_kwargs,
             y_bin_edges=violin_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=v_upper_trim_fraction,
             lower_trim_fraction=v_lower_trim_fraction,
@@ -1843,6 +1851,7 @@ def violin(data,
             violin_width=violin_width,
             violin_kwargs=logx_zero_violin_kwargs,
             y_bin_edges=logx_zero_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=logx_zero_upper_trim_fraction,
             lower_trim_fraction=logx_zero_lower_trim_fraction,
@@ -1931,6 +1940,7 @@ def violin_dose_response(data,
                          violin_width_to_span_fraction=0.1,
                          num_y_bins=100,
                          y_bin_edges=None,
+                         density=False,
                          upper_trim_fraction=0.01,
                          lower_trim_fraction=0.01,
                          violin_kwargs=None,
@@ -2033,6 +2043,11 @@ def violin_dose_response(data,
         list of arrays of the same length as `data`. If not specified,
         `y_bin_edges` is calculated to span `ylim` linearly (if `yscale` is
         'linear') or logarithmically (if `yscale` is 'log') using `num_y_bins`.
+    density : bool, optional
+        `density` parameter passed to the np.histogram() command that bins
+        population members for each violin. If True, violin width represents
+        relative frequency *density* instead of relative frequency (i.e., bins
+        are normalized by their width).
     upper_trim_fraction : float or list of floats, optional
         Fraction of members to trim (discard) from the top of the `data`
         violins (e.g., for aesthetic purposes). Upper trim fractions can be
@@ -2456,6 +2471,7 @@ def violin_dose_response(data,
             violin_width=violin_width,
             violin_kwargs=v_kwargs,
             y_bin_edges=violin_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=v_upper_trim_fraction,
             lower_trim_fraction=v_lower_trim_fraction,
@@ -2498,6 +2514,7 @@ def violin_dose_response(data,
             violin_width=violin_width,
             violin_kwargs=logx_zero_violin_kwargs,
             y_bin_edges=logx_zero_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=logx_zero_upper_trim_fraction,
             lower_trim_fraction=logx_zero_lower_trim_fraction,
@@ -2529,6 +2546,7 @@ def violin_dose_response(data,
             violin_width=violin_width,
             violin_kwargs=max_violin_kwargs,
             y_bin_edges=max_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=max_upper_trim_fraction,
             lower_trim_fraction=max_lower_trim_fraction,
@@ -2570,6 +2588,7 @@ def violin_dose_response(data,
             violin_width=violin_width,
             violin_kwargs=min_violin_kwargs,
             y_bin_edges=min_y_bin_edges,
+            density=density,
             xscale=xscale,
             upper_trim_fraction=min_upper_trim_fraction,
             lower_trim_fraction=min_lower_trim_fraction,
