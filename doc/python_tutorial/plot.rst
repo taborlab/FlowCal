@@ -60,40 +60,22 @@ Another way to compare multiple samples is to use a violin plot (:func:`FlowCal.
 
 .. image:: https://www.dropbox.com/s/3q6htlqrr28mw6h/python_tutorial_plot_hist1d_3.png?raw=1
 
-The y-axis is plotted on a log scale by default, and the top and bottom 1% of events are discarded for aesthetic purposes (see ``upper_trim_fraction`` and ``lower_trim_fraction`` parameters). The y-axis can also be plotted on a linear scale:
+The y-axis is plotted on a logicle scale by default, and the top and bottom 1% of events are discarded for aesthetic purposes (see ``upper_trim_fraction`` and ``lower_trim_fraction`` parameters). The y-axis can also be plotted on a logarithmic or linear scale:
 
+>>> FlowCal.plot.violin(data=d, channel='FL1', positions=iptg, xlabel='IPTG (uM)', yscale='log')
 >>> FlowCal.plot.violin(data=d, channel='FL1', positions=iptg, xlabel='IPTG (uM)', yscale='linear', ylim=(0,4000))
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/3q6htlqrr28mw6h/python_tutorial_plot_hist1d_3.png?raw=1
 
-The x-axis can also be plotted on a log scale. If data exists at x=0, it will be illustrated separately on the left side of the plot.
+The x-axis can also be plotted on a logarithmic scale. If data at position x=0 is specified, it will be illustrated separately on the left side of the plot.
 
 >>> FlowCal.plot.violin(data=d, channel='FL1', positions=iptg, xlabel='IPTG (uM)', xscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/3q6htlqrr28mw6h/python_tutorial_plot_hist1d_3.png?raw=1
 
-Data for minimum and maximum controls can also be separately illustrated via the ``min_data`` and ``max_data`` parameters (here, we use the low and high IPTG concentrations).
-
->>> FlowCal.plot.violin(data=d,
->>>                     min_data=d[0],
->>>                     max_data=d[-1],
->>>                     channel='FL1',
->>>                     positions=iptg,
->>>                     xlabel='IPTG (uM)',
->>>                     xscale='log',
->>>                     violin_kwargs={'data':{'facecolor':'gray', 'edgecolor':'black'},
->>>                                    'min' :{'facecolor':'black','edgecolor':'black'},
->>>                                    'max' :{'facecolor':'black','edgecolor':'black'}},
->>>                     draw_summary_stat_kwargs={'data':{'color':'black'},
->>>                                               'min' :{'color':'gray'},
->>>                                               'max' :{'color':'gray'}})
->>> plt.show()
-
-.. image:: https://www.dropbox.com/s/3q6htlqrr28mw6h/python_tutorial_plot_hist1d_3.png?raw=1
-
-Finally, a mathematical model can be illustrated alongside the data (e.g. a Hill fit) via the ``draw_model_fxn`` parameter. :func:`FlowCal.plot.violin` will take care of illustrating the model for x=0 data if the x-scale is logarithmic.
+"Dose response" or "transfer" functions are often illustrated from flow cytometry data, and they benefit from the additional context of minimum and maximum bounds and are often described by mathematical models. The (:func:`FlowCal.plot.violin_dose_response`) function can be used to add min data, max data, and a mathematical model to a violin plot. Min and max data are illustrated to the left of the plot, and the mathematical model is correctly illustrated even when a position=0 violin is illustrated separately when ``xscale`` is ``'log'``.
 
 >>> def iptg_hill_model(iptg_concentration):
 >>>     mn = 20.
@@ -105,26 +87,18 @@ Finally, a mathematical model can be illustrated alongside the data (e.g. a Hill
 >>>     else:
 >>>         return mn + ((mx-mn)/(1+((K/iptg_concentration)**n)))
 >>>
->>> FlowCal.plot.violin(data=d,
->>>                     min_data=d[0],
->>>                     max_data=d[-1],
->>>                     channel='FL1',
->>>                     positions=iptg,
->>>                     xlabel='IPTG (uM)',
->>>                     xscale='log',
->>>                     violin_kwargs={'data':{'facecolor':'gray', 'edgecolor':'black'},
->>>                                    'min' :{'facecolor':'black','edgecolor':'black'},
->>>                                    'max' :{'facecolor':'black','edgecolor':'black'}},
->>>                     draw_summary_stat_kwargs={'data':{'color':'black'},
->>>                                               'min' :{'color':'gray'},
->>>                                               'max' :{'color':'gray'}},
->>>                     draw_model=True,
->>>                     draw_model_fxn=iptg_hill_model,
->>>                     draw_model_kwargs={'color':'gray',
->>>                                        'linewidth':3,
->>>                                        'zorder':-1,
->>>                                        'solid_capstyle':'butt'},
->>>                     data_xlim=(2e1,2e3))
+>>> FlowCal.plot.violin_dose_response(data=d,
+>>>                                   channel='FL1',
+>>>                                   positions=iptg,
+>>>                                   min_data=d[0],
+>>>                                   max_data=d[-1],
+>>>                                   model_fxn=iptg_hill_model,
+>>>                                   draw_model_kwargs={'color':'gray',
+>>>                                                      'linewidth':3,
+>>>                                                      'zorder':-1,
+>>>                                                      'solid_capstyle':'butt'},
+>>>                                   xlabel='IPTG (uM)',
+>>>                                   xscale='log')
 >>> plt.show()
 
 .. image:: https://www.dropbox.com/s/3q6htlqrr28mw6h/python_tutorial_plot_hist1d_3.png?raw=1
