@@ -123,7 +123,7 @@ if __name__ == "__main__":
     plt.ylim((0,2500))
     plt.xlim((0,5e4))
     plt.xlabel('FL1  (Molecules of Equivalent Fluorescein, MEFL)')
-    plt.legend(['{} $\mu M$ DAPG'.format(i) for i in dapg],
+    plt.legend(['{:.1f} $\mu M$ DAPG'.format(i) for i in dapg],
                loc='upper left',
                fontsize='small')
     plt.tight_layout()
