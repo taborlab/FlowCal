@@ -135,13 +135,13 @@ if __name__ == "__main__":
     # Here, we illustrate how to obtain statistics from the fluorescence of
     # each sample and how to use them in a plot. The stats module contains
     # functions to calculate different statistics such as mean, median, and
-    # standard deviation. In this example, we calculate the geometric mean
-    # from channel FL1 of each sample, and plot them against the corresponding
-    # DAPG concentrations.
-    samples_fluorescence = [FlowCal.stats.gmean(samples[s_id], channels='FL1')
+    # standard deviation. In this example, we calculate the mean from channel
+    # FL1 of each sample and plot them against the corresponding DAPG
+    # concentrations.
+    samples_fluorescence = [FlowCal.stats.mean(samples[s_id], channels='FL1')
                             for s_id in sample_ids]
-    min_fluorescence = FlowCal.stats.gmean(samples['min'], channels='FL1')
-    max_fluorescence = FlowCal.stats.gmean(samples['max'], channels='FL1')
+    min_fluorescence = FlowCal.stats.mean(samples['min'], channels='FL1')
+    max_fluorescence = FlowCal.stats.mean(samples['max'], channels='FL1')
 
     dapg_color = '#ffc400'  # common color used for DAPG-related plots
 
@@ -156,12 +156,12 @@ if __name__ == "__main__":
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Min', x=2e2, y=1.25e2, ha='left', va='bottom', color='gray')
+    plt.text(s='Min', x=2e2, y=1.6e2, ha='left', va='bottom', color='gray')
     plt.axhline(max_fluorescence,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Max', x=-0.7, y=5e3, ha='left', va='top', color='gray')
+    plt.text(s='Max', x=-0.7, y=5.2e3, ha='left', va='top', color='gray')
 
     plt.yscale('log')
     plt.ylim((5e1,1e4))
