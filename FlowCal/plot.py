@@ -1308,6 +1308,46 @@ def _plot_single_violin(violin_position,
     """
     Plot a single violin.
 
+    Illustrate the relative frequency of members of a population using a
+    vertical, normalized, symmetrical histogram ("violin") centered on a
+    corresponding x-axis value. Wider regions of the violin indicate regions
+    that occur with greater frequency.
+
+    Parameters
+    ----------
+    violin_position : scalar
+        Position (x-axis value) at which to center violin.
+    violin_data : 1D array
+        A population for which to plot a violin.
+    violin_width : scalar
+        Width of violin. If `xscale` is 'log', the units are decades.
+    violin_kwargs : dict
+        Keyword arguments passed to the plt.fill_betweenx() command that
+        illustrates the violin.
+    y_bin_edges : array
+        Bin edges used to bin population members along the y-axis.
+    density : bool
+        `density` parameter passed to the np.histogram() command that bins
+        population members. If True, violin width represents relative
+        frequency *density* instead of relative frequency (i.e., bins are
+        normalized by their width).
+    xscale : {'linear','log'}
+        Scale of the x-axis.
+    upper_trim_fraction : float
+        Fraction of members to trim (discard) from the top of the violin
+        (e.g., for aesthetic purposes).
+    lower_trim_fraction : float
+        Fraction of members to trim (discard) from the bottom of the violin
+        (e.g., for aesthetic purposes).
+    draw_summary_stat : bool
+        Flag specifying to illustrate a summary statistic.
+    draw_summary_stat_fxn : function
+        Function used to calculate the summary statistic. The summary
+        statistic is calculated prior to aesthetic trimming.
+    draw_summary_stat_kwargs : dict
+        Keyword arguments passed to the plt.plot() command that illustrates
+        the summary statistic.
+
     """
     if draw_summary_stat:
         summary_stat = draw_summary_stat_fxn(violin_data)
