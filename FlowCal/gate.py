@@ -28,53 +28,6 @@ import collections
 # Gate Classes
 ###
 
-class DensityGate(object):
-    """
-    A density gate.
-
-    Attributes
-    ----------
-    boundaries : sequence of numpy arrays of floats
-        Sequence of gate boundaries used to visualize the gate (e.g. a list of
-        2D arrays specifying the x-y coordinates of gate contours).
-
-    Attributes (private)
-    --------------------
-    _bin_edges : sequence of sequences of floats
-        Histogram bin edges for each dimension of the gate.
-    _accepted_bin_indices : set
-        Indices of histogram bins permitted by the gate.
-
-    """
-    def __init__(self, boundaries, _bin_edges, _accepted_bin_indices):
-        self.boundaries            = boundaries
-        self._bin_edges            = _bin_edges
-        self._accepted_bin_indices = _accepted_bin_indices
-
-    def __eq__(self, other):
-        if isinstance(other, DensityGate):
-            # ignore sequence order for `boundaries`
-            return (set(b.tobytes() for b in self.boundaries)
-                 == set(b.tobytes() for b in other.boundaries)) \
-                and (tuple(tuple(seq) for seq in self._bin_edges)
-                  == tuple(tuple(seq) for seq in other._bin_edges)) \
-                and (self._accepted_bin_indices
-                  == other._accepted_bin_indices)
-        else:
-            return NotImplemented
-
-    def __ne__(self, other):
-        if isinstance(other, DensityGate):
-            return not self == other
-        else:
-            return NotImplemented
-
-    def __hash__(self):
-        # ignore sequence order for `boundaries`
-        return hash((frozenset(b.tobytes() for b in self.boundaries),
-                     tuple(tuple(seq) for seq in self._bin_edges),
-                     frozenset(self._accepted_bin_indices)))
-
 # Output namedtuples returned by gate functions
 StartEndGateOutput = collections.namedtuple(
     typename='StartEndGateOutput',
@@ -94,7 +47,8 @@ Density2dGateOutput = collections.namedtuple(
     field_names=('gated_data',
                  'mask',
                  'contour',
-                 'density_gate'))
+                 'bin_edges',
+                 'bin_mask'))
 
 ###
 # Gate Functions
@@ -310,7 +264,7 @@ def density2d(data,
               xscale='logicle',
               yscale='logicle',
               sigma=10.0,
-              density_gate=None,
+              bin_mask=None,
               full_output=False):
     """
     Gate that preserves events in the region with highest density.
@@ -362,10 +316,10 @@ def density2d(data,
         Standard deviation for Gaussian kernel used by
         `scipy.ndimage.filters.gaussian_filter` to smooth 2D histogram
         into a density.
-    density_gate : DensityGate, optional
-        A DensityGate returned by a previous call to this function. If
-        specified, the previous gate will be used to gate `data` (`bins`,
-        `gate_fraction`, `xscale`, `yscale`, and `sigma` are ignored).
+    bin_mask : 2D numpy array of bool, optional
+        A 2D mask array that selects the 2D histogram bins permitted by the
+        gate. Corresponding bin edges should be specified via `bins`. If
+        `bin_mask` is specified, `gate_fraction` and `sigma` are ignored.
     full_output : bool, optional
         Flag specifying to return additional outputs. If true, the outputs
         are given as a namedtuple.
@@ -378,12 +332,14 @@ def density2d(data,
         Boolean gate mask used to gate data such that ``gated_data =
         data[mask]``.
     contour : list of 2D numpy arrays, only if ``full_output==True``
-        List of 2D numpy array(s) of x-y coordinates tracing out
-        the edge of the gated region.
-    density_gate : DensityGate, only if ``full_output==True``
-        The DensityGate created to gate `data`. This gate can be applied to
-        new data by calling `gate.density2d` again with the `density_gate`
-        parameter.
+        List of 2D numpy array(s) of x-y coordinates tracing out the edge of
+        the gated region. If `bin_mask` is specified, `contour` is None.
+    bin_edges : 2-tuple of numpy arrays, only if ``full_output==True``
+        X-axis and y-axis bin edges used by the np.histogram2d() command that
+        bins events (bin_edges=(x_edges,y_edges)).
+    bin_mask : 2D numpy array of bool, only if ``full_output==True``
+        A 2D mask array that selects the 2D histogram bins permitted by the
+        gate.
 
     Raises
     ------
@@ -433,45 +389,37 @@ def density2d(data,
     if data_ch.shape[0] <= 1:
         raise ValueError('data should have more than one event')
 
-    if density_gate is None:
-        # Check gating fraction
-        if gate_fraction < 0 or gate_fraction > 1:
-            msg  = "gate fraction should be between 0 and 1, inclusive"
-            raise ValueError(msg)
-
-        # If ``data_ch.hist_bins()`` exists, obtain bin edges from it if
-        # necessary.
-        if hasattr(data_ch, 'hist_bins') and \
-                hasattr(data_ch.hist_bins, '__call__'):
-            # Check whether `bins` contains information for one or two axes
-            if hasattr(bins, '__iter__') and len(bins)==2:
-                # `bins` contains separate information for both axes
-                # If bins for the X axis is not an iterable, get bin edges from
-                # ``data_ch.hist_bins()``.
-                if not hasattr(bins[0], '__iter__'):
-                    bins[0] = data_ch.hist_bins(channels=0,
-                                                nbins=bins[0],
-                                                scale=xscale)
-                # If bins for the Y axis is not an iterable, get bin edges from
-                # ``data_ch.hist_bins()``.
-                if not hasattr(bins[1], '__iter__'):
-                    bins[1] = data_ch.hist_bins(channels=1,
-                                                nbins=bins[1],
-                                                scale=yscale)
-            else:
-                # `bins` contains information for one axis, which will be used
-                # twice.
-                # If bins is not an iterable, get bin edges from
-                # ``data_ch.hist_bins()``.
-                if not hasattr(bins, '__iter__'):
-                    bins = [data_ch.hist_bins(channels=0,
-                                              nbins=bins,
-                                              scale=xscale),
-                            data_ch.hist_bins(channels=1,
-                                              nbins=bins,
-                                              scale=yscale)]
-    else:
-        bins = density_gate._bin_edges
+    # If ``data_ch.hist_bins()`` exists, obtain bin edges from it if
+    # necessary.
+    if hasattr(data_ch, 'hist_bins') and \
+            hasattr(data_ch.hist_bins, '__call__'):
+        # Check whether `bins` contains information for one or two axes
+        if hasattr(bins, '__iter__') and len(bins)==2:
+            # `bins` contains separate information for both axes
+            # If bins for the X axis is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins[0], '__iter__'):
+                bins[0] = data_ch.hist_bins(channels=0,
+                                            nbins=bins[0],
+                                            scale=xscale)
+            # If bins for the Y axis is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins[1], '__iter__'):
+                bins[1] = data_ch.hist_bins(channels=1,
+                                            nbins=bins[1],
+                                            scale=yscale)
+        else:
+            # `bins` contains information for one axis, which will be used
+            # twice.
+            # If bins is not an iterable, get bin edges from
+            # ``data_ch.hist_bins()``.
+            if not hasattr(bins, '__iter__'):
+                bins = [data_ch.hist_bins(channels=0,
+                                          nbins=bins,
+                                          scale=xscale),
+                        data_ch.hist_bins(channels=1,
+                                          nbins=bins,
+                                          scale=yscale)]
 
     # Make 2D histogram
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
@@ -526,7 +474,14 @@ def density2d(data,
             zip(event_indices, x_bin_indices, y_bin_indices):
         H_events[x_bin_idx, y_bin_idx].append(event_idx)
 
-    if density_gate is None:
+    # Create bin mask if necessary
+    contours = None
+    if bin_mask is None:
+        # Check gating fraction
+        if gate_fraction < 0 or gate_fraction > 1:
+            msg  = "gate fraction should be between 0 and 1, inclusive"
+            raise ValueError(msg)
+
         # Determine number of events to keep. Only consider events which have
         # not been thrown out as outliers.
         n = int(np.ceil(gate_fraction*float(len(event_indices))))
@@ -541,10 +496,8 @@ def density2d(data,
                     gated_data=gated_data,
                     mask=mask,
                     contour=[],
-                    density_gate=DensityGate(
-                        boundaries=[],
-                        _bin_edges=[xe,ye],
-                        _accepted_bin_indices=set()))
+                    bin_edges=(xe,ye),
+                    bin_mask=np.zeros_like(H, dtype=bool))
             else:
                 return gated_data
 
@@ -562,8 +515,8 @@ def density2d(data,
         D = sH / np.sum(sH)
 
         # Sort bins by density
-        vD = D.ravel()
-        vH = H.ravel()
+        vD = D.ravel(order='C')
+        vH = H.ravel(order='C')
         sidx = np.argsort(vD)[::-1]
         svH = vH[sidx]  # linearized counts array sorted by density
 
@@ -573,28 +526,16 @@ def density2d(data,
         Nidx = np.nonzero(csvH >= n)[0][0]    # we want to include this index
 
         # Get indices of accepted histogram bins
-        accepted_bin_indices = set(sidx[:(Nidx+1)])
-    else:
-        accepted_bin_indices = density_gate._accepted_bin_indices
+        accepted_bin_indices = sidx[:(Nidx+1)]
 
-    # Get indices of events to keep
-    vH_events = H_events.ravel()
-    accepted_data_indices = vH_events[np.array(list(accepted_bin_indices),
-                                               dtype=np.int)]
-    accepted_data_indices = np.array([item       # flatten list of lists
-                                      for sublist in accepted_data_indices
-                                      for item in sublist],
-                                     dtype=np.int)
-    accepted_data_indices = np.sort(accepted_data_indices)
+        # Convert accepted bin indices to bin mask array
+        bin_mask = np.zeros_like(H, dtype=bool)
+        v_bin_mask = bin_mask.ravel(order='C')
+        v_bin_mask[accepted_bin_indices] = True
+        bin_mask = v_bin_mask.reshape(H.shape, order='C')
 
-    # Convert list of accepted data indices to boolean mask array
-    mask = np.zeros(shape=data.shape[0], dtype=bool)
-    mask[accepted_data_indices] = True
-
-    gated_data = data[mask]
-
-    if full_output:
-        if density_gate is None:
+        # Determine contours if necessary
+        if full_output:
             # Use scikit-image to find the contour of the gated region
             #
             # To find the contour of the gated region, values in the 2D
@@ -621,19 +562,23 @@ def density2d(data,
                                             yc)]).T
                         for contour_ij in contours_ij]
 
-            density_gate = DensityGate(
-                boundaries=contours,
-                _bin_edges=[xe,ye],
-                _accepted_bin_indices=accepted_bin_indices)
+    accepted_data_indices = H_events[bin_mask]
+    accepted_data_indices = np.array([item       # flatten list of lists
+                                      for sublist in accepted_data_indices
+                                      for item in sublist],
+                                     dtype=np.int)
 
-            return Density2dGateOutput(gated_data=gated_data,
-                                       mask=mask,
-                                       contour=contours,
-                                       density_gate=density_gate)
-        else:
-            return Density2dGateOutput(gated_data=gated_data,
-                                       mask=mask,
-                                       contour=density_gate.boundaries,
-                                       density_gate=density_gate)
+    # Convert list of accepted data indices to boolean mask array
+    mask = np.zeros(shape=data.shape[0], dtype=bool)
+    mask[accepted_data_indices] = True
+
+    gated_data = data[mask]
+
+    if full_output:
+        return Density2dGateOutput(gated_data=gated_data,
+                                   mask=mask,
+                                   contour=contours,
+                                   bin_edges=(xe,ye),
+                                   bin_mask=bin_mask)
     else:
         return gated_data
