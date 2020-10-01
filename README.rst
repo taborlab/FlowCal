@@ -13,7 +13,7 @@ It features:
 
 Documentation
 =============
-The official documentation can be found in http://taborlab.github.io/FlowCal/. Here you will find installation instructions, tutorials, and more.
+The official documentation can be found in https://flowcal.readthedocs.io. Here you will find installation instructions, tutorials, and more.
 
 Report Bugs
 ===========

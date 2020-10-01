@@ -1,9 +1,9 @@
 #!/bin/sh
 
+# The following is necessary to use Anaconda's python.
+source ~/.bash_profile
 # Change current working directory
 cd -- "$(dirname "$BASH_SOURCE")"
 # Install FlowCal
 sudo python -m pip install -r requirements.txt --no-cache-dir
 sudo python setup.py install
-# Pause
-read -p "Press [Enter] to finish..."
