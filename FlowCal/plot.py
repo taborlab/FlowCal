@@ -1571,6 +1571,9 @@ def violin(data,
         data axis (`ylim` if `vert` is True, `xlim` if `vert` is False) is
         calculated to span all violins (before they are aesthetically
         trimmed).
+    vert : bool, optional
+        Flag specifying to illustrate a vertical violin plot. If False, a
+        horizontal violin plot is illustrated.
     num_bins : int, optional
         Number of bins to bin population members. Ignored if `bin_edges` is
         specified.
