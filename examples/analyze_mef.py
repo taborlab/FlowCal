@@ -121,14 +121,17 @@ if __name__ == "__main__":
     # events. Since bead populations form a very narrow cluster in these
     # channels, we use a smoothing factor (``sigma``) lower than the default
     # (10). Finally, setting ``full_output=True`` instructs the function to
-    # return two additional outputs. The last one (``gate_contour``) is a curve
-    # surrounding the gated region, which we will use for plotting later.
-    beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+    # return additional outputs in the form of a named tuple. ``gate_contour``
+    # is a curve surrounding the gated region, which we will use for plotting
+    # later.
+    density_gate_output = FlowCal.gate.density2d(
         data=beads_sample_gated,
         channels=['FSC','SSC'],
         gate_fraction=0.3,
         sigma=5.,
         full_output=True)
+    beads_sample_gated = density_gate_output.gated_data
+    gate_contour       = density_gate_output.contour
 
     # Plot forward/side scatter 2D density plot and 1D fluorescence histograms
     print("Plotting density plot and histogram...")
@@ -237,11 +240,13 @@ if __name__ == "__main__":
 
         # Apply density gating on the forward/side scatter channels. Preserve
         # 50% of the events. Return also a contour around the gated region.
-        sample_gated, __, gate_contour = FlowCal.gate.density2d(
+        density_gate_output = FlowCal.gate.density2d(
             data=sample_gated,
             channels=['FSC','SSC'],
             gate_fraction=0.5,
             full_output=True)
+        sample_gated = density_gate_output.gated_data
+        gate_contour = density_gate_output.contour
 
         # Plot forward/side scatter 2D density plot and 1D fluorescence
         # histograms
