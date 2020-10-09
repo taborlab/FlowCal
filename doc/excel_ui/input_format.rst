@@ -12,7 +12,7 @@ Instruments sheet
 
 This sheet must be filled with basic information about the flow cytometer used to acquire the samples. Each row represents an instrument. Typically, the user would only need to specify one instrument. However, ``FlowCal`` allows the simultaneous processing of samples taken with different instruments. The figure below shows an example of an **Instruments** sheet.
 
-.. image:: https://www.dropbox.com/s/jgmgbgc2rbwagle/input_instruments.png?raw=1
+.. image:: /_static/img/excel_ui/input_instruments.png
 
 For each row, the following columns must be filled.
 
@@ -28,7 +28,7 @@ Beads sheet
 
 This sheet contains details about calibration microbeads and how to process them. Each row represents a different sample of beads. The figure below shows an example of an **Beads** sheet.
 
-.. image:: https://www.dropbox.com/s/e4snspj3w8yiqpl/input_beads.png?raw=1
+.. image:: /_static/img/excel_ui/input_beads.png
 
 For each row, the following columns must be filled:
 
@@ -46,7 +46,7 @@ Samples sheet
 
 In this sheet, the user specifies cell samples and tells ``FlowCal`` how to process them. Each row contains the information used in the analysis of one FCS file. One file can be analyzed several times with different options (e.g. gating fractions or fluorescence units) by adding more rows that reference the same file. The figure below shows an example of a **Samples** sheet.
 
-.. image:: https://www.dropbox.com/s/6c5b9lme2eg7iwx/input_samples.png?raw=1
+.. image:: /_static/img/excel_ui/input_samples.png
 
 For each row, the following columns must be filled:
 

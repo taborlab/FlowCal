@@ -9,14 +9,14 @@ To start, navigate to the ``examples`` directory included with FlowCal, and open
 
 FCS files are standard files in which flow cytometry data is stored. Normally, one FCS file corresponds to one sample.
 
-The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The following instruction opens the file ``Data001.fcs`` from the ``FCFiles`` folder, loads the information into an ``FCSData`` object, and assigns it to a variable ``s``.
+The object :class:`FlowCal.io.FCSData` allows a user to open an FCS file. The following instruction opens the file ``sample006.fcs`` from the ``FCFiles`` folder, loads the information into an ``FCSData`` object, and assigns it to a variable ``s``.
 
->>> s = FlowCal.io.FCSData('FCFiles/Data001.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
 
 An ``FCSData`` object is a 2D ``numpy`` array with a few additional features. The first dimension indexes the event number, and the second dimension indexes the flow cytometry channel (or "parameter", as called by the FCS standard). We can see the number of events and channels using the standard ``numpy``'s ``shape`` property:
 
 >>> print(s.shape)
-(30000, 8)
+(32224, 8)
 
 As with any ``numpy`` array, we can slice an ``FCSData`` object. For example, let's obtain the first 100 events.
 
@@ -28,12 +28,12 @@ Note that the product of slicing an FCSData object is also an FCSData object. We
 
 >>> s_sub_ch = s[:, [3, 4, 5]]
 >>> print(s_sub_ch.shape)
-(30000, 3)
+(32224, 3)
 
 However, it is not immediately obvious what channels we are getting. Fortunately, the ``FCSData`` object contains some additional information about the acquisition settings. In particular, we can check the name of the channels with the ``channels`` property.
 
 >>> print(s.channels)
-('TIME', 'FSC', 'SSC', 'FL1', 'FL2', 'FL3', 'FL1W', 'FL1A')
+('TIME', 'FSC', 'SSC', 'FL1', 'FL2', 'FL3', 'FSCW', 'FSCA')
 >>> print(s_sub_ch.channels)
 ('FL1', 'FL2', 'FL3')
 
