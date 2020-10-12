@@ -61,6 +61,6 @@ For each row, the following columns must be filled:
     c. **MEF**: MEF units.
 6. **Gate Fraction** (F): Fraction of samples to keep when performing :doc:`density gating</fundamentals/density_gate>`.
 
-Additional columns, such as **Strain**, **Plasmid**, and **IPTG (mM)** (columns G, H, and I), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
+Additional columns, such as **Strain**, **Plasmid**, and **DAPG (uM)** (columns G, H, and I), can be added in any place for the user’s records, and will be copied unmodified to the output Excel file by ``FlowCal``.
 
 .. warning:: If MEF units are requested for a fluorescence channel of a sample, an FCS file with calibration beads data should be specified in the **Beads ID** column. Both beads and samples should have been acquired at the same settings for the specified fluorescence channel, otherwise ``FlowCal`` will throw an error.
