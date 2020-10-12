@@ -97,7 +97,7 @@ Histograms, as shown above, can be used to plot and compare data from multiple s
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]
 >>> d = [FlowCal.transform.to_rfi(di) for di in d]
 >>> dapg = np.array([0, 2.33, 4.36, 8.16, 15.3, 28.6, 53.5, 100, 187, 350])
->>> FlowCal.plot.violin(data=d, channel='FL1', positions=dapg, xlabel='DAPG (uM)', xscale='log')
+>>> FlowCal.plot.violin(data=d, channel='FL1', positions=dapg, xlabel='DAPG (uM)', xscale='log', ylim=(1e0,2e3))
 >>> plt.show()
 
 .. image:: /_static/img/python_tutorial/python_tutorial_plot_violin_1.png
@@ -127,6 +127,7 @@ Note that the x axis has been plotted on a logarithmic scale using the ``xscale`
 >>>     model_fxn=dapg_sensor_model,
 >>>     xscale='log',
 >>>     yscale='log',
+>>>     ylim=(1e0,2e3),
 >>>     draw_model_kwargs={'color':'gray',
 >>>                        'linewidth':3,
 >>>                        'zorder':-1,
