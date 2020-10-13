@@ -628,6 +628,51 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1,1], dtype=bool)
             )
 
+    def test_pyramid_1_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/31, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_pyramid_1_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/31, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0],
+                      [0, 1, 1, 1, 0],
+                      [0, 0, 1, 0, 0],
+                      [0, 0, 0, 0, 0]],
+                     dtype=bool))
+
+    def test_pyramid_1_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 1, 1, 1, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[1,2],
+                      [2,1],
+                      [2,2],
+                      [2,3],
+                      [3,2],
+                      [2,2],
+                      [2,2],
+                      [2,1],
+                      [1,2],
+                      [2,3],
+                      [3,2]]))
+
     def test_pyramid_2_gated_data_1(self):
         bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
         np.testing.assert_array_equal(
@@ -662,6 +707,43 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
                 1,1,0,0,0,0], dtype=bool)
             )
+
+    def test_pyramid_2_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/31, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_pyramid_2_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/31, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0]],
+                     dtype=bool))
+
+    def test_pyramid_2_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,2],
+                      [2,2]]))
 
     def test_slope_1_gated_data_1(self):
         bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
@@ -699,6 +781,44 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
                 0,0,0,1,1], dtype=bool)
             )
+
+    def test_slope_1_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=4.0/30, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_slope_1_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=4.0/30, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 1]],
+                     dtype=bool))
+
+    def test_slope_1_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[4,4],
+                      [4,4],
+                      [4,4],
+                      [4,4]]))
 
     def test_slope_2_gated_data_1(self):
         bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
@@ -754,6 +874,53 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,1,0,1,1,
                 1,1,1,1,1], dtype=bool)
             )
+
+    def test_slope_2_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_slope_2_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 1, 1],
+                      [0, 0, 0, 1, 1]],
+                     dtype=bool))
+
+    def test_slope_2_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [4,4]]))
 
     def test_slope_3_gated_data_1(self):
         bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
@@ -830,6 +997,63 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1], dtype=bool)
             )
 
+    def test_slope_3_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=23.0/30, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_slope_3_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=23.0/30, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 1, 1, 1],
+                      [0, 0, 1, 1, 1],
+                      [0, 0, 1, 1, 1]],
+                     dtype=bool))
+
+    def test_slope_3_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 1, 1, 1],
+                             [0, 0, 1, 1, 1],
+                             [0, 0, 1, 1, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,3],
+                      [2,4],
+                      [3,2],
+                      [3,3],
+                      [3,4],
+                      [4,2],
+                      [4,3],
+                      [4,4],
+                      [2,2],
+                      [2,3],
+                      [2,4],
+                      [3,2],
+                      [3,3],
+                      [3,4],
+                      [4,2],
+                      [4,3],
+                      [4,4],
+                      [3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [4,4]]))
+
     ###
     # Test edge cases
     ###
@@ -863,6 +1087,41 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1,1], dtype=bool)
             )
 
+    def test_gate_fraction_1_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=1.0, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_gate_fraction_1_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=1.0, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1]],
+                     dtype=bool))
+
+    def test_gate_fraction_1_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[1, 1, 1, 1, 1],
+                             [1, 1, 1, 1, 1],
+                             [1, 1, 1, 1, 1],
+                             [1, 1, 1, 1, 1],
+                             [1, 1, 1, 1, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            self.pyramid)
+
     # Confirm nothing gets through with 0.0 gate_fraction
 
     def test_gate_fraction_2_gated_data_1(self):
@@ -891,6 +1150,41 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                 0,0,0,0,0,0], dtype=bool)
             )
+
+    def test_gate_fraction_2_bin_edges(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_gate_fraction_2_bin_mask_1(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=0.0, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0]],
+                     dtype=bool))
+
+    def test_gate_fraction_2_bin_mask_2(self):
+        bins = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.empty((0,2), dtype=self.pyramid.dtype))
 
     # Test error when gate_fraction outside [0,1]
 
@@ -958,6 +1252,39 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,0,0,0,0], dtype=bool)
             )
 
+    def test_implicit_gating_1_bin_edges(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/15, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_implicit_gating_1_bin_mask_1(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/15, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 0]],
+                     dtype=bool))
+
+    def test_implicit_gating_1_bin_mask_2(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        bin_mask = np.array([[0, 0, 0],
+                             [0, 1, 0],
+                             [0, 0, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,2],
+                      [2,2]]))
+
     def test_implicit_gating_2_gated_data_1(self):
         bins = [0.5, 1.5, 2.5, 3.5]
         np.testing.assert_array_equal(
@@ -1009,6 +1336,47 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1,1], dtype=bool)
             )
 
+    def test_implicit_gating_2_bin_edges(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/15, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_implicit_gating_2_bin_mask_1(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=11.0/15, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 1, 0],
+                      [1, 1, 1],
+                      [0, 1, 0]],
+                     dtype=bool))
+
+    def test_implicit_gating_2_bin_mask_2(self):
+        bins = [0.5, 1.5, 2.5, 3.5]
+        bin_mask = np.array([[0, 1, 0],
+                             [1, 1, 1],
+                             [0, 1, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[1,2],
+                      [2,1],
+                      [2,2],
+                      [2,3],
+                      [3,2],
+                      [2,2],
+                      [2,2],
+                      [2,1],
+                      [1,2],
+                      [2,3],
+                      [3,2]]))
+
     def test_implicit_gating_3_gated_data_1(self):
         bins = [1.5, 2.5, 3.5]
         np.testing.assert_array_equal(
@@ -1044,6 +1412,37 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,0,0,0,0], dtype=bool)
             )
 
+    def test_implicit_gating_3_bin_edges(self):
+        bins = [1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=3.0/9, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_implicit_gating_3_bin_mask_1(self):
+        bins = [1.5, 2.5, 3.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=3.0/9, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0],
+                      [0, 1]],
+                     dtype=bool))
+
+    def test_implicit_gating_3_bin_mask_2(self):
+        bins = [1.5, 2.5, 3.5]
+        bin_mask = np.array([[0, 0],
+                             [0, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[3,3],
+                      [3,3],
+                      [3,3]]))
+
     def test_implicit_gating_4_gated_data_1(self):
         bins = [0.5, 1.5, 2.5, 3.5, 4.5]
         np.testing.assert_array_equal(
@@ -1078,6 +1477,41 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
                 1,1,0,0,0,0], dtype=bool)
             )
+
+    def test_implicit_gating_4_bin_edges(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/22, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_implicit_gating_4_bin_mask_1(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=3.0/22, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0],
+                      [0, 1, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 0]],
+                     dtype=bool))
+
+    def test_implicit_gating_4_bin_mask_2(self):
+        bins = [0.5, 1.5, 2.5, 3.5, 4.5]
+        bin_mask = np.array([[0, 0, 0, 0],
+                             [0, 1, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,2],
+                      [2,2]]))
 
     # Test sub-binning (multiple values per bin)
 
@@ -1136,6 +1570,47 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,1,1,1], dtype=bool)
             )
 
+    def test_sub_bin_1_bin_edges(self):
+        bins = [0.5, 2.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_sub_bin_1_bin_mask_1(self):
+        bins = [0.5, 2.5, 4.5]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/30, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0],
+                      [0, 1]],
+                     dtype=bool))
+
+    def test_sub_bin_1_bin_mask_2(self):
+        bins = [0.5, 2.5, 4.5]
+        bin_mask = np.array([[0, 0],
+                             [0, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4],
+                      [4,4]]))
+
     # Test bins edge case (when bin edges = values)
     #
     # Again, the expected behavior is that density2d() should mimic
@@ -1179,6 +1654,42 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,
                 0,0,0,0,0,0], dtype=bool)
             )
+
+    def test_bins_edge_case_1_bin_edges(self):
+        bins = list(range(5))
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=4.0/31, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_bins_edge_case_1_bin_mask_1(self):
+        bins = list(range(5))
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=4.0/31, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 1]],
+                     dtype=bool))
+
+    def test_bins_edge_case_1_bin_mask_2(self):
+        bins = list(range(5))
+        bin_mask = np.array([[0, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[3,3],
+                      [3,4],
+                      [4,3],
+                      [4,4]]))
 
     def test_bins_edge_case_2_gated_data_1(self):
         bins = list(range(5))
@@ -1235,6 +1746,51 @@ class TestDensity2dGate2(unittest.TestCase):
                 1,1,0,0,1,1], dtype=bool)
             )
 
+    def test_bins_edge_case_2_bin_edges(self):
+        bins = list(range(5))
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=13.0/31, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_bins_edge_case_2_bin_mask_1(self):
+        bins = list(range(5))
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.pyramid, bins=bins, gate_fraction=13.0/31, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 1, 1],
+                      [0, 0, 1, 1]],
+                     dtype=bool))
+
+    def test_bins_edge_case_2_bin_mask_2(self):
+        bins = list(range(5))
+        bin_mask = np.array([[0, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 1, 1],
+                             [0, 0, 1, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.pyramid,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,3],
+                      [2,4],
+                      [3,2],
+                      [3,3],
+                      [3,4],
+                      [4,2],
+                      [4,3],
+                      [4,4],
+                      [2,2],
+                      [2,2],
+                      [2,3],
+                      [3,2]]))
+
     def test_bins_edge_case_3_gated_data_1(self):
         bins = [1,2,3]
         np.testing.assert_array_equal(
@@ -1281,6 +1837,43 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,
                 1,0,0,0,0], dtype=bool)
             )
+
+    def test_bins_edge_case_3_bin_edges(self):
+        bins = [1,2,3]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=9.0/14, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_bins_edge_case_3_bin_mask_1(self):
+        bins = [1,2,3]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=9.0/14, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 0],
+                      [0, 1]],
+                     dtype=bool))
+
+    def test_bins_edge_case_3_bin_mask_2(self):
+        bins = [1,2,3]
+        bin_mask = np.array([[0, 0],
+                             [0, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[2,2],
+                      [2,3],
+                      [3,2],
+                      [3,3],
+                      [2,2],
+                      [2,3],
+                      [3,2],
+                      [3,3],
+                      [3,3]]))
 
     def test_bins_edge_case_4_gated_data_1(self):
         bins = [1,2,3]
@@ -1336,6 +1929,47 @@ class TestDensity2dGate2(unittest.TestCase):
             np.array([0,1,1,0,1,1,1,0,1,1,1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,
                 1,0,0,0,0], dtype=bool)
             )
+
+    def test_bins_edge_case_4_bin_edges(self):
+        bins = [1,2,3]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/14, sigma=0.0,
+                full_output=True).bin_edges,
+            (bins,bins))
+
+    def test_bins_edge_case_4_bin_mask_1(self):
+        bins = [1,2,3]
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(
+                self.slope, bins=bins, gate_fraction=13.0/14, sigma=0.0,
+                full_output=True).bin_mask,
+            np.array([[0, 1],
+                      [1, 1]],
+                     dtype=bool))
+
+    def test_bins_edge_case_4_bin_mask_2(self):
+        bins = [1,2,3]
+        bin_mask = np.array([[0, 1],
+                             [1, 1]],
+                            dtype=bool)
+        np.testing.assert_array_equal(
+            FlowCal.gate.density2d(self.slope,
+                                   bins=bins,
+                                   bin_mask=bin_mask),
+            np.array([[1,2],
+                      [1,3],
+                      [2,1],
+                      [2,2],
+                      [2,3],
+                      [3,1],
+                      [3,2],
+                      [3,3],
+                      [2,2],
+                      [2,3],
+                      [3,2],
+                      [3,3],
+                      [3,3]]))
 
 if __name__ == '__main__':
     unittest.main()

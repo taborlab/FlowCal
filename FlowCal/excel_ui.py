@@ -453,7 +453,7 @@ def process_beads_table(beads_table,
                     channels=sc_channels)
             # Density gating
             try:
-                beads_sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                density_gate_output = FlowCal.gate.density2d(
                     data=beads_sample_gated,
                     channels=sc_channels,
                     gate_fraction=beads_row['Gate Fraction'],
@@ -461,6 +461,8 @@ def process_beads_table(beads_table,
                     yscale='logicle',
                     sigma=5.,
                     full_output=True)
+                beads_sample_gated = density_gate_output.gated_data
+                gate_contour       = density_gate_output.contour
             except ValueError as ve:
                 raise ExcelUIException(ve.message)
 
@@ -870,13 +872,15 @@ def process_samples_table(samples_table,
                     sc_channels + report_channels)
             # Density gating
             try:
-                sample_gated, __, gate_contour = FlowCal.gate.density2d(
+                density_gate_output = FlowCal.gate.density2d(
                     data=sample_gated,
                     channels=sc_channels,
                     gate_fraction=sample_row['Gate Fraction'],
                     xscale='logicle',
                     yscale='logicle',
                     full_output=True)
+                sample_gated = density_gate_output.gated_data
+                gate_contour = density_gate_output.contour
             except ValueError as ve:
                 raise ExcelUIException(ve.message)
 

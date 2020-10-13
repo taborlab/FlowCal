@@ -109,14 +109,16 @@ if __name__ == "__main__":
         # interest (i.e. debris).
         # We use the forward and side scatter channels, and preserve 50% of the
         # events. Finally, setting ``full_output=True`` instructs the function
-        # to return two additional outputs. The last one (``gate_contour``) is
-        # a curve surrounding the gated region, which we will use for plotting
-        # later.
-        sample_gated, __, gate_contour = FlowCal.gate.density2d(
+        # to return additional outputs in the form of a named tuple.
+        # ``gate_contour`` is a curve surrounding the gated region, which we
+        # will use for plotting later.
+        density_gate_output = FlowCal.gate.density2d(
             data=sample_gated,
             channels=['FSC','SSC'],
             gate_fraction=0.5,
             full_output=True)
+        sample_gated = density_gate_output.gated_data
+        gate_contour = density_gate_output.contour
 
         # Plot forward/side scatter 2D density plot and 1D fluorescence
         # histograms
