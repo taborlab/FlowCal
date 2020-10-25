@@ -3,11 +3,11 @@ Installing FlowCal with Anaconda
 
 To install Anaconda and ``FlowCal``, do the following:
 
-1. Navigate to https://www.anaconda.com/distribution/#download-section. Make sure that your operating system is selected (Windows, macOS, Linux). Click on the "Download" button below the "Python 3.7 version" message. This will download the installer.
+1. Navigate to `this <https://www.anaconda.com/products/individual>`_ page and scroll down to the "Anaconda Installers" section. Click on the "Graphical Installer" link below the name of your operating system (Windows, MacOS, or Linux). This will download the installer.
 
-.. note:: **Windows**: If your computer is a 32-bit PC, click on the message "32-Bit Graphical Installer" instead of the "Download" button. If you don't know whether yours is a 32 or 64 computer but you have purchased it in the last five years, it is probably a 64-bit computer and you can ignore this message.
+.. note:: **Windows**: If your computer is a 32-bit PC, click on the message "32-Bit Graphical Installer" instead of the "Download" button. If you don't know whether yours is a 32 or 64-bit computer but you have purchased it in the last five years, it is probably a 64-bit computer and you can ignore this message.
 
-.. note:: Python 2.7 is also supported. However, we recommend downloading the Python 3.7 version of Anaconda.
+.. note:: Python 2.7 is also supported. However, we recommend downloading the Python 3.8 version of Anaconda.
 
 2. Double click the installer (.exe in Windows, .pkg in OS X) and follow the instructions on screen.
 
@@ -17,7 +17,7 @@ To install Anaconda and ``FlowCal``, do the following:
 
 4. Inside the unzipped folder, double click on ``Install FlowCal (Windows).bat`` or ``Install FlowCal (macOS)`` if you are using Windows or OS X, respectively. This will open a terminal window and install ``FlowCal``. The installation procedure may take a few minutes. When installation is finished, the terminal will show the message “Press Enter to finish...”. If the installation was successful, your terminal should look like the figure below. Press Enter to close the terminal window.
 
-.. image:: https://www.dropbox.com/s/9ygziuk8r2r93kw/installation_completed.png?raw=1
+.. image:: /_static/img/getting_started/installation_completed.png
 
 .. note:: **Windows**: If the following message appears after double clicking ``Install FlowCal (Windows)``: “Windows protected your PC – Windows SmartScreen prevented an unrecognized app from starting...”, click on the “More info” link under the text, and then click on the “Run anyway” button. This will remove the security restriction from the program and allow it to run properly.
 
