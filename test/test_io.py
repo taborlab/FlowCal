@@ -2305,15 +2305,29 @@ class TestFCSHistBins(unittest.TestCase):
 
 class TestFCSAttributesChannelLabels(unittest.TestCase):
     """
-    Test correct extraction, functioning, and slicing of channel resolution.
+    Test correct extraction, functioning, and slicing of channel label.
 
-    We have previously looked at the contents of the $PnR attribute for
-    the test files and identified the correct histogram bin edges:
-        - Data001.fcs: [1024, 1024, 1024, 1024, 1024, 1024]
-        - Data002.fcs: [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
-        - Data003.fcs: [262144, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
-        - Data004.fcs: [262144, 262144, 262144, 262144, 262144, 262144, 262144,
-                        262144, 262144, 262144, 262144, 262144, 262144, 262144]
+    We have previously looked at the contents of the $PnS attribute for
+    the test files and identified the correct label(marker):
+        - Data001.fcs: [None, None, None, None, None, None]
+        - Data002.fcs: [None, None, None, None, None, None, None, None, None]
+        - Data003.fcs: [None, None, None, None, None, None, None, None]
+        - Data004.fcs: [None, None, None, None, None, None, None,
+                        None, None, None, None, None, None, None]
+        - Data005.fcs: ['209Bi_CD11b', '140Ce', '142Ce', 'Center', '161Dy_CD56',
+                        '162Dy_gdTCR', '163Dy_CRTH2', '164Dy_CLEC12A', '166Er_CD25',
+                        '167Er_CCR7', '168Er_CD3', '170Er_CD38', '151Eu_CD123',
+                        '153Eu_PD-1', 'Event_length', '155Gd_CD27', '156Gd_CCR5',
+                        '157Gd', '158Gd_CD117', '160Gd_CD14', '165Ho_CCR6', '127I',
+                        '113In_CD57', '115In_CD11c', '191Ir', '193Ir', '175Lu', '176Lu',
+                        '93Nb', '142Nd_CD19', '143Nd_CD45RA', '144Nd_CD141', '145Nd_CD4',
+                        '146Nd_CD8', '148Nd_CD16', '150Nd_CD1c', 'Offset', '192Os',
+                        '206Pb', '102Pd', '104Pd', '105Pd', '106Pd', '108Pd', '110Pd',
+                        '141Pr_CD33', '194Pt', '195Pt', '196Pt', '198Pt', 'Residual',
+                        '103Rh', '147Sm_CD20', '149Sm_CD127', '152Sm_CD66b', '154Sm_CD86',
+                        '181Ta', '159Tb_CD24', '169Tm_CX3CR1', '131Xe', '89Y_CD45',
+                        '171Yb_CD161', '172Yb_CD209', '173Yb_CXCR3', '174Yb_HLADR',
+                        '176Yb_CCR4', None, None, 'Time'])
 
     """
     def setUp(self):
