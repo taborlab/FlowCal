@@ -3,20 +3,23 @@ Functions for performing multicolor compensation.
 
 """
 
+import functools
+
 import numpy as np
 import FlowCal.stats
 
 def get_transform_fxn(nfc_sample,
                       sfc_samples,
                       channels,
-                      statistic_fxn=FlowCal.stats.median):
+                      statistic_fxn=FlowCal.stats.mean):
     """
     Get a transformation function to perform multicolor compensation.
 
     Parameters
     ----------
-    nfc_sample : FCSData object
-        Data corresponding to the no-fluorophore control sample.
+    nfc_sample : FCSData object or None
+        Data corresponding to the no-fluorophore control sample. If None,
+        autofluorescnece is set to zero.
     sfc_samples : list of FCSData object
         Data corresponding to the single-fluorophore control samples.
     channels : list
@@ -133,7 +136,10 @@ def get_transform_fxn(nfc_sample,
             ' the number of channels specified')
 
     # Calculate autofluorescence vector
-    a0 = np.array(statistic_fxn(nfc_sample[:,channels]))
+    if nfc_sample is None:
+        a0 = np.zeros(len(channels))
+    else:
+        a0 = np.array(statistic_fxn(nfc_sample[:,channels]))
     # Signal on the single-fluorophore controls
     # s_sfc[i,j] = s_sfc^j_i (fluorophore i, channel j)
     s_sfc = [np.array(statistic_fxn(s[:,channels])) for s in sfc_samples]

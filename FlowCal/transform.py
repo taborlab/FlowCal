@@ -389,14 +389,14 @@ def to_compensated(data, channels, a0, A):
         np.linalg.solve(A, (data_t[:, channels] - a0).T).T
 
     # Apply compensation to range
-    if hasattr(data_t, '_range') and data_t._range[chi] is not None:
+    if hasattr(data_t, '_range'):
         range_low = np.array([data_t._range[chi][0] for chi in channels])
         range_high = np.array([data_t._range[chi][1] for chi in channels])
 
         range_low_comp = np.linalg.solve(A, range_low - a0)
         range_high_comp = np.linalg.solve(A, range_high - a0)
 
-        for chi in channels:
-            data_t._range[chi] = [range_low_comp[chi], range_high_comp[chi]]
+        for i, chi in enumerate(channels):
+            data_t._range[chi] = [range_low_comp[i], range_high_comp[i]]
 
     return data_t
