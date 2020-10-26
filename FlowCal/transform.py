@@ -336,3 +336,67 @@ def to_mef(data, channels, sc_list, sc_channels = None):
                                   sc(data_t._range[chi][1])]
 
     return data_t
+
+
+def to_compensated(data, channels, a0, A):
+    """
+    Transform flow cytometry data using compensation coefficients.
+
+    This function is intended to be reduced to the following signature::
+
+        to_compensated_reduced(data)
+
+    by using ``functools.partial`` once compensation coefficients and the
+    channels they should be applied to are available.
+
+    Parameters
+    ----------
+    channels : list
+        Channels to compensate.
+    a0 : array
+        Autofluorescence vector, with a length equal to the number of
+        channels specified.
+    A : 2D array
+        Bleedthrough matrix, a square matrix with a size equal to the
+        number of channels specified.
+
+    Returns
+    -------
+    FCSData or numpy array
+        NxD transformed flow cytometry data.
+
+    """
+    # Check appropriate dimensions of a0 and A
+    if a0.shape != (len(channels),):
+        ValueError('length of a0 should be the same as the number of channels')
+    if A.shape != (len(channels), len(channels)):
+        ValueError('A should be a square matrix with size equal to the number'
+            ' of channels')
+
+    # Convert channels to iterable
+    if not (hasattr(channels, '__iter__') \
+            and not isinstance(channels, six.string_types)):
+        channels = [channels]
+    # Convert channels to integers
+    if hasattr(data, '_name_to_index'):
+        channels = data._name_to_index(channels)
+
+    # Copy data array
+    data_t = data.copy().astype(np.float64)
+
+    # Apply compensation to data
+    data_t[:, channels] = \
+        np.linalg.solve(A, (data_t[:, channels] - a0).T).T
+
+    # Apply compensation to range
+    if hasattr(data_t, '_range') and data_t._range[chi] is not None:
+        range_low = np.array([data_t._range[chi][0] for chi in channels])
+        range_high = np.array([data_t._range[chi][1] for chi in channels])
+
+        range_low_comp = np.linalg.solve(A, range_low - a0)
+        range_high_comp = np.linalg.solve(A, range_high - a0)
+
+        for chi in channels:
+            data_t._range[chi] = [range_low_comp[chi], range_high_comp[chi]]
+
+    return data_t
