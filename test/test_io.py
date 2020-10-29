@@ -24,7 +24,7 @@ Files to test:
     - Data003.fcs: FCS 3.0 from FlowJo Collectors Edition 7.5 /
                     BD FACScan Flow Cytometer
     - Data004.fcs: FCS 3.0 including floating-point data
-    - Data005.fcs: FCS 3.0 including $PxS value
+    - Data005.fcs: FCS 3.0 including $PnS value
 """
 filenames = ['test/Data001.fcs',
             'test/Data002.fcs',
