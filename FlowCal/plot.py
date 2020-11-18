@@ -199,7 +199,8 @@ class _LogicleTransform(matplotlib.transforms.Transform):
         be generated.
     channel : str or int
         Channel of `data` from which a set of T, M, and W parameters will
-        be generated. `channel` should be specified if `data` is not None.
+        be generated. `channel` should be specified if `data` is
+        multidimensional.
 
     Methods
     -------
@@ -255,9 +256,6 @@ class _LogicleTransform(matplotlib.transforms.Transform):
         matplotlib.transforms.Transform.__init__(self)
         # If data is included, try to obtain T, M and W from it
         if data is not None:
-            if channel is None:
-                raise ValueError("if data is provided, a channel should be"
-                    + " specified")
             # Convert to list if necessary
             if not isinstance(data, list):
                 data = [data]
@@ -268,7 +266,15 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                 T = 0
                 for d in data:
                     # Extract channel
-                    y = d[:, channel] if d.ndim > 1 else d
+                    if d.ndim > 1:
+                        if channel is None:
+                            msg  = "if multidimensional data is provided, a"
+                            msg += " channel should be specified"
+                            raise ValueError(msg)
+                        else:
+                            y = d[:, channel]
+                    else:
+                        y = d
                     if hasattr(y, 'range') and hasattr(y.range, '__call__'):
                         Ti = y.range(0)[1]
                     else:
@@ -280,7 +286,15 @@ class _LogicleTransform(matplotlib.transforms.Transform):
                 W = 0
                 for d in data:
                     # Extract channel
-                    y = d[:, channel] if d.ndim > 1 else d
+                    if d.ndim > 1:
+                        if channel is None:
+                            msg  = "if multidimensional data is provided, a"
+                            msg += " channel should be specified"
+                            raise ValueError(msg)
+                        else:
+                            y = d[:, channel]
+                    else:
+                        y = d
                     # If negative events are present, use minimum.
                     if np.any(y < 0):
                         r = np.min(y)
@@ -953,7 +967,8 @@ class _LogicleScale(matplotlib.scale.ScaleBase):
         be generated.
     channel : str or int
         Channel of `data` from which a set of T, M, and W parameters will
-        be generated. `channel` should be specified if `data` is not None.
+        be generated. `channel` should be specified if `data` is
+        multidimensional.
 
     """
     # String name of the scaling
