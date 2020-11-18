@@ -159,20 +159,26 @@ if __name__ == "__main__":
         gate_fraction=0.85,
         sigma=5.,
         full_output=True)
-    min_beads_sample_gated, __, min_gate_contour = FlowCal.gate.density2d(
+    beads_sample_gated = density_gate_output.gated_data
+    gate_contour       = density_gate_output.contour
+
+    min_density_gate_output = FlowCal.gate.density2d(
         data=min_beads_sample_gated,
         channels=['FSC','SSC'],
         gate_fraction=0.85,
         sigma=5.,
         full_output=True)
-    max_beads_sample_gated, __, max_gate_contour = FlowCal.gate.density2d(
+    min_beads_sample_gated = min_density_gate_output.gated_data
+    min_gate_contour       = min_density_gate_output.contour
+
+    max_density_gate_output = FlowCal.gate.density2d(
         data=max_beads_sample_gated,
         channels=['FSC','SSC'],
         gate_fraction=0.85,
         sigma=5.,
         full_output=True)
-    beads_sample_gated = density_gate_output.gated_data
-    gate_contour       = density_gate_output.contour
+    max_beads_sample_gated = max_density_gate_output.gated_data
+    max_gate_contour       = max_density_gate_output.contour
 
     # Plot forward/side scatter 2D density plot and 1D fluorescence histograms
     print("Plotting density plot and histogram...")
@@ -389,16 +395,21 @@ if __name__ == "__main__":
     max_sample_gated = FlowCal.gate.high_low(max_sample_gated,
                                              channels=['FSC','SSC','FL1'])
 
-    min_sample_gated, __, min_gate_contour = FlowCal.gate.density2d(
+    min_density_gate_output = FlowCal.gate.density2d(
         data=min_sample_gated,
         channels=['FSC','SSC'],
         gate_fraction=0.85,
         full_output=True)
-    max_sample_gated, __, max_gate_contour = FlowCal.gate.density2d(
+    min_sample_gated = min_density_gate_output.gated_data
+    min_gate_contour = min_density_gate_output.contour
+
+    max_density_gate_output = FlowCal.gate.density2d(
         data=max_sample_gated,
         channels=['FSC','SSC'],
         gate_fraction=0.85,
         full_output=True)
+    max_sample_gated = max_density_gate_output.gated_data
+    max_gate_contour = max_density_gate_output.contour
 
     # Plot and save
     min_plot_filename = '{}/density_hist_min.png'.format(samples_plot_dir)
