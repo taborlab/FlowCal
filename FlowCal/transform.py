@@ -247,7 +247,7 @@ def to_rfi(data,
     return data_t
 
 
-def to_mef(data, channels, sc_list, sc_channels = None):
+def to_mef(data, channels, sc_list, sc_channels=None):
     """
     Transform flow cytometry data using a standard curve function.
 
@@ -338,65 +338,109 @@ def to_mef(data, channels, sc_list, sc_channels = None):
     return data_t
 
 
-def to_compensated(data, channels, a0, A):
+def to_compensated(data, channels, a0, A, comp_channels=None):
     """
     Transform flow cytometry data using compensation coefficients.
 
+    This function accepts an autofluorescence vector `a0` and a
+    bleedthrough matrix `A` as compensation coefficients, with rows and
+    columns corresponding to channels specified in `comp_channels`.
+    `to_compensated` automatically checks whether compensation coefficients
+    are available for each channel specified in `channels`, and throws an
+    error otherwise.
+
     This function is intended to be reduced to the following signature::
 
-        to_compensated_reduced(data)
+        to_compensated_reduced(data, channels)
 
-    by using ``functools.partial`` once compensation coefficients and the
-    channels they should be applied to are available.
+    by using ``functools.partial`` once compensation coefficients and
+    `comp_channels` are available.
 
     Parameters
     ----------
-    channels : list
-        Channels to compensate.
+    data : FCSData or numpy array
+        NxD flow cytometry data where N is the number of events and D is
+        the number of parameters (aka channels).
+    channels : int, str, list of int, list of str
+        Channels on which to perform the transformation. If `channels` is
+        None, perform transformation in all channels specified on
+        `comp_channels`.
     a0 : array
-        Autofluorescence vector, with a length equal to the number of
-        channels specified.
+        Autofluorescence vector, with a length equal to the length of
+        `comp_channels`.
     A : 2D array
         Bleedthrough matrix, a square matrix with a size equal to the
-        number of channels specified.
+        length of `comp_channels`.
+    comp_channels : list of int or list of str
+        List of channels on which compensation can be applied. Each element
+        corresponds to each row and column in `a0` and `A`.
 
     Returns
     -------
     FCSData or numpy array
         NxD transformed flow cytometry data.
 
-    """
-    # Check appropriate dimensions of a0 and A
-    if a0.shape != (len(channels),):
-        ValueError('length of a0 should be the same as the number of channels')
-    if A.shape != (len(channels), len(channels)):
-        ValueError('A should be a square matrix with size equal to the number'
-            ' of channels')
+    Raises
+    ------
+    ValueError
+        If any channel specified in `channels` is not in `comp_channels`.
 
+    """
+    # Default comp_channels
+    if comp_channels is None:
+        if data.ndim == 1:
+            comp_channels = range(data.shape[0])
+        else:
+            comp_channels = range(data.shape[1])
+    # Convert comp_channels to indices
+    if hasattr(data, '_name_to_index'):
+        comp_channels = data._name_to_index(comp_channels)
+
+    # Default channels
+    if channels is None:
+        channels = comp_channels
     # Convert channels to iterable
     if not (hasattr(channels, '__iter__') \
             and not isinstance(channels, six.string_types)):
         channels = [channels]
-    # Convert channels to integers
+    # Convert channels to index
     if hasattr(data, '_name_to_index'):
-        channels = data._name_to_index(channels)
+        channels_ind = data._name_to_index(channels)
+    else:
+        channels_ind = channels
+    # Check if every channel is in comp_channels
+    for chi, chs in zip(channels_ind, channels):
+        if chi not in comp_channels:
+            raise ValueError(
+                "no compensation coefficients for channel {}".format(chs))
+
+    # Check appropriate dimensions of a0 and A
+    if a0.shape != (len(comp_channels),):
+        raise ValueError('length of a0 should be equal the number of elements'
+            ' in comp_channels')
+    if A.shape != (len(comp_channels), len(comp_channels)):
+        raise ValueError('A should be a square matrix with size equal to the'
+            ' number of elements in comp_channels')
 
     # Copy data array
     data_t = data.copy().astype(np.float64)
 
     # Apply compensation to data
-    data_t[:, channels] = \
-        np.linalg.solve(A, (data_t[:, channels] - a0).T).T
+    # Compensation will be applied to all channels in `comp_channels`, but
+    # only data in `channels` will be copied to the output array
+    comp_data = np.linalg.solve(A, (data_t[:, comp_channels] - a0).T).T
+    comp_channels_map = [comp_channels.index(chi) for chi in channels_ind]
+    data_t[:, channels_ind] = comp_data[:, comp_channels_map]
 
     # Apply compensation to range
     if hasattr(data_t, '_range'):
-        range_low = np.array([data_t._range[chi][0] for chi in channels])
-        range_high = np.array([data_t._range[chi][1] for chi in channels])
+        range_low = np.array([data_t._range[chi][0] for chi in comp_channels])
+        range_high = np.array([data_t._range[chi][1] for chi in comp_channels])
 
         range_low_comp = np.linalg.solve(A, range_low - a0)
         range_high_comp = np.linalg.solve(A, range_high - a0)
 
-        for i, chi in enumerate(channels):
-            data_t._range[chi] = [range_low_comp[i], range_high_comp[i]]
+        for chi, chmi in zip(channels_ind, comp_channels_map):
+            data_t._range[chi] = [range_low_comp[chmi], range_high_comp[chmi]]
 
     return data_t

@@ -10,7 +10,7 @@ import FlowCal.stats
 
 def get_transform_fxn(nfc_sample,
                       sfc_samples,
-                      channels,
+                      comp_channels,
                       statistic_fxn=FlowCal.stats.mean):
     """
     Get a transformation function to perform multicolor compensation.
@@ -22,7 +22,7 @@ def get_transform_fxn(nfc_sample,
         autofluorescnece is set to zero.
     sfc_samples : list of FCSData object
         Data corresponding to the single-fluorophore control samples.
-    channels : list
+    comp_channels : list
         Channels to compensate. The number of channels should match the
         number of single-fluorophore control samples.
 
@@ -32,7 +32,7 @@ def get_transform_fxn(nfc_sample,
         Transformation function to compensate flow cytometry data.
         This function has the following signature::
 
-            data_compensated = transform_fxn(data)
+            data_compensated = transform_fxn(data, channels)
 
     Other parameters
     ----------------
@@ -131,18 +131,18 @@ def get_transform_fxn(nfc_sample,
     """
 
     # Check for appropriate number of single fluorophore controls
-    if len(sfc_samples) != len(channels):
+    if len(sfc_samples) != len(comp_channels):
         ValueError('number of single fluorophore controls should match'
             ' the number of channels specified')
 
     # Calculate autofluorescence vector
     if nfc_sample is None:
-        a0 = np.zeros(len(channels))
+        a0 = np.zeros(len(comp_channels))
     else:
-        a0 = np.array(statistic_fxn(nfc_sample[:,channels]))
+        a0 = np.array(statistic_fxn(nfc_sample[:,comp_channels]))
     # Signal on the single-fluorophore controls
     # s_sfc[i,j] = s_sfc^j_i (fluorophore i, channel j)
-    s_sfc = [np.array(statistic_fxn(s[:,channels])) for s in sfc_samples]
+    s_sfc = [np.array(statistic_fxn(s[:,comp_channels])) for s in sfc_samples]
     # Get signal minus autofluorescence
     # s_bs[i,j] = s_sfc^j_i - a_0^j (fluorophore i, channel j)
     s_bs = np.array([s - a0 for s in s_sfc])
@@ -152,7 +152,7 @@ def get_transform_fxn(nfc_sample,
 
     # Make output transformation function
     transform_fxn = functools.partial(FlowCal.transform.to_compensated,
-                                      channels=channels,
+                                      comp_channels=comp_channels,
                                       a0=a0,
                                       A=A)
 
