@@ -24,19 +24,18 @@ import FlowCal
 ###
 
 # Names of the FCS files containing data from cell samples
-samples_filenames = ['FCFiles/sample006.fcs',
-                     'FCFiles/sample007.fcs',
-                     'FCFiles/sample008.fcs',
-                     'FCFiles/sample009.fcs',
-                     'FCFiles/sample010.fcs',
-                     'FCFiles/sample011.fcs',
-                     'FCFiles/sample012.fcs',
-                     'FCFiles/sample013.fcs',
-                     'FCFiles/sample014.fcs',
-                     'FCFiles/sample015.fcs']
+samples_filenames = ['FCFiles/sample029.fcs',
+                     'FCFiles/sample030.fcs',
+                     'FCFiles/sample031.fcs',
+                     'FCFiles/sample032.fcs',
+                     'FCFiles/sample033.fcs',
+                     'FCFiles/sample034.fcs',
+                     'FCFiles/sample035.fcs',
+                     'FCFiles/sample036.fcs',
+                     'FCFiles/sample037.fcs']
 
-# DAPG concentration of each cell sample, in micromolar.
-dapg = np.array([0, 2.33, 4.36, 8.16, 15.3, 28.6, 53.5, 100, 187, 350])
+# aTc concentration of each cell sample, in ng/mL.
+atc = np.array([0, 0.5, 1, 1.5, 2, 3, 4, 7.5, 20])
 
 # Plots will be generated after gating and transforming cell samples. These
 # will be stored in the following folder.
@@ -183,14 +182,14 @@ if __name__ == "__main__":
     # in the context of accessory matplotlib functions to modify the axes
     # limits and labels and to add a legend, among other things.
 
-    # Color each histogram according to its corresponding DAPG concentration.
+    # Color each histogram according to its corresponding aTc concentration.
     # Use a perceptually uniform colormap (cividis), and transition among
     # colors using a logarithmic normalization, which comports with the
-    # logarithmically spaced DAPG concentrations.
+    # logarithmically spaced aTc concentrations.
     cmap = mpl.cm.get_cmap('cividis')
-    norm = mpl.colors.LogNorm(vmin=1e0, vmax=500)
-    colors = [cmap(norm(dapg_i)) if dapg_i > 0 else cmap(0.0)
-              for dapg_i in dapg]
+    norm = mpl.colors.LogNorm(vmin=1e0, vmax=20)
+    colors = [cmap(norm(atc_i)) if atc_i > 0 else cmap(0.0)
+              for atc_i in atc]
 
     plt.figure(figsize=(6,3.5))
     FlowCal.plot.hist1d(samples,
@@ -201,7 +200,7 @@ if __name__ == "__main__":
     plt.ylim((0,2500))
     plt.xlim((0,5e3))
     plt.xlabel('FL1 Fluorescence (a.u.)')
-    plt.legend(['{} $\mu M$ DAPG'.format(i) for i in dapg],
+    plt.legend(['{:.1f} ng/mL aTc'.format(i) for i in atc],
                loc='upper left',
                fontsize='small')
     plt.tight_layout()
@@ -214,39 +213,39 @@ if __name__ == "__main__":
     # each sample and how to use them in a plot. The stats module contains
     # functions to calculate different statistics such as mean, median, and
     # standard deviation. In this example, we calculate the mean from channel
-    # FL1 of each sample and plot them against the corresponding DAPG
+    # FL1 of each sample and plot them against the corresponding aTc
     # concentrations.
     samples_fluorescence = [FlowCal.stats.mean(s, channels='FL1')
                             for s in samples]
 
-    dapg_color = '#ffc400'  # common color used for DAPG-related plots
+    atc_color = '#ffc400'  # common color used for aTc-related plots
 
     plt.figure(figsize=(3,3))
-    plt.plot(dapg,
+    plt.plot(atc,
              samples_fluorescence,
              marker='o',
-             color=dapg_color)
+             color=atc_color)
 
     # Illustrate min and max bounds. Because some of our control samples were
     # measured at a different cytometer gain setting and we aren't using MEF
-    # calibration here, we will use the 0uM and 350uM DAPG concentration
-    # samples instead.
+    # calibration here, we will use the 0 and 20 ng/mL aTc concentration samples
+    # instead.
     plt.axhline(samples_fluorescence[0],
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Min', x=2e2, y=2.0e1, ha='left', va='bottom', color='gray')
+    plt.text(s='Min', x=3e1, y=1.5e1, ha='left', va='bottom', color='gray')
     plt.axhline(samples_fluorescence[-1],
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Max', x=-0.7, y=2.1e2, ha='left', va='top', color='gray')
+    plt.text(s='Max', x=-0.8, y=2.5e2, ha='left', va='top', color='gray')
 
     plt.yscale('log')
     plt.ylim((5e0,5e2))
     plt.xscale('symlog')
-    plt.xlim((-1e0, 1e3))
-    plt.xlabel('DAPG Concentration ($\mu M$)')
+    plt.xlim((-1e0, 1e2))
+    plt.xlabel('aTc Concentration (ng/mL)')
     plt.ylabel('FL1 Fluorescence (a.u.)')
     plt.tight_layout()
     plt.savefig('dose_response.png', dpi=200)
@@ -255,12 +254,12 @@ if __name__ == "__main__":
     # Plot 3: Dose response violin plot
     #
     # Here, we use a violin plot to show the fluorescence of (almost) all
-    # cells as a function of DAPG. (The `upper_trim_fraction` and
+    # cells as a function of aTc. (The `upper_trim_fraction` and
     # `lower_trim_fraction` parameters eliminate the top and bottom 1% of
     # cells from each violin for aesthetic reasons. The summary statistic,
     # which is illustrated as a horizontal line atop each violin, is
-    # calculated before cells are removed, though.) We again use the 0uM and
-    # 350uM DAPG concentration samples as the min and max data in lieu of
+    # calculated before cells are removed, though.) We again use the 0 and 20
+    # ng/mL aTc concentration samples as the min and max data in lieu of
     # controls. We also set `yscale` to 'log' because the cytometer used to
     # collect this data produces positive integer data (as opposed to
     # floating-point data, which can sometimes be negative), so the added
@@ -269,16 +268,16 @@ if __name__ == "__main__":
     FlowCal.plot.violin_dose_response(
         data=samples,
         channel='FL1',
-        positions=dapg,
+        positions=atc,
         min_data=samples[0],
         max_data=samples[-1],
-        violin_kwargs={'facecolor':dapg_color,
+        violin_kwargs={'facecolor':atc_color,
                        'edgecolor':'black'},
         violin_width_to_span_fraction=0.075,
         xscale='log',
         yscale='log',
         ylim=(1e0,2e3))
-    plt.xlabel('DAPG Concentration ($\mu M$)')
+    plt.xlabel('aTc Concentration (ng/mL)')
     plt.ylabel('FL1 Fluorescence (a.u.)')
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
