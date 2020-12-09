@@ -19,10 +19,12 @@ As mentioned in the :doc:`fundamentals</fundamentals/calibration>` section, conv
 
 >>> b = FlowCal.io.FCSData('FCFiles/sample001.fcs')
 >>> b = FlowCal.transform.to_rfi(b)
->>> b_g, __, c = FlowCal.gate.density2d(b,
-...                                     channels=['FSC', 'SSC'],
-...                                     gate_fraction=0.3,
-...                                     full_output=True)
+>>> density_gate_output = FlowCal.gate.density2d(b,
+...                                              channels=['FSC', 'SSC'],
+...                                              gate_fraction=0.3,
+...                                              full_output=True)
+>>> b_g = density_gate_output.gated_data
+>>> c = density_gate_output.contour
 >>> FlowCal.plot.density_and_hist(b,
 ...                               gated_data=b_g,
 ...                               gate_contour=c,
@@ -60,18 +62,15 @@ The argument ``plot`` instructs :func:`FlowCal.mef.get_transform_fxn` to generat
 Let's now use ``to_mef`` to transform fluroescence data to MEF.
 
 >>> # Load sample
->>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
->>>
+>>> s = FlowCal.io.FCSData('FCFiles/sample029.fcs')
 >>> # Transform all channels to a.u., and then FL1 to MEF.
 >>> s = FlowCal.transform.to_rfi(s)
 >>> s = to_mef(s, channels='FL1')
->>>
 >>> # Gate
 >>> s_g = FlowCal.gate.high_low(s, channels=['FSC', 'SSC'])
 >>> s_g = FlowCal.gate.density2d(s_g,
 ...                              channels=['FSC', 'SSC'],
 ...                              gate_fraction=0.5)
->>>
 >>> # Plot histogram of transformed channel
 >>> FlowCal.plot.hist1d(s_g, channel='FL1')
 >>> plt.show()

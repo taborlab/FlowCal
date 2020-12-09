@@ -15,9 +15,9 @@ Also, import ``numpy`` and ``pyplot`` from ``matplotlib``
 Removing Saturated Events
 -------------------------
 
-We'll start by loading the data from file ``sample006.fcs`` into an ``FCSData`` object called ``s``. Then, transform all channels into a.u.
+We'll start by loading the data from file ``sample029.fcs`` into an ``FCSData`` object called ``s``. Then, transform all channels into a.u.
 
->>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/sample029.fcs')
 >>> s = FlowCal.transform.to_rfi(s)
 
 In the :doc:`plotting tutorial </python_tutorial/plot>` we looked at a density plot of the forward scatter/side scatter (``FSC``/``SSC``) channels and identified several clusters of particles (events). This density plot is repeated below for convenience.
@@ -56,7 +56,7 @@ Ellipse Gate
 >>> s_g3 = FlowCal.gate.ellipse(s_g1,
 ...                             channels=['FSC', 'SSC'],
 ...                             log=True,
-...                             center=(2.3, 2.78),
+...                             center=(2.2, 2.8),
 ...                             a=0.3,
 ...                             b=0.2,
 ...                             theta=30/180.*np.pi)
@@ -94,12 +94,14 @@ Plotting 2D Gates
 
 Finally, we will see a better way to visualize the result of applying a 2D gate. First, we will use density gating again, but this time we will do it a little differently.
 
->>> s_g5, m_g5, contour = FlowCal.gate.density2d(s_g1,
+>>> density_gate_output = FlowCal.gate.density2d(s_g1,
 ...                                              channels=['FSC', 'SSC'],
 ...                                              gate_fraction=0.75,
 ...                                              full_output=True)
+>>> s_g5 = density_gate_output.gated_data
+>>> contour = density_gate_output.contour
 
-The extra argument, ``full_output``, is available in every function in :mod:`FlowCal.gate`. It instructs a gating function to return some additional output arguments with information about the gating process. The second output argument is always a mask, a boolean array that indicates which events on the original FCSData object are being retained by the gate. 2-dimensional gating functions have a third output argument: a contour surrounding the gated region, which we will now use for plotting.
+The extra argument, ``full_output``, is available in every function in :mod:`FlowCal.gate`. It instructs a gating function to return some additional output arguments in a ``namedtuple`` object. From this object, we extract the gated data and a contour surrounding the gated region, which we will now use for plotting.
 
 The function :func:`FlowCal.plot.density_and_hist` was introduced in the :doc:`plotting tutorial </python_tutorial/plot>` to produce plots of a single FCSData object. But it can also be used to plot the result of a gating step, showing the data before and after gating, and the gating contour. Let's use this ability to show the result of the density gating process.
 

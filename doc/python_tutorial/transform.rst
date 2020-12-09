@@ -10,9 +10,9 @@ To start, navigate to the ``examples`` directory included with FlowCal, and open
 Transforming to Arbitrary Fluorescence Units (a.u.)
 ---------------------------------------------------
 
-Start by loading file ``sample006.fcs`` into an ``FCSData`` object called ``s``.
+Start by loading file ``sample029.fcs`` into an ``FCSData`` object called ``s``.
 
->>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/sample029.fcs')
 
 Let's now visualize the contents of the ``FL1`` channel. We will explore ``FlowCal``'s plotting functions in the :doc:`plotting tutorial </python_tutorial/plot>`, but for now let's just use ``matplotlib``'s ``hist`` function.
 
