@@ -114,7 +114,8 @@ if __name__ == "__main__":
     colors = [cmap(norm(atc_i)) if atc_i > 0 else cmap(0.0)
               for atc_i in atc]
 
-    plt.figure(figsize=(6,3.5))
+    plt.figure(figsize=(6, 5.5))
+    plt.subplot(2, 1, 1)
     FlowCal.plot.hist1d([samples[s_id] for s_id in sample_ids],
                         channel='FL1',
                         histtype='step',
@@ -126,6 +127,20 @@ if __name__ == "__main__":
     plt.legend(['{:.1f} ng/mL aTc'.format(i) for i in atc],
                loc='upper left',
                fontsize='small')
+
+    plt.subplot(2, 1, 2)
+    FlowCal.plot.hist1d([samples[s_id] for s_id in sample_ids],
+                        channel='FL2',
+                        histtype='step',
+                        bins=128,
+                        edgecolor=colors)
+    plt.ylim((0,2500))
+    plt.xlim((0,5e4))
+    plt.xlabel('FL2  (Molecules of Equivalent PE, MEPE)')
+    plt.legend(['{:.1f} ng/mL aTc'.format(i) for i in atc],
+               loc='upper left',
+               fontsize='small')
+
     plt.tight_layout()
     plt.savefig('histograms.png', dpi=200)
     plt.close()
@@ -135,42 +150,67 @@ if __name__ == "__main__":
     # Here, we illustrate how to obtain statistics from the fluorescence of
     # each sample and how to use them in a plot. The stats module contains
     # functions to calculate different statistics such as mean, median, and
-    # standard deviation. In this example, we calculate the mean from channel
-    # FL1 of each sample and plot them against the corresponding aTc
+    # standard deviation. In this example, we calculate the mean from channels
+    # FL1 and FL2 of each sample and plot them against the corresponding aTc
     # concentrations.
-    samples_fluorescence = [FlowCal.stats.mean(samples[s_id], channels='FL1')
-                            for s_id in sample_ids]
-    # Minimum and maximum sfGFP fluorescence controls have IDs NFC and SFC1
-    # respectively.
-    min_fluorescence = FlowCal.stats.mean(samples['NFC'], channels='FL1')
-    max_fluorescence = FlowCal.stats.mean(samples['SFC1'], channels='FL1')
+    samples_fl1 = [FlowCal.stats.mean(samples[s_id], channels='FL1')
+                   for s_id in sample_ids]
+    samples_fl2 = [FlowCal.stats.mean(samples[s_id], channels='FL2')
+                   for s_id in sample_ids]
+    # No fluorescence control (NFC) will give the minimum fluorescence level in
+    # both channels. Single fluorescence controls (SFCs) containing sfGFP or
+    # mCherry only will give the maximum levels in channels FL1 and FL2.
+    min_fl1 = FlowCal.stats.mean(samples['NFC'], channels='FL1')
+    max_fl1 = FlowCal.stats.mean(samples['SFC1'], channels='FL1')
+    min_fl2 = FlowCal.stats.mean(samples['NFC'], channels='FL2')
+    max_fl2 = FlowCal.stats.mean(samples['SFC2'], channels='FL2')
 
-    atc_color = '#ffc400'  # common color used for aTc-related plots
-
-    plt.figure(figsize=(3,3))
+    plt.figure(figsize=(6, 3))
+    
+    plt.subplot(1, 2, 1)
     plt.plot(atc,
-             samples_fluorescence,
+             samples_fl1,
              marker='o',
-             color=atc_color)
-
-    # Illustrate min and max bounds
-    plt.axhline(min_fluorescence,
+             color='tab:green')
+    plt.axhline(min_fl1,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
     plt.text(s='Min', x=3e1, y=2e2, ha='left', va='bottom', color='gray')
-    plt.axhline(max_fluorescence,
+    plt.axhline(max_fl1,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
     plt.text(s='Max', x=-0.8, y=5.2e3, ha='left', va='top', color='gray')
-
     plt.yscale('log')
     plt.ylim((5e1,1e4))
     plt.xscale('symlog')
     plt.xlim((-1e0, 1e2))
     plt.xlabel('aTc Concentration (ng/mL)')
     plt.ylabel('FL1 Fluorescence (MEFL)')
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(atc,
+             samples_fl2,
+             marker='o',
+             color='tab:orange')
+    plt.axhline(min_fl2,
+                color='gray',
+                linestyle='--',
+                zorder=-1)
+    plt.text(s='Min', x=3e1, y=3.5e1, ha='left', va='bottom', color='gray')
+    plt.axhline(max_fl2,
+                color='gray',
+                linestyle='--',
+                zorder=-1)
+    plt.text(s='Max', x=-0.8, y=2.e3, ha='left', va='top', color='gray')
+    plt.yscale('log')
+    plt.ylim((1e1,5e3))
+    plt.xscale('symlog')
+    plt.xlim((-1e0, 1e2))
+    plt.xlabel('aTc Concentration (ng/mL)')
+    plt.ylabel('FL2 Fluorescence (MEPE)')
+
     plt.tight_layout()
     plt.savefig('dose_response.png', dpi=200)
     plt.close()
@@ -187,48 +227,50 @@ if __name__ == "__main__":
     # integer data (as opposed to floating-point data, which can sometimes be
     # negative), so the added complexity of a logicle y-scale (which is the
     # default) is not necessary.
+    plt.figure(figsize=(8, 3.5))
 
-    # FlowCal violin plots can also illustrate a mathematical model alongside
-    # the violins. The following function defines such model. Note that sfGFP
-    # fluorescence is cellular fluorescence minus autofluorescence.
-    def atc_sensor_output(atc_concentration):
-        mn = 0.
-        mx = 2200.
-        K  = 3.
-        n  = 5.
-        if atc_concentration <= 0:
-            return mx
-        else:
-            return mn + ((mx-mn)/(1+((atc_concentration/K)**n)))
-
-    # To model cellular fluorescence, which we are plotting with this violin
-    # plot, we must add autofluorescence back to the sfGFP signal. For this
-    # model, autofluorescence is the mean fluorescence of an E. coli strain
-    # lacking sfGFP, which our NFC control is.
-    autofluorescence = FlowCal.stats.mean(samples['NFC'], channels='FL1')
-    def atc_sensor_cellular_fluorescence(atc_concentration):
-        return atc_sensor_output(atc_concentration) + autofluorescence
-
-    plt.figure(figsize=(4,3.5))
+    plt.subplot(1, 2, 1)
     FlowCal.plot.violin_dose_response(
         data=[samples[s_id] for s_id in sample_ids],
         channel='FL1',
         positions=atc,
         min_data=samples['NFC'],
         max_data=samples['SFC1'],
-        model_fxn=atc_sensor_cellular_fluorescence,
-        violin_kwargs={'facecolor':atc_color,
-                       'edgecolor':'black'},
-        violin_width_to_span_fraction=0.075,
+        xlabel='aTc Concentration (ng/mL)',
         xscale='log',
         yscale='log',
-        ylim=(1e1, 3e4),
+        ylim=(1e1,1e4),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:green',
+                       'edgecolor':'black'},
         draw_model_kwargs={'color':'gray',
                            'linewidth':3,
                            'zorder':-1,
-                           'solid_capstyle':'butt'})
-    plt.xlabel('aTc Concentration (ng/mL)')
+                           'solid_capstyle':'butt'},
+        )
     plt.ylabel('FL1 Fluorescence (MEFL)')
+
+    plt.subplot(1, 2, 2)
+    FlowCal.plot.violin_dose_response(
+        data=[samples[s_id] for s_id in sample_ids],
+        channel='FL2',
+        positions=atc,
+        min_data=samples['NFC'],
+        max_data=samples['SFC2'],
+        xlabel='aTc Concentration (ng/mL)',
+        xscale='log',
+        yscale='log',
+        ylim=(1e0,1e4),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:orange',
+                       'edgecolor':'black'},
+        draw_model_kwargs={'color':'gray',
+                           'linewidth':3,
+                           'zorder':-1,
+                           'solid_capstyle':'butt'},
+        )
+    plt.ylabel('FL2 Fluorescence (MEPE)')
+
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
     plt.close()

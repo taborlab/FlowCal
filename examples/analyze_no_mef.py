@@ -104,7 +104,7 @@ if __name__ == "__main__":
         # We will remove saturated events in the forward/side scatter channels,
         # and in the fluorescence channel FL1.
         sample_gated = FlowCal.gate.high_low(sample_gated,
-                                             channels=['FSC','SSC','FL1'])
+                                             channels=['FSC','SSC','FL1','FL2'])
 
         # ``FlowCal.gate.density2d()`` preserves only the densest population as
         # seen in a 2D density diagram of two channels. This helps remove
@@ -135,8 +135,9 @@ if __name__ == "__main__":
         density_params['mode'] = 'scatter'
 
         # Parameters for the fluorescence histograms
-        hist_params = {}
-        hist_params['xlabel'] = 'FL1 Fluorescence (a.u.)'
+        hist_params = [{}, {}]
+        hist_params[0]['xlabel'] = 'FL1 Fluorescence (a.u.)'
+        hist_params[1]['xlabel'] = 'FL2 Fluorescence (a.u.)'
 
         # Plot filename
         # The figure can be saved in any format supported by matplotlib (svg,
@@ -162,7 +163,7 @@ if __name__ == "__main__":
             sample,
             sample_gated,
             density_channels=['FSC','SSC'],
-            hist_channels=['FL1'],
+            hist_channels=['FL1','FL2'],
             gate_contour=gate_contour,
             density_params=density_params,
             hist_params=hist_params,
@@ -191,7 +192,8 @@ if __name__ == "__main__":
     colors = [cmap(norm(atc_i)) if atc_i > 0 else cmap(0.0)
               for atc_i in atc]
 
-    plt.figure(figsize=(6,3.5))
+    plt.figure(figsize=(6, 5.5))
+    plt.subplot(2, 1, 1)
     FlowCal.plot.hist1d(samples,
                         channel='FL1',
                         histtype='step',
@@ -203,6 +205,20 @@ if __name__ == "__main__":
     plt.legend(['{:.1f} ng/mL aTc'.format(i) for i in atc],
                loc='upper left',
                fontsize='small')
+
+    plt.subplot(2, 1, 2)
+    FlowCal.plot.hist1d(samples,
+                        channel='FL2',
+                        histtype='step',
+                        bins=128,
+                        edgecolor=colors)
+    plt.ylim((0,2500))
+    plt.xlim((0,5e3))
+    plt.xlabel('FL2 Fluorescence (a.u.)')
+    plt.legend(['{:.1f} ng/mL aTc'.format(i) for i in atc],
+               loc='upper left',
+               fontsize='small')
+
     plt.tight_layout()
     plt.savefig('histograms.png', dpi=200)
     plt.close()
@@ -215,38 +231,59 @@ if __name__ == "__main__":
     # standard deviation. In this example, we calculate the mean from channel
     # FL1 of each sample and plot them against the corresponding aTc
     # concentrations.
-    samples_fluorescence = [FlowCal.stats.mean(s, channels='FL1')
-                            for s in samples]
 
-    atc_color = '#ffc400'  # common color used for aTc-related plots
+    # Because some of our control samples were measured at a different cytometer
+    # gain setting and we aren't using MEF calibration here, we will use the 0
+    # and 20 ng/mL aTc concentration samples instead.
+    samples_fl1 = [FlowCal.stats.mean(s, channels='FL1') for s in samples]
+    samples_fl2 = [FlowCal.stats.mean(s, channels='FL2') for s in samples]
 
-    plt.figure(figsize=(3,3))
+    plt.figure(figsize=(6,3))
+
+    plt.subplot(1, 2, 1)
     plt.plot(atc,
-             samples_fluorescence,
+             samples_fl1,
              marker='o',
-             color=atc_color)
-
-    # Illustrate min and max bounds. Because some of our control samples were
-    # measured at a different cytometer gain setting and we aren't using MEF
-    # calibration here, we will use the 0 and 20 ng/mL aTc concentration samples
-    # instead.
-    plt.axhline(samples_fluorescence[0],
+             color='tab:green')
+    plt.axhline(samples_fl1[0],
                 color='gray',
                 linestyle='--',
                 zorder=-1)
     plt.text(s='Min', x=3e1, y=1.5e1, ha='left', va='bottom', color='gray')
-    plt.axhline(samples_fluorescence[-1],
+    plt.axhline(samples_fl1[-1],
                 color='gray',
                 linestyle='--',
                 zorder=-1)
     plt.text(s='Max', x=-0.8, y=2.5e2, ha='left', va='top', color='gray')
-
     plt.yscale('log')
     plt.ylim((5e0,5e2))
     plt.xscale('symlog')
     plt.xlim((-1e0, 1e2))
     plt.xlabel('aTc Concentration (ng/mL)')
     plt.ylabel('FL1 Fluorescence (a.u.)')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(atc,
+             samples_fl2,
+             marker='o',
+             color='tab:orange')
+    plt.axhline(samples_fl2[0],
+                color='gray',
+                linestyle='--',
+                zorder=-1)
+    plt.text(s='Min', x=3e1, y=1.35e1, ha='left', va='bottom', color='gray')
+    plt.axhline(samples_fl2[-1],
+                color='gray',
+                linestyle='--',
+                zorder=-1)
+    plt.text(s='Max', x=-0.8, y=6e2, ha='left', va='top', color='gray')
+    plt.yscale('log')
+    plt.ylim((4e0,1.5e3))
+    plt.xscale('symlog')
+    plt.xlim((-1e0, 1e2))
+    plt.xlabel('aTc Concentration (ng/mL)')
+    plt.ylabel('FL2 Fluorescence (a.u.)')
+
     plt.tight_layout()
     plt.savefig('dose_response.png', dpi=200)
     plt.close()
@@ -264,21 +301,40 @@ if __name__ == "__main__":
     # collect this data produces positive integer data (as opposed to
     # floating-point data, which can sometimes be negative), so the added
     # complexity of a logicle y-scale (which is the default) is not necessary.
-    plt.figure(figsize=(4,3.5))
+    plt.figure(figsize=(8,3.5))
+    
+    plt.subplot(1, 2, 1)
     FlowCal.plot.violin_dose_response(
         data=samples,
         channel='FL1',
         positions=atc,
         min_data=samples[0],
         max_data=samples[-1],
-        violin_kwargs={'facecolor':atc_color,
+        violin_kwargs={'facecolor':'tab:green',
+                       'edgecolor':'black'},
+        violin_width_to_span_fraction=0.075,
+        xscale='log',
+        yscale='log',
+        ylim=(1e0,1e3))
+    plt.xlabel('aTc Concentration (ng/mL)')
+    plt.ylabel('FL1 Fluorescence (a.u.)')
+    
+    plt.subplot(1, 2, 2)
+    FlowCal.plot.violin_dose_response(
+        data=samples,
+        channel='FL2',
+        positions=atc,
+        min_data=samples[0],
+        max_data=samples[-1],
+        violin_kwargs={'facecolor':'tab:orange',
                        'edgecolor':'black'},
         violin_width_to_span_fraction=0.075,
         xscale='log',
         yscale='log',
         ylim=(1e0,2e3))
     plt.xlabel('aTc Concentration (ng/mL)')
-    plt.ylabel('FL1 Fluorescence (a.u.)')
+    plt.ylabel('FL2 Fluorescence (a.u.)')
+
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
     plt.close()
