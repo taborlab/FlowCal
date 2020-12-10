@@ -16,6 +16,7 @@ For details about the experiment, samples, and instrument used, please
 consult readme.txt.
 
 """
+import six
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -80,6 +81,23 @@ if __name__ == "__main__":
         verbose=True,
         plot=True,
         plot_dir='plot_samples')
+
+    # Perform multi-color compensation
+    # ``FlowCal.compensate.get_transform_fxn()`` generates a transformation
+    # function that performs multi-color compensation on a specified set of
+    # channels. This will remove fluorophore bleedthrough in these channels on
+    # a given FCSData object.
+    # This function requires data from single-fluorophore controls (SFCs), one
+    # per channel to compensate, each containing only one fluorophore. This
+    # function can optionally use data from a no-fluorophore control (NFC).
+    compensation_fxn = FlowCal.compensate.get_transform_fxn(
+        nfc_sample=samples['NFC'],
+        sfc_samples=[samples['SFC1'], samples['SFC2']],
+        comp_channels=['FL1', 'FL2'],
+    )
+    # Compensate all samples
+    samples_compensated = {s_id: compensation_fxn(s, ['FL1', 'FL2'])
+                           for s_id, s in six.iteritems(samples)}
 
     ###
     # Part 2: Examples on how to use processed cell sample data
@@ -273,6 +291,59 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
+    plt.close()
+
+    # Plot 4: Dose response violin plot of compensated data
+    #
+    # Here, we repeat the previous violin plot but using compensated data.
+    # y axis will now be plotted in ``logicle`` scale since histograms will
+    # be centered around zero due to compensation.
+    plt.figure(figsize=(8, 3.5))
+
+    plt.subplot(1, 2, 1)
+    FlowCal.plot.violin_dose_response(
+        data=[samples_compensated[s_id] for s_id in sample_ids],
+        channel='FL1',
+        positions=atc,
+        min_data=samples_compensated['NFC'],
+        max_data=samples_compensated['SFC1'],
+        xlabel='aTc Concentration (ng/mL)',
+        xscale='log',
+        yscale='logicle',
+        ylim=(-3e2, 1e4),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:green',
+                       'edgecolor':'black'},
+        draw_model_kwargs={'color':'gray',
+                           'linewidth':3,
+                           'zorder':-1,
+                           'solid_capstyle':'butt'},
+        )
+    plt.ylabel('FL1 Fluorescence (MEFL)')
+
+    plt.subplot(1, 2, 2)
+    FlowCal.plot.violin_dose_response(
+        data=[samples_compensated[s_id] for s_id in sample_ids],
+        channel='FL2',
+        positions=atc,
+        min_data=samples_compensated['NFC'],
+        max_data=samples_compensated['SFC2'],
+        xlabel='aTc Concentration (ng/mL)',
+        xscale='log',
+        yscale='logicle',
+        ylim=(-1e2, 1e4),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:orange',
+                       'edgecolor':'black'},
+        draw_model_kwargs={'color':'gray',
+                           'linewidth':3,
+                           'zorder':-1,
+                           'solid_capstyle':'butt'},
+        )
+    plt.ylabel('FL2 Fluorescence (MEPE)')
+
+    plt.tight_layout()
+    plt.savefig('dose_response_violin_compensated.png', dpi=200)
     plt.close()
 
     print("\nDone.")
