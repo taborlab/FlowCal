@@ -10,7 +10,9 @@ process, plots are generated that give insight into the relevant steps.
 
 Part two processes data from twelve cell samples and uses the MEF
 transformation functions from part one to convert fluorescence of these
-samples to MEF. Plots are also generated in this stage.
+samples to MEF. Plots are also generated in this stage. In addition, we perform
+multi-color compensation on all samples using data from no-fluorophore and
+single-fluorophore control samples (NFC and SFCs).
 
 Part three exemplifies how to use the processed cell sample data with
 FlowCal's plotting and statistics modules to produce interesting plots.
@@ -503,11 +505,11 @@ if __name__ == "__main__":
     # Perform multi-color compensation
     # ``FlowCal.compensate.get_transform_fxn()`` generates a transformation
     # function that performs multi-color compensation on a specified set of
-    # channels. This will remove fluorophore bleedthrough in these channels on
-    # a given FCSData object.
+    # channels in order to remove fluorophore bleedthrough.
     # This function requires data from single-fluorophore controls (SFCs), one
-    # per channel to compensate, each containing only one fluorophore. This
-    # function can optionally use data from a no-fluorophore control (NFC).
+    # per channel to compensate, each from cells containing only one
+    # fluorophore. This function can optionally use data from a no-fluorophore
+    # control (NFC).
     compensation_fxn = FlowCal.compensate.get_transform_fxn(
         nfc_sample=nfc_sample_gated,
         sfc_samples=[sfc1_sample_gated, sfc2_sample_gated],

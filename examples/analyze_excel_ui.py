@@ -7,7 +7,9 @@ to process calibration beads data and cell samples according to an input
 Excel file. The exact operations performed are identical to when normally
 using the Excel UI. However, instead of generating an output Excel file, an
 OrderedDict of objects representing gated and transformed flow cytometry
-samples is obtained.
+samples is obtained. In addition, we perform multi-color compensation on all
+samples using data from no-fluorophore and single-fluorophore control samples
+(NFC and SFCs).
 
 Part two exemplifies how to use the processed cell sample data with
 FlowCal's plotting and statistics modules to produce interesting plots.
@@ -85,11 +87,11 @@ if __name__ == "__main__":
     # Perform multi-color compensation
     # ``FlowCal.compensate.get_transform_fxn()`` generates a transformation
     # function that performs multi-color compensation on a specified set of
-    # channels. This will remove fluorophore bleedthrough in these channels on
-    # a given FCSData object.
+    # channels in order to remove fluorophore bleedthrough.
     # This function requires data from single-fluorophore controls (SFCs), one
-    # per channel to compensate, each containing only one fluorophore. This
-    # function can optionally use data from a no-fluorophore control (NFC).
+    # per channel to compensate, each from cells containing only one
+    # fluorophore. This function can optionally use data from a no-fluorophore
+    # control (NFC).
     compensation_fxn = FlowCal.compensate.get_transform_fxn(
         nfc_sample=samples['NFC'],
         sfc_samples=[samples['SFC1'], samples['SFC2']],
@@ -295,7 +297,7 @@ if __name__ == "__main__":
 
     # Plot 4: Dose response violin plot of compensated data
     #
-    # Here, we repeat the previous violin plot but using compensated data.
+    # Here, we redraw the previous violin plot but using compensated data.
     # y axis will now be plotted in ``logicle`` scale since histograms will
     # be centered around zero due to compensation.
     plt.figure(figsize=(8, 3.5))
