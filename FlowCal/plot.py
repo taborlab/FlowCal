@@ -1805,8 +1805,10 @@ def violin(data,
     if bin_edges is None:
         if data_scale == 'logicle':
             t = _LogicleTransform(data=data, channel=channel)
-            t_min = t.inverted().transform_non_affine(data_lim[0])
-            t_max = t.inverted().transform_non_affine(data_lim[1])
+            t_min = t.inverted().transform_non_affine(x=data_lim[0],
+                                                      mask_out_of_range=False)
+            t_max = t.inverted().transform_non_affine(x=data_lim[1],
+                                                      mask_out_of_range=False)
             t_bin_edges = np.linspace(t_min, t_max, num_bins+1)
             bin_edges = t.transform_non_affine(t_bin_edges)
         elif data_scale == 'linear':
@@ -2494,8 +2496,10 @@ def violin_dose_response(data,
     if bin_edges is None:
         if yscale == 'logicle':
             t = _LogicleTransform(data=all_data, channel=channel)
-            t_ymin = t.inverted().transform_non_affine(ylim[0])
-            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_ymin = t.inverted().transform_non_affine(x=ylim[0],
+                                                       mask_out_of_range=False)
+            t_ymax = t.inverted().transform_non_affine(x=ylim[1],
+                                                       mask_out_of_range=False)
             t_bin_edges = np.linspace(t_ymin, t_ymax, num_bins+1)
             bin_edges = t.transform_non_affine(t_bin_edges)
         elif yscale == 'linear':
@@ -2507,8 +2511,10 @@ def violin_dose_response(data,
     if min_bin_edges is None:
         if yscale == 'logicle':
             t = _LogicleTransform(data=all_data, channel=channel)
-            t_ymin = t.inverted().transform_non_affine(ylim[0])
-            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_ymin = t.inverted().transform_non_affine(x=ylim[0],
+                                                       mask_out_of_range=False)
+            t_ymax = t.inverted().transform_non_affine(x=ylim[1],
+                                                       mask_out_of_range=False)
             t_min_bin_edges = np.linspace(t_ymin, t_ymax, num_bins+1)
             min_bin_edges = t.transform_non_affine(t_min_bin_edges)
         elif yscale == 'linear':
@@ -2520,8 +2526,10 @@ def violin_dose_response(data,
     if max_bin_edges is None:
         if yscale == 'logicle':
             t = _LogicleTransform(data=all_data, channel=channel)
-            t_ymin = t.inverted().transform_non_affine(ylim[0])
-            t_ymax = t.inverted().transform_non_affine(ylim[1])
+            t_ymin = t.inverted().transform_non_affine(x=ylim[0],
+                                                       mask_out_of_range=False)
+            t_ymax = t.inverted().transform_non_affine(x=ylim[1],
+                                                       mask_out_of_range=False)
             t_max_bin_edges = np.linspace(t_ymin, t_ymax, num_bins+1)
             max_bin_edges = t.transform_non_affine(t_max_bin_edges)
         elif yscale == 'linear':
