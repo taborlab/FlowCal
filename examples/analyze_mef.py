@@ -8,11 +8,11 @@ functions that can later be used to convert cell fluorescence to units of
 Molecules of Equivalent Fluorophore (MEF). At several points in this
 process, plots are generated that give insight into the relevant steps.
 
-Part two processes data from twelve cell samples and uses the MEF
+Part two processes data from nine cell samples and uses the MEF
 transformation functions from part one to convert fluorescence of these
-samples to MEF. Plots are also generated in this stage. In addition, we perform
-multi-color compensation on all samples using data from no-fluorophore and
-single-fluorophore control samples (NFC and SFCs).
+samples to MEF. Plots are also generated in this stage. In addition,
+multi-color compensation is performed on all samples using data from
+no-fluorophore and single-fluorophore control samples (NFC and SFCs).
 
 Part three exemplifies how to use the processed cell sample data with
 FlowCal's plotting and statistics modules to produce interesting plots.
@@ -38,9 +38,9 @@ import FlowCal
 # different cytometer gain setting. However, we can still compare these to our
 # samples because we are calibrating all fluorescence measurements to MEF units.
 beads_filename     = 'FCFiles/sample001.fcs'
-nfc_beads_filename = 'FCFiles/controls/sample003.fcs'
-sfc1_beads_filename = 'FCFiles/controls/sample002.fcs'
-sfc2_beads_filename = 'FCFiles/controls/sample001.fcs'
+nfc_beads_filename = 'FCFiles/controls/nfc/sample003.fcs'
+sfc1_beads_filename = 'FCFiles/controls/sfc1/sample003.fcs'
+sfc2_beads_filename = 'FCFiles/controls/sfc2/sample001.fcs'
 
 # Names of the FCS files containing data from cell samples
 samples_filenames = ['FCFiles/sample029.fcs',
@@ -52,9 +52,9 @@ samples_filenames = ['FCFiles/sample029.fcs',
                      'FCFiles/sample035.fcs',
                      'FCFiles/sample036.fcs',
                      'FCFiles/sample037.fcs']
-nfc_sample_filename = 'FCFiles/controls/sample004.fcs'
-sfc1_sample_filename = 'FCFiles/controls/sample010.fcs'
-sfc2_sample_filename = 'FCFiles/controls/sample019.fcs'
+nfc_sample_filename = 'FCFiles/controls/nfc/sample004.fcs'
+sfc1_sample_filename = 'FCFiles/controls/sfc1/sample007.fcs'
+sfc2_sample_filename = 'FCFiles/controls/sfc2/sample019.fcs'
 
 # Fluorescence values of each bead subpopulation, in MEF.
 # These values should be taken from the datasheet provided by the bead
@@ -647,7 +647,7 @@ if __name__ == "__main__":
     # `lower_trim_fraction` parameters eliminate the top and bottom 1% of
     # cells from each violin for aesthetic reasons. The summary statistic,
     # which is illustrated as a horizontal line atop each violin, is
-    # calculated before cells are removed, though.) We set `yscale` to 'log'
+    # calculated before cells are removed, though). We set `yscale` to 'log'
     # because the cytometer used to collect this data produces positive
     # integer data (as opposed to floating-point data, which can sometimes be
     # negative), so the added complexity of a logicle y-scale (which is the

@@ -7,9 +7,9 @@ to process calibration beads data and cell samples according to an input
 Excel file. The exact operations performed are identical to when normally
 using the Excel UI. However, instead of generating an output Excel file, an
 OrderedDict of objects representing gated and transformed flow cytometry
-samples is obtained. In addition, we perform multi-color compensation on all
-samples using data from no-fluorophore and single-fluorophore control samples
-(NFC and SFCs).
+samples is obtained. In addition, multi-color compensation is performed on
+all samples using data from no-fluorophore and single-fluorophore control
+samples (NFC and SFCs).
 
 Part two exemplifies how to use the processed cell sample data with
 FlowCal's plotting and statistics modules to produce interesting plots.

@@ -2,8 +2,10 @@
 """
 FlowCal Python API example, without using calibration beads data.
 
-This script is divided in two parts. Part one processes data from ten cell
-samples and generates plots of each one.
+This script is divided in two parts. Part one processes data from nine
+cell samples and generates plots of each one. In addition, multi-color
+compensation is performed on all samples using data from no-fluorophore and
+single-fluorophore control samples (NFC and SFCs).
 
 Part two exemplifies how to use the processed cell sample data with
 FlowCal's plotting and statistics modules to produce interesting plots.
@@ -33,6 +35,9 @@ samples_filenames = ['FCFiles/sample029.fcs',
                      'FCFiles/sample035.fcs',
                      'FCFiles/sample036.fcs',
                      'FCFiles/sample037.fcs']
+nfc_sample_filename = 'FCFiles/controls/nfc/sample004.fcs'
+sfc1_sample_filename = 'FCFiles/controls/sfc1/sample007.fcs'
+sfc2_sample_filename = 'FCFiles/controls/sfc2/sample019.fcs'
 
 # aTc concentration of each cell sample, in ng/mL.
 atc = np.array([0, 0.5, 1, 1.5, 2, 3, 4, 7.5, 20])
@@ -172,6 +177,117 @@ if __name__ == "__main__":
         # Save cell sample object
         samples.append(sample_gated)
 
+    # Now, process the nfc and sfc control samples
+    print("\nProcessing control samples...")
+
+    # Load, transform, and gate control samples
+    print("Loading file \"{}\"...".format(nfc_sample_filename))
+    nfc_sample = FlowCal.io.FCSData(nfc_sample_filename)
+    print("Loading file \"{}\"...".format(sfc1_sample_filename))
+    sfc1_sample = FlowCal.io.FCSData(sfc1_sample_filename)
+    print("Loading file \"{}\"...".format(sfc2_sample_filename))
+    sfc2_sample = FlowCal.io.FCSData(sfc2_sample_filename)
+
+    print("Performing data transformation...")
+    nfc_sample = FlowCal.transform.to_rfi(nfc_sample)
+    sfc1_sample = FlowCal.transform.to_rfi(sfc1_sample)
+    sfc2_sample = FlowCal.transform.to_rfi(sfc2_sample)
+
+    print("Performing gating...")
+    nfc_sample_gated = FlowCal.gate.start_end(nfc_sample,
+                                              num_start=250,
+                                              num_end=100)
+    sfc1_sample_gated = FlowCal.gate.start_end(sfc1_sample,
+                                               num_start=250,
+                                               num_end=100)
+    sfc2_sample_gated = FlowCal.gate.start_end(sfc2_sample,
+                                               num_start=250,
+                                               num_end=100)
+
+    nfc_sample_gated = FlowCal.gate.high_low(nfc_sample_gated,
+                                             channels=['FSC','SSC','FL1','FL2'])
+    sfc1_sample_gated = FlowCal.gate.high_low(sfc1_sample_gated,
+                                              channels=['FSC','SSC','FL1','FL2'])
+    sfc2_sample_gated = FlowCal.gate.high_low(sfc2_sample_gated,
+                                              channels=['FSC','SSC','FL1','FL2'])
+
+    print("Plotting density plot and histogram...")
+    density_gate_output = FlowCal.gate.density2d(
+        data=nfc_sample_gated,
+        channels=['FSC','SSC'],
+        gate_fraction=0.85,
+        full_output=True)
+    nfc_sample_gated = density_gate_output.gated_data
+    nfc_gate_contour = density_gate_output.contour
+
+    density_gate_output = FlowCal.gate.density2d(
+        data=sfc1_sample_gated,
+        channels=['FSC','SSC'],
+        gate_fraction=0.85,
+        full_output=True)
+    sfc1_sample_gated = density_gate_output.gated_data
+    sfc1_gate_contour = density_gate_output.contour
+
+    density_gate_output = FlowCal.gate.density2d(
+        data=sfc2_sample_gated,
+        channels=['FSC','SSC'],
+        gate_fraction=0.85,
+        full_output=True)
+    sfc2_sample_gated = density_gate_output.gated_data
+    sfc2_gate_contour = density_gate_output.contour
+
+    # Plot and save
+    nfc_plot_filename = '{}/density_hist_nfc.png'.format(samples_plot_dir)
+    sfc1_plot_filename = '{}/density_hist_sfc1.png'.format(samples_plot_dir)
+    sfc2_plot_filename = '{}/density_hist_sfc2.png'.format(samples_plot_dir)
+
+    FlowCal.plot.density_and_hist(
+        nfc_sample,
+        nfc_sample_gated,
+        density_channels=['FSC','SSC'],
+        hist_channels=['FL1','FL2'],
+        gate_contour=nfc_gate_contour,
+        density_params=density_params,
+        hist_params=hist_params,
+        savefig=nfc_plot_filename)
+    FlowCal.plot.density_and_hist(
+        sfc1_sample,
+        sfc1_sample_gated,
+        density_channels=['FSC','SSC'],
+        hist_channels=['FL1','FL2'],
+        gate_contour=sfc1_gate_contour,
+        density_params=density_params,
+        hist_params=hist_params,
+        savefig=sfc1_plot_filename)
+    FlowCal.plot.density_and_hist(
+        sfc2_sample,
+        sfc2_sample_gated,
+        density_channels=['FSC','SSC'],
+        hist_channels=['FL1','FL2'],
+        gate_contour=sfc2_gate_contour,
+        density_params=density_params,
+        hist_params=hist_params,
+        savefig=sfc2_plot_filename)
+
+    # Perform multi-color compensation
+    # ``FlowCal.compensate.get_transform_fxn()`` generates a transformation
+    # function that performs multi-color compensation on a specified set of
+    # channels in order to remove fluorophore bleedthrough.
+    # This function requires data from single-fluorophore controls (SFCs), one
+    # per channel to compensate, each from cells containing only one
+    # fluorophore. This function can optionally use data from a no-fluorophore
+    # control (NFC).
+    compensation_fxn = FlowCal.compensate.get_transform_fxn(
+        nfc_sample=nfc_sample_gated,
+        sfc_samples=[sfc1_sample_gated, sfc2_sample_gated],
+        comp_channels=['FL1', 'FL2'],
+    )
+    # Compensate all samples
+    samples_compensated = [compensation_fxn(s, ['FL1', 'FL2']) for s in samples]
+    nfc_sample_compensated = compensation_fxn(nfc_sample_gated, ['FL1', 'FL2'])
+    sfc1_sample_compensated = compensation_fxn(sfc1_sample_gated, ['FL1', 'FL2'])
+    sfc2_sample_compensated = compensation_fxn(sfc2_sample_gated, ['FL1', 'FL2'])
+
     ###
     # Part 3: Examples on how to use processed cell sample data
     ###
@@ -237,6 +353,13 @@ if __name__ == "__main__":
     # and 20 ng/mL aTc concentration samples instead.
     samples_fl1 = [FlowCal.stats.mean(s, channels='FL1') for s in samples]
     samples_fl2 = [FlowCal.stats.mean(s, channels='FL2') for s in samples]
+    # No fluorescence control (NFC) will give the minimum fluorescence level in
+    # both channels. Single fluorescence controls (SFCs) containing sfGFP or
+    # mCherry only will give the maximum levels in channels FL1 and FL2.
+    min_fl1 = FlowCal.stats.mean(nfc_sample_gated, channels='FL1')
+    max_fl1 = FlowCal.stats.mean(sfc1_sample_gated, channels='FL1')
+    min_fl2 = FlowCal.stats.mean(nfc_sample_gated, channels='FL2')
+    max_fl2 = FlowCal.stats.mean(sfc2_sample_gated, channels='FL2')
 
     plt.figure(figsize=(6,3))
 
@@ -245,18 +368,18 @@ if __name__ == "__main__":
              samples_fl1,
              marker='o',
              color='tab:green')
-    plt.axhline(samples_fl1[0],
+    plt.axhline(min_fl1,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Min', x=3e1, y=1.5e1, ha='left', va='bottom', color='gray')
-    plt.axhline(samples_fl1[-1],
+    plt.text(s='Min', x=3e1, y=1.4e1, ha='left', va='bottom', color='gray')
+    plt.axhline(max_fl1,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Max', x=-0.8, y=2.5e2, ha='left', va='top', color='gray')
+    plt.text(s='Max', x=-0.8, y=3.3e2, ha='left', va='top', color='gray')
     plt.yscale('log')
-    plt.ylim((5e0,5e2))
+    plt.ylim((5e0, 5e2))
     plt.xscale('symlog')
     plt.xlim((-1e0, 1e2))
     plt.xlabel('aTc Concentration (ng/mL)')
@@ -267,18 +390,18 @@ if __name__ == "__main__":
              samples_fl2,
              marker='o',
              color='tab:orange')
-    plt.axhline(samples_fl2[0],
+    plt.axhline(min_fl2,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Min', x=3e1, y=1.35e1, ha='left', va='bottom', color='gray')
-    plt.axhline(samples_fl2[-1],
+    plt.text(s='Min', x=3e1, y=0.9e1, ha='left', va='bottom', color='gray')
+    plt.axhline(max_fl2,
                 color='gray',
                 linestyle='--',
                 zorder=-1)
-    plt.text(s='Max', x=-0.8, y=6e2, ha='left', va='top', color='gray')
+    plt.text(s='Max', x=-0.8, y=5e2, ha='left', va='top', color='gray')
     plt.yscale('log')
-    plt.ylim((4e0,1.5e3))
+    plt.ylim((4e0, 1.5e3))
     plt.xscale('symlog')
     plt.xlim((-1e0, 1e2))
     plt.xlabel('aTc Concentration (ng/mL)')
@@ -295,21 +418,20 @@ if __name__ == "__main__":
     # `lower_trim_fraction` parameters eliminate the top and bottom 1% of
     # cells from each violin for aesthetic reasons. The summary statistic,
     # which is illustrated as a horizontal line atop each violin, is
-    # calculated before cells are removed, though.) We again use the 0 and 20
-    # ng/mL aTc concentration samples as the min and max data in lieu of
-    # controls. We also set `yscale` to 'log' because the cytometer used to
-    # collect this data produces positive integer data (as opposed to
-    # floating-point data, which can sometimes be negative), so the added
-    # complexity of a logicle y-scale (which is the default) is not necessary.
-    plt.figure(figsize=(8,3.5))
+    # calculated before cells are removed, though.) We set `yscale` to 'log'
+    # because the cytometer used to collect this data produces positive
+    # integer data (as opposed to floating-point data, which can sometimes be
+    # negative), so the added complexity of a logicle y-scale (which is the
+    # default) is not necessary.
+    plt.figure(figsize=(8, 3.5))
     
     plt.subplot(1, 2, 1)
     FlowCal.plot.violin_dose_response(
         data=samples,
         channel='FL1',
         positions=atc,
-        min_data=samples[0],
-        max_data=samples[-1],
+        min_data=nfc_sample_gated,
+        max_data=sfc1_sample_gated,
         violin_kwargs={'facecolor':'tab:green',
                        'edgecolor':'black'},
         violin_width_to_span_fraction=0.075,
@@ -324,8 +446,8 @@ if __name__ == "__main__":
         data=samples,
         channel='FL2',
         positions=atc,
-        min_data=samples[0],
-        max_data=samples[-1],
+        min_data=nfc_sample_gated,
+        max_data=sfc2_sample_gated,
         violin_kwargs={'facecolor':'tab:orange',
                        'edgecolor':'black'},
         violin_width_to_span_fraction=0.075,
@@ -337,6 +459,59 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
+    plt.close()
+
+    # Plot 4: Dose response violin plot of compensated data
+    #
+    # Here, we repeat the previous violin plot but using compensated data.
+    # y axis will now be plotted in ``logicle`` scale since histograms will
+    # be centered around zero due to compensation.
+    plt.figure(figsize=(8, 3.5))
+
+    plt.subplot(1, 2, 1)
+    FlowCal.plot.violin_dose_response(
+        data=samples_compensated,
+        channel='FL1',
+        positions=atc,
+        min_data=nfc_sample_compensated,
+        max_data=sfc1_sample_compensated,
+        xlabel='aTc Concentration (ng/mL)',
+        xscale='log',
+        yscale='logicle',
+        ylim=(-3e1, 1e3),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:green',
+                       'edgecolor':'black'},
+        draw_model_kwargs={'color':'gray',
+                           'linewidth':3,
+                           'zorder':-1,
+                           'solid_capstyle':'butt'},
+        )
+    plt.ylabel('FL1 Fluorescence (MEFL)')
+
+    plt.subplot(1, 2, 2)
+    FlowCal.plot.violin_dose_response(
+        data=samples_compensated,
+        channel='FL2',
+        positions=atc,
+        min_data=nfc_sample_compensated,
+        max_data=sfc2_sample_compensated,
+        xlabel='aTc Concentration (ng/mL)',
+        xscale='log',
+        yscale='logicle',
+        ylim=(-3e1, 2e3),
+        violin_width=0.12,
+        violin_kwargs={'facecolor': 'tab:orange',
+                       'edgecolor':'black'},
+        draw_model_kwargs={'color':'gray',
+                           'linewidth':3,
+                           'zorder':-1,
+                           'solid_capstyle':'butt'},
+        )
+    plt.ylabel('FL2 Fluorescence (MEPE)')
+
+    plt.tight_layout()
+    plt.savefig('dose_response_violin_compensated.png', dpi=200)
     plt.close()
 
     print("\nDone.")
