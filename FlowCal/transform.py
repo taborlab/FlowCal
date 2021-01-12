@@ -345,9 +345,8 @@ def to_compensated(data, channels, a0, A, comp_channels=None):
     This function accepts an autofluorescence vector `a0` and a
     bleedthrough matrix `A` as compensation coefficients, with rows and
     columns corresponding to channels specified in `comp_channels`.
-    `to_compensated` automatically checks whether compensation coefficients
-    are available for each channel specified in `channels`, and throws an
-    error otherwise.
+    `to_compensated` automatically checks whether compensation can be performed
+    for every channel specified in `channels`, and throws an error otherwise.
 
     This function is intended to be reduced to the following signature::
 
