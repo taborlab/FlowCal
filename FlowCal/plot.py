@@ -1369,113 +1369,116 @@ def _plot_single_violin(violin_position,
         the summary statistic.
 
     """
-    if draw_summary_stat:
-        summary_stat = draw_summary_stat_fxn(violin_data)
-
-    # trim outliers to get rid of long, unsightly tails
-    num_discard_low  = int(np.floor(len(violin_data) \
-                         * float(lower_trim_fraction)))
-    num_discard_high = int(np.floor(len(violin_data) \
-                         * float(upper_trim_fraction)))
-
-    violin_data = np.sort(violin_data)
-
-    violin_data = violin_data[num_discard_low:]
-    violin_data = violin_data[::-1]
-    violin_data = violin_data[num_discard_high:]
-    violin_data = violin_data[::-1]
-
-    ###
-    # build violin
-    ###
-    H,H_edges = np.histogram(violin_data, bins=bin_edges, density=density)
-    H = np.array(H, dtype=np.float)
-
-    # duplicate histogram bin counts to serve as left and right corners of
-    # bars that trace violin edge
-    positive_edge = np.repeat(H,2)
-
-    # add zeros to bring violin edge back to the axis
-    positive_edge = np.insert(positive_edge, 0, 0.0)
-    positive_edge = np.append(positive_edge, 0.0)
-
-    # normalize violin width
-    positive_edge /= np.max(positive_edge)
-
-    # rescale to specified violin width
-    positive_edge *= (violin_width/2.0)
-
-    # reflect violin edge across the axis defined by `violin_position`
-    if scale == 'log':
-        negative_edge = np.log10(violin_position) - positive_edge
-        positive_edge = np.log10(violin_position) + positive_edge
-
-        positive_edge = 10**positive_edge
-        negative_edge = 10**negative_edge
-    else:
-        negative_edge = violin_position - positive_edge
-        positive_edge = violin_position + positive_edge
-
-    # duplicate the histogram edges to serve as violin height values
-    height = np.repeat(H_edges,2)
-
-    ###
-    # crimp violin (i.e. remove the frequency=0 line segments between
-    #               violin regions)
-    ###
+    summary_stat   = None
     violin_regions = []
-    idx = 0
-    if len(height) == 1:
-        # edge case
-        if positive_edge[idx] == negative_edge[idx]:
-            # singularity
-            pass
+    if len(violin_data) > 0:
+        if draw_summary_stat:
+            summary_stat = draw_summary_stat_fxn(violin_data)
+
+        # trim outliers to get rid of long, unsightly tails
+        num_discard_low  = int(np.floor(len(violin_data) \
+                             * float(lower_trim_fraction)))
+        num_discard_high = int(np.floor(len(violin_data) \
+                             * float(upper_trim_fraction)))
+
+        violin_data = np.sort(violin_data)
+
+        violin_data = violin_data[num_discard_low:]
+        violin_data = violin_data[::-1]
+        violin_data = violin_data[num_discard_high:]
+        violin_data = violin_data[::-1]
+
+        ###
+        # build violin
+        ###
+        H,H_edges = np.histogram(violin_data, bins=bin_edges, density=density)
+        H = np.array(H, dtype=np.float)
+
+        # duplicate histogram bin counts to serve as left and right corners of
+        # bars that trace violin edge
+        positive_edge = np.repeat(H,2)
+
+        # add zeros to bring violin edge back to the axis
+        positive_edge = np.insert(positive_edge, 0, 0.0)
+        positive_edge = np.append(positive_edge, 0.0)
+
+        # normalize violin width
+        positive_edge /= np.max(positive_edge)
+
+        # rescale to specified violin width
+        positive_edge *= (violin_width/2.0)
+
+        # reflect violin edge across the axis defined by `violin_position`
+        if scale == 'log':
+            negative_edge = np.log10(violin_position) - positive_edge
+            positive_edge = np.log10(violin_position) + positive_edge
+
+            positive_edge = 10**positive_edge
+            negative_edge = 10**negative_edge
         else:
-            violin_regions.append(_ViolinRegion(positive_edge = positive_edge,
-                                                negative_edge = negative_edge,
-                                                height        = height))
-    else:
-        # The positive and negative edges can have zero or nonzero width along
-        # the violin axis. Points where the width is zero represent either the
-        # end of a violin region, which we want to keep, or part of an inter-
-        # region line segment (i.e., frequency=0), which we want to discard
-        # for aesthetic purposes. We can distinguish between these two cases
-        # by looking at how the equality of the two edges changes as we
-        # proceed along the violin axis.
-        start = idx  # assume we start in a violin region
-        while(idx < len(height)-1):
-            if (positive_edge[idx] == negative_edge[idx]) \
-                    and (positive_edge[idx+1] != negative_edge[idx+1]):
-                # violin region is opening
-                start = idx
-            elif (positive_edge[idx] != negative_edge[idx]) \
-                    and (positive_edge[idx+1] != negative_edge[idx+1]):
-                # violin region is continuing
+            negative_edge = violin_position - positive_edge
+            positive_edge = violin_position + positive_edge
+
+        # duplicate the histogram edges to serve as violin height values
+        height = np.repeat(H_edges,2)
+
+        ###
+        # crimp violin (i.e. remove the frequency=0 line segments between
+        #               violin regions)
+        ###
+        idx = 0
+        if len(height) == 1:
+            # edge case
+            if positive_edge[idx] == negative_edge[idx]:
+                # singularity
                 pass
-            elif (positive_edge[idx] != negative_edge[idx]) \
-                    and (positive_edge[idx+1] == negative_edge[idx+1]):
-                # violin region is closing
-                end = idx+1  # include this point
+            else:
                 violin_regions.append(
-                    _ViolinRegion(positive_edge = positive_edge[start:end+1],
-                                  negative_edge = negative_edge[start:end+1],
-                                  height        = height[start:end+1]))
-                start = None  # we are no longer in a violin region
-            elif (positive_edge[idx] == negative_edge[idx]) \
-                    and (positive_edge[idx+1] == negative_edge[idx+1]):
-                # we are in an inter-region segment
-                start = None
+                    _ViolinRegion(positive_edge=positive_edge,
+                                  negative_edge=negative_edge,
+                                  height       =height))
+        else:
+            # The positive and negative edges can have zero or nonzero width
+            # along the violin axis. Points where the width is zero represent
+            # either the end of a violin region, which we want to keep, or
+            # part of an inter-region line segment (i.e., frequency=0), which
+            # we want to discard for aesthetic purposes. We can distinguish
+            # between these two cases by looking at how the equality of the
+            # two edges changes as we proceed along the violin axis.
+            start = idx  # assume we start in a violin region
+            while(idx < len(height)-1):
+                if (positive_edge[idx] == negative_edge[idx]) \
+                        and (positive_edge[idx+1] != negative_edge[idx+1]):
+                    # violin region is opening
+                    start = idx
+                elif (positive_edge[idx] != negative_edge[idx]) \
+                        and (positive_edge[idx+1] != negative_edge[idx+1]):
+                    # violin region is continuing
+                    pass
+                elif (positive_edge[idx] != negative_edge[idx]) \
+                        and (positive_edge[idx+1] == negative_edge[idx+1]):
+                    # violin region is closing
+                    end = idx+1  # include this point
+                    violin_regions.append(
+                        _ViolinRegion(positive_edge=positive_edge[start:end+1],
+                                      negative_edge=negative_edge[start:end+1],
+                                      height       =height[start:end+1]))
+                    start = None  # we are no longer in a violin region
+                elif (positive_edge[idx] == negative_edge[idx]) \
+                        and (positive_edge[idx+1] == negative_edge[idx+1]):
+                    # we are in an inter-region segment
+                    start = None
 
-            idx += 1
+                idx += 1
 
-        if start is not None:
-            # if we were still in a violin region at the end,
-            # add the last region to the list
-            end = idx  # include this point
-            violin_regions.append(
-                _ViolinRegion(positive_edge = positive_edge[start:end+1],
-                              negative_edge = negative_edge[start:end+1],
-                              height        = height[start:end+1]))
+            if start is not None:
+                # if we were still in a violin region at the end,
+                # add the last region to the list
+                end = idx  # include this point
+                violin_regions.append(
+                    _ViolinRegion(positive_edge=positive_edge[start:end+1],
+                                  negative_edge=negative_edge[start:end+1],
+                                  height       =height[start:end+1]))
 
     # illustrate violin
     if vert:
@@ -1492,7 +1495,7 @@ def _plot_single_violin(violin_position,
                              **violin_kwargs)
 
     # illustrate summary statistic
-    if draw_summary_stat:
+    if draw_summary_stat and summary_stat is not None:
         if scale == 'log':
             positive_edge = np.log10(violin_position) + (violin_width/2.0)
             negative_edge = np.log10(violin_position) - (violin_width/2.0)
@@ -1711,32 +1714,48 @@ def violin(data,
             msg += " Specify `channel` to use ND array or list of ND"
             msg += " arrays."
             raise TypeError(msg)
-
-        # promote singleton if necessary
-        try:
-            iter(first_element)  # success => sequence of 1D sequences
-            data_length = len(data)
-        except TypeError:
-            data = [data]
-            data_length = 1
+        except StopIteration:
+            # data is empty
+            data_length = 0
+        else:
+            # promote singleton if necessary
+            try:
+                iter(first_element)  # success => sequence of 1D sequences
+                data_length = len(data)
+            except TypeError:
+                data = [data]
+                data_length = 1
     else:
         # assume ND sequence or sequence of ND sequences
         try:
-            first_element               = next(iter(data))
-            first_element_first_element = next(iter(first_element))
+            first_element = next(iter(data))
         except TypeError:
             msg  = "`data` should be ND array or list of ND arrays."
             msg += " Set `channel` to None to use 1D array or list of"
             msg += " 1D arrays."
             raise TypeError(msg)
-
-        # promote singleton if necessary
-        try:
-            iter(first_element_first_element)  # success => sequence of ND sequences
-            data_length = len(data)
-        except TypeError:
-            data = [data]
-            data_length = 1
+        except StopIteration:
+            # data is empty
+            data_length = 0
+        else:
+            try:
+                first_element_first_element = next(iter(first_element))
+            except TypeError:
+                msg  = "`data` should be ND array or list of ND arrays."
+                msg += " Set `channel` to None to use 1D array or list of"
+                msg += " 1D arrays."
+                raise TypeError(msg)
+            except StopIteration:
+                # first ND sequence is empty
+                data_length = len(data)
+            else:
+                # promote singleton if necessary
+                try:
+                    iter(first_element_first_element)  # success => sequence of ND sequences
+                    data_length = len(data)
+                except TypeError:
+                    data = [data]
+                    data_length = 1
 
         # exctract channel
         try:
@@ -1768,13 +1787,17 @@ def violin(data,
         data_max = -np.inf
         for idx in range(data_length):
             violin_data = np.array(data[idx], dtype=np.float).flat
-            violin_min = np.min(violin_data)
-            violin_max = np.max(violin_data)
-            if violin_min < data_min:
-                data_min = violin_min
-            if violin_max > data_max:
-                data_max = violin_max
+            if len(violin_data) > 0:
+                violin_min = np.min(violin_data)
+                violin_max = np.max(violin_data)
+                if violin_min < data_min:
+                    data_min = violin_min
+                if violin_max > data_max:
+                    data_max = violin_max
         data_lim = (data_min, data_max)
+        if all(np.isinf(data_lim)):
+            # e.g., data are all empty arrays
+            data_lim = (0.0, 1.0)
     else:
         data_lim = ylim if vert else xlim
 
@@ -1867,7 +1890,7 @@ def violin(data,
     # positions.
     if (vert and xlim is None) or (not vert and ylim is None):
         if violin_width is None:
-            if data_length == 1:
+            if data_length <= 1:
                 # edge case
                 violin_width = 0.5
             elif position_scale == 'log':
@@ -1883,11 +1906,21 @@ def violin(data,
                 violin_width = violin_width_to_span_fraction*span
 
         if position_scale == 'log':
-            position_lim = (10**(np.log10(np.min(positions))-violin_width),
-                            10**(np.log10(np.max(positions))+violin_width))
+            if data_length == 0:
+                # edge case
+                position_lim = (10**(np.log10(1e1)-violin_width),
+                                10**(np.log10(1e1)+violin_width))
+            else:
+                position_lim = (10**(np.log10(np.min(positions))-violin_width),
+                                10**(np.log10(np.max(positions))+violin_width))
         else:
-            position_lim = (np.min(positions)-violin_width,
-                            np.max(positions)+violin_width)
+            if data_length == 0:
+                # edge case
+                position_lim = (1.0-violin_width,
+                                1.0+violin_width)
+            else:
+                position_lim = (np.min(positions)-violin_width,
+                                np.max(positions)+violin_width)
     else:
         position_lim = xlim if vert else ylim
 
@@ -2056,9 +2089,11 @@ def violin(data,
         plt.xlabel(xlabel)
     if ylabel is not None:
         plt.ylabel(ylabel)
-    if vert and ylabel is None and hasattr(data[-1], 'channels'):
+    if vert and ylabel is None and data_length > 0 \
+            and hasattr(data[-1], 'channels'):
         plt.ylabel(data[-1].channels[0])
-    elif not vert and xlabel is None and hasattr(data[-1], 'channels'):
+    elif not vert and xlabel is None and data_length > 0 \
+            and hasattr(data[-1], 'channels'):
         plt.xlabel(data[-1].channels[0])
 
     if title is not None:
@@ -2350,36 +2385,52 @@ def violin_dose_response(data,
         try:
             first_element = next(iter(data))
         except TypeError:
-            msg  = "`data` should be 1D sequence or sequence of 1D sequences."
-            msg += " Specify `channel` to use ND sequence or sequence of ND"
-            msg += " sequences."
+            msg  = "`data` should be 1D array or list of 1D arrays."
+            msg += " Specify `channel` to use ND array or list of ND"
+            msg += " arrays."
             raise TypeError(msg)
-
-        # promote singleton if necessary
-        try:
-            iter(first_element)  # success => sequence of 1D sequences
-            data_length = len(data)
-        except TypeError:
-            data = [data]
-            data_length = 1
+        except StopIteration:
+            # data is empty
+            data_length = 0
+        else:
+            # promote singleton if necessary
+            try:
+                iter(first_element)  # success => sequence of 1D sequences
+                data_length = len(data)
+            except TypeError:
+                data = [data]
+                data_length = 1
     else:
         # assume ND sequence or sequence of ND sequences
         try:
-            first_element               = next(iter(data))
-            first_element_first_element = next(iter(first_element))
+            first_element = next(iter(data))
         except TypeError:
-            msg  = "`data` should be ND sequence or sequence of ND sequences."
-            msg += " Set `channel` to None to use 1D sequence or sequence of"
-            msg += " 1D sequences."
+            msg  = "`data` should be ND array or list of ND arrays."
+            msg += " Set `channel` to None to use 1D array or list of"
+            msg += " 1D arrays."
             raise TypeError(msg)
-
-        # promote singleton if necessary
-        try:
-            iter(first_element_first_element)  # success => sequence of ND sequences
-            data_length = len(data)
-        except TypeError:
-            data = [data]
-            data_length = 1
+        except StopIteration:
+            # data is empty
+            data_length = 0
+        else:
+            try:
+                first_element_first_element = next(iter(first_element))
+            except TypeError:
+                msg  = "`data` should be ND array or list of ND arrays."
+                msg += " Set `channel` to None to use 1D array or list of"
+                msg += " 1D arrays."
+                raise TypeError(msg)
+            except StopIteration:
+                # first ND sequence is empty
+                data_length = len(data)
+            else:
+                # promote singleton if necessary
+                try:
+                    iter(first_element_first_element)  # success => sequence of ND sequences
+                    data_length = len(data)
+                except TypeError:
+                    data = [data]
+                    data_length = 1
 
         # exctract channel
         try:
@@ -2427,13 +2478,17 @@ def violin_dose_response(data,
         ymax = -np.inf
         for idx in range(len(all_data)):
             violin_data = np.array(all_data[idx], dtype=np.float).flat
-            violin_min = np.min(violin_data)
-            violin_max = np.max(violin_data)
-            if violin_min < ymin:
-                ymin = violin_min
-            if violin_max > ymax:
-                ymax = violin_max
+            if len(violin_data) > 0:
+                violin_min = np.min(violin_data)
+                violin_max = np.max(violin_data)
+                if violin_min < ymin:
+                    ymin = violin_min
+                if violin_max > ymax:
+                    ymax = violin_max
         ylim = (ymin, ymax)
+        if all(np.isinf(ylim)):
+            # e.g., data are all empty arrays
+            ylim = (0.0, 1.0)
 
     # calculate violin bin edges if necessary
     if bin_edges is None:
@@ -2548,7 +2603,7 @@ def violin_dose_response(data,
     # violin_width away from extreme violin positions.
     if xlim is None:
         if violin_width is None:
-            if data_length == 1:
+            if data_length <= 1:
                 # edge case
                 violin_width = 0.5
             elif xscale == 'log':
@@ -2564,11 +2619,21 @@ def violin_dose_response(data,
                 violin_width = violin_width_to_span_fraction*span
 
         if xscale == 'log':
-            xlim = (10**(np.log10(np.min(positions))-violin_width),
-                    10**(np.log10(np.max(positions))+violin_width))
+            if data_length == 0:
+                # edge case
+                xlim = (10**(np.log10(1e1)-violin_width),
+                        10**(np.log10(1e1)+violin_width))
+            else:
+                xlim = (10**(np.log10(np.min(positions))-violin_width),
+                        10**(np.log10(np.max(positions))+violin_width))
         else:
-            xlim = (np.min(positions)-violin_width,
-                    np.max(positions)+violin_width)
+            if data_length == 0:
+                # edge case
+                xlim = (1.0-violin_width,
+                        1.0+violin_width)
+            else:
+                xlim = (np.min(positions)-violin_width,
+                        np.max(positions)+violin_width)
 
     if violin_width is None:
         if xscale == 'log':
@@ -2697,6 +2762,7 @@ def violin_dose_response(data,
             10**(np.log10(next_violin_position) - 2*violin_width)
 
     if max_data is not None:
+        max_data = np.array(max_data, dtype=np.float).flat
         _plot_single_violin(
             violin_position=next_violin_position,
             violin_data=max_data,
@@ -2712,7 +2778,7 @@ def violin_dose_response(data,
             draw_summary_stat_fxn=draw_summary_stat_fxn,
             draw_summary_stat_kwargs=max_draw_summary_stat_kwargs)
 
-        if draw_max_line:
+        if draw_max_line and len(max_data) > 0:
             summary_stat = draw_summary_stat_fxn(max_data)
             plt.plot([next_violin_position, xlim[1]],
                      [summary_stat, summary_stat],
@@ -2740,6 +2806,7 @@ def violin_dose_response(data,
             next_violin_position = next_violin_position - 2*violin_width
 
     if min_data is not None:
+        min_data = np.array(min_data, dtype=np.float).flat
         _plot_single_violin(
             violin_position=next_violin_position,
             violin_data=min_data,
@@ -2755,7 +2822,7 @@ def violin_dose_response(data,
             draw_summary_stat_fxn=draw_summary_stat_fxn,
             draw_summary_stat_kwargs=min_draw_summary_stat_kwargs)
 
-        if draw_min_line:
+        if draw_min_line and len(min_data) > 0:
             summary_stat = draw_summary_stat_fxn(min_data)
             plt.plot([next_violin_position, xlim[1]],
                      [summary_stat, summary_stat],
@@ -2866,7 +2933,7 @@ def violin_dose_response(data,
     if ylabel is not None:
         # Highest priority is user-provided label
         plt.ylabel(ylabel)
-    elif hasattr(data[-1], 'channels'):
+    elif data_length > 0 and hasattr(data[-1], 'channels'):
         # Attempt to use channel name
         plt.ylabel(data[-1].channels[0])
 
