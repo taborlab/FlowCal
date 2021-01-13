@@ -118,6 +118,10 @@ if __name__ == "__main__":
     # corresponding header in the Excel file.
     atc = samples_table.loc[sample_ids, 'aTc (ng/mL)']
 
+    # We now show how to generate plots using the processed flow cytometry
+    # data we just obtained.
+    print("\nGenerating plots...")
+
     # Plot 1: Histogram of all samples
     #
     # Here, we plot the fluorescence histograms of all nine samples in the same
@@ -242,7 +246,7 @@ if __name__ == "__main__":
     # `lower_trim_fraction` parameters eliminate the top and bottom 1% of
     # cells from each violin for aesthetic reasons. The summary statistic,
     # which is illustrated as a horizontal line atop each violin, is
-    # calculated before cells are removed, though.) We set `yscale` to 'log'
+    # calculated before cells are removed, though). We set `yscale` to 'log'
     # because the cytometer used to collect this data produces positive
     # integer data (as opposed to floating-point data, which can sometimes be
     # negative), so the added complexity of a logicle y-scale (which is the

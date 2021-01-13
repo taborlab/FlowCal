@@ -96,8 +96,11 @@ if __name__ == "__main__":
     # cytometry data loaded from file ``filename``.
     print("Loading file \"{}\"...".format(beads_filename))
     beads_sample     = FlowCal.io.FCSData(beads_filename)
+    print("Loading file \"{}\"...".format(nfc_beads_filename))
     nfc_beads_sample = FlowCal.io.FCSData(nfc_beads_filename)
+    print("Loading file \"{}\"...".format(sfc1_beads_filename))
     sfc1_beads_sample = FlowCal.io.FCSData(sfc1_beads_filename)
+    print("Loading file \"{}\"...".format(sfc2_beads_filename))
     sfc2_beads_sample = FlowCal.io.FCSData(sfc2_beads_filename)
 
     # Data loaded from an FCS file is in "Channel Units", the raw numbers
@@ -279,12 +282,12 @@ if __name__ == "__main__":
         savefig=sfc2_plot_filename)
 
     # Use beads data to obtain a MEF transformation function
-    print("\nCalculating standard curve for channel FL1...")
+    print("\nCalculating standard curves for channels FL1 and FL2...")
 
     # ``FlowCal.mef.get_transform_fxn()`` generates a transformation function
     # that converts fluorescence from relative fluorescence units (RFI) to MEF.
     # This function uses bead data from ``beads_sample_gated``. We generate a
-    # MEF transformation function for channels FL1 and FL3, with corresponding
+    # MEF transformation function for channels FL1 and FL2, with corresponding
     # MEF fluorescence values specified by the arrays ``mefl_values`` and
     # ``mepe_values``. By default, clustering (subpopulation recognition) will
     # be performed using information from both channels. We also enable the
@@ -416,10 +419,14 @@ if __name__ == "__main__":
     # Now, process the nfc and sfc control samples
     print("\nProcessing control samples...")
     # Load, transform, and gate control samples
+    print("Loading file \"{}\"...".format(nfc_sample_filename))
     nfc_sample = FlowCal.io.FCSData(nfc_sample_filename)
+    print("Loading file \"{}\"...".format(sfc1_sample_filename))
     sfc1_sample = FlowCal.io.FCSData(sfc1_sample_filename)
+    print("Loading file \"{}\"...".format(sfc2_sample_filename))
     sfc2_sample = FlowCal.io.FCSData(sfc2_sample_filename)
 
+    print("Performing data transformation...")
     nfc_sample = FlowCal.transform.to_rfi(nfc_sample)
     sfc1_sample = FlowCal.transform.to_rfi(sfc1_sample)
     sfc2_sample = FlowCal.transform.to_rfi(sfc2_sample)
@@ -428,6 +435,7 @@ if __name__ == "__main__":
     sfc1_sample = sfc1_mef_transform_fxn(sfc1_sample, channels=['FL1','FL2'])
     sfc2_sample = sfc2_mef_transform_fxn(sfc2_sample, channels=['FL1','FL2'])
 
+    print("Performing gating...")
     nfc_sample_gated = FlowCal.gate.start_end(nfc_sample,
                                               num_start=250,
                                               num_end=100)
@@ -445,6 +453,7 @@ if __name__ == "__main__":
     sfc2_sample_gated = FlowCal.gate.high_low(sfc2_sample_gated,
                                               channels=['FSC','SSC','FL1','FL2'])
 
+    print("Plotting density plot and histogram...")
     density_gate_output = FlowCal.gate.density2d(
         data=nfc_sample_gated,
         channels=['FSC','SSC'],
@@ -510,6 +519,7 @@ if __name__ == "__main__":
     # per channel to compensate, each from cells containing only one
     # fluorophore. This function can optionally use data from a no-fluorophore
     # control (NFC).
+    print("\nPerforming multi-color compensation...")
     compensation_fxn = FlowCal.compensate.get_transform_fxn(
         nfc_sample=nfc_sample_gated,
         sfc_samples=[sfc1_sample_gated, sfc2_sample_gated],
@@ -524,6 +534,9 @@ if __name__ == "__main__":
     ###
     # Part 3: Examples on how to use processed cell sample data
     ###
+    # We now show how to generate plots using the processed flow cytometry
+    # data we just obtained.
+    print("\nGenerating plots...")
 
     # Plot 1: Histogram of all samples
     #

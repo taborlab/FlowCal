@@ -277,6 +277,7 @@ if __name__ == "__main__":
     # per channel to compensate, each from cells containing only one
     # fluorophore. This function can optionally use data from a no-fluorophore
     # control (NFC).
+    print("\nPerforming multi-color compensation...")
     compensation_fxn = FlowCal.compensate.get_transform_fxn(
         nfc_sample=nfc_sample_gated,
         sfc_samples=[sfc1_sample_gated, sfc2_sample_gated],
@@ -291,6 +292,9 @@ if __name__ == "__main__":
     ###
     # Part 3: Examples on how to use processed cell sample data
     ###
+    # We now show how to generate plots using the processed flow cytometry
+    # data we just obtained.
+    print("\nGenerating plots...")
 
     # Plot 1: Histogram of all samples
     #
