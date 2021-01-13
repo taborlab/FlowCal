@@ -18,13 +18,14 @@ def get_transform_fxn(nfc_sample,
     Parameters
     ----------
     nfc_sample : FCSData object or None
-        Data corresponding to the no-fluorophore control sample. If None,
-        autofluorescnece is set to zero.
-    sfc_samples : list of FCSData object
-        Data corresponding to the single-fluorophore control samples.
-    comp_channels : list
-        Channels to compensate. The number of channels should match the
-        number of single-fluorophore control samples.
+        Data corresponding to the no-fluorophore control sample (NFC). If
+        None, no autofluorescence correction will be made.
+    sfc_samples : list of FCSData objects
+        Data corresponding to the single-fluorophore control samples
+        (SFCs).
+    comp_channels : list of str or int
+        Channels to compensate. Each channel should correspond to an
+        element of `sfc_samples`.
 
     Returns
     -------
@@ -37,96 +38,78 @@ def get_transform_fxn(nfc_sample,
     Other parameters
     ----------------
     statistic_fxn : function, optional
-        Function used to calculate the representative fluorescence of each
-        control sample. Must have the following signature::
-
-            s = statistic_fxn(data, **statistic_params)
-
-        where `data` is a 1D FCSData object or numpy array, and `s` is a
-        float. Statistical functions from numpy, scipy, or FlowCal.stats
-        are valid options.
+        Statistical function from ``FlowCal.stats`` used to calculate the
+        representative fluorescence of each control sample.
 
     Notes
     -----
-    The compensatiom method used here is based on the following analysis.
+    The compensation method used here is based on the following analysis.
 
-    On an instrument with :math:`n` channels and a sample with :math:`n`
-    fluorophores:
+    We assume we have an instrument with :math:`n` fluorescence channels
+    and a sample with :math:`n` fluorophores, where we expect the signal
+    in channel :math:`i` to correspond to fluorophore :math:`i` only.
+    In reality, the signal from each channel will additionally contain
+    some (hopefully small) signal from all other fluorophores. In
+    mathematical terms:
 
-    .. math:: s^i = a_0^i + \\sum_{j=1}^{n} a^i_j \\cdot f_j
+    .. math:: s^i = a_0^i + f_i + \\sum_{j=1,j\\neq i}^{n} a^i_j \\cdot f_j
 
     where:
 
-    - :math:`s^i` is the signal read in channel :math:`i`, in channel MEF
-    - :math:`a^i_0` is the autofluorescence in channel :math:`i`
-    - :math:`a^i_j` is the signal in channel :math:`i` due to fluorophore
-      :math:`j`
-    - :math:`f_j` is the amount of fluorophore :math:`j`, in some units to
-      be determined.
+    - :math:`s^i` is the total signal observed in channel :math:`i`.
+    - :math:`a^i_0` is the autofluorescence  signal in channel :math:`i`.
+    - :math:`f_i` is the signal from fluorophore :math:`i`.
+    - :math:`a^i_j` is a bleedthrough coefficient, which quantifies how
+      much signal from fluorophore :math:`j` appears in channel :math:`i`.
         
-    Or in matrix notation:
+    In matrix notation:
 
-    .. math:: s = a_0 + A \\cdot f
+    .. math:: \\mathbf{s} = \\mathbf{a_0} + \\mathbf{A} \\cdot \\mathbf{f}
 
-    The compensation procedure consists on finding numbers that are
-    proportional to the amount of a single fluorophore. In other words,
-    compensation is the process of finding the vector :math:`f` starting
-    from signals :math:`s` for an arbitrary sample. This is performed by
-    applying the following equation:
+    Where :math:`\\mathbf{a_0}` is the autofluorescence vector and
+    :math:`\\mathbf{A}` is the bleedthrough matrix, with all diagonal terms
+    equal to one. For an arbitrary sample, the compensation procedure
+    consists on solving for :math:`\\mathbf{f}` starting from the measured
+    signals :math:`\\mathbf{s}`:
 
-    .. math:: f = A^{-1} \\cdot (s - a_0)
+    .. math:: \\mathbf{f} = \\mathbf{A}^{-1} (\\mathbf{s} - \\mathbf{a_0})
 
-    This requires knowledge of the matrix :math:`A` and the vector
-    :math:`a_0`.
+    This requires knowledge of :math:`\\mathbf{A}` and
+    :math:`\\mathbf{a_0}`. To find these out, we use the following control
+    samples:
 
-    We assume that :math:`A` and :math:`a_0` stay constant with different
-    samples, provided that the fluorophores involved are identical and the
-    instrument stays the same. This makes it possible for us to use
-    *control samples* that facilitate calculating :math:`a_0` and
-    :math:`A`.
+    1. No-fluorophore control (NFC). In this case,
+    :math:`\\mathbf{f}_{NFC} = 0`. Therefore,
 
-    1. No-fluorophore control. In this case, :math:`f_j = 0` for all
-    :math:`j`. Therefore,
+    .. math:: \\mathbf{a_0} = \\mathbf{s}_{NFC}
 
-    .. math:: a_0^i = s^i_{NFC}
+    Where :math:`\\mathbf{s}_{NFC}` is the vector containing the signals in
+    all channels when measuring the NFC.
 
-    Where :math:`s^i_{NFC}` is the signal in channel :math:`i` due to the
-    no fluorophore control sample.
+    2. Single-fluorophore controls (SFCs), one for each fluorophore. For
+    fluorophore :math:`i`, all elements in :math:`\\mathbf{f}_{SFCi}` are 
+    zero, except for the one at position :math:`i` (:math:`f_{SFCi}`).
+    Therefore,
 
-    2. Single-fluorophore control. For fluorophore :math:`k`,
-    :math:`f_j = 0` for all :math:`j \\neq k`. Therefore,
+    .. math:: \\mathbf{s}_{SFCi} = \\mathbf{a_0} + \
+    \\mathbf{a}_i \\cdot f_{SFCi}
 
-    .. math:: s^i_{SFCk} = a_0^i +  a^i_k \\cdot f_k
+    Where :math:`\\mathbf{s}_{SFCi}` is the vector containing the signals
+    in all channels when measuring the SFC with fluorophore :math:`i`, and
+    :math:`\\mathbf{a}_i` is the ith column of :math:`A`. Solving for
+    :math:`\\mathbf{a}_i`:
 
-    Where :math:`s^i_{SFCk}` is the signal in channel :math:`i` due to
-    the single fluorophore control sample with fluorophore :math:`k`.
+    .. math:: \\mathbf{a}_i = (\\mathbf{s}_{SFCi} - \\mathbf{a_0})/f_{SFCi}
 
-    Two unknowns remain: :math:`a^i_k` and :math:`f_k`. In fact,
-    :math:`f_k` is undetermined up to a proportionality constant.
-    Therefore, we add the following two restrictions. First, we choose
-    to assign one channel to each fluorophore. Practically, this would be
-    the channel whose emission window has the greatest overlap with the
-    emission spectrum of the fluorophore. We therefore assign channel
-    :math:`k` to fluorophore :math:`k`. Next, we choose to express the
-    amount of fluorophore :math:`k` the same units as channel :math:`k`.
-    These restrictions can be expressed mathematically as:
+    Finally, using the additional restriction that :math:`a_i^i=1`, we
+    have:
 
-    .. math:: a^k_k = 1
+    .. math:: f_{SFCi} = s^i_{SFCi} - a^i_0
 
-    And therefore:
+    Therefore
 
-    .. math::
-
-        s^k_{SFCk} = a_0^k + f_k
-
-        f_k = s^k_{SFCk} - a_0^k
-
-    And we can calculate the remaining coefficients of :math:`A` as
-    follows:
-
-    .. math:: a^i_k = (s^i_{SFCk} - a_0^i)/(s^k_{SFCk} - a_0^k)
-
-    for all :math:`i \\neq k`.
+    .. math:: \\mathbf{a}_i = (\\mathbf{s}_{SFCi} - \\mathbf{a_0})/ \
+    (s^i_{SFCi} - a^i_0)
 
     """
 
@@ -140,15 +123,21 @@ def get_transform_fxn(nfc_sample,
         a0 = np.zeros(len(comp_channels))
     else:
         a0 = np.array(statistic_fxn(nfc_sample[:,comp_channels]))
-    # Signal on the single-fluorophore controls
-    # s_sfc[i,j] = s_sfc^j_i (fluorophore i, channel j)
-    s_sfc = [np.array(statistic_fxn(s[:,comp_channels])) for s in sfc_samples]
+    # Signals from the single-fluorophore controls
+    # Matrix S_sfc contains the signal from an SFC in each row
+    # S_sfc[:, i] <= s_SFCi
+    S_sfc = np.array(
+        [np.array(statistic_fxn(s[:,comp_channels])) for s in sfc_samples]).T
     # Get signal minus autofluorescence
-    # s_bs[i,j] = s_sfc^j_i - a_0^j (fluorophore i, channel j)
-    s_bs = np.array([s - a0 for s in s_sfc])
+    # Each column in S_sfc_noauto contains the signal from an SFC minus the
+    # autofluorescence vector
+    # S_sfc_noauto[:, i] <= s_SFCi - a_0
+    S_sfc_noauto = S_sfc - a0[:, np.newaxis]
     # Calculate matrix A
-    # A[i,j] = (s_sfc^i_j - a_0^i)/(s_sfc^j_j - a_0^j)
-    A = s_bs.T / np.diag(s_bs)
+    # The following uses broadcasting to divide column i by the (i,i) element
+    # of S_sfc_noauto
+    # A[:, i] <= (s_SFCi - a0)/(s^i_SFCi - a^i_0)
+    A = S_sfc_noauto / np.diag(S_sfc_noauto)
 
     # Make output transformation function
     transform_fxn = functools.partial(FlowCal.transform.to_compensated,
