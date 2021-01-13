@@ -217,7 +217,7 @@ In ``FlowCal``, compensation is performed by creating a transformation function 
 
 Here we can observe two changes. First, the NFC (black violin) is now centered around zero. This is an effect of removing the autofluorescence component, measured from the NFC itself, from the FL2 signal during compensation. Second, FL2 violins at low inducer levels are now centered around zero as well. Because both autofluorescence and bleedthrough from sfGFP were removed by the compensation process, the fact that the remaining FL2 signal is zero shows that the output of the genetic system driving mCherry is not leaky as we hypothesized above.
 
-A final note about compensation: most flow-cytometry software packages perform compensation without taking into account autofluorescence subtraction. In fact, one can mimic this procedure in ``FlowCal`` by calling ``compensate.get_transform_fxn()`` without an NFC:
+A final note about compensation: most flow cytometry software packages perform compensation without taking into account autofluorescence subtraction. In fact, one can mimic this procedure in ``FlowCal`` by calling ``compensate.get_transform_fxn()`` without an NFC:
 
 >>> compensation_fxn = FlowCal.compensate.get_transform_fxn(
 ...     None,
@@ -225,7 +225,7 @@ A final note about compensation: most flow-cytometry software packages perform c
 ...     ['FL1', 'FL2'],
 ... )
 
-Differences resulting from the usage of an NFC are negligible when sample fluorescence is much greater than autofluorescence. This may happen when the fluorescence signal is actually really large, or with modern instruments where an NFC histogram would be centered around zero (although in our experience this does not always happen perfectly). However, in cases where sample fluorescence is close to autofluorescence, ignoring the NFC can lead to non-sensical results where low fluorescence levels are brought down below autofluorescence. In fact, if we run this compensation method with our samples we obtain the following violins:
+Differences resulting from the usage of an NFC are negligible when sample fluorescence is much greater than autofluorescence. This may happen when the fluorescence signal is actually really large, or with modern instruments where an NFC histogram would be centered around zero (although in our experience this does not always happen perfectly). However, in cases where sample fluorescence is close to autofluorescence, ignoring the NFC can lead to nonsensical results where low fluorescence levels are brought down below autofluorescence. In fact, if we run this compensation method with our samples we obtain the following violins:
 
 .. image:: /_static/img/python_tutorial/python_tutorial_compensate_4.png
 
