@@ -43,6 +43,15 @@ def get_transform_fxn(nfc_sample,
 
     Notes
     -----
+    If using MEF calibration, we recommend using calibrated NFC and SFCs,
+    and calibrating all samples before applying compensation. Calibration
+    can correct for some small nonlinearities in the instrument's
+    fluorescence detectors, especially in older instruments. On the other
+    hand, compensation requires fluorescence units proportional to the
+    fluorescent signal. Thus, performing compensation followed by
+    calibration may give slightly different results than running
+    calibration followed by compensation as we recommend.
+
     The compensation method used here is based on the following analysis.
 
     We assume we have an instrument with :math:`n` fluorescence channels
