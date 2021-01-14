@@ -154,14 +154,9 @@ def read_table(filename, sheetname, index_col=None, engine=None):
         raise TypeError("sheetname should specify a single sheet")
 
     # Load excel table using pandas
-    read_excel_kwargs = {'io':filename,'index_col':index_col}
-
-    # Parameter specifying sheet name depends on pandas version
-    if packaging.version.parse(pd.__version__) \
-                < packaging.version.parse('0.21'):
-        read_excel_kwargs['sheetname']  = sheetname
-    else:
-        read_excel_kwargs['sheet_name'] = sheetname
+    read_excel_kwargs = {'io'         : filename,
+                         'sheet_name' : sheetname,
+                         'index_col'  : index_col}
 
     if engine is None:
         # try reading Excel file using openpyxl engine first, then xlrd
