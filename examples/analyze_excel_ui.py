@@ -105,14 +105,14 @@ if __name__ == "__main__":
     # in the context of accessory matplotlib functions to modify the axes
     # limits and labels and to add a legend, among other things.
 
-    # Color each histogram according to its corresponding DAPG concentration.
-    # Use a perceptually uniform colormap (cividis), and transition among
-    # colors using a logarithmic normalization, which comports with the
-    # logarithmically spaced DAPG concentrations.
-    cmap = mpl.cm.get_cmap('cividis')
-    norm = mpl.colors.LogNorm(vmin=1e0, vmax=500)
-    colors = [cmap(norm(dapg_i)) if dapg_i > 0 else cmap(0.0)
-              for dapg_i in dapg]
+    # Color each histogram according to its DAPG concentration. Linearize the
+    # color transitions using a logarithmic normalization to match the
+    # logarithmic spacing of the DAPG concentrations. (Concentrations are also
+    # augmented slightly to move the 0.0 concentration into the log
+    # normalization range.)
+    cmap = mpl.cm.get_cmap('gray_r')
+    norm = mpl.colors.LogNorm(vmin=1e0, vmax=3500.)
+    colors = [cmap(norm(dapg_i+4.)) for dapg_i in dapg]
 
     plt.figure(figsize=(6,3.5))
     FlowCal.plot.hist1d([samples[s_id] for s_id in sample_ids],
