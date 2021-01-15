@@ -94,7 +94,7 @@ setup(
                       'scikit-image>=0.10.0',
                       'scikit-learn>=0.16.0',
                       'pandas>=0.23.0',
-                      'xlrd>=0.9.2',
+                      'xlrd>=0.9.2,<2.0.0',
                       'openpyxl>=2.2.0'],
 
     # List additional groups of dependencies here (e.g. development
