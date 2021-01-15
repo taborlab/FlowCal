@@ -48,6 +48,7 @@ Functions in this module are divided in two categories:
 """
 
 import packaging
+import packaging.version
 import collections
 import numpy as np
 import scipy.ndimage.filters

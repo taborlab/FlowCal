@@ -8,6 +8,7 @@ import functools
 import collections
 import six
 import packaging
+import packaging.version
 
 import numpy as np
 import scipy
