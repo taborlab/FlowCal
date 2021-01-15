@@ -97,6 +97,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import openpyxl
+import zipfile
 
 import FlowCal.io
 import FlowCal.plot
@@ -168,7 +169,7 @@ def read_table(filename, sheetname, index_col=None, engine=None):
                    and 'unknown' in str(e).lower()):
                 raise
             else:
-                # pandas does not recognize openpyxl (e.g. pandas
+                # pandas does not recognize openpyxl (e.g., pandas
                 # version < 0.25.0), try xlrd
                 read_excel_kwargs['engine'] = 'xlrd'
                 table = pd.read_excel(**read_excel_kwargs)
@@ -179,10 +180,16 @@ def read_table(filename, sheetname, index_col=None, engine=None):
             read_excel_kwargs['engine'] = 'xlrd'
             table = pd.read_excel(**read_excel_kwargs)
         except openpyxl.utils.exceptions.InvalidFileException:
-            # unsupported file type (e.g. .xls), try xlrd
+            # unsupported file type (e.g., .xls), try xlrd
             #
             # (note: openpyxl's InvalidFileException has been stable at that
             # location since v2.2.0)
+            read_excel_kwargs['engine'] = 'xlrd'
+            table = pd.read_excel(**read_excel_kwargs)
+        except zipfile.BadZipFile:
+            # pandas >= 1.2.0 opens the file and passes the file buffer to
+            # openpyxl, which may determine the file is not a zip file (e.g.,
+            # if it's a .xls file), try xlrd
             read_excel_kwargs['engine'] = 'xlrd'
             table = pd.read_excel(**read_excel_kwargs)
     else:
