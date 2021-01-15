@@ -1392,7 +1392,7 @@ def _plot_single_violin(violin_position,
         # build violin
         ###
         H,H_edges = np.histogram(violin_data, bins=bin_edges, density=density)
-        H = np.array(H, dtype=np.float)
+        H = np.array(H, dtype=float)
 
         # duplicate histogram bin counts to serve as left and right corners of
         # bars that trace violin edge
@@ -1765,7 +1765,7 @@ def violin(data,
 
     # understand `positions`
     if positions is None:
-        positions = np.arange(1,data_length+1, dtype=np.float)
+        positions = np.arange(1,data_length+1, dtype=float)
         if position_scale == 'log':
             positions = 10**positions
         positions_length = len(positions)
@@ -1786,7 +1786,7 @@ def violin(data,
         data_min = np.inf
         data_max = -np.inf
         for idx in range(data_length):
-            violin_data = np.array(data[idx], dtype=np.float).flat
+            violin_data = np.array(data[idx], dtype=float).flat
             if len(violin_data) > 0:
                 violin_min = np.min(violin_data)
                 violin_max = np.max(violin_data)
@@ -1939,7 +1939,7 @@ def violin(data,
     ###
     for idx in range(data_length):
         violin_position = positions[idx]
-        violin_data     = np.array(data[idx], dtype=np.float).flat
+        violin_data     = np.array(data[idx], dtype=float).flat
 
         # understand violin_kwargs
         if isinstance(violin_kwargs, collectionsAbc.Sequence):
@@ -2452,7 +2452,7 @@ def violin_dose_response(data,
 
     # understand `positions`
     if positions is None:
-        positions = np.arange(1,data_length+1, dtype=np.float)
+        positions = np.arange(1,data_length+1, dtype=float)
         if xscale == 'log':
             positions = 10**positions
         positions_length = len(positions)
@@ -2479,7 +2479,7 @@ def violin_dose_response(data,
         ymin = np.inf
         ymax = -np.inf
         for idx in range(len(all_data)):
-            violin_data = np.array(all_data[idx], dtype=np.float).flat
+            violin_data = np.array(all_data[idx], dtype=float).flat
             if len(violin_data) > 0:
                 violin_min = np.min(violin_data)
                 violin_max = np.max(violin_data)
@@ -2656,7 +2656,7 @@ def violin_dose_response(data,
     ###
     for idx in range(data_length):
         violin_position = positions[idx]
-        violin_data     = np.array(data[idx], dtype=np.float).flat
+        violin_data     = np.array(data[idx], dtype=float).flat
 
         # understand violin_kwargs
         if isinstance(violin_kwargs, collectionsAbc.Sequence):
@@ -2770,7 +2770,7 @@ def violin_dose_response(data,
             10**(np.log10(next_violin_position) - 2*violin_width)
 
     if max_data is not None:
-        max_data = np.array(max_data, dtype=np.float).flat
+        max_data = np.array(max_data, dtype=float).flat
         _plot_single_violin(
             violin_position=next_violin_position,
             violin_data=max_data,
@@ -2814,7 +2814,7 @@ def violin_dose_response(data,
             next_violin_position = next_violin_position - 2*violin_width
 
     if min_data is not None:
-        min_data = np.array(min_data, dtype=np.float).flat
+        min_data = np.array(min_data, dtype=float).flat
         _plot_single_violin(
             violin_position=next_violin_position,
             violin_data=min_data,
