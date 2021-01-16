@@ -262,8 +262,8 @@ def write_workbook(filename, table_list, column_width=None):
             col_letter = openpyxl.utils.get_column_letter(i+1)
             writer.sheets[sheet_name].column_dimensions[col_letter].width = width
 
-    # Write excel file
-    writer.save()
+    # Save and close file
+    writer.close()
 
     # Restore previous header format
     if header_format_modified:
