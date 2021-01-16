@@ -152,8 +152,12 @@ def read_table(filename, sheetname, index_col=None, engine=None):
             and not isinstance(sheetname, six.string_types)):
         raise TypeError("sheetname should specify a single sheet")
 
-    # Load excel table using pandas
-    read_excel_kwargs = {'io'         : filename,
+    # Load excel table using pandas. (pandas >= v1.2.0 delays closing files in
+    # some situations, so open and close the file here.)
+    with open(filename, 'rb') as f:
+        file_in_mem = six.BytesIO(f.read())
+
+    read_excel_kwargs = {'io'         : file_in_mem,
                          'sheet_name' : sheetname,
                          'index_col'  : index_col}
 
