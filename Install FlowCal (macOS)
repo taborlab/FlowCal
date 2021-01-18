@@ -5,5 +5,5 @@ source ~/.bash_profile
 # Change current working directory
 cd -- "$(dirname "$BASH_SOURCE")"
 # Install FlowCal
-sudo python -m pip install -r requirements.txt --no-cache-dir
-sudo python setup.py install
+python -m pip install --user -r requirements.txt --no-cache-dir
+python setup.py install
