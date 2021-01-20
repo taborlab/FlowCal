@@ -1,9 +1,43 @@
 #!/bin/sh
 
-# The following is necessary to use Anaconda's python.
-source ~/.bash_profile
-# Change current working directory
-cd -- "$(dirname "$BASH_SOURCE")"
-# Install FlowCal
-python -m pip install --user -r requirements.txt --no-cache-dir
-python setup.py install
+# Install FlowCal using the `setuptools` packaging library, and install
+# FlowCal's dependencies using the `pip` package manager. Both tools should
+# be run using Anaconda's version of Python, whose location Anaconda adds to
+# the shell PATH variable in a shell initialization script (typically .zshrc
+# or .bash_profile). To complicate things, the default macOS shell changed
+# from bash to zsh in macOS 10.15, Catalina. To support both defaults, look
+# up the current default shell, run it as an interactive login shell (which
+# runs the necessary initialization scripts), and use it to install FlowCal
+# via `pip` and `setuptools`.
+
+# Look up default shell for current user using the directory service command
+# line utility (dscl).
+default_shell="$(dscl . -read Users/$(whoami) UserShell \
+                 | sed 's/UserShell: //')"
+
+# Make command that changes to the FlowCal directory (i.e., the directory where
+# this file is located)
+if [ -n "$ZSH_VERSION" ]; then
+    # Base shell (/bin/sh) is zsh, use zsh syntax for location of current file
+    cd_flowcal="cd -- $(dirname "${(%):-%x}");"
+else
+    # Base shell is not zsh, try bash syntax for location of current file
+    cd_flowcal="cd -- $(dirname "${BASH_SOURCE[0]}");"
+fi
+
+# Python commands that install FlowCal. (Commands are collected via a here
+# document, which is input to a `tr` command that removes the newline
+# characters.)
+install_flowcal="$(tr -d '\012' <<END
+python -m pip install --user -r requirements.txt --no-cache-dir;
+python setup.py install;
+END
+)"
+
+# Run installation commands in the default shell run as an interactive ("-i")
+# login ("-l") shell with a clean environment ("env -i", so the PATH variable
+# is not inherited from this shell and mangled). (Getting zsh to source
+# .zshrc requires an interactive shell; getting bash to source .bash_profile
+# requires a login shell.)
+env -i $default_shell -i -l -c "${cd_flowcal}${install_flowcal}"
+
