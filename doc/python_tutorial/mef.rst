@@ -19,10 +19,12 @@ As mentioned in the :doc:`fundamentals</fundamentals/calibration>` section, conv
 
 >>> b = FlowCal.io.FCSData('FCFiles/sample001.fcs')
 >>> b = FlowCal.transform.to_rfi(b)
->>> b_g, __, c = FlowCal.gate.density2d(b,
-...                                     channels=['FSC', 'SSC'],
-...                                     gate_fraction=0.3,
-...                                     full_output=True)
+>>> density_gate_output = FlowCal.gate.density2d(b,
+...                                              channels=['FSC', 'SSC'],
+...                                              gate_fraction=0.3,
+...                                              full_output=True)
+>>> b_g = density_gate_output.gated_data
+>>> c   = density_gate_output.contour
 >>> FlowCal.plot.density_and_hist(b,
 ...                               gated_data=b_g,
 ...                               gate_contour=c,

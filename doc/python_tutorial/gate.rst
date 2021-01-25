@@ -94,12 +94,15 @@ Plotting 2D Gates
 
 Finally, we will see a better way to visualize the result of applying a 2D gate. First, we will use density gating again, but this time we will do it a little differently.
 
->>> s_g5, m_g5, contour = FlowCal.gate.density2d(s_g1,
+>>> density_gate_output = FlowCal.gate.density2d(s_g1,
 ...                                              channels=['FSC', 'SSC'],
 ...                                              gate_fraction=0.75,
 ...                                              full_output=True)
+>>> s_g5    = density_gate_output.gated_data
+>>> m_g5    = density_gate_output.mask
+>>> contour = density_gate_output.contour
 
-The extra argument, ``full_output``, is available in every function in :mod:`FlowCal.gate`. It instructs a gating function to return some additional output arguments with information about the gating process. The second output argument is always a mask, a boolean array that indicates which events on the original FCSData object are being retained by the gate. 2-dimensional gating functions have a third output argument: a contour surrounding the gated region, which we will now use for plotting.
+The extra argument, ``full_output``, is available in every function in :mod:`FlowCal.gate`. It instructs a gating function to return additional output arguments with information about the gating process. The second output argument is always a mask (extracted here from the ``Density2dGateOutput`` ``namedtuple`` using its field name), which is a boolean array that indicates which events from the original FCSData object are being retained by the gate. Two-dimensional gating functions have a third output argument: a contour surrounding the gated region, which we will now use for plotting.
 
 The function :func:`FlowCal.plot.density_and_hist` was introduced in the :doc:`plotting tutorial </python_tutorial/plot>` to produce plots of a single FCSData object. But it can also be used to plot the result of a gating step, showing the data before and after gating, and the gating contour. Let's use this ability to show the result of the density gating process.
 

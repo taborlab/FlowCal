@@ -8,6 +8,7 @@ import functools
 import collections
 import six
 import packaging
+import packaging.version
 
 import numpy as np
 import scipy
@@ -913,7 +914,7 @@ def get_transform_fxn(data_beads,
         mef_values   = [mef_values]
 
     # Transform mef_values to numpy array
-    mef_values = np.array(mef_values, dtype=np.float)
+    mef_values = np.array(mef_values, dtype=float)
 
     ###
     # 1. Clustering
