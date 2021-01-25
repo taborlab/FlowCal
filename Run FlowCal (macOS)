@@ -1,9 +1,29 @@
 #!/bin/sh
 
-# The following is necessary to use Anaconda's python.
-source ~/.bash_profile
-# Set environment variable to change default matplotlib backend
-# This is necessary so that the open file dialog is shown properly
-export MPLBACKEND="TkAgg"
-# Run FlowCal
-python -m FlowCal.excel_ui -v -p -H
+# Run FlowCal using Python. The Python version should be the one installed by
+# Anaconda. As with the `Install FlowCal (macOS)` script, look up the current
+# default shell, run it as an interactive login shell with a clean
+# environment, and use it to run the FlowCal Excel UI.
+
+# Look up default shell for current user using the directory service command
+# line utility (dscl).
+default_shell="$(dscl . -read Users/$(whoami) UserShell \
+                 | sed 's/UserShell: //')"
+
+# Commands that run FlowCal. (Commands are collected via a here document,
+# which is input to a `tr` command that removes the newline characters.) The
+# export command changes the default matplotlib backend, which is necessary
+# to properly show the open file dialog.
+run_flowcal="$(tr -d '\012' <<END
+export MPLBACKEND='TkAgg';
+python -m FlowCal.excel_ui -v -p -H;
+END
+)"
+
+# Run commands in the default shell run as an interactive ("-i") login ("-l")
+# shell with a clean environment ("env -i", so the PATH variable is not
+# inherited from this shell and mangled). (Getting zsh to source .zshrc
+# requires an interactive shell; getting bash to source .bash_profile
+# requires a login shell.)
+env -i $default_shell -i -l -c "${run_flowcal}"
+

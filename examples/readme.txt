@@ -1,13 +1,19 @@
 Introduction
 ============
 
-This folder contains flow cytometry data from a simple bacterial IPTG-induction experiment, and the necessary files that demonstrate how to analyze this data with FlowCal.
+This folder contains flow cytometry data from a simple bacterial 2,4‐diacetylphloroglucinol (DAPG) induction experiment and the necessary files that demonstrate how to analyze this data with FlowCal.
 
 
-Experimental details
-====================
+Experiment description
+======================
 
-This experiment used an E. coli strain with a high-copy plasmid containing sfGFP under control of the IPTG-inducible promoter Ptac. Five samples were started from this strain, with IPTG added to the following final concentrations: 0, 81, 161, 318, and 1000 micromolar. Samples were grown until late exponential, and fluorescence measurements were taken via flow cytometry. The five resulting flow cytometry standard (FCS) files are contained in the "FCFiles" folder, and are named "DataXXX.fcs". An additional sample containing calibration beads was also measured, and the corresponding FCS file is named "Beads006.fcs".
+Escherichia coli expressing the fluorescent protein superfolder GFP (sfGFP) from the DAPG-inducible promoter Pphlf were induced to 0, 2.33, 4.36, 8.16, 15.3, 28.6, 53.5, 100, 187, and 350 micromolar DAPG and grown shaking at 37C for ~6 hours prior to fluorophore maturation (wherein cells were incubated with the bacterial translation inhibitor chloramphenicol for one hour to allow fluorescent proteins to mature) and measurement of cellular fluorescence by flow cytometry. The ten resulting flow cytometry standard (FCS) files are located in the "FCFiles/" folder and are named "sampleXXX.fcs". An additional sample containing calibration beads was also measured; its corresponding FCS file is named "sample001.fcs".
+
+A minimum control sample containing E. coli lacking sfGFP was measured along with its own beads sample on a separate day; the corresponding FCS files are located in the "FCFiles/min/" folder.
+
+A maximum control sample containing E. coli expressing sfGFP from Pphlf but lacking the DAPG-sensitive PhlF transcriptional repressor was measured along with its own beads sample on a third day; the corresponding FCS files are located in the "FCFiles/max/" folder.
+
+For more information, see this study: https://doi.org/10.15252/msb.20209618.
 
 
 Details on the flow cytometer used
@@ -29,7 +35,7 @@ Examples included
 Excel UI
 --------
 
-This example shows how to process a set of cell sample and bead sample FCS files with the Excel UI, and produce a set of plots and an output Excel file with statistics.
+This example shows how to process cell-sample and bead-sample FCS files using the Excel UI to produce plots and an Excel file with statistics.
 
 To run, start FlowCal by running the "Run FlowCal" program. An "open file" dialog will appear. Navigate to this folder and select "experiment.xlsx".
 
@@ -37,7 +43,7 @@ To run, start FlowCal by running the "Run FlowCal" program. An "open file" dialo
 Python API, without using calibration beads data
 ------------------------------------------------
 
-This example shows how to process a set of cell sample FCS files entirely from Python with FlowCal.
+This example shows how to process cell-sample FCS files entirely from Python with FlowCal.
 
 To run, use the script "analyze_no_mef.py" as a regular python program.
 
@@ -45,7 +51,7 @@ To run, use the script "analyze_no_mef.py" as a regular python program.
 Python API, using calibration beads data
 ----------------------------------------
 
-This example shows how to process a set of cell sample and bead sample FCS files entirely from Python with FlowCal.
+This example shows how to process cell-sample and bead-sample FCS files entirely from Python with FlowCal.
 
 To run, use the script "analyze_mef.py" as a regular python program.
 
@@ -53,6 +59,6 @@ To run, use the script "analyze_mef.py" as a regular python program.
 Python API, using calibration beads data and an input Excel file
 ----------------------------------------------------------------
 
-This example shows how to process a set of cell sample and bead sample FCS files with the Excel UI, and obtain processed flow cytometry data for further analysis in Python.
+This example shows how to process cell-sample and bead-sample FCS files using the Excel UI to obtain processed flow cytometry data for further analysis in Python.
 
 To run, use the script "analyze_excel_ui.py" as a regular python program.

@@ -1,1 +1,5 @@
 numpydoc>=0.7.0
+
+# The readthedocs build environment pins pillow==5.4.1, but the latest
+# version matplotlib (v3.3.3) requires pillow>=6.2.0.
+pillow>=6.2.0

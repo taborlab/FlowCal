@@ -9,7 +9,10 @@ import unittest
 
 import numpy as np
 import pandas as pd
-import pandas.util.testing as tm
+try:
+    import pandas.testing as tm       # for pandas >= 0.20.1
+except ImportError:
+    import pandas.util.testing as tm  # for pandas <= 0.19.2
 
 import FlowCal
 
@@ -61,6 +64,53 @@ class TestReadTable(unittest.TestCase):
 
         # Read table
         table = FlowCal.excel_ui.read_table(self.filename,
+                                            sheetname=sheetname,
+                                            index_col=index_col)
+
+        # Compare
+        tm.assert_frame_equal(table, expected_output)
+
+    def test_read_table_xls(self):
+        """
+        Test for proper loading of a table from an old-format Excel sheet.
+
+        """
+        xls_filename = 'test/test_excel_ui.xls'
+
+        # Sheet to read
+        sheetname = "Instruments"
+        # Column to use as index labels
+        index_col = "ID"
+
+        # Expected output
+        expected_output_list = []
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        expected_output_list.append(row)
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        expected_output_list.append(row)
+        expected_index = pd.Series([u'FC001', u'FC002'], name='ID')
+        expected_columns = [u'Description',
+                            u'Forward Scatter Channel',
+                            u'Side Scatter Channel',
+                            u'Fluorescence Channels',
+                            u'Time Channel']
+
+        expected_output = pd.DataFrame(expected_output_list,
+                                       index=expected_index,
+                                       columns=expected_columns)
+
+        # Read table
+        table = FlowCal.excel_ui.read_table(xls_filename,
                                             sheetname=sheetname,
                                             index_col=index_col)
 
@@ -212,6 +262,66 @@ class TestReadTable(unittest.TestCase):
                           self.filename,
                           sheetname,
                           index_col)
+
+class TestWriteWorkbook(unittest.TestCase):
+    """
+    Class to test excel_ui.write_workbook()
+
+    """
+    def setUp(self):
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        self.test_file = os.path.join(file_dir, 'test_write_workbook.xlsx')
+
+    def test_write_workbook(self):
+        """
+        Test proper writing of Excel workbook.
+
+        """
+        # Make test table
+        df_list = []
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer'
+        row[u'Forward Scatter Channel'] = u'FSC-H'
+        row[u'Side Scatter Channel'] = u'SSC-H'
+        row[u'Fluorescence Channels'] = u'FL1-H, FL2-H, FL3-H'
+        row[u'Time Channel'] = u'Time'
+        df_list.append(row)
+        row = {}
+        row[u'Description'] = u'Moake\'s Flow Cytometer (new acquisition card)'
+        row[u'Forward Scatter Channel'] = u'FSC'
+        row[u'Side Scatter Channel'] = u'SSC'
+        row[u'Fluorescence Channels'] = u'FL1, FL2, FL3'
+        row[u'Time Channel'] = u'TIME'
+        df_list.append(row)
+
+        index_col = 'ID'
+        df_idx = pd.Series([u'FC001', u'FC002'], name=index_col)
+
+        df_columns = [u'Description',
+                      u'Forward Scatter Channel',
+                      u'Side Scatter Channel',
+                      u'Fluorescence Channels',
+                      u'Time Channel']
+
+        table = pd.DataFrame(df_list,
+                             index=df_idx,
+                             columns=df_columns)
+
+        # Write table to file
+        sheetname = 'Instruments'
+        FlowCal.excel_ui.write_workbook(filename=self.test_file,
+                                        table_list=[(sheetname, table)])
+
+        # Read table from file
+        read_table = FlowCal.excel_ui.read_table(filename=self.test_file,
+                                                 sheetname=sheetname,
+                                                 index_col=index_col)
+
+        # Compare tables
+        tm.assert_frame_equal(table, read_table)
+
+    def tearDown(self):
+        os.remove(self.test_file)
 
 class TestRegexMEFValues(unittest.TestCase):
     """
