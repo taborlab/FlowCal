@@ -303,22 +303,12 @@ if __name__ == "__main__":
     # in the context of accessory matplotlib functions to modify the axes
     # limits and labels and to add a legend, among other things.
 
-    # Color each histogram according to its corresponding aTc concentration.
-    # Use a perceptually uniform colormap (cividis), and transition among
-    # colors using a logarithmic normalization, which comports with the
-    # logarithmically spaced aTc concentrations.
-    cmap = mpl.cm.get_cmap('cividis')
-    norm = mpl.colors.LogNorm(vmin=1e0, vmax=20)
-    colors = [cmap(norm(atc_i)) if atc_i > 0 else cmap(0.0)
-              for atc_i in atc]
-
     plt.figure(figsize=(6, 5.5))
     plt.subplot(2, 1, 1)
     FlowCal.plot.hist1d(samples,
                         channel='FL1',
                         histtype='step',
-                        bins=128,
-                        edgecolor=colors)
+                        bins=128)
     plt.ylim((0,2500))
     plt.xlim((0,5e3))
     plt.xlabel('FL1 Fluorescence (a.u.)')
@@ -330,8 +320,7 @@ if __name__ == "__main__":
     FlowCal.plot.hist1d(samples,
                         channel='FL2',
                         histtype='step',
-                        bins=128,
-                        edgecolor=colors)
+                        bins=128)
     plt.ylim((0,2500))
     plt.xlim((0,5e3))
     plt.xlabel('FL2 Fluorescence (a.u.)')
@@ -491,7 +480,7 @@ if __name__ == "__main__":
                            'zorder':-1,
                            'solid_capstyle':'butt'},
         )
-    plt.ylabel('FL1 Fluorescence (MEFL)')
+    plt.ylabel('FL1 Fluorescence (a.u.)')
 
     plt.subplot(1, 2, 2)
     FlowCal.plot.violin_dose_response(
@@ -512,7 +501,7 @@ if __name__ == "__main__":
                            'zorder':-1,
                            'solid_capstyle':'butt'},
         )
-    plt.ylabel('FL2 Fluorescence (MEPE)')
+    plt.ylabel('FL2 Fluorescence (a.u.)')
 
     plt.tight_layout()
     plt.savefig('dose_response_violin_compensated.png', dpi=200)

@@ -73,8 +73,6 @@ import collections
 import sys
 import os
 import os.path
-import packaging
-import packaging.version
 import platform
 import re
 import six
@@ -97,6 +95,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import openpyxl
+import zipfile
 
 import FlowCal.io
 import FlowCal.plot
@@ -153,15 +152,14 @@ def read_table(filename, sheetname, index_col=None, engine=None):
             and not isinstance(sheetname, six.string_types)):
         raise TypeError("sheetname should specify a single sheet")
 
-    # Load excel table using pandas
-    read_excel_kwargs = {'io':filename,'index_col':index_col}
+    # Load excel table using pandas. (pandas >= v1.2.0 delays closing files in
+    # some situations, so open and close the file here.)
+    with open(filename, 'rb') as f:
+        file_in_mem = six.BytesIO(f.read())
 
-    # Parameter specifying sheet name depends on pandas version
-    if packaging.version.parse(pd.__version__) \
-                < packaging.version.parse('0.21'):
-        read_excel_kwargs['sheetname']  = sheetname
-    else:
-        read_excel_kwargs['sheet_name'] = sheetname
+    read_excel_kwargs = {'io'         : file_in_mem,
+                         'sheet_name' : sheetname,
+                         'index_col'  : index_col}
 
     if engine is None:
         # try reading Excel file using openpyxl engine first, then xlrd
@@ -173,7 +171,7 @@ def read_table(filename, sheetname, index_col=None, engine=None):
                    and 'unknown' in str(e).lower()):
                 raise
             else:
-                # pandas does not recognize openpyxl (e.g. pandas
+                # pandas does not recognize openpyxl (e.g., pandas
                 # version < 0.25.0), try xlrd
                 read_excel_kwargs['engine'] = 'xlrd'
                 table = pd.read_excel(**read_excel_kwargs)
@@ -184,10 +182,16 @@ def read_table(filename, sheetname, index_col=None, engine=None):
             read_excel_kwargs['engine'] = 'xlrd'
             table = pd.read_excel(**read_excel_kwargs)
         except openpyxl.utils.exceptions.InvalidFileException:
-            # unsupported file type (e.g. .xls), try xlrd
+            # unsupported file type (e.g., .xls), try xlrd
             #
             # (note: openpyxl's InvalidFileException has been stable at that
             # location since v2.2.0)
+            read_excel_kwargs['engine'] = 'xlrd'
+            table = pd.read_excel(**read_excel_kwargs)
+        except zipfile.BadZipFile:
+            # pandas >= 1.2.0 opens the file and passes the file buffer to
+            # openpyxl, which may determine the file is not a zip file (e.g.,
+            # if it's a .xls file), try xlrd
             read_excel_kwargs['engine'] = 'xlrd'
             table = pd.read_excel(**read_excel_kwargs)
     else:
@@ -225,26 +229,17 @@ def write_workbook(filename, table_list, column_width=None):
     # Modify default header format
     # Pandas' default header format is bold text with thin borders. Here we
     # use bold text only, without borders.
-    # The header style structure is in pd.core.format in pandas<=0.18.0,
-    # pd.formats.format in 0.18.1<=pandas<0.20, and pd.io.formats.excel in
-    # pandas>=0.20.
     # Also, wrap in a try-except block in case style structure is not found.
-    format_module_found = False
+    header_format_modified = False
     try:
         # Get format module
-        if packaging.version.parse(pd.__version__) \
-                <= packaging.version.parse('0.18'):
-            format_module = pd.core.format
-        elif packaging.version.parse(pd.__version__) \
-                < packaging.version.parse('0.20'):
-            format_module = pd.formats.format
-        else:
-            import pandas.io.formats.excel as format_module
+        import pandas.io.formats.excel as format_module
+
         # Save previous style, replace, and indicate that previous style should
         # be restored at the end
         old_header_style = format_module.header_style
         format_module.header_style = {"font": {"bold": True}}
-        format_module_found = True
+        header_format_modified = True
     except AttributeError as e:
         pass
 
@@ -271,11 +266,11 @@ def write_workbook(filename, table_list, column_width=None):
             col_letter = openpyxl.utils.get_column_letter(i+1)
             writer.sheets[sheet_name].column_dimensions[col_letter].width = width
 
-    # Write excel file
-    writer.save()
+    # Save and close file
+    writer.close()
 
     # Restore previous header format
-    if format_module_found:
+    if header_format_modified:
         format_module.header_style = old_header_style
 
 def process_beads_table(beads_table,
@@ -1022,17 +1017,8 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
             if pd.notnull(beads_table[header][row_id]):
 
                 # Detector voltage
-                # Dataframes, such as beads_table, are modified differently
-                # depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    beads_table.set_value(
-                        row_id,
-                        channel + ' Detector Volt.',
-                        beads_samples[row_id].detector_voltage(channel))
-                else:
-                    beads_table.at[row_id, channel + ' Detector Volt.'] = \
-                        beads_samples[row_id].detector_voltage(channel)
+                beads_table.at[row_id, channel + ' Detector Volt.'] = \
+                    beads_samples[row_id].detector_voltage(channel)
 
 
                 # Amplification type
@@ -1040,16 +1026,8 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                # Dataframes, such as beads_table, are modified differently
-                # depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    beads_table.set_value(row_id,
-                                          channel + ' Amp. Type',
-                                          amplification_type)
-                else:
-                    beads_table.at[row_id, channel + ' Amp. Type'] = \
-                        amplification_type
+                beads_table.at[row_id, channel + ' Amp. Type'] = \
+                    amplification_type
 
 
                 # Bead model and parameters
@@ -1066,53 +1044,27 @@ def add_beads_stats(beads_table, beads_samples, mef_outputs=None):
                         # Bead model
                         beads_model_str = mef_outputs[row_id]. \
                             fitting['beads_model_str'][mef_channel_index]
-                        # Dataframes, such as beads_table, are modified
-                        # differently depending on pandas' version.
-                        if packaging.version.parse(pd.__version__) \
-                                < packaging.version.parse('0.21'):
-                            beads_table.set_value(row_id,
-                                                  channel + ' Beads Model',
-                                                  beads_model_str)
-                        else:
-                            beads_table.at[row_id, channel + ' Beads Model'] = \
-                                beads_model_str
+                        beads_table.at[row_id, channel + ' Beads Model'] = \
+                            beads_model_str
 
                         # Bead parameter names
                         params_names = mef_outputs[row_id]. \
                             fitting['beads_params_names'][mef_channel_index]
                         params_names_str = ", ".join([str(p)
                                                       for p in params_names])
-                        # Dataframes, such as beads_table, are modified
-                        # differently depending on pandas' version.
-                        if packaging.version.parse(pd.__version__) \
-                                < packaging.version.parse('0.21'):
-                            beads_table.set_value(
-                                row_id,
-                                channel + ' Beads Params. Names',
-                                params_names_str)
-                        else:
-                            beads_table.at[
-                                row_id,
-                                channel + ' Beads Params. Names'] = \
-                                    params_names_str
+                        beads_table.at[
+                            row_id,
+                            channel + ' Beads Params. Names'] = \
+                                params_names_str
 
                         # Bead parameter values
                         params = mef_outputs[row_id]. \
                             fitting['beads_params'][mef_channel_index]
                         params_str = ", ".join([str(p) for p in params])
-                        # Dataframes, such as beads_table, are modified
-                        # differently depending on pandas' version.
-                        if packaging.version.parse(pd.__version__) \
-                                < packaging.version.parse('0.21'):
-                            beads_table.set_value(
-                                row_id,
-                                channel + ' Beads Params. Values',
-                                params_str)
-                        else:
-                            beads_table.at[
-                                row_id,
-                                channel + ' Beads Params. Values'] = \
-                                    params_str
+                        beads_table.at[
+                            row_id,
+                            channel + ' Beads Params. Values'] = \
+                                params_str
 
     # Restore index name if table is empty
     if len(beads_table) == 0:
@@ -1216,82 +1168,32 @@ def add_samples_stats(samples_table, samples):
                 # Acquisition settings
 
                 # Detector voltage
-                # Dataframes, such as samples_table, are modified
-                # differently depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Detector Volt.',
-                        samples[row_id].detector_voltage(channel))
-                else:
-                    samples_table.at[row_id, channel + ' Detector Volt.'] = \
-                        samples[row_id].detector_voltage(channel)
+                samples_table.at[row_id, channel + ' Detector Volt.'] = \
+                    samples[row_id].detector_voltage(channel)
 
                 # Amplification type
                 if samples[row_id].amplification_type(channel)[0]:
                     amplification_type = "Log"
                 else:
                     amplification_type = "Linear"
-                # Dataframes, such as samples_table, are modified
-                # differently depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    samples_table.set_value(row_id,
-                                            channel + ' Amp. Type',
-                                            amplification_type)
-                else:
-                    samples_table.at[row_id, channel + ' Amp. Type'] = \
-                        amplification_type
+                samples_table.at[row_id, channel + ' Amp. Type'] = \
+                    amplification_type
 
                 # Statistics from event list
-                # Dataframes, such as samples_table, are modified
-                # differently depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Mean',
-                        FlowCal.stats.mean(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Median',
-                        FlowCal.stats.median(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Mode',
-                        FlowCal.stats.mode(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Std',
-                        FlowCal.stats.std(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' CV',
-                        FlowCal.stats.cv(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' IQR',
-                        FlowCal.stats.iqr(samples[row_id], channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' RCV',
-                        FlowCal.stats.rcv(samples[row_id], channel))
-                else:
-                    samples_table.at[row_id, channel + ' Mean'] = \
-                        FlowCal.stats.mean(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' Median'] = \
-                        FlowCal.stats.median(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' Mode'] = \
-                        FlowCal.stats.mode(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' Std'] = \
-                        FlowCal.stats.std(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' CV'] = \
-                        FlowCal.stats.cv(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' IQR'] = \
-                        FlowCal.stats.iqr(samples[row_id], channel)
-                    samples_table.at[row_id, channel + ' RCV'] = \
-                        FlowCal.stats.rcv(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' Mean'] = \
+                    FlowCal.stats.mean(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' Median'] = \
+                    FlowCal.stats.median(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' Mode'] = \
+                    FlowCal.stats.mode(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' Std'] = \
+                    FlowCal.stats.std(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' CV'] = \
+                    FlowCal.stats.cv(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' IQR'] = \
+                    FlowCal.stats.iqr(samples[row_id], channel)
+                samples_table.at[row_id, channel + ' RCV'] = \
+                    FlowCal.stats.rcv(samples[row_id], channel)
 
                 # For geometric statistics, first check for non-positive events.
                 # If found, throw a warning and calculate statistics on positive
@@ -1309,40 +1211,17 @@ def add_samples_stats(samples_table, samples):
                     # Write warning message to table
                     if samples_table.loc[row_id, 'Analysis Notes']:
                         msg = samples_table.loc[row_id, 'Analysis Notes'] + msg
-                    # Dataframes, such as samples_table, are modified
-                    # differently depending on pandas' version.
-                    if packaging.version.parse(pd.__version__) \
-                            < packaging.version.parse('0.21'):
-                        samples_table.set_value(row_id, 'Analysis Notes', msg)
-                    else:
-                        samples_table.at[row_id, 'Analysis Notes'] = msg
+                    samples_table.at[row_id, 'Analysis Notes'] = msg
                 else:
                     sample_positive = samples[row_id]
 
                 # Calculate and write geometric statistics
-                # Dataframes, such as samples_table, are modified
-                # differently depending on pandas' version.
-                if packaging.version.parse(pd.__version__) \
-                        < packaging.version.parse('0.21'):
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Geom. Mean',
-                        FlowCal.stats.gmean(sample_positive, channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Geom. Std',
-                        FlowCal.stats.gstd(sample_positive, channel))
-                    samples_table.set_value(
-                        row_id,
-                        channel + ' Geom. CV',
-                        FlowCal.stats.gcv(sample_positive, channel))
-                else:
-                    samples_table.at[row_id, channel + ' Geom. Mean'] = \
-                        FlowCal.stats.gmean(sample_positive, channel)
-                    samples_table.at[row_id, channel + ' Geom. Std'] = \
-                        FlowCal.stats.gstd(sample_positive, channel)
-                    samples_table.at[row_id, channel + ' Geom. CV'] = \
-                        FlowCal.stats.gcv(sample_positive, channel)
+                samples_table.at[row_id, channel + ' Geom. Mean'] = \
+                    FlowCal.stats.gmean(sample_positive, channel)
+                samples_table.at[row_id, channel + ' Geom. Std'] = \
+                    FlowCal.stats.gstd(sample_positive, channel)
+                samples_table.at[row_id, channel + ' Geom. CV'] = \
+                    FlowCal.stats.gcv(sample_positive, channel)
 
     # Restore index name if table is empty
     if len(samples_table) == 0:

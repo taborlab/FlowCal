@@ -129,22 +129,12 @@ if __name__ == "__main__":
     # in the context of accessory matplotlib functions to modify the axes
     # limits and labels and to add a legend, among other things.
 
-    # Color each histogram according to its corresponding aTc concentration.
-    # Use a perceptually uniform colormap (cividis), and transition among
-    # colors using a logarithmic normalization, which comports with the
-    # logarithmically spaced aTc concentrations.
-    cmap = mpl.cm.get_cmap('cividis')
-    norm = mpl.colors.LogNorm(vmin=0.5, vmax=20)
-    colors = [cmap(norm(atc_i)) if atc_i > 0 else cmap(0.0)
-              for atc_i in atc]
-
     plt.figure(figsize=(6, 5.5))
     plt.subplot(2, 1, 1)
     FlowCal.plot.hist1d([samples[s_id] for s_id in sample_ids],
                         channel='FL1',
                         histtype='step',
-                        bins=128,
-                        edgecolor=colors)
+                        bins=128)
     plt.ylim((0,2500))
     plt.xlim((0,5e4))
     plt.xlabel('FL1  (Molecules of Equivalent Fluorescein, MEFL)')
@@ -156,8 +146,7 @@ if __name__ == "__main__":
     FlowCal.plot.hist1d([samples[s_id] for s_id in sample_ids],
                         channel='FL2',
                         histtype='step',
-                        bins=128,
-                        edgecolor=colors)
+                        bins=128)
     plt.ylim((0,2500))
     plt.xlim((0,5e4))
     plt.xlabel('FL2  (Molecules of Equivalent PE, MEPE)')

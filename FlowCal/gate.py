@@ -423,8 +423,8 @@ def density2d(data,
 
     # Make 2D histogram
     H,xe,ye = np.histogram2d(data_ch[:,0], data_ch[:,1], bins=bins)
-    xe = np.array(xe, dtype=np.float)
-    ye = np.array(ye, dtype=np.float)
+    xe = np.array(xe, dtype=float)
+    ye = np.array(ye, dtype=float)
 
     # Map each event to its histogram bin by sorting events into a 2D array of
     # lists which mimics the histogram.
@@ -467,7 +467,7 @@ def density2d(data,
     # Create a 2D array of lists mimicking the histogram to accumulate events
     # associated with each bin.
     filler = np.frompyfunc(lambda x: list(), 1, 1)
-    H_events = np.empty_like(H, dtype=np.object)
+    H_events = np.empty_like(H, dtype=object)
     filler(H_events, H_events)
 
     for event_idx, x_bin_idx, y_bin_idx in \
@@ -566,7 +566,7 @@ def density2d(data,
     accepted_data_indices = np.array([item       # flatten list of lists
                                       for sublist in accepted_data_indices
                                       for item in sublist],
-                                     dtype=np.int)
+                                     dtype=int)
 
     # Convert list of accepted data indices to boolean mask array
     mask = np.zeros(shape=data.shape[0], dtype=bool)
