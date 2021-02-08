@@ -13,4 +13,5 @@ FlowCal's Python API Tutorial
    plot.rst
    gate.rst
    mef.rst
+   compensate.rst
    excel_ui.rst

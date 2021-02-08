@@ -15,9 +15,9 @@ Also, import ``numpy`` and ``pyplot`` from ``matplotlib``
 Removing Saturated Events
 -------------------------
 
-We'll start by loading the data from file ``sample006.fcs`` into an ``FCSData`` object called ``s``. Then, transform all channels into a.u.
+We'll start by loading the data from file ``sample029.fcs`` into an ``FCSData`` object called ``s``. Then, transform all channels into a.u.
 
->>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/sample029.fcs')
 >>> s = FlowCal.transform.to_rfi(s)
 
 In the :doc:`plotting tutorial </python_tutorial/plot>` we looked at a density plot of the forward scatter/side scatter (``FSC``/``SSC``) channels and identified several clusters of particles (events). This density plot is repeated below for convenience.
@@ -56,7 +56,7 @@ Ellipse Gate
 >>> s_g3 = FlowCal.gate.ellipse(s_g1,
 ...                             channels=['FSC', 'SSC'],
 ...                             log=True,
-...                             center=(2.3, 2.78),
+...                             center=(2.2, 2.8),
 ...                             a=0.3,
 ...                             b=0.2,
 ...                             theta=30/180.*np.pi)

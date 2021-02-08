@@ -15,9 +15,9 @@ Also, import ``numpy`` and ``pyplot`` from ``matplotlib``
 Histograms
 ----------
 
-Let's load the data from file ``sample006.fcs`` into an ``FCSData`` object called ``s``, and tranform all channels to arbitrary units.
+Let's load the data from file ``sample029.fcs`` into an ``FCSData`` object called ``s``, and tranform all channels to arbitrary units.
 
->>> s = FlowCal.io.FCSData('FCFiles/sample006.fcs')
+>>> s = FlowCal.io.FCSData('FCFiles/sample029.fcs')
 >>> s = FlowCal.transform.to_rfi(s)
 
 One is often interested in the fluorescence distribution across a population of cells. This is represented in a histogram. Since ``FCSData`` is a numpy array, one could use the standard ``hist`` function included in matplotlib. Alternatively, ``FlowCal`` includes its own histogram function specifically tailored to work with ``FCSData`` objects. For example, one can plot the contents of the ``FL1`` channel with a single call to :func:`FlowCal.plot.hist1d`.
@@ -38,7 +38,7 @@ By default, :func:`FlowCal.plot.hist1d` uses something called *logicle* scaling 
 
 Finally, :func:`FlowCal.plot.hist1d` can plot several FCSData objects at the same time. Let's now load 3 FCSData objects, transform all channels to a.u., and plot the ``FL1`` channel of all three with transparency.
 
->>> filenames = ['FCFiles/sample{:03d}.fcs'.format(i + 9) for i in range(3)]
+>>> filenames = ['FCFiles/sample{:03d}.fcs'.format(i + 33) for i in range(3)]
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]
 >>> d = [FlowCal.transform.to_rfi(di) for di in d]
 >>> FlowCal.plot.hist1d(d, channel='FL1', alpha=0.7, bins=128)
@@ -93,11 +93,11 @@ Violin Plots
 
 Histograms, as shown above, can be used to plot and compare data from multiple samples. However, they can easily get too crowded. A more compact way is to use a violin plot, wherein vertical, normalized, symmetrical histograms ("violins") are shown centered on corresponding x-axis values. We can do this with the :func:`FlowCal.plot.violin` function.
 
->>> filenames = ['FCFiles/sample{:03d}.fcs'.format(i+6) for i in range(10)]
+>>> filenames = ['FCFiles/sample{:03d}.fcs'.format(i+29) for i in range(9)]
 >>> d = [FlowCal.io.FCSData(filename) for filename in filenames]
 >>> d = [FlowCal.transform.to_rfi(di) for di in d]
->>> dapg = np.array([0, 2.33, 4.36, 8.16, 15.3, 28.6, 53.5, 100, 187, 350])
->>> FlowCal.plot.violin(data=d, channel='FL1', positions=dapg, xlabel='DAPG (uM)', xscale='log', ylim=(1e0,2e3))
+>>> atc = np.array([0, 0.5, 1, 1.5, 2, 3, 4, 7.5, 20])
+>>> FlowCal.plot.violin(data=d, channel='FL1', positions=atc, xlabel='aTc (ng/mL)', xscale='log', ylim=(1e0,2e3))
 >>> plt.show()
 
 .. image:: /_static/img/python_tutorial/python_tutorial_plot_violin_1.png
@@ -107,24 +107,23 @@ Note that the x axis has been plotted on a logarithmic scale using the ``xscale`
 "Dose response" or "transfer" functions are common in biology. These sometimes include minimum (negative) and maximum (positive) controls, and are often approximated by mathematical models. The :func:`FlowCal.plot.violin_dose_response` function can be used to plot a full dose response dataset, including min data, max data, and a mathematical model. Min and max data are illustrated to the left of the plot, and the mathematical model is correctly illustrated even when a position=0 violin is illustrated separately when ``xscale`` is ``log``.
 
 >>> # Function specifying mathematical model
->>> def dapg_sensor_model(dapg_concentration):
->>>     mn = 20
->>>     mx = 250.
->>>     K  = 20.
->>>     n  = 3.57
->>>     if dapg_concentration <= 0:
->>>         return mn
->>>     else:
->>>         return mn + ((mx-mn)/(1+((K/dapg_concentration)**n)))
->>>
+>>> def atc_sensor_model(atc_concentration):
+>>>         mn = 16
+>>>         mx = 170.
+>>>         K  = 3.
+>>>         n  = 5.
+>>>         if atc_concentration <= 0:
+>>>             return mx
+>>>         else:
+>>>             return mn + ((mx-mn)/(1+((atc_concentration/K)**n)))
 >>> # Plot
 >>> FlowCal.plot.violin_dose_response(
 >>>     data=d,
 >>>     channel='FL1',
->>>     positions=dapg,
+>>>     positions=atc,
 >>>     min_data=d[0],
 >>>     max_data=d[-1],
->>>     model_fxn=dapg_sensor_model,
+>>>     model_fxn=atc_sensor_model,
 >>>     xscale='log',
 >>>     yscale='log',
 >>>     ylim=(1e0,2e3),
@@ -132,7 +131,7 @@ Note that the x axis has been plotted on a logarithmic scale using the ``xscale`
 >>>                        'linewidth':3,
 >>>                        'zorder':-1,
 >>>                        'solid_capstyle':'butt'})
->>> plt.xlabel('DAPG Concentration ($\mu M$)')
+>>> plt.xlabel('aTc Concentration (ng/mL)')
 >>> plt.ylabel('FL1 Fluorescence (a.u.)')
 >>> plt.show()
 
