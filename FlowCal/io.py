@@ -755,11 +755,9 @@ class FCSFile(object):
             try:
                 stext_begin = int(self._text['$BEGINSTEXT'])   # required keyword
                 stext_end = int(self._text['$ENDSTEXT'])       # required keyword
-            except:
+            except KeyError as e:
                 warnings.warn(
-                    "Either $BEGINSTEXT or $ENDSTEXT is missing. "
-                    "Both are set to zero.",
-                    Warning
+                    "Either $BEGINSTEXT or $ENDSTEXT is missing. Both are set to zero."
                 )
                 stext_begin = 0
                 stext_end = 0
@@ -826,11 +824,9 @@ class FCSFile(object):
             try:
                 analysis_begin = int(self._text['$BEGINANALYSIS'])
                 analysis_end = int(self._text['$ENDANALYSIS'])
-            except:
+            except KeyError as e:
                 warnings.warn(
-                    "Either $BEGINANALYSIS or $ENDSANALYSIS is missing. "
-                    "Both are set to zero.",
-                    Warning
+                    "Either $BEGINANALYSIS or $ENDSANALYSIS is missing. Both are set to zero."
                 )
                 analysis_begin = 0
                 analysis_end = 0
