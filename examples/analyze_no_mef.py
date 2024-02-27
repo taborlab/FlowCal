@@ -188,7 +188,7 @@ if __name__ == "__main__":
     # logarithmic spacing of the DAPG concentrations. (Concentrations are also
     # augmented slightly to move the 0.0 concentration into the log
     # normalization range.)
-    cmap = mpl.cm.get_cmap('gray_r')
+    cmap = mpl.colormaps['gray_r']
     norm = mpl.colors.LogNorm(vmin=1e0, vmax=3500.)
     colors = [cmap(norm(dapg_i+4.)) for dapg_i in dapg]
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     plt.ylim((0,2500))
     plt.xlim((0,5e3))
     plt.xlabel('FL1 Fluorescence (a.u.)')
-    plt.legend(['{} $\mu M$ DAPG'.format(i) for i in dapg],
+    plt.legend([r'{} $\mu M$ DAPG'.format(i) for i in dapg],
                loc='upper left',
                fontsize='small')
     plt.tight_layout()
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     plt.ylim((5e0,5e2))
     plt.xscale('symlog')
     plt.xlim((-1e0, 1e3))
-    plt.xlabel('DAPG Concentration ($\mu M$)')
+    plt.xlabel(r'DAPG Concentration ($\mu M$)')
     plt.ylabel('FL1 Fluorescence (a.u.)')
     plt.tight_layout()
     plt.savefig('dose_response.png', dpi=200)
@@ -278,7 +278,7 @@ if __name__ == "__main__":
         xscale='log',
         yscale='log',
         ylim=(1e0,2e3))
-    plt.xlabel('DAPG Concentration ($\mu M$)')
+    plt.xlabel(r'DAPG Concentration ($\mu M$)')
     plt.ylabel('FL1 Fluorescence (a.u.)')
     plt.tight_layout()
     plt.savefig('dose_response_violin.png', dpi=200)
