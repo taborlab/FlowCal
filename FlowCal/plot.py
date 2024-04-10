@@ -645,12 +645,12 @@ class _LogicleLocator(matplotlib.ticker.Locator):
         if vmax < vmin:
             vmin, vmax = vmax, vmin
 
-        if not matplotlib.ticker.is_decade(abs(vmin), b):
+        if not _is_decade(abs(vmin), b):
             if vmin < 0:
                 vmin = -_base_up(-vmin, b)
             else:
                 vmin = _base_down(vmin, b)
-        if not matplotlib.ticker.is_decade(abs(vmax), b):
+        if not _is_decade(abs(vmax), b):
             if vmax < 0:
                 vmax = -_base_down(-vmax, b)
             else:
@@ -891,6 +891,17 @@ class _ViolinLogFormatterSciNotation(matplotlib.ticker.LogFormatterSciNotation):
         return matplotlib.ticker.LogFormatterSciNotation.__call__(self,
                                                                   x=x,
                                                                   pos=pos)
+
+# Replace the ticker.is_decade that was removed in matplotlib 3.8
+# see here: https://matplotlib.org/stable/api/prev_api_changes/api_changes_3.8.0.html
+def _is_decade(x, base=10):
+    if not np.isfinite(x):
+        return False
+    if x == 0.0:
+        return True
+    
+    y = np.log(x) / np.log(base)
+    np.isclose(y, np.round(y))
 
 ###
 # CUSTOM SCALES
