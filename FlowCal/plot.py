@@ -645,15 +645,14 @@ class _LogicleLocator(matplotlib.ticker.Locator):
         if vmax < vmin:
             vmin, vmax = vmax, vmin
 
-        if not matplotlib.ticker.is_decade(abs(vmin), b):
-            if vmin < 0:
-                vmin = -_base_up(-vmin, b)
-            else:
+        if vmin < 0:
+            vmin = -_base_up(-vmin, b)
+        if vmax < 0:
+            vmax = -_base_down(-vmax, b)
+        if (b > 0) and (vmin > 0) and (vmax > 0):
+            if not np.isclose(np.log(vmin)/np.log(b), np.round(np.log(vmin)/np.log(b))):
                 vmin = _base_down(vmin, b)
-        if not matplotlib.ticker.is_decade(abs(vmax), b):
-            if vmax < 0:
-                vmax = -_base_down(-vmax, b)
-            else:
+            if not np.isclose(np.log(vmax)/np.log(b), np.round(np.log(vmax)/np.log(b))):
                 vmax = _base_up(vmax, b)
 
         if vmin == vmax:
