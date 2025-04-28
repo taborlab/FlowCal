@@ -1622,9 +1622,15 @@ class FCSData(np.ndarray):
         # In CellQuest Pro's FCS2.0, the TIMETICKS keyword parameter contains
         # the time step in milliseconds.
         if '$TIMESTEP' in fcs_file.text:
-            time_step = float(fcs_file.text['$TIMESTEP'])
+            try:
+                time_step = float(fcs_file.text['$TIMESTEP'])
+            except:
+                time_step = None
         elif 'TIMETICKS' in fcs_file.text:
-            time_step = float(fcs_file.text['TIMETICKS'])/1000.
+            try:
+                time_step = float(fcs_file.text['TIMETICKS'])/1000.
+            except:
+                time_step = None
         else:
             time_step = None
 
